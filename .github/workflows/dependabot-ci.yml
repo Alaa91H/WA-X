@@ -30,4 +30,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and test all variants
-        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest assembleWhatsappRelease assembleBusinessRelease
+        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest lintWhatsappDebug lintBusinessDebug assembleWhatsappRelease assembleBusinessRelease
