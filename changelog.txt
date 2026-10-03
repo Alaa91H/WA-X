@@ -1,3 +1,16 @@
-[FIXED]
-* We fixed some bugs reported by users
-* Fixed version checking
+[COMPATIBILITY]
+* Added WhatsApp Messenger 2.26.38.xx and 2.26.39.xx support.
+* Added WhatsApp Business 2.26.38.xx support.
+* Added Android 17 / API 37 support to the downgrade compatibility hook.
+
+[SECURITY]
+* Restricted bridge Binder access to WaEnhancer, WhatsApp, and WhatsApp Business UIDs.
+* Restricted remote preference reads to trusted WaEnhancer/WhatsApp callers.
+* Protected internal control broadcasts with a signature-level permission.
+* Added authentication for Tasker MESSAGE_SENT intents and scoped outgoing Tasker broadcasts.
+
+[STABILITY]
+* Completed the custom SharedPreferences implementation (string sets, clear, apply, commit).
+* Fixed HookProvider initialization.
+* Fixed Tasker event delivery that was previously disabled unconditionally.
+* Release workflow now builds signed release APKs and fails when signing secrets are missing.
