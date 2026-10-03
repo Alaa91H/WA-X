@@ -2,7 +2,6 @@ package com.wmods.wppenhacer.xposed.bridge.service
 
 import android.content.Context
 import android.os.Binder
-import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import com.wmods.wppenhacer.BuildConfig
@@ -42,8 +41,8 @@ object HookBinder : WaeIIFace.Stub() {
         enforceAllowedCaller()
 
         val target = File(path).canonicalFile
-        val externalRoot = Environment.getExternalStorageDirectory().canonicalFile
-        val rootPath = externalRoot.path
+        val storageRoot = File("/storage").canonicalFile
+        val rootPath = storageRoot.path
         val targetPath = target.path
 
         if (targetPath != rootPath && !targetPath.startsWith(rootPath + File.separator)) {
