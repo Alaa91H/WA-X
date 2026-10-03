@@ -270,7 +270,10 @@ jobs:
 
   create-tag:
     name: Create requested release tag
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && startsWith(github.event.head_commit.message, 'release: v')
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master' &&
+      startsWith(github.event.head_commit.message, 'release: v')
     needs:
       - build
     runs-on: ubuntu-latest
