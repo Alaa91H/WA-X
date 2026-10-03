@@ -130,6 +130,8 @@ class FeatureLoader {
         private var currentVersion: String? = null
         private var crashHandlerInstalled = false
         private const val UPDATE_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000L
+        private val INTERNAL_BROADCAST_PERMISSION =
+            BuildConfig.APPLICATION_ID + ".permission.INTERNAL_BROADCAST"
         private var lastUpdateCheckScheduledAt = 0L
 
         @JvmStatic
@@ -455,8 +457,11 @@ class FeatureLoader {
                 }
             }
             ContextCompat.registerReceiver(
-                app, restartReceiver,
+                app,
+                restartReceiver,
                 IntentFilter("${BuildConfig.APPLICATION_ID}.WHATSAPP.RESTART"),
+                INTERNAL_BROADCAST_PERMISSION,
+                null,
                 ContextCompat.RECEIVER_EXPORTED
             )
 
@@ -467,8 +472,11 @@ class FeatureLoader {
                 }
             }
             ContextCompat.registerReceiver(
-                app, wppReceiver,
+                app,
+                wppReceiver,
                 IntentFilter("${BuildConfig.APPLICATION_ID}.CHECK_WPP"),
+                INTERNAL_BROADCAST_PERMISSION,
+                null,
                 ContextCompat.RECEIVER_EXPORTED
             )
 
@@ -479,8 +487,11 @@ class FeatureLoader {
                 }
             }
             ContextCompat.registerReceiver(
-                app, restartManualReceiver,
+                app,
+                restartManualReceiver,
                 IntentFilter("${BuildConfig.APPLICATION_ID}.MANUAL_RESTART"),
+                INTERNAL_BROADCAST_PERMISSION,
+                null,
                 ContextCompat.RECEIVER_EXPORTED
             )
         }
