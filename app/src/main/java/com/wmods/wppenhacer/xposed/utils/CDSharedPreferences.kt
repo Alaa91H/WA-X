@@ -7,6 +7,9 @@ import org.xmlpull.v1.XmlSerializer
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /**
  * A custom implementation of [SharedPreferences] that reads from and writes to
@@ -73,12 +76,12 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
 
     private fun saveData(mapToSave: Map<String, Any?>): Boolean {
         synchronized(lock) {
-            return try {
-                if (xmlFile.parentFile?.exists() == false && xmlFile.parentFile?.mkdirs() == false) {
-                    return false
-                }
+            val parent = xmlFile.absoluteFile.parentFile ?: return false
+            if (!parent.exists() && !parent.mkdirs() && !parent.isDirectory) return false
 
-                FileOutputStream(xmlFile).use { outputStream ->
+            val tempFile = File(parent, xmlFile.name + ".tmp")
+            return try {
+                FileOutputStream(tempFile).use { outputStream ->
                     val serializer: XmlSerializer = Xml.newSerializer()
                     serializer.setOutput(outputStream, "UTF-8")
                     serializer.startDocument("UTF-8", true)
@@ -138,8 +141,24 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
                     serializer.endDocument()
                     outputStream.fd.sync()
                 }
+
+                try {
+                    Files.move(
+                        tempFile.toPath(),
+                        xmlFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE
+                    )
+                } catch (_: AtomicMoveNotSupportedException) {
+                    Files.move(
+                        tempFile.toPath(),
+                        xmlFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING
+                    )
+                }
                 true
             } catch (e: Exception) {
+                tempFile.delete()
                 e.printStackTrace()
                 false
             }
