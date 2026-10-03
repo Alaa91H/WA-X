@@ -52,6 +52,10 @@ public class ScopeHook {
                         if ("getHookBinder".equals(arg)) {
                             Method mGetContext = param.thisObject.getClass().getMethod("getContext");
                             Context context = (Context) mGetContext.invoke(param.thisObject);
+                            if (!BridgeAccess.isCallerAllowed(context, false)) {
+                                XposedBridge.log("Wa Enhancer: Rejecting unauthorized SettingsProvider bridge request");
+                                return;
+                            }
                             XposedBridge.log("Wa Enhancer: Trying to allow blocking ");
                             try {
                                 XposedHelpers.callStaticMethod(Binder.class, "allowBlockingForCurrentThread");
