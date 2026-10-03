@@ -34,6 +34,10 @@ import com.wmods.wppenhacer.xposed.core.components.SharedPreferencesWrapper
 import com.wmods.wppenhacer.xposed.utils.collapseAndHide
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import org.luckypray.dexkit.query.enums.StringMatchType
 import org.luckypray.dexkit.util.DexSignUtil
 import java.io.File
@@ -44,6 +48,7 @@ import java.util.Properties
 import java.util.WeakHashMap
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.text.set
 
@@ -55,6 +60,14 @@ class Others(loader: ClassLoader, preferences:SharedPreferences) : Feature(loade
         val propsBoolean = ConcurrentHashMap<Int, Boolean>()
         @JvmField
         val propsInteger = ConcurrentHashMap<Int, Int>()
+
+        private val callInfoHttpClient: OkHttpClient by lazy {
+            OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
+                .build()
+        }
     }
 
     private lateinit var properties: Properties
@@ -450,6 +463,7 @@ class Others(loader: ClassLoader, preferences:SharedPreferences) : Feature(loade
         
         val ip = XposedHelpers.getObjectField(wamCall, "callPeerIpStr") as? String
         if (!ip.isNullOrBlank()) {
+            appendIpLocation(sb, ip)
             sb.append(String.format(Utils.application.getString(R.string.ip_s), ip)).append("\n")
         }
         val platform = XposedHelpers.getObjectField(wamCall, "callPeerPlatform") as? String
@@ -460,6 +474,46 @@ class Others(loader: ClassLoader, preferences:SharedPreferences) : Feature(loade
             sb.append(String.format(Utils.application.getString(R.string.wpp_version_s), wppVersion)).append("\n")
         
         Utils.showNotification(Utils.application.getString(R.string.call_information), sb.toString())
+    }
+
+    private fun appendIpLocation(sb: StringBuilder, ip: String) {
+        runCatching {
+            val url = HttpUrl.Builder()
+                .scheme("https")
+                .host("ipwho.is")
+                .addPathSegment(ip)
+                .build()
+            val request = Request.Builder().url(url).build()
+
+            callInfoHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@use
+                val body = response.body.string()
+                val json = JSONObject(body)
+                if (!json.optBoolean("success", false)) return@use
+
+                json.optString("country")
+                    .takeIf { it.isNotBlank() }
+                    ?.let {
+                        sb.append(
+                            String.format(
+                                Utils.application.getString(R.string.country_s),
+                                it
+                            )
+                        ).append("\n")
+                    }
+
+                json.optString("city")
+                    .takeIf { it.isNotBlank() }
+                    ?.let {
+                        sb.append(
+                            String.format(
+                                Utils.application.getString(R.string.city_s),
+                                it
+                            )
+                        ).append("\n")
+                    }
+            }
+        }.onFailure { logDebug("Call IP geolocation unavailable", it) }
     }
 
     private fun alwaysOnline() {
