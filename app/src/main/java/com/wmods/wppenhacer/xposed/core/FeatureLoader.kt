@@ -455,8 +455,11 @@ class FeatureLoader {
                 }
             }
             ContextCompat.registerReceiver(
-                app, restartReceiver,
+                app,
+                restartReceiver,
                 IntentFilter("${BuildConfig.APPLICATION_ID}.WHATSAPP.RESTART"),
+                BuildConfig.APPLICATION_ID + ".permission.INTERNAL_CONTROL",
+                null,
                 ContextCompat.RECEIVER_EXPORTED
             )
 
@@ -467,8 +470,11 @@ class FeatureLoader {
                 }
             }
             ContextCompat.registerReceiver(
-                app, wppReceiver,
+                app,
+                wppReceiver,
                 IntentFilter("${BuildConfig.APPLICATION_ID}.CHECK_WPP"),
+                BuildConfig.APPLICATION_ID + ".permission.INTERNAL_CONTROL",
+                null,
                 ContextCompat.RECEIVER_EXPORTED
             )
 
@@ -479,8 +485,11 @@ class FeatureLoader {
                 }
             }
             ContextCompat.registerReceiver(
-                app, restartManualReceiver,
+                app,
+                restartManualReceiver,
                 IntentFilter("${BuildConfig.APPLICATION_ID}.MANUAL_RESTART"),
+                BuildConfig.APPLICATION_ID + ".permission.INTERNAL_CONTROL",
+                null,
                 ContextCompat.RECEIVER_EXPORTED
             )
         }
