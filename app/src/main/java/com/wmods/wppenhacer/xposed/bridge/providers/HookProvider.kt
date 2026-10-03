@@ -9,10 +9,12 @@ import com.wmods.wppenhacer.xposed.bridge.service.HookBinder
 
 class HookProvider : ContentProvider() {
     override fun onCreate(): Boolean {
-        return false
+        context?.let(HookBinder::initialize)
+        return true
     }
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        context?.let(HookBinder::initialize)
         if (method == "getHookBinder") {
             val result = Bundle()
             result.putBinder("binder", HookBinder)
