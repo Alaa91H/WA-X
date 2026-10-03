@@ -1,5 +1,6 @@
 [FIXED]
-* Added compatibility with WhatsApp 2.26.32.x (official stable)
+* Added compatibility with WhatsApp 2.26.32.x through 2.26.39.x current stable line
+* Added compatibility with WhatsApp Business 2.26.38.x
 * Hardened bridge and remote-preference IPC access
 * Completed custom SharedPreferences set/apply/clear/commit handling
 * Fixed release builds to publish release APKs only
