@@ -27,15 +27,33 @@ object HookBinder : WaeIIFace.Stub() {
         }
     }
 
+    private fun sharedStorageRoots(): List<File> {
+        val roots = linkedSetOf(Environment.getExternalStorageDirectory().canonicalFile)
+        val androidDataMarker = File.separator + "Android" + File.separator + "data" + File.separator
+
+        App.instance.getExternalFilesDirs(null)
+            .filterNotNull()
+            .forEach { appExternalDir ->
+                val canonicalPath = appExternalDir.canonicalFile.path
+                val markerIndex = canonicalPath.indexOf(androidDataMarker)
+                if (markerIndex > 0) {
+                    roots.add(File(canonicalPath.substring(0, markerIndex)).canonicalFile)
+                }
+            }
+
+        return roots.toList()
+    }
+
     private fun resolveAllowedPath(path: String): File {
         enforceAllowedCaller()
 
         val target = File(path).canonicalFile
-        val externalRoot = Environment.getExternalStorageDirectory().canonicalFile
-        val rootPath = externalRoot.path
         val targetPath = target.path
+        val isSharedStorage = sharedStorageRoots().any { root ->
+            targetPath == root.path || targetPath.startsWith(root.path + File.separator)
+        }
 
-        if (targetPath != rootPath && !targetPath.startsWith(rootPath + File.separator)) {
+        if (!isSharedStorage) {
             throw SecurityException("Bridge path is outside shared external storage")
         }
         return target
