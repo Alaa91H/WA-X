@@ -33,7 +33,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
                 .url(LATEST_RELEASE_API)
                 .build()
 
-            val hash: String
+            val releaseVersion: String
             val changelog: String
             val publishedAt: String
 
@@ -46,20 +46,20 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
 
                 if (tagName.isBlank()) return
 
-                hash = tagName.substringAfterLast("-", "").trim()
+                releaseVersion = tagName.removePrefix("v").trim()
                 changelog = release.optString("body", "No changelog available.").trim()
                 publishedAt = release.optString("published_at", "")
             }
 
-            if (hash.isBlank()) return
+            if (releaseVersion.isBlank()) return
 
-            val isNewVersion =
-                !BuildConfig.VERSION_NAME.lowercase().contains(hash.lowercase().trim())
-            val isIgnored = WppCore.getPrivString("ignored_version", "") == hash
+            val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-dev").substringBefore("+").trim()
+            val isNewVersion = releaseVersion != currentVersion
+            val isIgnored = WppCore.getPrivString("ignored_version", "") == releaseVersion
 
             if (isNewVersion && !isIgnored) {
                 mActivity.runOnUiThread {
-                    showUpdateDialog(hash, changelog, publishedAt)
+                    showUpdateDialog(releaseVersion, changelog, publishedAt)
                 }
             }
         } catch (e: Exception) {
@@ -67,7 +67,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
         }
     }
 
-    private fun showUpdateDialog(hash: String, changelog: String, publishedAt: String) {
+    private fun showUpdateDialog(version: String, changelog: String, publishedAt: String) {
         try {
             val markwon = Markwon.create(mActivity)
             val dialog = AlertDialogWpp(mActivity)
@@ -75,7 +75,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
             val formattedDate = formatPublishedDate(publishedAt)
 
             val message = buildString {
-                append("📦 **Version:** `").append(hash).append("`\n")
+                append("📦 **Version:** `").append(version).append("`\n")
                 if (formattedDate.isNotEmpty()) {
                     append("📅 **Released:** ").append(formattedDate).append("\n")
                 }
@@ -85,7 +85,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
             dialog.setTitle("🎉 New Update Available!")
             dialog.setMessage(markwon.toMarkdown(message))
             dialog.setNegativeButton("Ignore") { dialog, _ ->
-                WppCore.setPrivString("ignored_version", hash)
+                WppCore.setPrivString("ignored_version", version)
                 dialog.dismiss()
             }
             dialog.setPositiveButton("Update Now") { dialog, _ ->
