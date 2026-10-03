@@ -56,7 +56,13 @@ class ContextMenuActionProvider(
     }
 
     override fun doHook() {
-        val popupWindowMessage = Unobfuscator.loadPopupWindowMessageClass(classLoader)
+        val popupWindowMessage = runCatching {
+            Unobfuscator.loadPopupWindowMessageClass(classLoader)
+        }.getOrElse {
+            logDebug("Context-menu popup class unavailable", it)
+            return
+        }
+
         XposedBridge.hookAllConstructors(popupWindowMessage, object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 if (providers.isEmpty()) return
