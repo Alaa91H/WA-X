@@ -184,9 +184,20 @@ public class ScopeHook {
     }
 
     private static String getPackageNameFromPackageSettings(Object packageSettings) {
+        if (packageSettings == null) return "";
+
+        try {
+            Object packageName = XposedHelpers.callMethod(packageSettings, "getPackageName");
+            if (packageName instanceof String) {
+                return (String) packageName;
+            }
+        } catch (Throwable ignored) {
+        }
+
         String packageSettingsString = packageSettings.toString();
         int startIndex = packageSettingsString.lastIndexOf(' ') + 1;
         int endIndex = packageSettingsString.lastIndexOf('/');
+        if (startIndex <= 0 || endIndex <= startIndex) return "";
         return packageSettingsString.substring(startIndex, endIndex);
     }
 
