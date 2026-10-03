@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import com.wmods.wppenhacer.xposed.bridge.BridgeAccess
 import com.wmods.wppenhacer.xposed.bridge.service.HookBinder
 
 class HookProvider : ContentProvider() {
@@ -13,6 +14,8 @@ class HookProvider : ContentProvider() {
     }
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        val providerContext = context ?: return null
+        BridgeAccess.enforceCaller(providerContext, allowSettingsProvider = true)
         if (method == "getHookBinder") {
             val result = Bundle()
             result.putBinder("binder", HookBinder)
