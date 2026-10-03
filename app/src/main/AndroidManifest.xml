@@ -7,6 +7,11 @@
         <package android:name="com.whatsapp.w4b" />
     </queries>
 
+    <permission
+        android:name="${applicationId}.permission.INTERNAL_BROADCAST"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.INTERNAL_BROADCAST" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -36,7 +41,7 @@
     <application
         android:forceQueryable="true"
         android:name=".App"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"

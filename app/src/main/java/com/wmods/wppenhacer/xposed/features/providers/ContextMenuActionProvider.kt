@@ -56,21 +56,28 @@ class ContextMenuActionProvider(
     }
 
     override fun doHook() {
-        val popupWindowMessage = Unobfuscator.loadPopupWindowMessageClass(classLoader)
+        val popupWindowMessage = runCatching {
+            Unobfuscator.loadPopupWindowMessageClass(classLoader)
+        }.getOrElse {
+            logDebug("Context-menu popup class unavailable", it)
+            return
+        }
+
         XposedBridge.hookAllConstructors(popupWindowMessage, object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 if (providers.isEmpty()) return
                 val activity = WppCore.getCurrentActivity() ?: run {
                     return
                 }
-                val mainPopupWindow = param.thisObject as PopupWindow
-                val viewGroup = mainPopupWindow.contentView as ViewGroup
+                val mainPopupWindow = param.thisObject as? PopupWindow ?: return
+                val viewGroup = mainPopupWindow.contentView as? ViewGroup ?: return
 
-                val fMessageObj = param.args.filterIsInstance(FMessageWpp.TYPE).first()
+                val fMessageObj = param.args.firstOrNull { FMessageWpp.TYPE.isInstance(it) } ?: return
                 val fMessage = FMessageWpp(fMessageObj)
 
                 val layout =
                     viewGroup.findViewById<LinearLayout>(Utils.getID("reactions_tray_layout", "id"))
+                        ?: return
                 layout.orientation = LinearLayout.VERTICAL
                 val parentItems = layout.children.toList()
                 layout.removeAllViews()

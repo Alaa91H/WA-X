@@ -24,10 +24,13 @@ class HideSeen(loader: ClassLoader, preferences: SharedPreferences) :
 
         @JvmStatic
         fun generateFMessageKey(protocolTreeNodeWpp: ProtocolTreeNodeWpp): FMessageWpp.Key? {
-            val fromKV = protocolTreeNodeWpp.attributes.first { it.key == "to" }
+            val fromKV = protocolTreeNodeWpp.attributes.firstOrNull { it.key == "to" }
+                ?: return null
             val userJid = fromKV.userJid ?: return null
-            val idKV = protocolTreeNodeWpp.attributes.first { it.key == "id" }
-            return FMessageWpp.Key(idKV.value!!, userJid, false)
+            val idKV = protocolTreeNodeWpp.attributes.firstOrNull { it.key == "id" }
+                ?: return null
+            val messageId = idKV.value ?: return null
+            return FMessageWpp.Key(messageId, userJid, false)
         }
     }
 
@@ -60,8 +63,15 @@ class HideSeen(loader: ClassLoader, preferences: SharedPreferences) :
     }
 
     private fun hookEnforceHiding() {
+        val readReceiptMethod = runCatching {
+            Unobfuscator.loadReadReceiptMethod(classLoader)
+        }.getOrElse {
+            logDebug("Optional read-receipt hook unavailable", it)
+            return
+        }
+
         XposedBridge.hookMethod(
-            Unobfuscator.loadReadReceiptMethod(classLoader),
+            readReceiptMethod,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val fMessage = FMessageWpp(param.args[0])

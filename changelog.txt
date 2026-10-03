@@ -1,3 +1,14 @@
-[FIXED]
-* We fixed some bugs reported by users
-* Fixed version checking
+[COMPATIBILITY]
+* Restored support for WhatsApp and WhatsApp Business 2.26.32.xx, including the current official Android release 2.26.32.84.
+* Optional read-receipt and context-menu hooks now fail safely when their target is unavailable instead of disabling the rest of the feature.
+
+[SECURITY]
+* Restricted bridge, hook-provider, and remote-preference IPC access to authorized module/WhatsApp callers.
+* Restricted bridge file operations to validated shared-storage volumes while preserving removable-storage support.
+* Disabled Android backup for module application data.
+* Release builds no longer fall back to the debug signing key, and release publishing now requires signing secrets.
+
+[STABILITY]
+* Completed CDSharedPreferences string-set, edit, clear, commit, apply, listener, and atomic-write behavior.
+* Hardened update metadata parsing and corrected fork update links.
+* CI now builds WhatsApp and Business Debug/Release variants and runs unit tests.

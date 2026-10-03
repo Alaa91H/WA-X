@@ -52,6 +52,11 @@ public class ScopeHook {
                         if ("getHookBinder".equals(arg)) {
                             Method mGetContext = param.thisObject.getClass().getMethod("getContext");
                             Context context = (Context) mGetContext.invoke(param.thisObject);
+                            if (!isAllowedSettingsBridgeCaller(context)) {
+                                XposedBridge.log("Wa Enhancer: blocked unauthorized settings bridge caller uid=" + Binder.getCallingUid());
+                                param.setResult(null);
+                                return;
+                            }
                             XposedBridge.log("Wa Enhancer: Trying to allow blocking ");
                             try {
                                 XposedHelpers.callStaticMethod(Binder.class, "allowBlockingForCurrentThread");
@@ -153,6 +158,21 @@ public class ScopeHook {
             });
         }
 
+    }
+
+    private static boolean isAllowedSettingsBridgeCaller(Context context) {
+        int callingUid = Binder.getCallingUid();
+        String[] packages = context.getPackageManager().getPackagesForUid(callingUid);
+        if (packages == null) return false;
+
+        for (String caller : packages) {
+            if (FeatureLoader.PACKAGE_WPP.equals(caller)
+                    || FeatureLoader.PACKAGE_BUSINESS.equals(caller)
+                    || BuildConfig.APPLICATION_ID.equals(caller)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void unhook() {

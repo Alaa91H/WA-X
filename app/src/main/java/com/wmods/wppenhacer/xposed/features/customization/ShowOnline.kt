@@ -54,8 +54,8 @@ class ShowOnline(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         XposedBridge.hookAllConstructors(classViewHolder, object : XC_MethodHook() {
             @SuppressLint("ResourceType")
             override fun afterHookedMethod(param: MethodHookParam) {
-                val view = param.args.filterIsInstance<View>().first()
-                val context = param.args.filterIsInstance<Context>().first()
+                val view = param.args.filterIsInstance<View>().firstOrNull() ?: return
+                val context = param.args.filterIsInstance<Context>().firstOrNull() ?: return
                 var content = view.findViewById<LinearLayout>(Utils.getID("conversations_row_content", "id"))
                 if (content == null) {
                     content = view.findViewById(Utils.getID("row_content", "id"))

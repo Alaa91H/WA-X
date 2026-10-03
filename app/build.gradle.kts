@@ -40,8 +40,8 @@ android {
         minSdk = 28
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 160
-        versionName = "1.6.0 ($gitHash)"
+        versionCode = 161
+        versionName = "1.6.1 ($gitHash)"
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -106,7 +106,7 @@ android {
             //noinspection NotShrinkingResources
             isShrinkResources = false
             signingConfig =
-                if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else signingConfigs["debug"]
+                if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else null
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -127,6 +127,7 @@ android {
 
     lint {
         disable += "SelectedPhotoAccess"
+        warning += "MissingTranslation"
         baseline = file("lint-baseline.xml")
     }
 
