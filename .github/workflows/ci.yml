@@ -1,0 +1,253 @@
+name: Android CI & Release
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: waenhancer-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "17"
+
+jobs:
+  verify:
+    name: Verify Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5.6.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
+          VERSION_CODE="$(sed -n 's/^waeVersionCode=//p' gradle.properties | tail -n 1 | tr -d '\r')"
+          if [[ -z "$VERSION" || -z "$VERSION_CODE" ]]; then
+            echo "::error::waeVersionName/waeVersionCode are missing from gradle.properties"
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid semantic version: $VERSION"
+            exit 1
+          fi
+          if [[ ! "$VERSION_CODE" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid Android version code: $VERSION_CODE"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION (code $VERSION_CODE), tag: v$VERSION"
+
+      - name: Grant Gradle wrapper permission
+        run: chmod +x gradlew
+
+      - name: Build debug variants and run unit tests
+        run: |
+          ./gradlew --no-daemon --stacktrace \
+            assembleWhatsappDebug \
+            assembleBusinessDebug \
+            testWhatsappDebugUnitTest \
+            testBusinessDebugUnitTest
+
+      - name: Run Android lint
+        run: |
+          ./gradlew --no-daemon --stacktrace --continue \
+            lintWhatsappDebug \
+            lintBusinessDebug
+
+      - name: Verify release variants
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          ./gradlew --no-daemon --stacktrace \
+            assembleWhatsappRelease \
+            assembleBusinessRelease \
+            -PreleaseTag="$RELEASE_TAG"
+
+  release:
+    name: Publish release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs:
+      - verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5.6.0
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
+          TAG="v$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Decide whether a release is needed
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAG_SHA="$(git rev-list -n 1 "$TAG")"
+            if [[ "$TAG_SHA" != "$GITHUB_SHA" ]]; then
+              echo "needed=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::$TAG already points to $TAG_SHA. Bump waeVersionName for a new release."
+              exit 0
+            fi
+
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "needed=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::Release $TAG already exists."
+              exit 0
+            fi
+          fi
+
+          echo "needed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Validate signing secrets
+        if: steps.gate.outputs.needed == 'true'
+        env:
+          KEY_STORE: ${{ secrets.KEY_STORE }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in KEY_STORE KEY_STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required release signing secret: $name"
+              exit 1
+            fi
+          done
+
+          printf '%s\n' "androidStorePassword=$KEY_STORE_PASSWORD" >> gradle.properties
+          printf '%s\n' "androidKeyAlias=$KEY_ALIAS" >> gradle.properties
+          printf '%s\n' "androidKeyPassword=$KEY_PASSWORD" >> gradle.properties
+          printf '%s\n' "androidStoreFile=key.jks" >> gradle.properties
+          printf '%s' "$KEY_STORE" | base64 --decode > key.jks
+
+      - name: Grant Gradle wrapper permission
+        if: steps.gate.outputs.needed == 'true'
+        run: chmod +x gradlew
+
+      - name: Build signed release APKs
+        if: steps.gate.outputs.needed == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon --stacktrace clean \
+            assembleWhatsappRelease \
+            assembleBusinessRelease \
+            -PreleaseTag="$RELEASE_TAG"
+
+          mkdir -p release
+          mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/release -maxdepth 1 -type f -name '*.apk' | sort)
+          mapfile -t WB_APKS < <(find app/build/outputs/apk/business/release -maxdepth 1 -type f -name '*.apk' | sort)
+
+          if [[ "${#WA_APKS[@]}" -ne 1 || "${#WB_APKS[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one APK for each flavor"
+            printf 'WhatsApp APKs: %s\n' "${WA_APKS[*]:-none}"
+            printf 'Business APKs: %s\n' "${WB_APKS[*]:-none}"
+            exit 1
+          fi
+
+          cp "${WA_APKS[0]}" "release/WaEnhancer-$VERSION.apk"
+          cp "${WB_APKS[0]}" "release/WaEnhancer-Business-$VERSION.apk"
+
+          if find release -maxdepth 1 -type f ! -name '*.apk' -print -quit | grep -q .; then
+            echo "::error::Release staging contains a non-APK file"
+            exit 1
+          fi
+
+      - name: Verify APK signatures
+        if: steps.gate.outputs.needed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          if [[ -z "$APKSIGNER" ]]; then
+            echo "::error::apksigner was not found"
+            exit 1
+          fi
+          for apk in release/*.apk; do
+            "$APKSIGNER" verify --verbose "$apk"
+          done
+
+      - name: Create and push Git tag
+        if: steps.gate.outputs.needed == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" "$GITHUB_SHA" -m "WaEnhancer $TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: Publish GitHub Release
+        if: steps.gate.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" release/*.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "WaEnhancer $VERSION" \
+            --notes-file changelog.txt \
+            --target "$GITHUB_SHA" \
+            --verify-tag
