@@ -74,11 +74,10 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
     }
 
     private fun saveData(mapToSave: Map<String, Any?>): Boolean {
-        return try {
-            if (xmlFile.parentFile?.exists() == false && xmlFile.parentFile?.mkdirs() == false) {
-                return false
-            }
+        val parent = xmlFile.parentFile
+        if (parent != null && !parent.exists() && !parent.mkdirs()) return false
 
+        return try {
             FileOutputStream(xmlFile).use { outputStream ->
                 val serializer: XmlSerializer = Xml.newSerializer()
                 serializer.setOutput(outputStream, "UTF-8")
@@ -257,21 +256,17 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         }
 
         override fun commit(): Boolean {
-            val changedKeys: Set<String>
-            val listenerSnapshot: List<SharedPreferences.OnSharedPreferenceChangeListener>
-            val dataSnapshot: Map<String, Any?>
-
-            synchronized(lock) {
+            val (changedKeys, dataSnapshot, listenerSnapshot) = synchronized(lock) {
                 val before = preferencesMap.toMap()
 
                 if (clearAll) preferencesMap.clear()
                 keysToRemove.forEach(preferencesMap::remove)
                 localChanges.forEach { (key, value) -> preferencesMap[key] = value }
 
-                changedKeys = (before.keys + preferencesMap.keys)
+                val changed = (before.keys + preferencesMap.keys)
                     .filterTo(linkedSetOf()) { before[it] != preferencesMap[it] }
-                dataSnapshot = preferencesMap.toMap()
-                listenerSnapshot = listeners.toList()
+
+                Triple(changed, preferencesMap.toMap(), listeners.toList())
             }
 
             val persisted = saveData(dataSnapshot)
