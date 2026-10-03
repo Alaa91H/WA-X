@@ -54,16 +54,26 @@ object HookBinder : WaeIIFace.Stub() {
 
     override fun openFile(path: String, create: Boolean): ParcelFileDescriptor? {
         val file = resolveAllowedPath(path)
-        if (!file.exists() && create) {
+        if (create) {
             try {
-                file.parentFile?.mkdirs()
-                file.createNewFile()
+                file.parentFile?.let { parent ->
+                    if (!parent.exists() && !parent.mkdirs() && !parent.isDirectory) return null
+                }
             } catch (_: Exception) {
                 return null
             }
         }
+
+        val mode = if (create) {
+            ParcelFileDescriptor.MODE_READ_WRITE or
+                ParcelFileDescriptor.MODE_CREATE or
+                ParcelFileDescriptor.MODE_TRUNCATE
+        } else {
+            ParcelFileDescriptor.MODE_READ_WRITE
+        }
+
         return try {
-            ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE)
+            ParcelFileDescriptor.open(file, mode)
         } catch (_: FileNotFoundException) {
             null
         }
