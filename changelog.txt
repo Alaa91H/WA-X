@@ -1,14 +1,46 @@
-[COMPATIBILITY]
-* Restored support for WhatsApp and WhatsApp Business 2.26.32.xx, including the current official Android release 2.26.32.84.
-* Optional read-receipt and context-menu hooks now fail safely when their target is unavailable instead of disabling the rest of the feature.
+WaEnhancer 1.6.1
+Release date: 2026-10-03
 
-[SECURITY]
-* Restricted bridge, hook-provider, and remote-preference IPC access to authorized module/WhatsApp callers.
-* Restricted bridge file operations to validated shared-storage volumes while preserving removable-storage support.
-* Disabled Android backup for module application data.
-* Release builds no longer fall back to the debug signing key, and release publishing now requires signing secrets.
+HIGHLIGHTS
+- Consolidated the active compatibility and stability branches into a single mainline release.
+- Restored and extended compatibility coverage for current WhatsApp 2.26.x builds with minimal hook changes.
+- Hardened IPC, exported components, release signing, update checks, and automation integrations.
+- Reworked CI/CD into a single tag-aware pipeline that verifies the project before publishing.
 
-[STABILITY]
-* Completed CDSharedPreferences string-set, edit, clear, commit, apply, listener, and atomic-write behavior.
-* Hardened update metadata parsing and corrected fork update links.
-* CI now builds WhatsApp and Business Debug/Release variants and runs unit tests.
+COMPATIBILITY
+- WhatsApp: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, 2.26.38.x, and 2.26.39.x.
+- WhatsApp Business: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, and 2.26.38.x.
+- Added Android 17 handling to the downgrade compatibility hook.
+- Added targeted fallbacks and null-safe guards around reflection-heavy hooks so optional signature changes do not crash unrelated features.
+- Improved compatibility handling for read receipts, context menus, conversation rows, media preview metadata, and origin-message resolution.
+
+SECURITY
+- Restricted bridge, hook-provider, and remote-preference IPC calls to authorized WaEnhancer/WhatsApp callers.
+- Restricted bridge file operations to validated shared-storage roots while preserving removable-storage support.
+- Added explicit package targeting for internal restart and status-check broadcasts.
+- Protected internal control receivers with signature-level permissions where applicable.
+- Restricted ForceStartActivity to WhatsApp and WhatsApp Business targets.
+- Disabled Android backup for module application data that can contain sensitive preferences or API keys.
+- Protected temporary LSPosed diagnostic database copies and removed world-readable permissions.
+- Added authenticated Tasker intents using a user-configured token.
+- Replaced insecure HTTP call geolocation requests with HTTPS and bounded network timeouts.
+- Disabled verbose runtime logging by default.
+- Pinned release-related third-party GitHub Actions where applicable.
+
+STABILITY
+- Completed the custom SharedPreferences implementation, including string sets, clear, commit/apply, listeners, and atomic persistence.
+- Initialized the bridge binder context consistently from both the service and provider paths.
+- Fixed an API 28 compatibility issue in MediaMetadataRetriever cleanup.
+- Fixed locked-chat contact filtering so locked contacts are hidden instead of exclusively retained.
+- Prevented crashes when opening WaEnhancer from the WhatsApp menu.
+- Hardened update metadata parsing and removed package-visibility dependency from version checks.
+- Scoped the home status receiver to the visible lifecycle to avoid stale receiver instances.
+- Added defensive handling for incomplete receipt nodes, media metadata, view-holder parameters, and changed context-menu signatures.
+
+BUILD & RELEASE
+- Release version metadata is centralized in gradle.properties.
+- Release builds validate that the configured version matches the Git tag (v<version>).
+- Debug builds remain clearly identifiable as development builds.
+- Release builds never fall back to the Android debug signing key.
+- CI verifies WhatsApp and Business debug builds, unit tests, Android lint, and release builds before publishing.
+- GitHub Releases publish only signed .apk assets with deterministic names.
