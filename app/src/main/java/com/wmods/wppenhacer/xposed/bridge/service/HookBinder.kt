@@ -1,5 +1,6 @@
 package com.wmods.wppenhacer.xposed.bridge.service
 
+import android.os.Environment
 import android.os.ParcelFileDescriptor
 import com.wmods.wppenhacer.App
 import com.wmods.wppenhacer.xposed.bridge.BridgeAccess
@@ -13,9 +14,23 @@ object HookBinder : WaeIIFace.Stub() {
         BridgeAccess.enforceCaller(App.instance)
     }
 
+    private fun externalFile(path: String): File {
+        val file = File(path).canonicalFile
+        val primaryExternal = Environment.getExternalStorageDirectory().canonicalFile.path
+        val canonicalPath = file.path
+        val allowed = canonicalPath == primaryExternal ||
+                canonicalPath.startsWith(primaryExternal + File.separator) ||
+                canonicalPath == "/storage" ||
+                canonicalPath.startsWith("/storage/")
+        if (!allowed) {
+            throw SecurityException("WaEnhancer bridge only allows external-storage paths")
+        }
+        return file
+    }
+
     override fun openFile(path: String, create: Boolean): ParcelFileDescriptor? {
         enforceCaller()
-        val file = File(path)
+        val file = externalFile(path)
         if (create) {
             try {
                 file.parentFile?.mkdirs()
@@ -36,17 +51,17 @@ object HookBinder : WaeIIFace.Stub() {
 
     override fun createDir(path: String): Boolean {
         enforceCaller()
-        val file = File(path)
+        val file = externalFile(path)
         return file.mkdirs() || file.isDirectory
     }
 
     override fun exists(path: String): Boolean {
         enforceCaller()
-        return File(path).exists()
+        return externalFile(path).exists()
     }
 
     override fun listFiles(path: String): List<File> {
         enforceCaller()
-        return File(path).listFiles()?.toList() ?: emptyList()
+        return externalFile(path).listFiles()?.toList() ?: emptyList()
     }
 }
