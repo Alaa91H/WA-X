@@ -34,4 +34,19 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and test all variants
-        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest lintWhatsappDebug lintBusinessDebug assembleWhatsappRelease assembleBusinessRelease
+        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest assembleWhatsappRelease assembleBusinessRelease
+
+      - name: Run Android lint
+        shell: bash
+        run: |
+          set +e
+          ./gradlew lintWhatsappDebug lintBusinessDebug
+          status=$?
+          for report in app/build/intermediates/lint_intermediate_text_report/*/lintReport*/lint-results-*.txt; do
+            if [ -f "$report" ]; then
+              echo "::group::$report"
+              cat "$report"
+              echo "::endgroup::"
+            fi
+          done
+          exit $status
