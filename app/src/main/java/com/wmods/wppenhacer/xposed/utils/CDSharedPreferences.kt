@@ -1,11 +1,11 @@
 package com.wmods.wppenhacer.xposed.utils
 
 import android.content.SharedPreferences
+import android.util.AtomicFile
 import android.util.Xml
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 
 /**
@@ -14,6 +14,7 @@ import java.io.FileOutputStream
 class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
 
     private val lock = Any()
+    private val atomicFile = AtomicFile(xmlFile)
     private var preferencesMap = mutableMapOf<String, Any?>()
     private val listeners = mutableListOf<SharedPreferences.OnSharedPreferenceChangeListener>()
 
@@ -23,13 +24,13 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
 
     private fun loadData() {
         synchronized(lock) {
-            if (!xmlFile.exists() || !xmlFile.isFile) return
+            if (!atomicFile.exists()) return
 
             try {
-                FileInputStream(xmlFile).use { inputStream ->
+                atomicFile.openRead().use { inputStream ->
                     val parser = Xml.newPullParser()
                     parser.setInput(inputStream, "UTF-8")
-                    preferencesMap.clear()
+                    val loaded = mutableMapOf<String, Any?>()
 
                     var eventType = parser.eventType
                     while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -39,21 +40,22 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
 
                             if (key != null) {
                                 when (tagName) {
-                                    "string" -> preferencesMap[key] = parser.nextText()
-                                    "boolean" -> preferencesMap[key] =
+                                    "string" -> loaded[key] = parser.nextText()
+                                    "boolean" -> loaded[key] =
                                         parser.getAttributeValue(null, "value")?.toBoolean() ?: false
-                                    "int" -> preferencesMap[key] =
+                                    "int" -> loaded[key] =
                                         parser.getAttributeValue(null, "value")?.toIntOrNull() ?: 0
-                                    "long" -> preferencesMap[key] =
+                                    "long" -> loaded[key] =
                                         parser.getAttributeValue(null, "value")?.toLongOrNull() ?: 0L
-                                    "float" -> preferencesMap[key] =
+                                    "float" -> loaded[key] =
                                         parser.getAttributeValue(null, "value")?.toFloatOrNull() ?: 0f
-                                    "set" -> preferencesMap[key] = readStringSet(parser)
+                                    "set" -> loaded[key] = readStringSet(parser)
                                 }
                             }
                         }
                         eventType = parser.next()
                     }
+                    preferencesMap = loaded
                 }
             } catch (_: Exception) {
                 preferencesMap.clear()
@@ -64,7 +66,8 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
     private fun readStringSet(parser: XmlPullParser): Set<String?> {
         val values = linkedSetOf<String?>()
         var eventType = parser.next()
-        while (!(eventType == XmlPullParser.END_TAG && parser.name == "set")) {
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            if (eventType == XmlPullParser.END_TAG && parser.name == "set") break
             if (eventType == XmlPullParser.START_TAG && parser.name == "string") {
                 values.add(parser.nextText())
             }
@@ -75,85 +78,96 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
 
     private fun saveData(mapToSave: Map<String, Any?>): Boolean {
         val parent = xmlFile.parentFile
-        if (parent != null && !parent.exists() && !parent.mkdirs()) return false
+        if (parent != null && !parent.exists() && !parent.mkdirs() && !parent.isDirectory) {
+            return false
+        }
 
+        var outputStream: FileOutputStream? = null
         return try {
-            FileOutputStream(xmlFile).use { outputStream ->
-                val serializer: XmlSerializer = Xml.newSerializer()
-                serializer.setOutput(outputStream, "UTF-8")
-                serializer.startDocument("UTF-8", true)
-                serializer.startTag(null, "map")
+            outputStream = atomicFile.startWrite()
+            val serializer: XmlSerializer = Xml.newSerializer()
+            serializer.setOutput(outputStream, "UTF-8")
+            serializer.startDocument("UTF-8", true)
+            serializer.startTag(null, "map")
 
-                for ((key, value) in mapToSave) {
-                    when (value) {
-                        is String -> {
+            for ((key, value) in mapToSave) {
+                when (value) {
+                    is String -> {
+                        serializer.startTag(null, "string")
+                        serializer.attribute(null, "name", key)
+                        serializer.text(value)
+                        serializer.endTag(null, "string")
+                    }
+
+                    is Boolean -> {
+                        serializer.startTag(null, "boolean")
+                        serializer.attribute(null, "name", key)
+                        serializer.attribute(null, "value", value.toString())
+                        serializer.endTag(null, "boolean")
+                    }
+
+                    is Int -> {
+                        serializer.startTag(null, "int")
+                        serializer.attribute(null, "name", key)
+                        serializer.attribute(null, "value", value.toString())
+                        serializer.endTag(null, "int")
+                    }
+
+                    is Long -> {
+                        serializer.startTag(null, "long")
+                        serializer.attribute(null, "name", key)
+                        serializer.attribute(null, "value", value.toString())
+                        serializer.endTag(null, "long")
+                    }
+
+                    is Float -> {
+                        serializer.startTag(null, "float")
+                        serializer.attribute(null, "name", key)
+                        serializer.attribute(null, "value", value.toString())
+                        serializer.endTag(null, "float")
+                    }
+
+                    is Set<*> -> {
+                        serializer.startTag(null, "set")
+                        serializer.attribute(null, "name", key)
+                        value.filterIsInstance<String>().forEach { item ->
                             serializer.startTag(null, "string")
-                            serializer.attribute(null, "name", key)
-                            serializer.text(value)
+                            serializer.text(item)
                             serializer.endTag(null, "string")
                         }
-
-                        is Boolean -> {
-                            serializer.startTag(null, "boolean")
-                            serializer.attribute(null, "name", key)
-                            serializer.attribute(null, "value", value.toString())
-                            serializer.endTag(null, "boolean")
-                        }
-
-                        is Int -> {
-                            serializer.startTag(null, "int")
-                            serializer.attribute(null, "name", key)
-                            serializer.attribute(null, "value", value.toString())
-                            serializer.endTag(null, "int")
-                        }
-
-                        is Long -> {
-                            serializer.startTag(null, "long")
-                            serializer.attribute(null, "name", key)
-                            serializer.attribute(null, "value", value.toString())
-                            serializer.endTag(null, "long")
-                        }
-
-                        is Float -> {
-                            serializer.startTag(null, "float")
-                            serializer.attribute(null, "name", key)
-                            serializer.attribute(null, "value", value.toString())
-                            serializer.endTag(null, "float")
-                        }
-
-                        is Set<*> -> {
-                            serializer.startTag(null, "set")
-                            serializer.attribute(null, "name", key)
-                            value.filterIsInstance<String>().forEach { item ->
-                                serializer.startTag(null, "string")
-                                serializer.text(item)
-                                serializer.endTag(null, "string")
-                            }
-                            serializer.endTag(null, "set")
-                        }
+                        serializer.endTag(null, "set")
                     }
                 }
-
-                serializer.endTag(null, "map")
-                serializer.endDocument()
-                outputStream.fd.sync()
             }
+
+            serializer.endTag(null, "map")
+            serializer.endDocument()
+            serializer.flush()
+            atomicFile.finishWrite(outputStream)
+            outputStream = null
             true
         } catch (_: Exception) {
+            outputStream?.let(atomicFile::failWrite)
             false
         }
     }
 
-    override fun getAll(): Map<String, *> = synchronized(lock) { preferencesMap.toMap() }
+    override fun getAll(): Map<String, *> = synchronized(lock) {
+        preferencesMap.mapValues { (_, value) ->
+            if (value is Set<*>) value.toSet() else value
+        }
+    }
 
     override fun getString(key: String, defValue: String?): String? = synchronized(lock) {
         preferencesMap[key] as? String ?: defValue
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun getStringSet(key: String?, defValues: Set<String?>?): Set<String?>? = synchronized(lock) {
-        (preferencesMap[key] as? Set<String?>)?.toSet() ?: defValues
-    }
+    override fun getStringSet(key: String?, defValues: Set<String?>?): Set<String?>? =
+        synchronized(lock) {
+            if (key == null) return@synchronized defValues?.toSet()
+            (preferencesMap[key] as? Set<String?>)?.toSet() ?: defValues?.toSet()
+        }
 
     override fun getInt(key: String, defValue: Int): Int = synchronized(lock) {
         preferencesMap[key] as? Int ?: defValue
@@ -209,7 +223,7 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         ): SharedPreferences.Editor {
             if (key == null) return this
             if (values == null) return remove(key)
-            localChanges[key] = values.toSet()
+            localChanges[key] = values.filterNotNull().toSet()
             keysToRemove.remove(key)
             return this
         }
@@ -256,28 +270,37 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         }
 
         override fun commit(): Boolean {
-            val (changedKeys, dataSnapshot, listenerSnapshot) = synchronized(lock) {
+            val changedKeys: Set<String>
+            val listenerSnapshot: List<SharedPreferences.OnSharedPreferenceChangeListener>
+
+            synchronized(lock) {
                 val before = preferencesMap.toMap()
+                val updated = if (clearAll) mutableMapOf() else preferencesMap.toMutableMap()
 
-                if (clearAll) preferencesMap.clear()
-                keysToRemove.forEach(preferencesMap::remove)
-                localChanges.forEach { (key, value) -> preferencesMap[key] = value }
+                keysToRemove.forEach(updated::remove)
+                localChanges.forEach { (key, value) ->
+                    updated[key] = if (value is Set<*>) value.toSet() else value
+                }
 
-                val changed = (before.keys + preferencesMap.keys)
-                    .filterTo(linkedSetOf()) { before[it] != preferencesMap[it] }
+                val changed = (before.keys + updated.keys)
+                    .filterTo(linkedSetOf()) { before[it] != updated[it] }
 
-                Triple(changed, preferencesMap.toMap(), listeners.toList())
+                if (changed.isNotEmpty() && !saveData(updated)) return false
+
+                preferencesMap = updated
+                changedKeys = changed
+                listenerSnapshot = listeners.toList()
+                localChanges.clear()
+                keysToRemove.clear()
+                clearAll = false
             }
 
-            val persisted = saveData(dataSnapshot)
-            if (persisted && changedKeys.isNotEmpty()) {
-                changedKeys.forEach { key ->
-                    listenerSnapshot.forEach { listener ->
-                        listener.onSharedPreferenceChanged(this@CDSharedPreferences, key)
-                    }
+            for (key in changedKeys) {
+                listenerSnapshot.forEach { listener ->
+                    listener.onSharedPreferenceChanged(this@CDSharedPreferences, key)
                 }
             }
-            return persisted
+            return true
         }
     }
 }
