@@ -99,7 +99,7 @@ jobs:
             lintBusinessDebug
 
       - name: Configure release signing
-        if: github.event_name != 'pull_request'
+        if: steps.version.outputs.is_tag == 'true'
         env:
           KEY_STORE: ${{ secrets.KEY_STORE }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -121,7 +121,7 @@ jobs:
           printf '%s\n' "androidStoreFile=key.jks" >> gradle.properties
           printf '%s' "$KEY_STORE" | base64 --decode > key.jks
 
-      - name: Build signed APKs
+      - name: Prepare signed APKs
         if: github.event_name != 'pull_request'
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -131,35 +131,31 @@ jobs:
         run: |
           set -euo pipefail
 
+          mkdir -p signed-apks
+
           if [[ "$IS_TAG" == "true" ]]; then
             ./gradlew --no-daemon --stacktrace clean \
               assembleWhatsappRelease \
               assembleBusinessRelease \
               -PreleaseTag="$RELEASE_TAG"
-          else
-            ./gradlew --no-daemon --stacktrace clean \
-              assembleWhatsappRelease \
-              assembleBusinessRelease
-          fi
 
-          mkdir -p signed-apks
-          mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/release -maxdepth 1 -type f -name '*.apk' | sort)
-          mapfile -t WB_APKS < <(find app/build/outputs/apk/business/release -maxdepth 1 -type f -name '*.apk' | sort)
-
-          if [[ "${#WA_APKS[@]}" -ne 1 || "${#WB_APKS[@]}" -ne 1 ]]; then
-            echo "::error::Expected exactly one release APK for each flavor"
-            printf 'WhatsApp APKs: %s\n' "${WA_APKS[*]:-none}"
-            printf 'Business APKs: %s\n' "${WB_APKS[*]:-none}"
-            exit 1
-          fi
-
-          if [[ "$IS_TAG" == "true" ]]; then
+            mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/release -maxdepth 1 -type f -name '*.apk' | sort)
+            mapfile -t WB_APKS < <(find app/build/outputs/apk/business/release -maxdepth 1 -type f -name '*.apk' | sort)
             WA_NAME="WaEnhancer-$VERSION.apk"
             WB_NAME="WaEnhancer-Business-$VERSION.apk"
           else
+            mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/debug -maxdepth 1 -type f -name '*.apk' | sort)
+            mapfile -t WB_APKS < <(find app/build/outputs/apk/business/debug -maxdepth 1 -type f -name '*.apk' | sort)
             SHA8="${GITHUB_SHA:0:8}"
             WA_NAME="WaEnhancer-$VERSION-ci-$SHA8.apk"
             WB_NAME="WaEnhancer-Business-$VERSION-ci-$SHA8.apk"
+          fi
+
+          if [[ "${#WA_APKS[@]}" -ne 1 || "${#WB_APKS[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one APK for each flavor"
+            printf 'WhatsApp APKs: %s\n' "${WA_APKS[*]:-none}"
+            printf 'Business APKs: %s\n' "${WB_APKS[*]:-none}"
+            exit 1
           fi
 
           cp "${WA_APKS[0]}" "signed-apks/$WA_NAME"
