@@ -16,7 +16,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
 
     companion object {
         private const val LATEST_RELEASE_API = "https://api.github.com/repos/Dev4Mod/WaEnhancer/releases/latest"
-        private const val TELEGRAM_UPDATE_URL = "https://t.me/waenhancher"
+        private const val TELEGRAM_UPDATE_URL = "https://t.me/waenhancer"
 
         private val httpClient: OkHttpClient by lazy {
             OkHttpClient.Builder()
