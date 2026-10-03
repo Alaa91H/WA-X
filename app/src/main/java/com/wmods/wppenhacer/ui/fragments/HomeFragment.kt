@@ -52,23 +52,40 @@ class HomeFragment : BaseFragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private var statusReceiverRegistered = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val intentFilter = IntentFilter("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP")
-        ContextCompat.registerReceiver(requireContext(), object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                try {
-                    if (FeatureLoader.PACKAGE_WPP == intent.getStringExtra("PKG")) {
-                        receiverBroadcastWpp(context, intent)
-                    } else {
-                        receiverBroadcastBusiness(context, intent)
-                    }
-                } catch (_: Exception) {
+    private val statusReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            try {
+                when (intent.getStringExtra("PKG")) {
+                    FeatureLoader.PACKAGE_WPP -> receiverBroadcastWpp(context, intent)
+                    FeatureLoader.PACKAGE_BUSINESS -> receiverBroadcastBusiness(context, intent)
                 }
+            } catch (_: Exception) {
             }
-        }, intentFilter, ContextCompat.RECEIVER_EXPORTED)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!statusReceiverRegistered) {
+            val intentFilter = IntentFilter("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP")
+            ContextCompat.registerReceiver(
+                requireContext(),
+                statusReceiver,
+                intentFilter,
+                ContextCompat.RECEIVER_EXPORTED
+            )
+            statusReceiverRegistered = true
+        }
+    }
+
+    override fun onStop() {
+        if (statusReceiverRegistered) {
+            runCatching { requireContext().unregisterReceiver(statusReceiver) }
+            statusReceiverRegistered = false
+        }
+        super.onStop()
     }
 
     override fun onCreateView(
@@ -118,7 +135,7 @@ class HomeFragment : BaseFragment() {
 
         binding.updateCard.setOnClickListener { view ->
             animateClick(view)
-            Utils.openLink(requireActivity(), "https://t.me/waenhancher")
+            Utils.openLink(requireActivity(), "https://t.me/waenhancer")
         }
 
         binding.diagBtn.setOnClickListener { view ->
@@ -438,8 +455,12 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun checkWpp(activity: FragmentActivity) {
-        val checkWpp = Intent("${BuildConfig.APPLICATION_ID}.CHECK_WPP")
-        activity.sendBroadcast(checkWpp)
+        listOf(FeatureLoader.PACKAGE_WPP, FeatureLoader.PACKAGE_BUSINESS).forEach { packageName ->
+            val checkWpp = Intent("${BuildConfig.APPLICATION_ID}.CHECK_WPP").apply {
+                setPackage(packageName)
+            }
+            activity.sendBroadcast(checkWpp)
+        }
     }
 
     private fun checkForUpdates() {
@@ -454,7 +475,7 @@ class HomeFragment : BaseFragment() {
                     .build()
 
                 val request = Request.Builder()
-                    .url("https://api.github.com/repos/Dev4Mod/WaEnhancer/releases/latest")
+                    .url("https://api.github.com/repos/Alaa91H/WaEnhancer/releases/latest")
                     .build()
 
                 client.newCall(request).execute().use { response ->
