@@ -13,7 +13,6 @@ import android.content.SharedPreferences
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.lang.reflect.Field
-import java.util.stream.Collectors
 
 class LockedChatsEnhancer(classLoader: ClassLoader, preferences:SharedPreferences) :
     Feature(classLoader, preferences) {
@@ -61,19 +60,21 @@ class LockedChatsEnhancer(classLoader: ClassLoader, preferences:SharedPreference
         XposedBridge.hookMethod(loadedContacts, object : XC_MethodHook() {
 
             override fun beforeHookedMethod(param: MethodHookParam) {
-                val list = XposedHelpers.getObjectField(param.args[0], "A01") as? List<*>? ?: return
-                val lockedChats = lockedChatsFields[1].get(chatCache) as HashSet<*>?
-                val lockedNumbers = lockedChats!!.stream()
-                    .map<String?> { userjid: Any? -> UserJid(userjid).phoneNumber }.collect(
-                        Collectors.toList()
-                    )
-                val filteredList = list.filter { item: Any? ->
-                    if (!WaContactWpp.TYPE.isInstance(item)) return@filter false
-                    val waContact = WaContactWpp(item)
-                    val phoneNumber = waContact.userJid.phoneNumber
-                    lockedNumbers.contains(phoneNumber)
+                val holder = param.args.firstOrNull() ?: return
+                val list = XposedHelpers.getObjectField(holder, "A01") as? List<*> ?: return
+                val cache = chatCache ?: return
+                val lockedChatsField = lockedChatsFields.getOrNull(1) ?: return
+                val lockedChats = lockedChatsField.get(cache) as? HashSet<*> ?: return
+                val lockedNumbers = lockedChats.mapNotNull { userJid ->
+                    UserJid(userJid).phoneNumber
+                }.toHashSet()
+
+                val filteredList = list.filterNot { item ->
+                    if (!WaContactWpp.TYPE.isInstance(item)) return@filterNot false
+                    val phoneNumber = WaContactWpp(item).userJid.phoneNumber
+                    phoneNumber != null && phoneNumber in lockedNumbers
                 }
-                XposedHelpers.setObjectField(param.args[0], "A01", filteredList)
+                XposedHelpers.setObjectField(holder, "A01", filteredList)
             }
         })
     }
