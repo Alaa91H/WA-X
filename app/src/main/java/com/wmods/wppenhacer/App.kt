@@ -78,6 +78,7 @@ class App : Application() {
 
     fun restartApp(packageWpp: String) {
         val intent = Intent(BuildConfig.APPLICATION_ID + ".WHATSAPP.RESTART").apply {
+            setPackage(packageWpp)
             putExtra("PKG", packageWpp)
         }
         sendBroadcast(intent)
