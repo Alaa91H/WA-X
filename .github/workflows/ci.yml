@@ -323,3 +323,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" "$GITHUB_SHA" -m "WaEnhancer $TAG"
           git push origin "$TAG"
+
+      - name: Delete merged branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          while read -r _ ref; do
+            branch="${ref#refs/heads/}"
+            if [[ "$branch" != "master" ]]; then
+              echo "Deleting merged branch: $branch"
+              git push origin --delete "$branch"
+            fi
+          done < <(git ls-remote --heads origin)
