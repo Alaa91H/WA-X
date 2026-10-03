@@ -53,14 +53,8 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
 
             if (hash.isBlank()) return
 
-            val packageInfo = try {
-                mActivity.packageManager.getPackageInfo(BuildConfig.APPLICATION_ID, 0)
-            } catch (e: Exception) {
-                XposedBridge.log(e)
-                return
-            }
-
-            val isNewVersion = !packageInfo.versionName!!.lowercase().contains(hash.lowercase().trim())
+            val isNewVersion =
+                !BuildConfig.VERSION_NAME.lowercase().contains(hash.lowercase().trim())
             val isIgnored = WppCore.getPrivString("ignored_version", "") == hash
 
             if (isNewVersion && !isIgnored) {
