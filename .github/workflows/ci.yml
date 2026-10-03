@@ -190,41 +190,6 @@ jobs:
           compression-level: 0
           retention-days: 14
 
-  cleanup-branches:
-    name: Remove merged branches
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-
-      - name: Delete branches already merged into master
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin --prune '+refs/heads/*:refs/remotes/origin/*'
-
-          while read -r sha ref; do
-            branch="${ref#refs/heads/}"
-            if [[ "$branch" == "master" ]]; then
-              continue
-            fi
-
-            if git merge-base --is-ancestor "$sha" "$GITHUB_SHA"; then
-              echo "Deleting merged branch: $branch"
-              git push origin --delete "$branch"
-            else
-              echo "::error::Refusing to delete unmerged branch: $branch ($sha)"
-              exit 1
-            fi
-          done < <(git ls-remote --heads origin)
-
   release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
@@ -354,15 +319,3 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" "$GITHUB_SHA" -m "WaEnhancer $TAG"
           git push origin "$TAG"
-
-      - name: Delete merged branches
-        shell: bash
-        run: |
-          set -euo pipefail
-          while read -r _ ref; do
-            branch="${ref#refs/heads/}"
-            if [[ "$branch" != "master" ]]; then
-              echo "Deleting merged branch: $branch"
-              git push origin --delete "$branch"
-            fi
-          done < <(git ls-remote --heads origin)
