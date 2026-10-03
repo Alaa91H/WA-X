@@ -24,8 +24,6 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
 
     private fun loadData() {
         synchronized(lock) {
-            if (!atomicFile.exists()) return
-
             try {
                 atomicFile.openRead().use { inputStream ->
                     val parser = Xml.newPullParser()
