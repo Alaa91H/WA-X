@@ -438,8 +438,12 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun checkWpp(activity: FragmentActivity) {
-        val checkWpp = Intent("${BuildConfig.APPLICATION_ID}.CHECK_WPP")
-        activity.sendBroadcast(checkWpp)
+        listOf(FeatureLoader.PACKAGE_WPP, FeatureLoader.PACKAGE_BUSINESS).forEach { packageName ->
+            val checkWpp = Intent("${BuildConfig.APPLICATION_ID}.CHECK_WPP").apply {
+                setPackage(packageName)
+            }
+            activity.sendBroadcast(checkWpp)
+        }
     }
 
     private fun checkForUpdates() {
