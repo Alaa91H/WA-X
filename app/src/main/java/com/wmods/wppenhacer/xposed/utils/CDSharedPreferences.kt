@@ -277,6 +277,9 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
                 }
 
                 snapshot = preferencesMap.toMap()
+                localChanges.clear()
+                keysToRemove.clear()
+                clearAll = false
             }
 
             val saved = saveData(snapshot)
