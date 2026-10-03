@@ -4,8 +4,11 @@ import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
+import android.os.Binder
 import android.os.Bundle
+import android.os.Process
 import com.wmods.wppenhacer.xposed.bridge.service.HookBinder
+import com.wmods.wppenhacer.xposed.core.FeatureLoader
 
 class HookProvider : ContentProvider() {
     override fun onCreate(): Boolean {
@@ -13,7 +16,22 @@ class HookProvider : ContentProvider() {
         return true
     }
 
+    private fun isCallerAllowed(): Boolean {
+        val callingUid = Binder.getCallingUid()
+        if (callingUid == Process.myUid() || callingUid == Process.SYSTEM_UID) return true
+
+        val packages = context?.packageManager?.getPackagesForUid(callingUid).orEmpty()
+        return packages.any {
+            it == "com.android.providers.settings" ||
+                it == FeatureLoader.PACKAGE_WPP ||
+                it == FeatureLoader.PACKAGE_BUSINESS
+        }
+    }
+
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        if (!isCallerAllowed()) {
+            throw SecurityException("Unauthorized WaEnhancer hook provider caller")
+        }
         context?.let(HookBinder::initialize)
         if (method == "getHookBinder") {
             val result = Bundle()
