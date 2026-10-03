@@ -3,7 +3,8 @@ name: Dependabot CI
 on:
   pull_request:
     branches:
-      - dev
+      - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,5 +29,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build WhatsApp Debug
-        run: ./gradlew assembleWhatsappDebug
+      - name: Build debug variants
+        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug
