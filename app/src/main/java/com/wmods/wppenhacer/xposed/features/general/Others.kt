@@ -446,17 +446,38 @@ class Others(loader: ClassLoader, preferences:SharedPreferences) : Feature(loade
         sb.append(String.format(Utils.application.getString(R.string.phone_number_s), number)).append("\n")
         
         val ip = XposedHelpers.getObjectField(wamCall, "callPeerIpStr") as String?
-        if (ip != null) {
-            val client = OkHttpClient.Builder().build()
-            val url = "http://ip-api.com/json/$ip"
-            val request = Request.Builder().url(url).build()
-            val content = client.newCall(request).execute().body.string()
-            val json = JSONObject(content)
-            val country = json.getString("country")
-            val city = json.getString("city")
-            sb.append(String.format(Utils.application.getString(R.string.country_s), country)).append("\n")
-              .append(String.format(Utils.application.getString(R.string.city_s), city)).append("\n")
-              .append(String.format(Utils.application.getString(R.string.ip_s), ip)).append("\n")
+        if (!ip.isNullOrBlank()) {
+            runCatching {
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(4, TimeUnit.SECONDS)
+                    .readTimeout(4, TimeUnit.SECONDS)
+                    .build()
+                val url = "https://ipapi.co/$ip/json/"
+                val request = Request.Builder().url(url).build()
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use
+                    val json = JSONObject(response.body.string())
+                    val country = json.optString("country_name")
+                    val city = json.optString("city")
+                    if (country.isNotBlank()) {
+                        sb.append(
+                            String.format(
+                                Utils.application.getString(R.string.country_s),
+                                country
+                            )
+                        ).append("\n")
+                    }
+                    if (city.isNotBlank()) {
+                        sb.append(
+                            String.format(
+                                Utils.application.getString(R.string.city_s),
+                                city
+                            )
+                        ).append("\n")
+                    }
+                }
+            }.onFailure { logDebug("IP geolocation failed", it) }
+            sb.append(String.format(Utils.application.getString(R.string.ip_s), ip)).append("\n")
         }
         val platform = XposedHelpers.getObjectField(wamCall, "callPeerPlatform") as String?
         if (platform != null)
