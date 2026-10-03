@@ -2,6 +2,7 @@ package com.wmods.wppenhacer.utils
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.os.Process
 import com.topjohnwu.superuser.Shell
 import com.wmods.wppenhacer.R
 import org.json.JSONArray
@@ -179,15 +180,21 @@ object RootDiagnostics {
 
             listOf(cacheFile, walFile, shmFile, journalFile).forEach { it.delete() }
 
+            val uid = Process.myUid()
+            val copiedFiles = listOf(cacheFile, walFile, shmFile, journalFile)
             Shell.cmd(
                 "cp $LSP_CONFIG_DB ${cacheFile.absolutePath} && " +
                         "cp $LSP_CONFIG_DB-wal ${walFile.absolutePath} 2>/dev/null; " +
                         "cp $LSP_CONFIG_DB-shm ${shmFile.absolutePath} 2>/dev/null; " +
                         "cp $LSP_CONFIG_DB-journal ${journalFile.absolutePath} 2>/dev/null; " +
-                        "chmod 777 ${cacheFile.absolutePath} ${walFile.absolutePath} ${shmFile.absolutePath} ${journalFile.absolutePath} 2>/dev/null"
+                        "chown $uid:$uid ${cacheFile.absolutePath} ${walFile.absolutePath} ${shmFile.absolutePath} ${journalFile.absolutePath} 2>/dev/null; " +
+                        "chmod 600 ${cacheFile.absolutePath} ${walFile.absolutePath} ${shmFile.absolutePath} ${journalFile.absolutePath} 2>/dev/null"
             ).exec()
 
-            if (cacheFile.exists() && isHmaInLsposedDb(cacheFile)) {
+            val isActive = cacheFile.exists() && isHmaInLsposedDb(cacheFile)
+            copiedFiles.forEach { it.delete() }
+
+            if (isActive) {
                 callback.onLog(
                     LogEntry(
                         context.getString(R.string.diag_hma_lsposed_active),
