@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build Android
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     permissions:
       contents: read
@@ -34,23 +34,41 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug variants and run unit tests
-        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest
+      - name: Build and test all variants
+        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest assembleWhatsappRelease assembleBusinessRelease
 
-      - name: Build release variants
-        run: ./gradlew assembleWhatsappRelease assembleBusinessRelease
+  lint:
+    name: Android Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5.6.0
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Run Android lint
         shell: bash
         run: |
           set +e
-          ./gradlew lintWhatsappDebug lintBusinessDebug
+          ./gradlew --continue lintWhatsappDebug lintBusinessDebug
           status=$?
-          for report in app/build/intermediates/lint_intermediate_text_report/*/lintReport*/lint-results-*.txt; do
-            if [ -f "$report" ]; then
-              echo "::group::$report"
-              cat "$report"
-              echo "::endgroup::"
-            fi
+          find app/build -type f -name 'lint-results-*.txt' -print0 2>/dev/null | while IFS= read -r -d '' report; do
+            echo "::group::$report"
+            cat "$report"
+            echo "::endgroup::"
           done
           exit $status
