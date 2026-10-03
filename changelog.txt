@@ -1,3 +1,6 @@
 [FIXED]
-* We fixed some bugs reported by users
-* Fixed version checking
+* Added compatibility with WhatsApp 2.26.32.x (official stable)
+* Hardened bridge and remote-preference IPC access
+* Completed custom SharedPreferences set/apply/clear/commit handling
+* Fixed release builds to publish release APKs only
+* Fixed CI branch targeting and Telegram update link
