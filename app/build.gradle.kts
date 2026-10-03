@@ -94,7 +94,7 @@ android {
             //noinspection NotShrinkingResources
             isShrinkResources = false
             signingConfig =
-                if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else signingConfigs["debug"]
+                if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else null
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
