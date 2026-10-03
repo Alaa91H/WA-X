@@ -4,13 +4,16 @@
 * Added Android 17 / API 37 support to the downgrade compatibility hook.
 
 [SECURITY]
-* Restricted bridge Binder access to WaEnhancer, WhatsApp, and WhatsApp Business UIDs.
+* Restricted bridge Binder access to trusted UIDs and shared external-storage paths.
 * Restricted remote preference reads to trusted WaEnhancer/WhatsApp callers.
 * Protected internal control broadcasts with a signature-level permission.
+* Blocked unauthorized HookProvider and SettingsProvider bridge callers.
+* Disabled application data backup.
 * Added authentication for Tasker MESSAGE_SENT intents and scoped outgoing Tasker broadcasts.
 
 [STABILITY]
 * Completed the custom SharedPreferences implementation (string sets, clear, apply, commit).
 * Fixed HookProvider initialization.
 * Fixed Tasker event delivery that was previously disabled unconditionally.
-* Release workflow now builds signed release APKs and fails when signing secrets are missing.
+* Release workflow now builds signed release APKs, uses least-privilege Actions permissions, and fails when signing secrets are missing.
+* Update checks now use this fork's release feed with safer tag parsing.
