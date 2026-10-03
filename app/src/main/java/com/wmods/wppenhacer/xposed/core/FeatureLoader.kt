@@ -148,7 +148,7 @@ class FeatureLoader {
                         mApp = param.args[0] as Application
                         val application = mApp!!
                         val pref = getPreferences(application)
-                        Feature.DEBUG = pref.getBoolean("enablelogs", true)
+                        Feature.DEBUG = pref.getBoolean("enablelogs", false)
                         Utils.xprefs = pref
 
                         if (pref.getBoolean("bootloader_spoofer", false)) {
