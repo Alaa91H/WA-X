@@ -33,5 +33,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug variants
-        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug
+      - name: Build and test debug variants
+        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug testWhatsappDebugUnitTest testBusinessDebugUnitTest
