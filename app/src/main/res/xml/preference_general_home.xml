@@ -104,6 +104,13 @@
             app:summary="@string/enable_tasker_automation_sum"
             app:title="@string/enable_tasker_automation" />
 
+        <EditTextPreference
+            android:dependency="tasker"
+            android:inputType="textPassword"
+            app:key="tasker_auth_token"
+            app:summary="@string/tasker_auth_token_sum"
+            app:title="@string/tasker_auth_token" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
