@@ -494,9 +494,9 @@ class HomeFragment : BaseFragment() {
                         return@use
                     }
 
-                    val parts = tagName.split("-")
-                    val hash = if (parts.size > 1) parts[1].trim() else ""
-                    val isNewVersion = hash.isNotEmpty() && !BuildConfig.VERSION_NAME.lowercase().contains(hash.lowercase().trim())
+                    val releaseVersion = tagName.removePrefix("v").trim()
+                    val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-dev").substringBefore("+").trim()
+                    val isNewVersion = releaseVersion.isNotEmpty() && releaseVersion != currentVersion
 
                     updateCardState(success = true, isUpToDate = !isNewVersion, newVersion = tagName)
                 }
