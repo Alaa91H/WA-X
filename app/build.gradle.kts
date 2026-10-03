@@ -93,8 +93,7 @@ android {
             isMinifyEnabled = project.hasProperty("minify") && project.findProperty("minify").toString().toBoolean()
             //noinspection NotShrinkingResources
             isShrinkResources = false
-            signingConfig =
-                if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else signingConfigs["debug"]
+            signingConfig = signingConfigs["config"].takeIf { it.storeFile != null }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
