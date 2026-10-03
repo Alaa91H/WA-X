@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit
 class UpdateChecker(private val mActivity: Activity) : Runnable {
 
     companion object {
-        private const val LATEST_RELEASE_API = "https://api.github.com/repos/Dev4Mod/WaEnhancer/releases/latest"
-        private const val TELEGRAM_UPDATE_URL = "https://t.me/waenhancher"
+        private const val LATEST_RELEASE_API = "https://api.github.com/repos/Alaa91H/WaEnhancer/releases/latest"
+        private const val TELEGRAM_UPDATE_URL = "https://t.me/waenhancer"
 
         private val httpClient: OkHttpClient by lazy {
             OkHttpClient.Builder()
@@ -46,7 +46,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
 
                 if (tagName.isBlank()) return
 
-                hash = tagName.split("-")[1].trim()
+                hash = tagName.substringAfterLast("-", "").trim()
                 changelog = release.optString("body", "No changelog available.").trim()
                 publishedAt = release.optString("published_at", "")
             }

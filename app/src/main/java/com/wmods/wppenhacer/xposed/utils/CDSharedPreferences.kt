@@ -22,9 +22,6 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         loadData()
     }
 
-    /**
-     * Parses the SharedPreferences XML file format from the custom directory.
-     */
     private fun loadData() {
         synchronized(lock) {
             if (!xmlFile.exists() || !xmlFile.isFile) return
@@ -43,24 +40,24 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
                             if (key != null) {
                                 when (tagName) {
                                     "string" -> preferencesMap[key] = parser.nextText()
-                                    "boolean" -> {
-                                        val valueStr = parser.getAttributeValue(null, "value")
-                                        preferencesMap[key] = valueStr?.toBoolean() ?: false
-                                    }
-
-                                    "int" -> {
-                                        val valueStr = parser.getAttributeValue(null, "value")
-                                        preferencesMap[key] = valueStr?.toIntOrNull() ?: 0
-                                    }
-
-                                    "long" -> {
-                                        val valueStr = parser.getAttributeValue(null, "value")
-                                        preferencesMap[key] = valueStr?.toLongOrNull() ?: 0L
-                                    }
-
-                                    "float" -> {
-                                        val valueStr = parser.getAttributeValue(null, "value")
-                                        preferencesMap[key] = valueStr?.toFloatOrNull() ?: 0f
+                                    "boolean" -> preferencesMap[key] =
+                                        parser.getAttributeValue(null, "value")?.toBoolean() ?: false
+                                    "int" -> preferencesMap[key] =
+                                        parser.getAttributeValue(null, "value")?.toIntOrNull() ?: 0
+                                    "long" -> preferencesMap[key] =
+                                        parser.getAttributeValue(null, "value")?.toLongOrNull() ?: 0L
+                                    "float" -> preferencesMap[key] =
+                                        parser.getAttributeValue(null, "value")?.toFloatOrNull() ?: 0f
+                                    "set" -> {
+                                        val values = linkedSetOf<String>()
+                                        var nestedEvent = parser.next()
+                                        while (!(nestedEvent == XmlPullParser.END_TAG && parser.name == "set")) {
+                                            if (nestedEvent == XmlPullParser.START_TAG && parser.name == "string") {
+                                                values.add(parser.nextText())
+                                            }
+                                            nestedEvent = parser.next()
+                                        }
+                                        preferencesMap[key] = values
                                     }
                                 }
                             }
@@ -74,14 +71,11 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         }
     }
 
-    /**
-     * Saves the memory cache state back into the physical XML file.
-     */
-    private fun saveData(mapToSave: Map<String, Any?>) {
+    private fun saveData(mapToSave: Map<String, Any?>): Boolean {
         synchronized(lock) {
-            try {
-                if (xmlFile.parentFile?.exists() == false) {
-                    xmlFile.parentFile?.mkdirs()
+            return try {
+                if (xmlFile.parentFile?.exists() == false && xmlFile.parentFile?.mkdirs() == false) {
+                    return false
                 }
 
                 FileOutputStream(xmlFile).use { outputStream ->
@@ -126,32 +120,48 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
                                 serializer.attribute(null, "value", value.toString())
                                 serializer.endTag(null, "float")
                             }
+
+                            is Set<*> -> {
+                                serializer.startTag(null, "set")
+                                serializer.attribute(null, "name", key)
+                                value.filterIsInstance<String>().forEach { item ->
+                                    serializer.startTag(null, "string")
+                                    serializer.text(item)
+                                    serializer.endTag(null, "string")
+                                }
+                                serializer.endTag(null, "set")
+                            }
                         }
                     }
 
                     serializer.endTag(null, "map")
                     serializer.endDocument()
+                    outputStream.fd.sync()
                 }
+                true
             } catch (e: Exception) {
                 e.printStackTrace()
+                false
             }
         }
     }
 
-    // --- SharedPreferences Interface Methods ---
-
-    override fun getAll(): Map<String, *> = synchronized(lock) { preferencesMap.toMap() }
+    override fun getAll(): Map<String, *> = synchronized(lock) {
+        preferencesMap.mapValues { (_, value) ->
+            if (value is Set<*>) value.toSet() else value
+        }
+    }
 
     override fun getString(key: String, defValue: String?): String? = synchronized(lock) {
         preferencesMap[key] as? String ?: defValue
     }
 
-    override fun getStringSet(
-        p0: String?,
-        p1: Set<String?>?
-    ): Set<String?>? {
-        TODO("Not yet implemented")
-    }
+    override fun getStringSet(key: String?, defValues: Set<String?>?): Set<String?>? =
+        synchronized(lock) {
+            if (key == null) return@synchronized defValues
+            val stored = preferencesMap[key] as? Set<*> ?: return@synchronized defValues
+            stored.filterIsInstance<String>().toSet()
+        }
 
     override fun getInt(key: String, defValue: Int): Int = synchronized(lock) {
         preferencesMap[key] as? Int ?: defValue
@@ -173,15 +183,19 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         preferencesMap.containsKey(key)
     }
 
-    override fun edit(): SharedPreferences.Editor {
-        return CustomEditor()
+    override fun edit(): SharedPreferences.Editor = CustomEditor()
+
+    override fun registerOnSharedPreferenceChangeListener(
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) {
+        synchronized(lock) {
+            if (!listeners.contains(listener)) listeners.add(listener)
+        }
     }
 
-    override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
-        synchronized(lock) { listeners.add(listener) }
-    }
-
-    override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+    override fun unregisterOnSharedPreferenceChangeListener(
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) {
         synchronized(lock) { listeners.remove(listener) }
     }
 
@@ -191,16 +205,21 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
         private var clearAll = false
 
         override fun putString(key: String, value: String?): SharedPreferences.Editor {
+            if (value == null) return remove(key)
             localChanges[key] = value
             keysToRemove.remove(key)
             return this
         }
 
         override fun putStringSet(
-            p0: String?,
-            p1: Set<String?>?
-        ): SharedPreferences.Editor? {
-            TODO("Not yet implemented")
+            key: String?,
+            values: Set<String?>?
+        ): SharedPreferences.Editor {
+            if (key == null) return this
+            if (values == null) return remove(key)
+            localChanges[key] = values.filterNotNull().toSet()
+            keysToRemove.remove(key)
+            return this
         }
 
         override fun putInt(key: String, value: Int): SharedPreferences.Editor {
@@ -233,16 +252,56 @@ class CDSharedPreferences(private val xmlFile: File) : SharedPreferences {
             return this
         }
 
-        override fun apply() {
-            TODO("Not yet implemented")
+        override fun clear(): SharedPreferences.Editor {
+            clearAll = true
+            localChanges.clear()
+            keysToRemove.clear()
+            return this
         }
 
-        override fun clear(): SharedPreferences.Editor? {
-            TODO("Not yet implemented")
+        override fun apply() {
+            commit()
         }
 
         override fun commit(): Boolean {
-            TODO("Not yet implemented")
+            val changedKeys = linkedSetOf<String>()
+            val listenersSnapshot: List<SharedPreferences.OnSharedPreferenceChangeListener>
+
+            synchronized(lock) {
+                val updated = if (clearAll) {
+                    changedKeys.addAll(preferencesMap.keys)
+                    mutableMapOf()
+                } else {
+                    preferencesMap.toMutableMap()
+                }
+
+                for (key in keysToRemove) {
+                    if (updated.remove(key) != null) changedKeys.add(key)
+                }
+
+                for ((key, value) in localChanges) {
+                    val storedValue = if (value is Set<*>) value.toSet() else value
+                    if (updated[key] != storedValue) {
+                        updated[key] = storedValue
+                        changedKeys.add(key)
+                    }
+                }
+
+                if (!saveData(updated)) return false
+
+                preferencesMap = updated
+                listenersSnapshot = listeners.toList()
+                localChanges.clear()
+                keysToRemove.clear()
+                clearAll = false
+            }
+
+            for (key in changedKeys) {
+                listenersSnapshot.forEach { listener ->
+                    listener.onSharedPreferenceChanged(this@CDSharedPreferences, key)
+                }
+            }
+            return true
         }
     }
 }
