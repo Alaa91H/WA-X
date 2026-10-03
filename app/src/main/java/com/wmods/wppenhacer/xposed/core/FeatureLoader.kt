@@ -152,8 +152,13 @@ class FeatureLoader {
                         Utils.xprefs = pref
 
                         if (pref.getBoolean("bootloader_spoofer", false)) {
-                            HookBL.hook(loader, pref)
-                            XposedBridge.log("Bootloader Spoofer is Injected")
+                            runCatching {
+                                HookBL.hook(loader, pref)
+                                XposedBridge.log("Bootloader Spoofer is Injected")
+                            }.onFailure {
+                                XposedBridge.log("Bootloader Spoofer initialization failed")
+                                XposedBridge.log(it)
+                            }
                         }
 
                         val packageManager = application.packageManager
@@ -176,7 +181,12 @@ class FeatureLoader {
                             initializeModuleContext()
                             val timeMillis = System.currentTimeMillis()
                             UnobfuscatorCache.init(application)
-                            SharedPreferencesWrapper.hookInit(application.classLoader)
+                            runCatching {
+                                SharedPreferencesWrapper.hookInit(application.classLoader)
+                            }.onFailure {
+                                XposedBridge.log("SharedPreferences wrapper initialization failed")
+                                XposedBridge.log(it)
+                            }
                             ReflectionUtils.initCache(application)
 
                             val isSupported = supportedVersions?.any { s ->
