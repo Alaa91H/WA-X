@@ -5,7 +5,7 @@ on:
 
 jobs:
   release:
-    permissions: write-all
+    permissions:\n      contents: write
     runs-on: ubuntu-latest
     env:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -35,23 +35,28 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$VERSION-$SHA8" >> $GITHUB_OUTPUT
 
-      - name: Write key
+      - name: Write signing key
         env:
           KEY_STORE: ${{ secrets.KEY_STORE }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ ! -z "$KEY_STORE" ]; then
-          echo androidStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
-          echo androidKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
-          echo androidKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
-          echo androidStoreFile='key.jks' >> gradle.properties
-          echo "$KEY_STORE" | base64 --decode > key.jks
+          if [ -z "$KEY_STORE" ] || [ -z "$KEY_STORE_PASSWORD" ] || [ -z "$ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Release signing secrets are required"
+            exit 1
           fi
+          echo "androidStorePassword=$KEY_STORE_PASSWORD" >> gradle.properties
+          echo "androidKeyAlias=$ALIAS" >> gradle.properties
+          echo "androidKeyPassword=$KEY_PASSWORD" >> gradle.properties
+          echo "androidStoreFile=key.jks" >> gradle.properties
+          echo "$KEY_STORE" | base64 --decode > key.jks
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build all variants
-        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug -Pminify=true
+      - name: Build all release variants
+        run: ./gradlew assembleWhatsappRelease assembleBusinessRelease
 
       - name: Upload to GitHub release
         uses: softprops/action-gh-release@v3
@@ -60,8 +65,8 @@ jobs:
           name: WaEnhancer ${{ steps.vars.outputs.version }}
           body_path: changelog.txt
           files: |
-            app/build/outputs/apk/whatsapp/debug/WaEnhancer*.apk
-            app/build/outputs/apk/business/debug/WaEnhancer-Business*.apk
+            app/build/outputs/apk/whatsapp/release/WaEnhancer*.apk
+            app/build/outputs/apk/business/release/WaEnhancer-Business*.apk
           tag_name: ${{ steps.vars.outputs.tag }}
 
       - name: Read changelog
