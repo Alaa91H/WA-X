@@ -25,22 +25,10 @@ jobs:
             gradle/libs.versions.toml
             **/gradle.properties
 
-      - name: Write key
-        env:
-          KEY_STORE: ${{ secrets.KEY_STORE }}
-        run: |
-          if [ ! -z "$KEY_STORE" ]; then
-          echo androidStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
-          echo androidKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
-          echo androidKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
-          echo androidStoreFile='key.jks' >> gradle.properties
-          echo "$KEY_STORE" | base64 --decode > key.jks
-          fi
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Business Release
+      - name: Build Business Debug
         run: ./gradlew assembleBusinessDebug -Pminify=true
 
       - name: Upload APK
