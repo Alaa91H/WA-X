@@ -60,8 +60,15 @@ class HideSeen(loader: ClassLoader, preferences: SharedPreferences) :
     }
 
     private fun hookEnforceHiding() {
+        val readReceiptMethod = runCatching {
+            Unobfuscator.loadReadReceiptMethod(classLoader)
+        }.getOrElse {
+            logDebug("Optional read-receipt hook unavailable", it)
+            return
+        }
+
         XposedBridge.hookMethod(
-            Unobfuscator.loadReadReceiptMethod(classLoader),
+            readReceiptMethod,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val fMessage = FMessageWpp(param.args[0])
