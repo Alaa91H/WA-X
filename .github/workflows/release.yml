@@ -5,7 +5,8 @@ on:
 
 jobs:
   release:
-    permissions: write-all
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     env:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -35,27 +36,22 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$VERSION-$SHA8" >> $GITHUB_OUTPUT
 
-      - name: Verify release signing secrets
+      - name: Write signing key
         env:
           KEY_STORE: ${{ secrets.KEY_STORE }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           ALIAS: ${{ secrets.ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          test -n "$KEY_STORE"
-          test -n "$KEY_STORE_PASSWORD"
-          test -n "$ALIAS"
-          test -n "$KEY_PASSWORD"
-
-      - name: Write key
-        env:
-          KEY_STORE: ${{ secrets.KEY_STORE }}
-        run: |
-          echo androidStorePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> gradle.properties
-          echo androidKeyAlias='${{ secrets.ALIAS }}' >> gradle.properties
-          echo androidKeyPassword='${{ secrets.KEY_PASSWORD }}' >> gradle.properties
-          echo androidStoreFile='key.jks' >> gradle.properties
-          echo "$KEY_STORE" | base64 --decode > key.jks
+          if [ -z "$KEY_STORE" ] || [ -z "$KEY_STORE_PASSWORD" ] || [ -z "$ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Release signing secrets are required"
+            exit 1
+          fi
+          printf '%s\n' "androidStorePassword=$KEY_STORE_PASSWORD" >> gradle.properties
+          printf '%s\n' "androidKeyAlias=$ALIAS" >> gradle.properties
+          printf '%s\n' "androidKeyPassword=$KEY_PASSWORD" >> gradle.properties
+          printf '%s\n' "androidStoreFile=key.jks" >> gradle.properties
+          printf '%s' "$KEY_STORE" | base64 --decode > key.jks
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
