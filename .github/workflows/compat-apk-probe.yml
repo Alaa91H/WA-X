@@ -37,7 +37,7 @@ jobs:
           echo "applicationId=$APP_ID"
           echo "versionName=$VERSION"
           test "$APP_ID" = "com.whatsapp"
-          test "$VERSION" = "2.26.32.84"
+          test "$VERSION" = "2.26.39.71"
 
       - name: Extract DEX files
         run: |
