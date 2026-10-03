@@ -155,7 +155,7 @@
 
         <receiver
             android:name=".receivers.WAFReceiver"
-            android:exported="true"
+            android:exported="false"
             tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="com.facebook.GET_PHONE_ID" />
