@@ -1883,25 +1883,52 @@ object Unobfuscator {
 
     fun loadOriginFMessageField(classLoader: ClassLoader): Field {
         return UnobfuscatorCache.getInstance().getField(classLoader) {
-            val result = bridge.findMethod {
+            val fMessageClass = loadFMessageClass(classLoader)
+
+            val preferredResult = bridge.findMethod {
                 matcher {
                     usingStrings("audio/ogg; codecs=opu")
                     returnType = Boolean::class.java.name
                 }
             }
-            val fMessageClass = loadFMessageClass(classLoader)
-            if (result.isEmpty()) {
-                throw RuntimeException("OriginFMessageField not found")
-            }
-            for (clazz in result) {
-                val fields = clazz.usingFields
-                for (field in fields) {
-                    val f = field.field.getFieldInstance(classLoader)
-                    if (fMessageClass.isAssignableFrom(f.declaringClass)) {
-                        return@getField f
+            for (methodData in preferredResult) {
+                for (fieldData in methodData.usingFields) {
+                    val field = fieldData.field.getFieldInstance(classLoader)
+                    if (fMessageClass.isAssignableFrom(field.declaringClass)) {
+                        return@getField field
                     }
                 }
             }
+
+            // Compatibility fallback used by the 2.26.32-supported implementation.
+            val legacyMarkers = arrayOf(
+                "audio/ogg; codecs=opus",
+                "audio/ogg",
+                "audio/amr",
+                "audio/mp4",
+                "audio/aac"
+            )
+            for (marker in legacyMarkers) {
+                val legacyResult = try {
+                    bridge.findMethod {
+                        matcher {
+                            addUsingString(marker, StringMatchType.Contains)
+                        }
+                    }
+                } catch (_: Exception) {
+                    continue
+                }
+
+                for (methodData in legacyResult) {
+                    for (fieldData in methodData.usingFields) {
+                        val field = fieldData.field.getFieldInstance(classLoader)
+                        if (fMessageClass.isAssignableFrom(field.declaringClass)) {
+                            return@getField field
+                        }
+                    }
+                }
+            }
+
             throw RuntimeException("OriginFMessageField field not found")
         }
     }
