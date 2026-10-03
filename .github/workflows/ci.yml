@@ -27,13 +27,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up JDK
-        uses: actions/setup-java@v5.6.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
@@ -100,13 +100,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up JDK
-        uses: actions/setup-java@v5.6.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
@@ -131,6 +131,13 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --tags --force
+
+          REMOTE_MASTER_SHA="$(git ls-remote origin refs/heads/master | awk '{print $1}')"
+          if [[ "$GITHUB_SHA" != "$REMOTE_MASTER_SHA" ]]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::This run is superseded by master $REMOTE_MASTER_SHA; release publishing is skipped."
+            exit 0
+          fi
 
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
             TAG_SHA="$(git rev-list -n 1 "$TAG")"
