@@ -160,7 +160,7 @@
 
         <receiver
             android:name=".receivers.WAFReceiver"
-            android:exported="false"
+            android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="com.facebook.GET_PHONE_ID" />
