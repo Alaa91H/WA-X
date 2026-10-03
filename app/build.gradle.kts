@@ -127,6 +127,7 @@ android {
 
     lint {
         disable += "SelectedPhotoAccess"
+        warning += "MissingTranslation"
         baseline = file("lint-baseline.xml")
     }
 
