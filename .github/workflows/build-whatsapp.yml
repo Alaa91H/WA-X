@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    permissions: write-all
+    permissions:\n      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,7 +39,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build WhatsApp Release
+      - name: Build WhatsApp Debug
         run: ./gradlew assembleWhatsappDebug -Pminify=true
 
       - name: Upload APK
