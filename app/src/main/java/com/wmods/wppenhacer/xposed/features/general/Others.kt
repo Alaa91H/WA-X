@@ -34,9 +34,6 @@ import com.wmods.wppenhacer.xposed.core.components.SharedPreferencesWrapper
 import com.wmods.wppenhacer.xposed.utils.collapseAndHide
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
 import org.luckypray.dexkit.query.enums.StringMatchType
 import org.luckypray.dexkit.util.DexSignUtil
 import java.io.File
@@ -419,17 +416,23 @@ class Others(loader: ClassLoader, preferences:SharedPreferences) : Feature(loade
 
         XposedBridge.hookAllMethods(clsCallEventCallback, "fieldstatsReady", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                if (clsWamCall.isInstance(param.args[0])) {
+                val wamCall = param.args.firstOrNull() ?: return
+                if (!clsWamCall.isInstance(wamCall)) return
 
-                    val callinfo = XposedHelpers.callMethod(param.thisObject, "getCallInfo") ?: return
-                    val userJid = FMessageWpp.UserJid(XposedHelpers.callMethod(callinfo, "getPeerJid"))
-                    if (userJid.isNull) return
-                    CompletableFuture.runAsync {
-                        try {
-                            showCallInformation(param.args[0], userJid)
-                        } catch (e: Exception) {
-                            logDebug(e)
-                        }
+                val callInfo = runCatching {
+                    XposedHelpers.callMethod(param.thisObject, "getCallInfo")
+                }.getOrNull() ?: return
+                val peerJid = runCatching {
+                    XposedHelpers.callMethod(callInfo, "getPeerJid")
+                }.getOrNull() ?: return
+                val userJid = FMessageWpp.UserJid(peerJid)
+                if (userJid.isNull) return
+
+                CompletableFuture.runAsync {
+                    try {
+                        showCallInformation(wamCall, userJid)
+                    } catch (e: Exception) {
+                        logDebug(e)
                     }
                 }
             }
@@ -445,24 +448,15 @@ class Others(loader: ClassLoader, preferences:SharedPreferences) : Feature(loade
             sb.append(String.format(Utils.application.getString(R.string.contact_s), contact)).append("\n")
         sb.append(String.format(Utils.application.getString(R.string.phone_number_s), number)).append("\n")
         
-        val ip = XposedHelpers.getObjectField(wamCall, "callPeerIpStr") as String?
-        if (ip != null) {
-            val client = OkHttpClient.Builder().build()
-            val url = "http://ip-api.com/json/$ip"
-            val request = Request.Builder().url(url).build()
-            val content = client.newCall(request).execute().body.string()
-            val json = JSONObject(content)
-            val country = json.getString("country")
-            val city = json.getString("city")
-            sb.append(String.format(Utils.application.getString(R.string.country_s), country)).append("\n")
-              .append(String.format(Utils.application.getString(R.string.city_s), city)).append("\n")
-              .append(String.format(Utils.application.getString(R.string.ip_s), ip)).append("\n")
+        val ip = XposedHelpers.getObjectField(wamCall, "callPeerIpStr") as? String
+        if (!ip.isNullOrBlank()) {
+            sb.append(String.format(Utils.application.getString(R.string.ip_s), ip)).append("\n")
         }
-        val platform = XposedHelpers.getObjectField(wamCall, "callPeerPlatform") as String?
-        if (platform != null)
+        val platform = XposedHelpers.getObjectField(wamCall, "callPeerPlatform") as? String
+        if (!platform.isNullOrBlank())
             sb.append(String.format(Utils.application.getString(R.string.platform_s), platform)).append("\n")
-        val wppVersion = XposedHelpers.getObjectField(wamCall, "callPeerAppVersion") as String?
-        if (wppVersion != null)
+        val wppVersion = XposedHelpers.getObjectField(wamCall, "callPeerAppVersion") as? String
+        if (!wppVersion.isNullOrBlank())
             sb.append(String.format(Utils.application.getString(R.string.wpp_version_s), wppVersion)).append("\n")
         
         Utils.showNotification(Utils.application.getString(R.string.call_information), sb.toString())
