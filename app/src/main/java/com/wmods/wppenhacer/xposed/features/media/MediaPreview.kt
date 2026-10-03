@@ -252,15 +252,17 @@ class MediaPreview(
                 cursor0?.use { cursor ->
                     if (cursor.count > 0) {
                         cursor.moveToFirst()
-                        var url = cursor.getString(0)
-                        val mimeType = cursor.getString(1)
-                        val mediaKey = cursor.getString(2)
+                        var url = cursor.getString(0).orEmpty()
+                        val mimeType = cursor.getString(1) ?: return@use
+                        val mediaKey = cursor.getString(2) ?: return@use
                         val directPath = cursor.getString(3)
                         val fileLength = cursor.getLong(4)
 
                         if (isNewsletter) {
+                            if (directPath.isNullOrBlank()) return@use
                             url = "https://mmg.whatsapp.net$directPath"
                         }
+                        if (url.isBlank()) return@use
 
                         val mainHandler = Handler(Looper.getMainLooper())
                         mainHandler.post {
