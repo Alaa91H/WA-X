@@ -12,7 +12,18 @@ plugins {
 val gitHash: String = providers.exec {
     commandLine("git", "rev-parse", "HEAD")
     isIgnoreExitValue = true
-}.standardOutput.asText.map { it.trim().uppercase(Locale.getDefault()).substring(0,8) }.getOrElse("UNKNOWN")
+}.standardOutput.asText.map { it.trim().uppercase(Locale.getDefault()).take(8) }.getOrElse("UNKNOWN")
+
+val baseVersionName = providers.gradleProperty("waeVersionName").get()
+val baseVersionCode = providers.gradleProperty("waeVersionCode").get().toInt()
+val releaseTag = providers.gradleProperty("releaseTag").orNull
+val releaseVersion = releaseTag?.removePrefix("v")
+
+if (releaseTag != null && releaseTag != "v$baseVersionName") {
+    throw GradleException("Release tag $releaseTag does not match configured version v$baseVersionName")
+}
+
+val resolvedVersionName = releaseVersion ?: "$baseVersionName-dev+$gitHash"
 
 android {
     namespace = "com.wmods.wppenhacer"
@@ -40,8 +51,8 @@ android {
         minSdk = 28
         //noinspection OldTargetApi
         targetSdk = 34
-        versionCode = 161
-        versionName = "1.6.1 ($gitHash)"
+        versionCode = baseVersionCode
+        versionName = resolvedVersionName
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
