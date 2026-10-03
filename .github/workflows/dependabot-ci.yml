@@ -1,13 +1,15 @@
-name: Dependabot CI
+name: Android CI
 
 on:
   pull_request:
     branches:
+      - master
       - dev
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build Android
+    name: Build and test Android
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,5 +30,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build WhatsApp Debug
-        run: ./gradlew assembleWhatsappDebug
+      - name: Build debug and release variants
+        run: ./gradlew assembleWhatsappDebug assembleBusinessDebug assembleWhatsappRelease assembleBusinessRelease
+
+      - name: Run unit tests
+        run: ./gradlew testWhatsappDebugUnitTest testBusinessDebugUnitTest
