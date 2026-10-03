@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <permission
+        android:name="${applicationId}.permission.INTERNAL_CONTROL"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="${applicationId}.permission.INTERNAL_CONTROL" />
+
     <queries>
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
