@@ -5,7 +5,8 @@ on:
 
 jobs:
   release:
-    permissions: write-all
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     env:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -80,7 +81,7 @@ jobs:
 
       - name: Post to Telegram channel
         if: ${{ env.BOT_TOKEN != '' }}
-        uses: Dev4Mod/telegram-github-action@master
+        uses: Dev4Mod/telegram-github-action@e1001298507b8e281cb05254f450b920871ecc85
         with:
           to: ${{ env.CHANNEL_ID }}
           token: ${{ env.BOT_TOKEN }}
