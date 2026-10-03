@@ -283,6 +283,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate release signing availability
+        env:
+          KEY_STORE: ${{ secrets.KEY_STORE }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in KEY_STORE KEY_STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Cannot create a release tag: missing signing secret $name"
+              exit 1
+            fi
+          done
+
       - name: Validate request and push tag
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
