@@ -1,52 +1,28 @@
-WaEnhancer 1.6.1
-Release date: 2026-10-03
+WaEnhancer 1.6.2
+Release date: 2026-10-04
 
 HIGHLIGHTS
-- Consolidated all active development, compatibility, and stability work into the master branch.
-- Removed obsolete branches after verifying that their required changes were preserved in master.
-- Extended WhatsApp 2.26.x compatibility with focused, low-risk hook fallbacks and defensive guards.
-- Replaced the previous multi-workflow setup with one hardened Android CI workflow.
-- Normal CI runs now build, verify, and retain signed APK artifacts without publishing a GitHub Release.
-- GitHub Releases are created only from version tags that match the configured application version.
+- Added support for WhatsApp 2.26.40.x and extended WhatsApp Business support to 2.26.39.x.
+- Version detection now falls back to built-in supported-version lists when the resource arrays cannot be read, and logs the resolved list for diagnostics.
+- Consolidated all build and release automation into a single hardened CI workflow.
+- Added an automated baseline report and a merge-blocking regression gate for lint, unit tests, and APK size.
 
 COMPATIBILITY
-- WhatsApp: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, 2.26.38.x, and 2.26.39.x.
-- WhatsApp Business: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, and 2.26.38.x.
-- Added Android 17 handling to the downgrade compatibility hook.
-- Restored the legacy audio-origin resolver as a fallback while preserving the newer resolver as the primary path.
-- Made optional read-receipt and context-menu hooks fail safely when WhatsApp signatures change.
-- Added null-safe handling around conversation view holders, receipt nodes, media preview metadata, and reflection-heavy paths.
-
-SECURITY
-- Restricted bridge, hook-provider, and remote-preference IPC calls to authorized WaEnhancer and WhatsApp callers.
-- Restricted bridge file operations to validated shared-storage roots while retaining removable-storage support.
-- Added explicit package targeting for internal restart and status-check broadcasts.
-- Protected internal control receivers with signature-level permissions where applicable.
-- Restricted ForceStartActivity to WhatsApp and WhatsApp Business packages.
-- Disabled Android backup for module data that may contain sensitive preferences or API credentials.
-- Hardened temporary LSPosed diagnostic database handling and removed unsafe world-readable behavior.
-- Added authenticated Tasker intents using a user-configured token.
-- Replaced insecure HTTP geolocation traffic with HTTPS and bounded network timeouts.
-- Disabled verbose runtime logging by default.
-- Pinned critical GitHub Actions to immutable commit SHAs.
-
-STABILITY
-- Completed the custom SharedPreferences implementation, including string sets, clear, commit/apply, listeners, and atomic persistence.
-- Fixed an API 28 MediaMetadataRetriever cleanup incompatibility.
-- Fixed locked-chat filtering so locked contacts are hidden instead of exclusively retained.
-- Prevented crashes when opening WaEnhancer from the WhatsApp menu.
-- Hardened update metadata parsing and semantic version/tag handling.
-- Scoped the home status receiver to the visible lifecycle to avoid stale receiver instances.
-- Added defensive handling for incomplete media, receipt, view-holder, and context-menu data.
-- Improved explicit internal broadcast routing to reduce accidental cross-app delivery.
+- WhatsApp: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, 2.26.38.x, 2.26.39.x, and 2.26.40.x.
+- WhatsApp Business: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, 2.26.38.x, and 2.26.39.x.
+- The module keeps starting when the supported-version resources fail to load instead of reporting a false incompatibility.
 
 BUILD & RELEASE
-- Release version metadata is centralized in gradle.properties.
+- One workflow now owns the pipeline: build, unit tests, Android lint, baseline regression gate, APK preparation, signature verification, tag validation, and GitHub Release publishing.
+- Normal runs build and sign debug APKs, keep them as CI artifacts for testing, and never publish a GitHub Release.
+- Only version tags use the release keystore; release APKs are never signed with the debug key.
 - The configured version must match the release tag in the form v<version>.
-- One CI workflow now handles build, unit tests, Android lint, APK preparation, signature verification, tag validation, and GitHub Release publishing.
-- Normal master builds produce signed debug APK artifacts for testing and never publish a GitHub Release.
-- Tag builds require the real release-signing secrets and build release APKs; they never fall back to the Android debug key.
-- APK signatures are verified before artifacts or releases are accepted.
-- GitHub Release assets are restricted to exactly two deterministic .apk files:
+- Release assets are exactly two deterministic .apk files:
   - WaEnhancer-<version>.apk
   - WaEnhancer-Business-<version>.apk
+- The regression gate compares each change against the baseline of the base revision, so a change cannot bypass the limits it is checked against by editing its own baseline.json.
+
+DEVELOPER NOTES
+- Gradle and Kotlin daemon JVMs now force the en-US locale, fixing local builds on non-English systems where Room code generation emitted localized digits.
+- Shell scripts are checked out with LF line endings on every platform.
+- The baseline generator records executed, skipped, failed, and errored unit tests from the JUnit XML output.
