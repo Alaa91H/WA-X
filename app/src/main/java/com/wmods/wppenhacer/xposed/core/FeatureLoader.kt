@@ -125,8 +125,29 @@ class FeatureLoader {
         const val PACKAGE_WPP = "com.whatsapp"
         const val PACKAGE_BUSINESS = "com.whatsapp.w4b"
 
+        private val FALLBACK_SUPPORTED_VERSIONS_WPP = listOf(
+            "2.26.32.xx",
+            "2.26.34.xx",
+            "2.26.35.xx",
+            "2.26.36.xx",
+            "2.26.37.xx",
+            "2.26.38.xx",
+            "2.26.39.xx",
+            "2.26.40.xx"
+        )
+
+        private val FALLBACK_SUPPORTED_VERSIONS_BUSINESS = listOf(
+            "2.26.32.xx",
+            "2.26.34.xx",
+            "2.26.35.xx",
+            "2.26.36.xx",
+            "2.26.37.xx",
+            "2.26.38.xx",
+            "2.26.39.xx"
+        )
+
         private val list = Collections.synchronizedList(ArrayList<ErrorItem>())
-        private var supportedVersions: List<String>? = null
+        private var supportedVersions: List<String> = emptyList()
         private var currentVersion: String? = null
         private var crashHandlerInstalled = false
         private const val UPDATE_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000L
@@ -164,13 +185,12 @@ class FeatureLoader {
                         currentVersion = packageInfo.versionName
                         installCrashHandler(application, packageInfo.versionName.orEmpty())
 
-                        val resIdArray = if (application.packageName == PACKAGE_WPP)
-                            R.array.supported_versions_wpp
-                        else
-                            R.array.supported_versions_business
-
                         supportedVersions =
-                            application.resources.getStringArray(resIdArray).toList()
+                            resolveSupportedVersions(application)
+                        XposedBridge.log(
+                            "Supported versions for ${application.packageName}: " +
+                                    supportedVersions.joinToString(", ")
+                        )
                         application.registerActivityLifecycleCallbacks(WaCallback())
                         registerReceivers()
 
@@ -181,9 +201,9 @@ class FeatureLoader {
                             SharedPreferencesWrapper.hookInit(application.classLoader)
                             ReflectionUtils.initCache(application)
 
-                            val isSupported = supportedVersions?.any { s ->
+                            val isSupported = supportedVersions.any { s ->
                                 packageInfo.versionName?.startsWith(s.replace(".xx", "")) ?: false
-                            } ?: false
+                            }
 
                             if (!isSupported) {
                                 disableExpirationVersion(application.classLoader)
@@ -238,7 +258,7 @@ class FeatureLoader {
                                 .setTitle(activity.getString(R.string.error_detected))
                                 .setMessage(
                                     "${activity.getString(R.string.version_error)}$msg\n\nCurrent Version: $currentVersion\nSupported Versions:\n${
-                                        supportedVersions?.joinToString(
+                                        supportedVersions.joinToString(
                                             "\n"
                                         )
                                     }"
@@ -281,6 +301,32 @@ class FeatureLoader {
                 BuildConfig.APPLICATION_ID + ".preferences",
                 BuildConfig.APPLICATION_ID + "_preferences"
             )
+        }
+
+        private fun resolveSupportedVersions(application: Application): List<String> {
+            val resIdArray = if (application.packageName == PACKAGE_WPP)
+                R.array.supported_versions_wpp
+            else
+                R.array.supported_versions_business
+
+            val fromResources = try {
+                application.resources.getStringArray(resIdArray)
+                    ?.filter { it.isNotBlank() }
+                    ?.toList()
+                    .orEmpty()
+            } catch (e: Throwable) {
+                XposedBridge.log("Can't read supported versions from resources: ${e.message}")
+                emptyList()
+            }
+
+            if (fromResources.isNotEmpty()) return fromResources
+
+            val fallback = if (application.packageName == PACKAGE_WPP)
+                FALLBACK_SUPPORTED_VERSIONS_WPP
+            else
+                FALLBACK_SUPPORTED_VERSIONS_BUSINESS
+            XposedBridge.log("Using built-in supported versions list: ${fallback.joinToString(", ")}")
+            return fallback
         }
 
         private fun initializeModuleContext() {
