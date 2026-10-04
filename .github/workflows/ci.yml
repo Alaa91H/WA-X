@@ -1,3 +1,17 @@
+# WaEnhancer Android CI - one workflow, tag-driven releases.
+#
+# Event matrix
+#   pull_request      : build, unit tests, Android lint and the baseline regression gate.
+#   push (master)     : the same checks plus signed debug APK artifacts for testing.
+#   push (tag v*)     : release-signed APKs, signature verification and GitHub Release.
+#   workflow_dispatch : manual run; also starts the release build for a tag created by CI,
+#                       because tags pushed with GITHUB_TOKEN do not trigger new runs.
+#
+# Release guarantees enforced by this file
+#   * waeVersionName must match the tag without the leading "v".
+#   * Only tag builds use the release keystore; every other build uses the debug key.
+#   * A GitHub Release is created only from a tag, never from a branch push.
+#   * Release assets are exactly two deterministic .apk files and nothing else.
 name: Android CI
 
 on:
@@ -98,6 +112,24 @@ jobs:
             lintWhatsappDebug \
             lintBusinessDebug
 
+      # The reference baseline comes from the base revision (pull-request base branch,
+      # pre-push commit or HEAD^), never from the change's own copy, so a change cannot
+      # raise the limits it is checked against by editing baseline.json.
+      - name: Enforce baseline regression gates
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/baseline/check_baseline.py \
+            --event-name "$EVENT_NAME" \
+            --base-ref "$BASE_REF" \
+            --pr-base-sha "$PR_BASE_SHA" \
+            --before-sha "$BEFORE_SHA"
+
       - name: Configure release signing
         if: steps.version.outputs.is_tag == 'true'
         env:
@@ -134,6 +166,7 @@ jobs:
           mkdir -p signed-apks
 
           if [[ "$IS_TAG" == "true" ]]; then
+            # Release build: signed with the real release keystore configured above.
             ./gradlew --no-daemon --stacktrace clean \
               assembleWhatsappRelease \
               assembleBusinessRelease \
@@ -144,6 +177,7 @@ jobs:
             WA_NAME="WaEnhancer-$VERSION.apk"
             WB_NAME="WaEnhancer-Business-$VERSION.apk"
           else
+            # Normal build: keep the debug-signed APKs as CI artifacts for testing.
             mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/debug -maxdepth 1 -type f -name '*.apk' | sort)
             mapfile -t WB_APKS < <(find app/build/outputs/apk/business/debug -maxdepth 1 -type f -name '*.apk' | sort)
             SHA8="${GITHUB_SHA:0:8}"
@@ -253,6 +287,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ ! -f changelog.txt ]]; then
+            echo "::error::changelog.txt is required as the release notes"
+            exit 1
+          fi
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "::error::Release $TAG already exists"
             exit 1
