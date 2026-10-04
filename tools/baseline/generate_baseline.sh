@@ -150,6 +150,32 @@ JAVA_FILES="$(find app/src/main/java -name '*.java' 2>/dev/null | wc -l | tr -d 
 TEST_FILES="$(find app/src/test app/src/androidTest -type f -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
 TEST_COUNT="$(grep -r -c '@Test' app/src/test app/src/androidTest 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}' || true)"
 
+# ---------------------------------------------------------- test results ---
+
+TEST_RESULTS_DIR="app/build/test-results"
+TR_FILES=0; TR_TESTS=0; TR_SKIPPED=0; TR_FAILURES=0; TR_ERRORS=0
+xml_attr() { # testsuite-tag attr-name
+    printf '%s' "$1" | grep -o " $2=\"[0-9]*\"" 2>/dev/null | head -n 1 | grep -o '[0-9]*' || true
+}
+while IFS= read -r xml; do
+    [[ -z "$xml" ]] && continue
+    suite="$(tr '\n' ' ' < "$xml" 2>/dev/null | grep -o '<testsuite [^>]*>' | head -n 1 || true)"
+    [[ -z "$suite" ]] && continue
+    TR_FILES=$((TR_FILES + 1))
+    v="$(xml_attr "$suite" tests)";    TR_TESTS=$((TR_TESTS + ${v:-0}))
+    v="$(xml_attr "$suite" skipped)";  TR_SKIPPED=$((TR_SKIPPED + ${v:-0}))
+    v="$(xml_attr "$suite" failures)"; TR_FAILURES=$((TR_FAILURES + ${v:-0}))
+    v="$(xml_attr "$suite" errors)";   TR_ERRORS=$((TR_ERRORS + ${v:-0}))
+done < <(find "$TEST_RESULTS_DIR" -type f -name '*.xml' 2>/dev/null | sort || true)
+
+if [[ "$TR_FILES" -eq 0 ]]; then
+    TR_JSON_TESTS=null; TR_JSON_SKIPPED=null; TR_JSON_FAILURES=null; TR_JSON_ERRORS=null
+    TR_REPORT="n/a (no JUnit XMLs — run unit tests before generating)"
+else
+    TR_JSON_TESTS=$TR_TESTS; TR_JSON_SKIPPED=$TR_SKIPPED; TR_JSON_FAILURES=$TR_FAILURES; TR_JSON_ERRORS=$TR_ERRORS
+    TR_REPORT="$TR_TESTS executed, $TR_FAILURES failures, $TR_ERRORS errors ($TR_FILES files)"
+fi
+
 # --------------------------------------------------------------- features ---
 
 FEATURES_RAW="$(sed -n '/val classes = arrayOf(/,/^[[:space:]]*)/p' "$FEATURE_LOADER" \
@@ -272,6 +298,13 @@ cat > "$BASELINE_JSON" <<EOF
     "testFiles": $TEST_FILES,
     "testMethods": $TEST_COUNT
   },
+  "testResults": {
+    "files": $TR_FILES,
+    "tests": $TR_JSON_TESTS,
+    "skipped": $TR_JSON_SKIPPED,
+    "failures": $TR_JSON_FAILURES,
+    "errors": $TR_JSON_ERRORS
+  },
   "features": {
     "registeredCount": $FEATURE_COUNT,
     "names": $FEATURE_NAMES_JSON
@@ -338,6 +371,7 @@ Regenerate after every phase and compare against \`baseline.json\`.
 |---|---|
 | Features registered in FeatureLoader | $FEATURE_COUNT |
 | Unit test files / methods | $TEST_FILES / $TEST_COUNT |
+| Unit tests executed (last run) | $TR_REPORT |
 | Kotlin files (main / xposed / features) | $KT_MAIN / $KT_XPOSED / $KT_FEATURES |
 | Java files remaining | $JAVA_FILES |
 | Unobfuscator lines | $UNOBF_LINES |
@@ -386,6 +420,7 @@ echo ""
 echo "WaEnhancer baseline ($MODULE_VERSION @ $GIT_COMMIT)"
 echo "  features:        $FEATURE_COUNT"
 echo "  tests:           $TEST_COUNT methods in $TEST_FILES files"
+echo "  test results:    $TR_REPORT"
 echo "  unobfuscator:    $UNOBF_LINES lines, $UNOBF_LOAD_FUNCS load resolvers, $UNOBF_BANGS '!!'"
 echo "  lint baseline:   $LINT_TOTAL issues"
 echo "  APKs:            ${#APK_FILES[@]}"
