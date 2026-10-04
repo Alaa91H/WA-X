@@ -392,4 +392,6 @@ echo "  APKs:            ${#APK_FILES[@]}"
 echo "  runtime source:  $RUNTIME_SOURCE"
 echo ""
 echo "  wrote: $BASELINE_JSON"
-[[ "$WRITE_REPORT" -eq 1 ]] && echo "  wrote: $BASELINE_MD"
+if [[ "$WRITE_REPORT" -eq 1 ]]; then
+    echo "  wrote: $BASELINE_MD"
+fi
