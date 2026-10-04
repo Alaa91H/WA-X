@@ -1,0 +1,8 @@
+02-10 12:00:00.000  4242  4242 I XposedBridge: WaEnhancer 1.6.1 (161)
+02-10 12:00:00.010  4242  4242 I XposedBridge: Supported versions for com.whatsapp: 2.26.32.xx, 2.26.34.xx
+02-10 12:00:00.020  4242  4242 I XposedBridge: Loading Plugins
+02-10 12:00:00.062  4242  4242 I XposedBridge: * Loaded Plugin AntiRevoke in 42ms
+02-10 12:00:00.101  4242  4242 I XposedBridge: * Loaded Plugin CustomToolbar in 39ms
+02-10 12:00:00.180  4242  4242 I XposedBridge: * Loaded Plugin Tasker in 79ms
+02-10 12:00:00.240  4242  4242 I XposedBridge: * Loaded Plugin BackupRestore in 60ms
+02-10 12:00:01.000  4242  4242 I XposedBridge: Loaded Hooks in 1263ms

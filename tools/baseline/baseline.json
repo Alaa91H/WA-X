@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-04T06:40:27Z",
+  "module": {
+    "name": "WaEnhancer",
+    "versionName": "1.6.1",
+    "versionCode": 161
+  },
+  "git": {
+    "commit": "dd43b7071c34",
+    "branch": "master",
+    "dirtyWorktree": true
+  },
+  "sdk": {
+    "compileSdk": 37,
+    "targetSdk": 34,
+    "minSdk": 28
+  },
+  "source": {
+    "kotlinFilesMain": 171,
+    "kotlinFilesXposed": 114,
+    "kotlinFilesFeatures": 67,
+    "javaFilesRemaining": 3,
+    "testFiles": 1,
+    "testMethods": 8
+  },
+  "features": {
+    "registeredCount": 64,
+    "names": ["DebugFeature", "MinorFixes", "ContactItemListener", "ConversationItemListener", "MenuStatusProvider", "ShowEditMessage", "AntiRevoke", "CustomToolbar", "CustomView", "SeenTick", "BubbleColors", "CallPrivacy", "ActivityController", "CustomThemeV2", "FloatingBottomBar", "ChatLimit", "SeparateGroup", "ShowOnline", "DndMode", "FreezeLastSeen", "TypingPrivacy", "HideChat", "HideSeen", "HideSeenView", "TagMessage", "HideTabs", "IGStatus", "MediaQuality", "NewChat", "Others", "PinnedLimit", "CustomTime", "ShareLimit", "StatusDownload", "ViewOnce", "CallType", "MediaPreview", "FilterGroups", "Tasker", "DeleteStatus", "DownloadViewOnce", "Channels", "DownloadProfile", "ChatFilters", "GroupAdmin", "Stickers", "CopyStatus", "CopySelectionMessage", "TextStatusComposer", "ToastViewer", "MenuHome", "AntiWa", "CustomPrivacy", "AudioTranscript", "GoogleTranslate", "ContactVerify", "LockedChatsEnhancer", "CallRecording", "BackupRestore", "JumpFirstMessage", "AboutContactPicker", "DefaultEmoji", "CaptureDevice", "ContextMenuActionProvider"]
+  },
+  "unobfuscator": {
+    "fileLines": 3491,
+    "loadResolvers": 187,
+    "nonNullAssertions": 60,
+    "throwStatements": 168,
+    "runtimeErrorCount": null,
+    "runtimeErrorCountNote": "requires on-device structured failure reports (T03)"
+  },
+  "lintBaseline": {
+    "file": "app/lint-baseline.xml",
+    "totalIssues": 419,
+    "byIssueId": {
+    "AlwaysShowAction": 12,
+    "AndroidGradlePluginVersion": 2,
+    "AppBundleLocaleChanges": 1,
+    "AppCompatResource": 8,
+    "ApplySharedPref": 4,
+    "ContentDescription": 10,
+    "DefaultLocale": 16,
+    "DisableBaselineAlignment": 1,
+    "DiscouragedApi": 1,
+    "ExportedContentProvider": 1,
+    "ExtraTranslation": 12,
+    "GradleDependency": 5,
+    "HardcodedText": 44,
+    "IconLocation": 1,
+    "InflateParams": 2,
+    "InlinedApi": 1,
+    "LocaleFolder": 1,
+    "MissingTranslation": 70,
+    "NewerVersionAvailable": 7,
+    "NotifyDataSetChanged": 13,
+    "Overdraw": 3,
+    "PluralsCandidate": 4,
+    "RtlSymmetry": 1,
+    "SdCardPath": 2,
+    "SetTextI18n": 2,
+    "SmallSp": 1,
+    "TrustAllX509TrustManager": 1,
+    "TypographyEllipsis": 38,
+    "Typos": 3,
+    "UnusedResources": 145,
+    "UseCompoundDrawables": 1,
+    "VectorPath": 4,
+    "VectorRaster": 1,
+    "WrongThread": 1
+  }
+  },
+  "supportedVersions": {
+    "whatsapp": ["2.26.32.xx", "2.26.34.xx", "2.26.35.xx", "2.26.36.xx", "2.26.37.xx", "2.26.38.xx", "2.26.39.xx", "2.26.40.xx"],
+    "business": ["2.26.32.xx", "2.26.34.xx", "2.26.35.xx", "2.26.36.xx", "2.26.37.xx", "2.26.38.xx", "2.26.39.xx"]
+  },
+  "apks": [
+    {"path": "app/build/outputs/apk/business/debug/WaEnhancer-Business-1.6.1-dev+DD43B707.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 37137347, "sizeHuman": "35.42 MiB", "sha256": "25dcc8ad2fd327fb61b741a8952bf8f60a7bcdaac9cdc2d2da831b386bfe5a94"},
+    {"path": "app/build/outputs/apk/whatsapp/debug/WaEnhancer-1.6.1-dev+DD43B707.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 37137367, "sizeHuman": "35.42 MiB", "sha256": "b116ec89ef4f5c27299b41433980583f3757fea1bbd6bea8aec2274dab605cba"}
+  ],
+  "runtime": {
+    "source": "none",
+    "xposedLog": null,
+    "featuresLoaded": null,
+    "totalHookLoadMs": null,
+    "featureLoadTimesMs": {}
+  }
+}
