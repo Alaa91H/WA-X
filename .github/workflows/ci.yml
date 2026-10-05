@@ -1,5 +1,5 @@
 # =============================================================================
-# WaEnhancer — Android CI (single source of truth for building and releasing)
+# WA X — Android CI (single source of truth for building and releasing)
 # =============================================================================
 #
 # This is the ONLY workflow in the repository. It owns the whole pipeline:
@@ -20,9 +20,9 @@
 # Release contract (enforced, not documented-only)
 #   * The tag, the configured version and the version baked into the APK are
 #     all the same string. Any mismatch fails the run.
-#     gradle.properties -> waeVersionName == <tag> without the leading "v"
-#     APK versionName   == waeVersionName
-#     APK versionCode   == waeVersionCode
+#     gradle.properties -> waxVersionName == <tag> without the leading "v"
+#     APK versionName   == waxVersionName
+#     APK versionCode   == waxVersionCode
 #   * Only a tag build is signed with the release keystore. Every other build
 #     is signed with the debug key, so a release key never signs an unreleased
 #     artifact and a debug-signed APK never reaches a Release.
@@ -117,16 +117,16 @@ jobs:
             echo "$value"
           }
 
-          VERSION="$(property waeVersionName)"
-          VERSION_CODE="$(property waeVersionCode)"
+          VERSION="$(property waxVersionName)"
+          VERSION_CODE="$(property waxVersionCode)"
           TAG="v$VERSION"
 
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::waeVersionName is not a release version: $VERSION"
+            echo "::error::waxVersionName is not a release version: $VERSION"
             exit 1
           fi
           if [[ ! "$VERSION_CODE" =~ ^[0-9]+$ ]]; then
-            echo "::error::waeVersionCode is not an integer: $VERSION_CODE"
+            echo "::error::waxVersionCode is not an integer: $VERSION_CODE"
             exit 1
           fi
 
@@ -279,13 +279,13 @@ jobs:
               assembleBusinessRelease \
               -PreleaseTag="$RELEASE_TAG"
             SOURCE_VARIANT=release
-            WA_NAME="WaEnhancer-$VERSION.apk"
-            WB_NAME="WaEnhancer-Business-$VERSION.apk"
+            WA_NAME="WA-X-$VERSION.apk"
+            WB_NAME="WA-X-Business-$VERSION.apk"
           else
             SOURCE_VARIANT=debug
             SHA8="${GITHUB_SHA:0:8}"
-            WA_NAME="WaEnhancer-$VERSION-ci-$SHA8.apk"
-            WB_NAME="WaEnhancer-Business-$VERSION-ci-$SHA8.apk"
+            WA_NAME="WA-X-$VERSION-ci-$SHA8.apk"
+            WB_NAME="WA-X-Business-$VERSION-ci-$SHA8.apk"
           fi
 
           for flavor in whatsapp business; do
@@ -418,7 +418,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
+          VERSION="$(sed -n 's/^waxVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
           TAG="v$VERSION"
           if [[ "$GITHUB_REF_NAME" != "$TAG" ]]; then
             echo "::error::Tag $GITHUB_REF_NAME does not match the configured version $TAG"
@@ -428,8 +428,8 @@ jobs:
           {
             echo "version=$VERSION"
             echo "tag=$TAG"
-            echo "wa_name=WaEnhancer-$VERSION.apk"
-            echo "wb_name=WaEnhancer-Business-$VERSION.apk"
+            echo "wa_name=WA-X-$VERSION.apk"
+            echo "wb_name=WA-X-Business-$VERSION.apk"
           } >> "$GITHUB_OUTPUT"
 
       - name: Download the signed APKs from this run
@@ -473,8 +473,8 @@ jobs:
             fi
           done
 
-          if ! grep -qF "WaEnhancer $VERSION" changelog.txt; then
-            echo "::error::changelog.txt does not announce WaEnhancer $VERSION"
+          if ! grep -qF "WA X $VERSION" changelog.txt; then
+            echo "::error::changelog.txt does not announce WA X $VERSION"
             exit 1
           fi
 
@@ -489,7 +489,7 @@ jobs:
 
           gh release create "$TAG" dist/*.apk \
             --repo "$GITHUB_REPOSITORY" \
-            --title "WaEnhancer $VERSION" \
+            --title "WA X $VERSION" \
             --notes-file changelog.txt \
             --verify-tag \
             --latest

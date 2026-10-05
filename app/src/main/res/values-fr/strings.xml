@@ -127,7 +127,7 @@
     <string name="whatsapp_in_background">WhatsApp en arrière-plan</string>
     <string name="whatsapp_is_not_running_or_has_not_been_activated_in_lsposed">WhatsApp ne fonctionne pas ou n\'a pas été activé dans Lsposed</string>
     <string name="business_is_not_running_or_has_not_been_activated_in_lsposed">Business ne fonctionne pas ou n\'a pas été activée dans Lsposed</string>
-    <string name="restart_wpp">Il est nécessaire de redémarrer WhatsApp pour que les modifications dans Wa Enhancer prennent effet.\n\nVoulez-vous redémarrer ?</string>
+    <string name="restart_wpp">Il est nécessaire de redémarrer WhatsApp pour que les modifications dans WA X prennent effet.\n\nVoulez-vous redémarrer ?</string>
     <string name="version_s_not_listed">La version %s n\'est pas répertoriée dans les versions prises en charge !\nVeuillez utiliser la version WhatsApp prise en charge !</string>
     <string name="media">Médias</string>
     <string name="show_button_to_send_blue_tick">Afficher le bouton pour envoyer la coche bleue</string>
@@ -254,8 +254,8 @@
     <string name="force_disable_emojis_alert_title">Forcer la désactivation des emojis</string>
     <string name="force_disable_emojis_alert_msg">Cette fonction rendra les emojis invisibles dans le sélecteur d\'emojis. Pour envoyer des emojis, utilisez ceux du clavier de votre appareil.</string>
     <string name="disable_default_emojis">Désactiver les émojis par défaut</string>
-    <string name="theme_mode">Thème sombre de Wa Enhancer</string>
-    <string name="theme_mode_sum">Forcer un mode thème dans le Wa Enhancer</string>
+    <string name="theme_mode">Thème sombre de WA X</string>
+    <string name="theme_mode_sum">Forcer un mode thème dans le WA X</string>
     <string name="wae_color_mode">Mode de couleur WAE</string>
     <string name="wae_color_preset">Couleur prédéfinie</string>
     <string name="wae_color_mode_preset">Prédéfini</string>
@@ -318,20 +318,20 @@
     <string name="viewed_your_message">%s A vu votre message</string>
     <string name="old_statuses">Anciens statuts</string>
     <string name="old_statuses_sum">Changer vers l\'ancienne page des statuts verticalement et sans canaux (REMARQUE : peut provoquer un décalage dans l\'interface)</string>
-    <string name="force_english">Forcer l\'anglais pour Wa Enhancer</string>
+    <string name="force_english">Forcer l\'anglais pour WA X</string>
     <string name="select_status_type">Sélectionnez le type de statut</string>
     <string name="open_camera">Ouvrir la caméra</string>
     <string name="edit_text">Modifier le texte</string>
-    <string name="about_info">Wa Enhancer est un module Xposed qui améliore votre expérience WhatsApp en offrant des fonctionnalités avancées de confidentialité, une personnalisation de l\'écran d\'accueil, des ajustements généraux et des améliorations multimédias.</string>
+    <string name="about_info">WA X est un module Xposed qui améliore votre expérience WhatsApp en offrant des fonctionnalités avancées de confidentialité, une personnalisation de l\'écran d\'accueil, des ajustements généraux et des améliorations multimédias.</string>
     <string name="installation">Installation</string>
-    <string name="installation_desc">1. Assurez-vous que votre appareil est rooté.\n2. Installez Xposed Framework sur votre appareil.\n3. Téléchargez Wa Enhancer depuis la section Actions.\n4. Installez l\'APK Wa Enhancer.\n5. Activez le module Wa Enhancer dans l\'application d\'installation Xposed.</string>
+    <string name="installation_desc">1. Assurez-vous que votre appareil est rooté.\n2. Installez Xposed Framework sur votre appareil.\n3. Téléchargez WA X depuis la section Actions.\n4. Installez l\'APK WA X.\n5. Activez le module WA X dans l\'application d\'installation Xposed.</string>
     <string name="go_to_telegram">Aller sur Télégramme</string>
     <string name="go_to_github">Allez sur GitHub</string>
     <string name="contributors">Contributeurs</string>
     <string name="support">Soutien</string>
-    <string name="support_desc">Si vous rencontrez des problèmes ou avez des questions sur Wa Enhancer, veuillez visiter Telegram.</string>
+    <string name="support_desc">Si vous rencontrez des problèmes ou avez des questions sur WA X, veuillez visiter Telegram.</string>
     <string name="license">Licence</string>
-    <string name="license_desc">Ce projet est sous licence GNU - consultez le fichier LICENSE pour plus de détails.\n\nRemarque : Veuillez utiliser Wa Enhancer de manière responsable et conformément aux termes et conditions des applications que vous modifiez. Une mauvaise utilisation de cet outil peut entraîner des conséquences juridiques.</string>
+    <string name="license_desc">Ce projet est sous licence GNU - consultez le fichier LICENSE pour plus de détails.\n\nRemarque : Veuillez utiliser WA X de manière responsable et conformément aux termes et conditions des applications que vous modifiez. Une mauvaise utilisation de cet outil peut entraîner des conséquences juridiques.</string>
     <string name="select_a_color">Sélectionnez une couleur</string>
     <string name="custom_appearance">Apparence personnalisée</string>
     <string name="custom_filters_sum">Activer les filtres par identifiant et Feuilles de style personnalisé</string>
@@ -351,7 +351,7 @@
     <string name="new_theme_name">Nouveau nom de thème</string>
     <string name="create">Créer</string>
     <string name="storage_permission">Autorisation de stockage</string>
-    <string name="permission_storage">Autoriser Wa Enhancer à accéder à votre stockage externe ?</string>
+    <string name="permission_storage">Autoriser WA X à accéder à votre stockage externe ?</string>
     <string name="allow">Autoriser</string>
     <string name="deny">Refuser</string>
     <string name="saved">Enregistré</string>
@@ -377,8 +377,8 @@
     <string name="list_animations_home_screen_sum">Ajouter des animations en faisant glisser la liste de discussion</string>
     <string name="stamp_copied_messages">Supprimer le tampon des messages copiés</string>
     <string name="stamp_copied_messages_sum">Supprime le nom et la date lors de la copie de plusieurs messages</string>
-    <string name="invalid_folder">Le dossier invalide a été sélectionné. Veuillez choisir le dossier WaEnhancer</string>
-    <string name="uri_permission">Pour utiliser des thèmes personnalisés, vous devez sélectionner le dossier \"WaEnhancer\" dans \"Télécharger\"</string>
+    <string name="invalid_folder">Le dossier invalide a été sélectionné. Veuillez choisir le dossier WA X</string>
+    <string name="uri_permission">Pour utiliser des thèmes personnalisés, vous devez sélectionner le dossier \"WA X\" dans \"Télécharger\"</string>
     <string name="double_click_to_react">Activer le double-clic pour réagir</string>
     <string name="double_click_to_like_sum">Active la possibilité de double-cliquer sur le message pour y réagir</string>
     <string name="custom_reaction">Réaction personnalisée</string>
@@ -392,7 +392,7 @@
     <string name="ghost_mode_s">Mode fantôme [%s]</string>
     <string name="ghost_mode_title">Afficher le bouton du mode fantôme</string>
     <string name="ghost_mode_sum">Afficher un bouton Mode Fantôme sur la barre d\'outils de l\'écran d\'accueil</string>
-    <string name="grant_permissions">Pour utiliser Wa Enhancer, il est nécessaire d\'accorder certaines autorisations pour utiliser les fonctions.</string>
+    <string name="grant_permissions">Pour utiliser WA X, il est nécessaire d\'accorder certaines autorisations pour utiliser les fonctions.</string>
     <string name="grant_manage_storage">Accorder la gestion du stockage</string>
     <string name="grant_media_read">Accorder la lecture aux médias</string>
     <string name="grant_reading_of_contacts">Accorder la lecture des contacts</string>
@@ -408,8 +408,8 @@
     <string name="select_all">Sélectionner tout</string>
     <string name="custom_colors_for_text_status">Couleurs personnalisées pour le texte du statut</string>
     <string name="custom_colors_for_text_status_sum">Appuyez et maintenez sur le sélecteur de couleur dans l\'état pour le personnaliser</string>
-    <string name="enable_wa_enhancer_button">Activer le bouton Wa Enhancer</string>
-    <string name="enable_wa_enhancer_button_sum">Ajouter un bouton sur l’écran d’accueil pour ouvrir Wa Enhancer</string>
+    <string name="enable_wa_enhancer_button">Activer le bouton WA X</string>
+    <string name="enable_wa_enhancer_button_sum">Ajouter un bouton sur l’écran d’accueil pour ouvrir WA X</string>
     <string name="custom_privacy">Confidentialité personnalisée</string>
     <string name="custom_privacy_sum">Activer/Désactiver La confidentialité personnalisée</string>
     <string name="custom_privacy_per_contact">Confidentialité personnalisée par contact</string>
@@ -527,7 +527,7 @@
     <string name="remove_sticker_white_outline_sum">Supprime la bordure blanche lors de la création de stickers</string>
     <string name="remove_sticker_white_outline">Supprimer le contour blanc des stickers</string>
     <string name="stickers">Stickers</string>
-    <string name="alert_module_notfound">Module WaEnhancer introuvable ; HMA le masque probablement. Retirez WhatsApp de la liste HMA et réessayez.</string>
+    <string name="alert_module_notfound">Module WA X introuvable ; HMA le masque probablement. Retirez WhatsApp de la liste HMA et réessayez.</string>
     <string name="diag_title">Diagnostic root</string>
     <string name="diag_summary">Recherche les problèmes de sepolicy et les blocages Hide My App List affectant WhatsApp.</string>
     <string name="diag_button">Analyser l\'appareil</string>
@@ -547,7 +547,7 @@
     <string name="diag_hma_not_found">Configuration de Hide My App List introuvable.</string>
     <string name="diag_hma_invalid">La configuration de Hide My App List est invalide.</string>
     <string name="diag_hma_no_blocks">Aucun blocage Hide My App List détecté pour WhatsApp.</string>
-    <string name="diag_hma_blocked">Hide My App List masque WaEnhancer à :</string>
-    <string name="diag_hma_disable">Désactivez le blocage de WhatsApp/Business dans Hide My App List pour que WaEnhancer fonctionne correctement.</string>
+    <string name="diag_hma_blocked">Hide My App List masque WA X à :</string>
+    <string name="diag_hma_disable">Désactivez le blocage de WhatsApp/Business dans Hide My App List pour que WA X fonctionne correctement.</string>
     <string name="diag_copied">Ligne copiée dans le presse-papiers</string>
 </resources>

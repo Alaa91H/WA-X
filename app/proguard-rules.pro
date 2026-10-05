@@ -24,9 +24,9 @@
 -dontoptimize
 
 # (R fields are accessed and rewritten via reflection)
--keep class com.wmods.wppenhacer.R { *; }
--keep class com.wmods.wppenhacer.R$* { *; }
--keepclassmembers class com.wmods.wppenhacer.R$* {
+-keep class com.wax.module.R { *; }
+-keep class com.wax.module.R$* { *; }
+-keepclassmembers class com.wax.module.R$* {
      public static <fields>;
 }
 

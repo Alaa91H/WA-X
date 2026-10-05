@@ -59,68 +59,68 @@ All 64 registered features. `W` and `B` are the worst status across the declared
 | # | Feature | Category | Tier | Resolvers | Sources | W | B |
 |---|---|---|---|---|---|---|---|
 | 1 | `BubbleColors` | customization | dexkit | 3 | Unobfuscator | _unknown_ | _unknown_ |
-| 2 | `ContactVerify` | customization | dexkit | 3 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 3 | `CustomThemeV2` | customization | dexkit | 2 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 2 | `ContactVerify` | customization | dexkit | 3 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 3 | `CustomThemeV2` | customization | dexkit | 2 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 4 | `CustomTime` | customization | dexkit | 1 | Unobfuscator | _unknown_ | _unknown_ |
-| 5 | `CustomToolbar` | customization | dexkit | 2 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 6 | `CustomView` | customization | indirect | 0 | ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 5 | `CustomToolbar` | customization | dexkit | 2 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 6 | `CustomView` | customization | indirect | 0 | ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 7 | `DefaultEmoji` | customization | dexkit | 2 | Unobfuscator | _unknown_ | _unknown_ |
 | 8 | `FilterGroups` | customization | dexkit | 3 | Unobfuscator, UnobfuscatorCache | _unknown_ | _unknown_ |
 | 9 | `FloatingBottomBar` | customization | none | 0 | - | _unknown_ | _unknown_ |
 | 10 | `HideSeenView` | customization | none | 0 | - | _unknown_ | _unknown_ |
-| 11 | `HideTabs` | customization | dexkit | 4 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 12 | `IGStatus` | customization | dexkit | 6 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 11 | `HideTabs` | customization | dexkit | 4 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 12 | `IGStatus` | customization | dexkit | 6 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 13 | `SeparateGroup` | customization | dexkit | 15 | Unobfuscator, UnobfuscatorCache, ReflectionUtils | _unknown_ | _unknown_ |
 | 14 | `ShowOnline` | customization | dexkit | 4 | Unobfuscator, UnobfuscatorCache, ReflectionUtils | _unknown_ | _unknown_ |
-| 15 | `AboutContactPicker` | general | indirect | 0 | WppCore | _unknown_ | _unknown_ |
-| 16 | `AntiRevoke` | general | dexkit | 4 | Unobfuscator, UnobfuscatorCache, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 15 | `AboutContactPicker` | general | indirect | 0 | ModuleRuntime | _unknown_ | _unknown_ |
+| 16 | `AntiRevoke` | general | dexkit | 4 | Unobfuscator, UnobfuscatorCache, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 17 | `CallType` | general | dexkit | 1 | Unobfuscator, UnobfuscatorCache, ReflectionUtils | _unknown_ | _unknown_ |
 | 18 | `CaptureDevice` | general | dexkit | 1 | Unobfuscator | _unknown_ | _unknown_ |
-| 19 | `ChatLimit` | general | dexkit | 5 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 20 | `DeleteStatus` | general | indirect | 0 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
-| 21 | `NewChat` | general | indirect | 0 | WppCore | _unknown_ | _unknown_ |
-| 22 | `Others` | general | dexkit | 28 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 19 | `ChatLimit` | general | dexkit | 5 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 20 | `DeleteStatus` | general | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 21 | `NewChat` | general | indirect | 0 | ModuleRuntime | _unknown_ | _unknown_ |
+| 22 | `Others` | general | dexkit | 28 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 23 | `PinnedLimit` | general | dexkit | 4 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 24 | `SeenTick` | general | dexkit | 7 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 24 | `SeenTick` | general | dexkit | 7 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 25 | `ShareLimit` | general | dexkit | 1 | Unobfuscator | _unknown_ | _unknown_ |
-| 26 | `ShowEditMessage` | general | dexkit | 3 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 27 | `Tasker` | general | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
+| 26 | `ShowEditMessage` | general | dexkit | 3 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 27 | `Tasker` | general | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 28 | `ContactItemListener` | listeners | dexkit | 3 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 29 | `ConversationItemListener` | listeners | indirect | 0 | WppCore | _unknown_ | _unknown_ |
-| 30 | `CallRecording` | media | indirect | 0 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
+| 29 | `ConversationItemListener` | listeners | indirect | 0 | ModuleRuntime | _unknown_ | _unknown_ |
+| 30 | `CallRecording` | media | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 31 | `DownloadProfile` | media | indirect | 0 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 32 | `DownloadViewOnce` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 33 | `MediaPreview` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 32 | `DownloadViewOnce` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 33 | `MediaPreview` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 34 | `MediaQuality` | media | dexkit | 10 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 35 | `StatusDownload` | media | indirect | 0 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
-| 36 | `ActivityController` | others | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
+| 35 | `StatusDownload` | media | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 36 | `ActivityController` | others | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 37 | `AudioTranscript` | others | dexkit | 2 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 | 38 | `BackupRestore` | others | indirect | 0 | Unobfuscator | _unknown_ | _unknown_ |
-| 39 | `Channels` | others | dexkit | 4 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 39 | `Channels` | others | dexkit | 4 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 40 | `ChatFilters` | others | dexkit | 1 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 41 | `CopySelectionMessage` | others | indirect | 0 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
+| 41 | `CopySelectionMessage` | others | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 42 | `CopyStatus` | others | dexkit | 2 | Unobfuscator | _unknown_ | _unknown_ |
 | 43 | `DebugFeature` | others | none | 0 | - | _unknown_ | _unknown_ |
-| 44 | `GoogleTranslate` | others | indirect | 0 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 45 | `GroupAdmin` | others | dexkit | 2 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 46 | `JumpFirstMessage` | others | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
-| 47 | `MenuHome` | others | indirect | 0 | WppCore | _unknown_ | _unknown_ |
+| 44 | `GoogleTranslate` | others | indirect | 0 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 45 | `GroupAdmin` | others | dexkit | 2 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 46 | `JumpFirstMessage` | others | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 47 | `MenuHome` | others | indirect | 0 | ModuleRuntime | _unknown_ | _unknown_ |
 | 48 | `MinorFixes` | others | none | 0 | - | _unknown_ | _unknown_ |
 | 49 | `Stickers` | others | dexkit | 1 | Unobfuscator | _unknown_ | _unknown_ |
-| 50 | `TextStatusComposer` | others | dexkit | 3 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
-| 51 | `ToastViewer` | others | dexkit | 2 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 50 | `TextStatusComposer` | others | dexkit | 3 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 51 | `ToastViewer` | others | dexkit | 2 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 52 | `AntiWa` | privacy | dexkit | 3 | Unobfuscator | _unknown_ | _unknown_ |
-| 53 | `CallPrivacy` | privacy | dexkit | 2 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 54 | `CustomPrivacy` | privacy | indirect | 0 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 55 | `DndMode` | privacy | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
-| 56 | `FreezeLastSeen` | privacy | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
-| 57 | `HideChat` | privacy | dexkit | 1 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 58 | `HideSeen` | privacy | dexkit | 7 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 53 | `CallPrivacy` | privacy | dexkit | 2 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 54 | `CustomPrivacy` | privacy | indirect | 0 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 55 | `DndMode` | privacy | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 56 | `FreezeLastSeen` | privacy | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 57 | `HideChat` | privacy | dexkit | 1 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 58 | `HideSeen` | privacy | dexkit | 7 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 59 | `LockedChatsEnhancer` | privacy | dexkit | 4 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 | 60 | `TagMessage` | privacy | dexkit | 2 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 61 | `TypingPrivacy` | privacy | dexkit | 1 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
+| 61 | `TypingPrivacy` | privacy | dexkit | 1 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 62 | `ViewOnce` | privacy | dexkit | 1 | Unobfuscator | _unknown_ | _unknown_ |
-| 63 | `ContextMenuActionProvider` | providers | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
+| 63 | `ContextMenuActionProvider` | providers | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 64 | `MenuStatusProvider` | providers | dexkit | 3 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 
 ## Features requiring resolver evidence

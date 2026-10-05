@@ -139,7 +139,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lint-file", default="app/lint-baseline.xml")
     parser.add_argument(
         "--unobfuscator",
-        default="app/src/main/java/com/wmods/wppenhacer/xposed/core/devkit/Unobfuscator.kt",
+        default="app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt",
         help="file the `!!` ratchet is measured against",
     )
     parser.add_argument("--test-results", default="app/build/test-results")

@@ -8,7 +8,7 @@ Java_com_wmods_wppenhacer_xposed_utils_AudioOpusConverter_nativeInitOpusEncoder(
     
     int error = 0;
     OggOpusComments *comments = ope_comments_create();
-    ope_comments_add(comments, "ENCODER", "WaEnhancer");
+    ope_comments_add(comments, "ENCODER", "WA X");
     
     OggOpusEnc *enc = ope_encoder_create_file(path, comments, sampleRate, channels, 0, &error);
     

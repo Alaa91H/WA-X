@@ -122,7 +122,7 @@
         "category": "listeners",
         "resolutionTier": "indirect",
         "resolutionSources": [
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": []
@@ -149,7 +149,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadCallerMessageEditMethod",
@@ -168,7 +168,7 @@
           "Unobfuscator",
           "UnobfuscatorCache",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadAntiRevokeFStatusMethod",
@@ -187,7 +187,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadExpirationClass",
@@ -204,7 +204,7 @@
         "resolutionTier": "indirect",
         "resolutionSources": [
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -218,7 +218,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadBlueOnReplayMessageJobMethod",
@@ -257,7 +257,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadAntiRevokeOnCallReceivedMethod",
@@ -271,7 +271,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadLockedAuthCheckMethod"
@@ -285,7 +285,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadFragmentViewMethod",
@@ -313,7 +313,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadChatLimitDelete2Method",
@@ -384,7 +384,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadDndModeMethod"
@@ -397,7 +397,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadFreezeSeenMethod"
@@ -414,7 +414,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadGhostModeMethod"
@@ -431,7 +431,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadArchiveChatClass"
@@ -445,7 +445,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadHideViewSendReadJob",
@@ -499,7 +499,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadOnMenuItemSelected",
@@ -518,7 +518,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadFabMethod",
@@ -565,7 +565,7 @@
         "category": "general",
         "resolutionTier": "indirect",
         "resolutionSources": [
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -580,7 +580,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadAbsViewHolder",
@@ -688,7 +688,7 @@
         "resolutionTier": "indirect",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -732,7 +732,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadLayoutClass"
@@ -765,7 +765,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadReceiptMethod"
@@ -781,7 +781,7 @@
         "resolutionTier": "indirect",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": []
@@ -793,7 +793,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadViewOnceDownloadMenuMethod"
@@ -809,7 +809,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadHeaderChannelItemClass",
@@ -855,7 +855,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadGroupCheckAdminMethod",
@@ -901,7 +901,7 @@
         "resolutionTier": "indirect",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -914,7 +914,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadTextStatusComposerOnCreate",
@@ -932,7 +932,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadOnInsertReceipt",
@@ -948,7 +948,7 @@
         "category": "others",
         "resolutionTier": "indirect",
         "resolutionSources": [
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -983,7 +983,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": []
@@ -1014,7 +1014,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -1028,7 +1028,7 @@
         "resolutionSources": [
           "Unobfuscator",
           "ReflectionUtils",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadDialerProfilePictureLoader",
@@ -1063,7 +1063,7 @@
         "resolutionTier": "indirect",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
@@ -1090,7 +1090,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadOnCreatedMenuConversation"
@@ -1104,7 +1104,7 @@
         "category": "general",
         "resolutionTier": "indirect",
         "resolutionSources": [
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [],
         "preferenceKeys": []
@@ -1145,7 +1145,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "WppCore"
+          "ModuleRuntime"
         ],
         "resolverDependencies": [
           "loadPopupWindowMessageClass"

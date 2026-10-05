@@ -127,7 +127,7 @@
     <string name="whatsapp_in_background">واتساب في الخلفية</string>
     <string name="whatsapp_is_not_running_or_has_not_been_activated_in_lsposed">واتساب لا يعمل أو لم يتم تفعيله في LSPosed</string>
     <string name="business_is_not_running_or_has_not_been_activated_in_lsposed">واتساب للأعمال لا يعمل أو لم يتم تفعيله في LSPosed</string>
-    <string name="restart_wpp">من الضروري إعادة تشغيل WhatsApp لتفعيل التغييرات في Wa Enhancer.\n\nهل تريد إعادة التشغيل؟</string>
+    <string name="restart_wpp">من الضروري إعادة تشغيل WhatsApp لتفعيل التغييرات في WA X.\n\nهل تريد إعادة التشغيل؟</string>
     <string name="version_s_not_listed">الإصدار %s غير مدرج في الإصدارات المدعومة!\nالرجاء استخدام إصدار WhatsApp المدعوم!</string>
     <string name="media">الوسائط</string>
     <string name="show_button_to_send_blue_tick">إظهار زر إرسال العلامة الزرقاء</string>
@@ -254,9 +254,9 @@
     <string name="force_disable_emojis_alert_title">فرض تعطيل الرموز التعبيرية</string>
     <string name="force_disable_emojis_alert_msg">ستجعل هذه الميزة الرموز التعبيرية غير ظاهرة في منتقي الرموز. لإرسال الرموز التعبيرية استخدم لوحة مفاتيح جهازك.</string>
     <string name="disable_default_emojis">تعطيل الرموز التعبيرية الافتراضية</string>
-    <string name="theme_mode">الوضع الداكن في Wa Enhancer</string>
-    <string name="theme_mode_sum">فرض وضع سمة معيّن في Wa Enhancer</string>
-    <string name="wae_color_mode">نمط ألوان Wa Enhancer</string>
+    <string name="theme_mode">الوضع الداكن في WA X</string>
+    <string name="theme_mode_sum">فرض وضع سمة معيّن في WA X</string>
+    <string name="wae_color_mode">نمط ألوان WA X</string>
     <string name="wae_color_preset">لون محدد مسبقًا</string>
     <string name="wae_color_mode_preset">الإعداد المسبق</string>
     <string name="wae_color_mode_auto_monet">تلقائي (Monet)</string>
@@ -318,20 +318,20 @@
     <string name="viewed_your_message">%s شاهد رسالتك</string>
     <string name="old_statuses">الحالات القديمة</string>
     <string name="old_statuses_sum">التغيير إلى صفحة الحالات القديمة عموديًا وبدون قنوات (ملاحظة: قد يتسبب ذلك في حدوث بطء في الواجهة)</string>
-    <string name="force_english">فرض اللغة الإنجليزية في Wa Enhancer</string>
+    <string name="force_english">فرض اللغة الإنجليزية في WA X</string>
     <string name="select_status_type">تحديد نوع الحالة</string>
     <string name="open_camera">فتح الكاميرا</string>
     <string name="edit_text">تحرير النص</string>
-    <string name="about_info">Wa Enhancer وحدة Xposed تُحسّن تجربة واتساب عبر ميزات خصوصية متقدمة وتخصيص للشاشة الرئيسية وتعديلات عامة وتحسينات على الوسائط.</string>
+    <string name="about_info">WA X وحدة Xposed تُحسّن تجربة واتساب عبر ميزات خصوصية متقدمة وتخصيص للشاشة الرئيسية وتعديلات عامة وتحسينات على الوسائط.</string>
     <string name="installation">تثبيت</string>
-    <string name="installation_desc">1. تأكد من أن جهازك مُجذّر (روت).\n2. ثبّت إطار عمل Xposed Framework على جهازك.\n3. نزّل Wa Enhancer من قسم الإصدارات.\n4. ثبّت ملف Wa Enhancer APK.\n5. فعّل وحدة Wa Enhancer في تطبيق Xposed Installer.</string>
+    <string name="installation_desc">1. تأكد من أن جهازك مُجذّر (روت).\n2. ثبّت إطار عمل Xposed Framework على جهازك.\n3. نزّل WA X من قسم الإصدارات.\n4. ثبّت ملف WA X APK.\n5. فعّل وحدة WA X في تطبيق Xposed Installer.</string>
     <string name="go_to_telegram">الذهاب إلى تيليجرام</string>
     <string name="go_to_github">الذهاب إلى GitHub</string>
     <string name="contributors">المساهمون</string>
     <string name="support">الدعم</string>
-    <string name="support_desc">إذا واجهت أي مشكلات أو لديك أسئلة حول Wa Enhancer، يرجى زيارة Telegram.</string>
+    <string name="support_desc">إذا واجهت أي مشكلات أو لديك أسئلة حول WA X، يرجى زيارة Telegram.</string>
     <string name="license">الترخيص</string>
-    <string name="license_desc">هذا المشروع مرخص بموجب رخصة GNU - راجع ملف LICENSE للحصول على التفاصيل.\n\nملحوظة: يرجى استخدام Wa Enhancer بطريقة مسؤولة ووفقا لأحكام وشروط التطبيقات التي تقوم بتعديلها. وقد تؤدي إساءة استخدام هذه الأداة إلى عواقب قانونية.</string>
+    <string name="license_desc">هذا المشروع مرخص بموجب رخصة GNU - راجع ملف LICENSE للحصول على التفاصيل.\n\nملحوظة: يرجى استخدام WA X بطريقة مسؤولة ووفقا لأحكام وشروط التطبيقات التي تقوم بتعديلها. وقد تؤدي إساءة استخدام هذه الأداة إلى عواقب قانونية.</string>
     <string name="select_a_color">اختر اللون</string>
     <string name="custom_appearance">المظهر المخصص</string>
     <string name="custom_filters_sum">تفعيل الفلاتر حسب المعرف و CSS المخصص</string>
@@ -351,7 +351,7 @@
     <string name="new_theme_name">اسم السمة الجديدة</string>
     <string name="create">إنشاء</string>
     <string name="storage_permission">إذن التخزين</string>
-    <string name="permission_storage">السماح لـ Wa Enhancer بالوصول إلى وحدة التخزين الخارجية الخاصة بك؟</string>
+    <string name="permission_storage">السماح لـ WA X بالوصول إلى وحدة التخزين الخارجية الخاصة بك؟</string>
     <string name="allow">سماح</string>
     <string name="deny">رفض</string>
     <string name="saved">تم الحفظ</string>
@@ -377,8 +377,8 @@
     <string name="list_animations_home_screen_sum">إضافة رسوم متحركة عند تمرير قائمة الدردشة</string>
     <string name="stamp_copied_messages">إزالة الاسم والتاريخ من الرسائل المنسوخة</string>
     <string name="stamp_copied_messages_sum">إزالة الاسم والتاريخ عند نسخ أكثر من رسالة واحدة</string>
-    <string name="invalid_folder">تم تحديد مجلد غير صالح. الرجاء اختيار مجلد WaEnhancer</string>
-    <string name="uri_permission">لاستخدام القوالب المخصصة تحتاج إلى تحديد مجلد \"WaEnhancer\" في \"تنزيل\"</string>
+    <string name="invalid_folder">تم تحديد مجلد غير صالح. الرجاء اختيار مجلد WA X</string>
+    <string name="uri_permission">لاستخدام القوالب المخصصة تحتاج إلى تحديد مجلد \"WA X\" في \"تنزيل\"</string>
     <string name="double_click_to_react">تمكين النقر المزدوج للتفاعل</string>
     <string name="double_click_to_like_sum">تنشيط إمكانية النقر المزدوج على الرسالة للتفاعل معها</string>
     <string name="custom_reaction">رد فعل مخصص</string>
@@ -392,7 +392,7 @@
     <string name="ghost_mode_s">وضع الشبح [%s]</string>
     <string name="ghost_mode_title">إظهار أيقونة وضع الشبح</string>
     <string name="ghost_mode_sum">إظهار أيقونة وضع الشبح على شريط أدوات الشاشة الرئيسية</string>
-    <string name="grant_permissions">لاستخدام Wa Enhancer، من الضروري منح بعض الأذونات لاستخدام الوظائف.</string>
+    <string name="grant_permissions">لاستخدام WA X، من الضروري منح بعض الأذونات لاستخدام الوظائف.</string>
     <string name="grant_manage_storage">منح إدارة التخزين</string>
     <string name="grant_media_read">منح قراءة الوسائط</string>
     <string name="grant_reading_of_contacts">منح قراءة جهات الاتصال</string>
@@ -527,7 +527,7 @@
     <string name="remove_sticker_white_outline_sum">إزالة الإطار الأبيض عند إنشاء الملصقات</string>
     <string name="remove_sticker_white_outline">إزالة الإطار الأبيض للملصق</string>
     <string name="stickers">الملصقات</string>
-    <string name="alert_module_notfound">لم يتم العثور على وحدة WaEnhancer، والأرجح أن HMA يخفيها. أزل واتساب من قائمة HMA وحاول مرة أخرى.</string>
+    <string name="alert_module_notfound">لم يتم العثور على وحدة WA X، والأرجح أن HMA يخفيها. أزل واتساب من قائمة HMA وحاول مرة أخرى.</string>
     <string name="diag_title">تشخيص صلاحيات الروت</string>
     <string name="diag_summary">التحقق من مشكلات sepolicy وحجب Hide My App List التي تؤثر على واتساب.</string>
     <string name="diag_button">تحليل الجهاز</string>
@@ -547,7 +547,7 @@
     <string name="diag_hma_not_found">لم يتم العثور على إعدادات Hide My App List.</string>
     <string name="diag_hma_invalid">إعدادات Hide My App List غير صالحة.</string>
     <string name="diag_hma_no_blocks">لا توجد حجب من Hide My App List تستهدف واتساب.</string>
-    <string name="diag_hma_blocked">Hide My App List يخفي WaEnhancer عن:</string>
-    <string name="diag_hma_disable">عطّل الحجب عن واتساب/واتساب للأعمال في Hide My App List حتى يعمل WaEnhancer بشكل صحيح.</string>
+    <string name="diag_hma_blocked">Hide My App List يخفي WA X عن:</string>
+    <string name="diag_hma_disable">عطّل الحجب عن واتساب/واتساب للأعمال في Hide My App List حتى يعمل WA X بشكل صحيح.</string>
     <string name="diag_copied">تم نسخ السطر إلى الحافظة</string>
 </resources>

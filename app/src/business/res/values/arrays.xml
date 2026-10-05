@@ -4,8 +4,8 @@
         The Business flavor overrides the recommended LSPosed scope declared in
         src/main/res/values/arrays.xml.
 
-        The business flavor hooks WhatsApp Business only: WppXposed gates plain
-        WhatsApp behind App.isOriginalPackage, which is false for this flavor's
+        The business flavor hooks WhatsApp Business only: ModuleEntryPoint gates plain
+        WhatsApp behind ModuleApplication.isOriginalPackage, which is false for this flavor's
         application id. Recommending com.whatsapp here would put a package in the
         scope that the module never enhances, so it is left out.
 

@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-05T18:41:31Z",
+  "generatedAtUtc": "2026-10-05T20:22:53Z",
   "module": {
     "name": "WaEnhancer",
-    "versionName": "1.8.0",
-    "versionCode": 180
+    "versionName": "1.0.0",
+    "versionCode": 100
   },
   "git": {
-    "commit": "253de0e73c1b",
+    "commit": "f9473004d683",
     "branch": "master",
     "dirtyWorktree": true
   },
@@ -18,8 +18,8 @@
   },
   "source": {
     "kotlinFilesMain": 242,
-    "kotlinFilesXposed": 121,
-    "kotlinFilesFeatures": 72,
+    "kotlinFilesXposed": 0,
+    "kotlinFilesFeatures": 0,
     "javaFilesRemaining": 3,
     "testFiles": 41,
     "testMethods": 756
@@ -70,8 +70,8 @@
     "business": ["2.26.32.xx", "2.26.34.xx", "2.26.35.xx", "2.26.36.xx", "2.26.37.xx", "2.26.38.xx", "2.26.39.xx"]
   },
   "apks": [
-    {"path": "app/build/outputs/apk/business/debug/WaEnhancer-Business-1.7.0-dev+97C5B200.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38308471, "sizeHuman": "36.53 MiB", "sha256": "ff139e5a9896b569b8220cd0b0451d6898d1101765cc0ccf6c85fd4003aa9712"},
-    {"path": "app/build/outputs/apk/whatsapp/debug/WaEnhancer-1.7.0-dev+97C5B200.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38308491, "sizeHuman": "36.53 MiB", "sha256": "df38cbf677e4df7aa2b1352f9ced95d070065a9791b919988138d629bcefc438"}
+    {"path": "app/build/outputs/apk/business/debug/WA-X-Business-1.0.0-dev+F9473004.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38266611, "sizeHuman": "36.49 MiB", "sha256": "4b92c514dbdffe00ed517ee2ed37b2dd072c99da2d85b6b0225a072610d1deea"},
+    {"path": "app/build/outputs/apk/whatsapp/debug/WA-X-1.0.0-dev+F9473004.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38266631, "sizeHuman": "36.49 MiB", "sha256": "7b850163f5366a2a974881c9250051f1b5334147df301ae8d7554c4f28de768c"}
   ],
   "runtime": {
     "source": "none",

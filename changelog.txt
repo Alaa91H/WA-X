@@ -3,7 +3,7 @@ Release date: 2026-10-05
 
 A correctness release. HD Status works again and, for the first time, says what it
 cannot do instead of failing quietly. The module scope is also confined to the two
-applications Wa Enhancer actually supports.
+applications WA X actually supports.
 
 HIGHLIGHTS
 - HD Status (HD Quality Images and HD Quality Videos) restored: the quality ceilings

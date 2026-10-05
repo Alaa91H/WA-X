@@ -66,4 +66,4 @@ naming:
   FunctionNaming:
     active: true
     # Hook callbacks mirror Xposed's own method names.
-    ignoreAnnotated: ['com.wmods.wppenhacer.xposed.core.Feature']
+    ignoreAnnotated: ['com.wax.module.xposed.core.Feature']

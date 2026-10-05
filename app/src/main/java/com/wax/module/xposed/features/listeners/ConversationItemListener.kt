@@ -1,0 +1,206 @@
+package com.wax.module.xposed.features.listeners
+
+import android.app.Activity
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.HeaderViewListAdapter
+import android.widget.ListAdapter
+import android.widget.ListView
+import com.wax.module.xposed.core.Feature
+import com.wax.module.xposed.core.ModuleRuntime
+import com.wax.module.xposed.core.components.FMessageWpp
+import de.robv.android.xposed.XC_MethodHook
+import android.content.SharedPreferences 
+import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
+import java.lang.ref.WeakReference
+import java.util.WeakHashMap
+import java.util.concurrent.CopyOnWriteArraySet
+
+class ConversationItemListener(
+    loader: ClassLoader,
+    preferences:SharedPreferences
+) : Feature(loader, preferences) {
+
+    data class BoundConversationItem(
+        val messageId: String,
+        val rowId: Long,
+        val message: FMessageWpp
+    )
+
+    companion object {
+        private const val FIELD_BOUND_MESSAGE_ID = "conversation_item_bound_message_id"
+
+        @JvmField
+        val conversationListeners = CopyOnWriteArraySet<OnConversationItemListener>()
+
+        var adapter: ListAdapter? = null
+
+        @JvmField
+        val listItems = WeakHashMap<View, BoundConversationItem>()
+
+        private var hooked: XC_MethodHook.Unhook? = null
+        private var adapterActivity: WeakReference<Activity>? = null
+
+        @JvmStatic
+        fun unwrapBaseAdapter(adapter: ListAdapter?): BaseAdapter? {
+            var cur: Any? = adapter ?: return null
+            if (cur is HeaderViewListAdapter) {
+                cur = cur.wrappedAdapter
+            }
+            if (cur is BaseAdapter) {
+                return cur
+            }
+            return cur?.javaClass?.declaredFields?.firstNotNullOfOrNull { field ->
+                if (BaseAdapter::class.java.isAssignableFrom(field.type)) {
+                    field.isAccessible = true
+                    field.get(cur) as? BaseAdapter
+                } else null
+            }
+        }
+
+        @JvmStatic
+        fun notifyDataSetChanged() {
+            Handler(Looper.getMainLooper()).post {
+                val baseAdapter = unwrapBaseAdapter(adapter)
+                baseAdapter?.notifyDataSetChanged()
+            }
+        }
+
+        fun getBoundMessageId(view: View): String? {
+            return XposedHelpers.getAdditionalInstanceField(view, FIELD_BOUND_MESSAGE_ID) as? String
+        }
+
+        fun isViewBoundToMessage(view: View, messageId: String): Boolean {
+            return getBoundMessageId(view) == messageId
+        }
+
+        private fun bindViewToMessage(view: View, fMessage: FMessageWpp): BoundConversationItem {
+            val boundItem = BoundConversationItem(
+                messageId = fMessage.key.messageID,
+                rowId = fMessage.rowId,
+                message = fMessage
+            )
+            XposedHelpers.setAdditionalInstanceField(view, FIELD_BOUND_MESSAGE_ID, boundItem.messageId)
+            listItems[view] = boundItem
+            return boundItem
+        }
+    }
+
+    @Throws(Throwable::class)
+    override fun doHook() {
+        ModuleRuntime.addListenerActivity { activity, type ->
+            if (adapterActivity?.get() === activity && type == ModuleRuntime.ActivityChangeState.ChangeType.DESTROYED) {
+                hooked?.unhook()
+                hooked = null
+                adapter = null
+                adapterActivity = null
+                listItems.clear()
+            }
+        }
+
+        XposedHelpers.findAndHookMethod(
+            ListView::class.java,
+            "setAdapter",
+            ListAdapter::class.java,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (conversationListeners.isEmpty()) return
+                    val currentActivity = ModuleRuntime.getCurrentConversation()
+                    if (currentActivity == null) {
+                        return
+                    }
+
+                    val listView = param.thisObject as ListView
+                    if (listView.id != android.R.id.list) {
+                        return
+                    }
+
+                    var currentAdapter = param.args[0] as? ListAdapter
+                    if (currentAdapter is HeaderViewListAdapter) {
+                        currentAdapter = currentAdapter.wrappedAdapter
+                    }
+
+                    if (currentAdapter == null) {
+                        return
+                    }
+
+                    adapter = currentAdapter
+                    adapterActivity = WeakReference(currentActivity)
+
+                    for (listener in conversationListeners) {
+                        listener.onAttachAdapter(adapter)
+                    }
+
+                    hooked?.unhook()
+
+                    val method = XposedHelpers.findMethodBestMatch(
+                        adapter!!.javaClass, "getView",
+                        Int::class.javaPrimitiveType,
+                        View::class.java,
+                        ViewGroup::class.java
+                    )
+
+                    hooked = XposedBridge.hookMethod(method, object : XC_MethodHook() {
+                        @Throws(Throwable::class)
+                        override fun afterHookedMethod(param: MethodHookParam) {
+                            if (conversationListeners.isEmpty()) return
+                            val activeAdapter = adapter ?: return
+                            if (param.thisObject !== activeAdapter) return
+
+                            val position = param.args[0] as Int
+                            val convertView = param.args[1] as? View
+                            val viewGroup = param.result as? ViewGroup ?: return
+
+                            val fMessageObj = activeAdapter.getItem(position) ?: return
+
+                            if (!FMessageWpp.TYPE.isInstance(fMessageObj)) return
+                            val fMessage = FMessageWpp(fMessageObj)
+
+                            bindViewToMessage(viewGroup, fMessage)
+
+                            for (listener in conversationListeners) {
+                                try {
+                                    listener.onItemBind(fMessage, viewGroup, position, convertView)
+                                } catch (e: Throwable) {
+                                    logDebug(e)
+                                }
+                            }
+                        }
+                    })
+                }
+            }
+        )
+    }
+
+    override fun getPluginName(): String {
+        return "Conversation Item Listener"
+    }
+
+    abstract class OnConversationItemListener {
+        /**
+         * Called when a message item is rendered in the conversation
+         *
+         * @param fMessage The message
+         * @param view     The view associated with the item
+         * @param position The position
+         * @param convertView The view from the adapter
+         * @throws Throwable Errors caught in the hook
+         */
+        @Throws(Throwable::class)
+        abstract fun onItemBind(
+            fMessage: FMessageWpp,
+            view: ViewGroup,
+            position: Int,
+            convertView: View?
+        )
+
+        open fun onAttachAdapter(adapter: ListAdapter?) {
+            // TODO
+        }
+    }
+}

@@ -61,14 +61,35 @@
                     android:textStyle="bold" />
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvDevName"
+                    android:id="@+id/tvTagline"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
                     android:alpha="0.9"
-                    android:text="@string/developer"
+                    android:gravity="center"
                     android:textColor="@color/text_on_gradient"
                     android:textSize="14sp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvDevName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:alpha="0.8"
+                    android:gravity="center"
+                    android:text="@string/developer"
+                    android:textColor="@color/text_on_gradient"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvVersion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_xs"
+                    android:alpha="0.7"
+                    android:gravity="center"
+                    android:textColor="@color/text_on_gradient"
+                    android:textSize="12sp" />
 
             </LinearLayout>
 
@@ -184,6 +205,40 @@
                         app:iconPadding="@dimen/spacing_small"
                         app:strokeColor="?attr/colorPrimary" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnProfile"
+                        style="@style/ModernButton.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_small"
+                        android:text="@string/wax_go_to_profile"
+                        app:icon="@drawable/ic_github"
+                        app:iconGravity="start"
+                        app:iconPadding="@dimen/spacing_small"
+                        app:strokeColor="?attr/colorPrimary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEmail"
+                        style="@style/ModernButton.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_small"
+                        android:text="@string/wax_go_to_email"
+                        app:iconGravity="start"
+                        app:iconPadding="@dimen/spacing_small"
+                        app:strokeColor="?attr/colorPrimary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSupport"
+                        style="@style/ModernButton.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_small"
+                        android:text="@string/wax_go_to_support"
+                        app:iconGravity="start"
+                        app:iconPadding="@dimen/spacing_small"
+                        app:strokeColor="?attr/colorPrimary" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -201,18 +256,85 @@
                     android:padding="@dimen/spacing_medium">
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/tvContributors"
+                        android:id="@+id/tvNotices"
                         style="@style/SectionTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/contributors" />
+                        android:text="@string/wax_open_source_notices" />
 
-                    <LinearLayout
-                        android:id="@+id/contributorsContainer"
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvNoticesDescription"
+                        style="@style/SectionDescription"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/spacing_small"
+                        android:layout_marginBottom="@dimen/spacing_small"
+                        android:text="@string/wax_open_source_notices_desc" />
+
+                    <LinearLayout
+                        android:id="@+id/noticesContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="vertical" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardInfoStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_medium"
+                app:cardBackgroundColor="@color/surface_container">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_medium">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvDisclaimerTitle"
+                        style="@style/SectionTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wax_disclaimer_title" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvDisclaimer"
+                        style="@style/SectionDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wax_disclaimer" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardInfoStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_medium"
+                app:cardBackgroundColor="@color/surface_container">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_medium">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvAccountRisk"
+                        style="@style/SectionTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wax_account_risk_title" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvAccountRiskDetails"
+                        style="@style/SectionDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/wax_account_risk" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -1,11 +1,11 @@
 | [English](README.md) | **Português(Brasil)**
 
-# WaEnhancer
+# WA X
 
 <div align="center">
-  <p><strong>WaEnhancer é um módulo Xposed que melhora sua experiência no WhatsApp.</strong></p>
+  <p><strong>WA X é um módulo Xposed que melhora sua experiência no WhatsApp.</strong></p>
   <p><strong>Aviso:</strong> Este módulo é destinado apenas para fins educacionais. Você pode ter problemas com sua conta do WhatsApp, incluindo risco de banimento! Use por sua conta e risco.</p>
-  <p>Observe que este projeto está atualmente em desenvolvimento, então bugs e falhas podem ocorrer. Se encontrar algum problema, reporte em nosso grupo ou crie um <a href="https://github.com/Dev4Mod/WaEnhancer/issues">relatório de problema</a> aqui.</p>
+  <p>Observe que este projeto está atualmente em desenvolvimento, então bugs e falhas podem ocorrer. Se encontrar algum problema, reporte em nosso grupo ou crie um <a href="https://github.com/Alaa91H/WA-X/issues">relatório de problema</a> aqui.</p>
 </div>
 
 ## Principais Funcionalidades
@@ -138,12 +138,12 @@
 ## Instalação
 1. Certifique-se de que seu dispositivo está com root.
 2. Instale o Xposed Framework (recomendamos [este](https://github.com/JingMatrix/LSPosed) LSPosed) no seu dispositivo.
-3. Baixe o WaEnhancer na aba [Actions](https://github.com/Dev4Mod/WaEnhancer/actions).
-4. Instale o APK do WaEnhancer.
-5. Ative o módulo WaEnhancer no aplicativo Xposed Installer(LSPosed).
+3. Baixe o WA X na aba [Actions](https://github.com/Alaa91H/WA-X/actions).
+4. Instale o APK do WA X.
+5. Ative o módulo WA X no aplicativo Xposed Installer(LSPosed).
 
 ## Suporte
-Se você encontrar algum problema ou tiver dúvidas sobre o WaEnhancer, por favor [Visite o Telegram](https://t.me/waenhancer).
+Se você encontrar algum problema ou tiver dúvidas sobre o WA X, por favor [Visite o Telegram](https://t.me/Alaa91h).
 
 ## Licença
 Este projeto está licenciado sob a Licença GNU - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
@@ -156,4 +156,4 @@ Este projeto está licenciado sob a Licença GNU - veja o arquivo [LICENSE](LICE
 
 ---
 
-**Nota**: Por favor, use o WaEnhancer de forma responsável e em conformidade com os termos e condições dos aplicativos que você está modificando. O uso indevido desta ferramenta pode levar a consequências legais.
+**Nota**: Por favor, use o WA X de forma responsável e em conformidade com os termos e condições dos aplicativos que você está modificando. O uso indevido desta ferramenta pode levar a consequências legais.

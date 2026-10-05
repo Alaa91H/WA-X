@@ -26,7 +26,7 @@ import sys
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TARGET = os.path.join(
-    REPO_ROOT, "app/src/main/java/com/wmods/wppenhacer/xposed/core/devkit/Unobfuscator.kt"
+    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt"
 )
 
 OPENER_RE = re.compile(r"^(\s*)(findFirst(?:Class|Method)UsingStrings)\($")

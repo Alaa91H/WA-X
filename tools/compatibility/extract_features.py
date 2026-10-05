@@ -39,14 +39,14 @@ from typing import Any
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 FEATURE_LOADER = os.path.join(
-    REPO_ROOT, "app/src/main/java/com/wmods/wppenhacer/xposed/core/FeatureLoader.kt"
+    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
 )
 FEATURES_DIR = os.path.join(
-    REPO_ROOT, "app/src/main/java/com/wmods/wppenhacer/xposed/features"
+    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/features"
 )
 ARRAYS_XML = os.path.join(REPO_ROOT, "app/src/main/res/values/arrays.xml")
 UNOBFUSCATOR = os.path.join(
-    REPO_ROOT, "app/src/main/java/com/wmods/wppenhacer/xposed/core/devkit/Unobfuscator.kt"
+    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt"
 )
 APP_BUILD_GRADLE = os.path.join(REPO_ROOT, "app/build.gradle.kts")
 
@@ -77,7 +77,8 @@ RESOLUTION_SOURCES = (
     "Unobfuscator",
     "UnobfuscatorCache",
     "ReflectionUtils",
-    "WppCore",
+    # Formerly WppCore; renamed to ModuleRuntime in the WA X identity migration.
+    "ModuleRuntime",
 )
 
 # Maps the feature source package to the user facing category name used by the
@@ -297,12 +298,12 @@ def build() -> dict[str, Any]:
         "packages": {
             "whatsapp": {
                 "packageName": "com.whatsapp",
-                "applicationId": "com.wmods.wppenhacer",
+                "applicationId": "com.wax.module",
                 "declaredVersions": versions["supported_versions_wpp"],
             },
             "business": {
                 "packageName": "com.whatsapp.w4b",
-                "applicationId": "com.wmods.wppenhacer.w4b",
+                "applicationId": "com.wax.module.w4b",
                 "declaredVersions": versions["supported_versions_business"],
             },
         },

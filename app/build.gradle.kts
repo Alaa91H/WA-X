@@ -21,8 +21,8 @@ val gitHash: String =
         .map { it.trim().uppercase(Locale.getDefault()).take(8) }
         .getOrElse("UNKNOWN")
 
-val baseVersionName = providers.gradleProperty("waeVersionName").get()
-val baseVersionCode = providers.gradleProperty("waeVersionCode").get().toInt()
+val baseVersionName = providers.gradleProperty("waxVersionName").get()
+val baseVersionCode = providers.gradleProperty("waxVersionCode").get().toInt()
 val releaseTag = providers.gradleProperty("releaseTag").orNull
 val releaseVersion = releaseTag?.removePrefix("v")
 
@@ -33,7 +33,7 @@ if (releaseTag != null && releaseTag != "v$baseVersionName") {
 val resolvedVersionName = releaseVersion ?: "$baseVersionName-dev+$gitHash"
 
 android {
-    namespace = "com.wmods.wppenhacer"
+    namespace = "com.wax.module"
     //noinspection GradleDependency
     compileSdk = 37
     ndkVersion = "28.2.13676358"
@@ -49,12 +49,12 @@ android {
         create("business") {
             dimension = "version"
             applicationIdSuffix = ".w4b"
-            resValue("string", "app_name", "Wa Enhancer Business")
+            resValue("string", "app_name", "WA X Business")
         }
     }
 
     defaultConfig {
-        applicationId = "com.wmods.wppenhacer"
+        applicationId = "com.wax.module"
         minSdk = 28
         //noinspection OldTargetApi
         targetSdk = 34
@@ -205,10 +205,13 @@ android {
 
 androidComponents {
     onVariants { variant ->
+        // Output names carry the product identity so a downloaded APK is
+        // recognisable without opening it: WA-X-<version>.apk, and the Business
+        // build gets the same name once the flavors are unified.
         val appName =
             when (variant.flavorName) {
-                "business" -> "WaEnhancer-Business"
-                else -> "WaEnhancer"
+                "business" -> "WA-X-Business"
+                else -> "WA-X"
             }
         variant.outputs.forEach { output ->
             output.outputFileName.set(output.versionName.map { "$appName-$it.apk" })

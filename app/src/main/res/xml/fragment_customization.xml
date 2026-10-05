@@ -20,7 +20,7 @@
             app:summary="%s"
             app:title="@string/changecolor_mode" />
 
-        <com.wmods.wppenhacer.preference.FeatureColorPreferenceCompat
+        <com.wax.module.preference.FeatureColorPreferenceCompat
             app:cpv_showAlphaSlider="true"
             app:dependency="changecolor"
             app:icon="@drawable/ic_customization_palette_24"
@@ -28,7 +28,7 @@
             app:summary="@string/default_color"
             app:title="@string/primary_color" />
 
-        <com.wmods.wppenhacer.preference.FeatureColorPreferenceCompat
+        <com.wax.module.preference.FeatureColorPreferenceCompat
             app:cpv_showAlphaSlider="true"
             app:dependency="changecolor"
             app:icon="@drawable/ic_customization_palette_24"
@@ -36,7 +36,7 @@
             app:summary="@string/default_color"
             app:title="@string/background_color" />
 
-        <com.wmods.wppenhacer.preference.FeatureColorPreferenceCompat
+        <com.wax.module.preference.FeatureColorPreferenceCompat
             app:cpv_showAlphaSlider="true"
             app:dependency="changecolor"
             app:icon="@drawable/ic_customization_palette_24"
@@ -49,7 +49,7 @@
             app:summary="@string/wallpaper_in_home_screen_sum"
             app:title="@string/wallpaper_in_home_screen" />
 
-        <com.wmods.wppenhacer.preference.FileSelectPreference
+        <com.wax.module.preference.FileSelectPreference
             android:entryValues="@array/image_picker"
             android:summary="@string/wallpaper_not_selected"
             app:dependency="wallpaper"
@@ -115,7 +115,7 @@
             app:key="change_dpi"
             app:title="@string/change_default_dpi" />
 
-        <com.wmods.wppenhacer.preference.ThemePreference
+        <com.wax.module.preference.ThemePreference
             android:key="folder_theme"
             app:dependency="custom_filters"
             android:summary="@string/manage_theme_sum"
@@ -156,7 +156,7 @@
             app:summary="@string/change_blubble_color_sum"
             app:title="@string/change_bubble_colors" />
 
-        <com.wmods.wppenhacer.preference.FeatureColorPreferenceCompat
+        <com.wax.module.preference.FeatureColorPreferenceCompat
             app:cpv_showAlphaSlider="true"
             app:dependency="bubble_color"
             app:icon="@drawable/ic_customization_palette_24"
@@ -164,7 +164,7 @@
             app:summary="@string/default_color"
             app:title="@string/bubble_left" />
 
-        <com.wmods.wppenhacer.preference.FeatureColorPreferenceCompat
+        <com.wax.module.preference.FeatureColorPreferenceCompat
             app:cpv_showAlphaSlider="true"
             app:dependency="bubble_color"
             app:icon="@drawable/ic_customization_palette_24"
