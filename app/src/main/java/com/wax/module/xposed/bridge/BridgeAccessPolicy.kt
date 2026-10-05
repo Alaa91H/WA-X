@@ -1,6 +1,7 @@
 package com.wax.module.xposed.bridge
 
 import com.wax.module.platform.SupportedPackages
+import com.wax.module.platform.TargetPackageRegistry
 import java.io.File
 
 /**
@@ -25,7 +26,7 @@ import java.io.File
 object BridgeAccessPolicy {
     /** Target packages the module hooks and therefore serves. */
     @JvmField
-    val TARGET_PACKAGES: Set<String> = SupportedPackages.ALL
+    val TARGET_PACKAGES: Set<String> = TargetPackageRegistry.packageNames
 
     /**
      * The settings provider is how [ScopeHook] intercepts `Settings.System` calls from

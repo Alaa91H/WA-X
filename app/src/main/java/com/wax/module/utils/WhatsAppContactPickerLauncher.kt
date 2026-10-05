@@ -6,13 +6,14 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import com.wax.module.platform.SupportedPackages
+import com.wax.module.platform.TargetPackageRegistry
 import java.util.ArrayList
 
 object WhatsAppContactPickerLauncher {
     const val EXTRA_PICKER_MODE = "picker_mode"
     const val EXTRA_CONTACT_MODE = "contact_mode"
 
-    private val whatsappPackages = SupportedPackages.ALL.toList()
+    private val whatsappPackages = TargetPackageRegistry.packageNames.toList()
     private val aboutActivityCandidates = listOf(
         "com.whatsapp.settings.About",
         "com.whatsapp.settings.ui.About"

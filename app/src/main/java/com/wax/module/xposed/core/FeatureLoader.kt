@@ -31,6 +31,7 @@ import com.wax.module.diagnostics.FailureReportStore
 import com.wax.module.diagnostics.FeatureFailureReport
 import com.wax.module.diagnostics.ReportRedactor
 import com.wax.module.platform.SupportedPackages
+import com.wax.module.platform.TargetPackageRegistry
 import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.core.components.FMessageWpp
 import com.wax.module.xposed.core.components.FStatusWpp

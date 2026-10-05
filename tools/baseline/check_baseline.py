@@ -447,7 +447,7 @@ def main() -> int:
             checks.append((True, label, detail))
 
     # --- report ----------------------------------------------------------
-    print("WaEnhancer baseline gate (T04)")
+    print("WA X baseline gate (T04)")
     print("Baseline source: %s" % source)
     for notice in notices:
         print("  [WARN] %s" % notice)

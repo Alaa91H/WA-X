@@ -4,6 +4,7 @@ import com.wax.module.platform.JsonValue
 import com.wax.module.platform.KeyValueStore
 import com.wax.module.platform.MiniJson
 import com.wax.module.platform.SupportedPackages
+import com.wax.module.platform.TargetApp
 import com.wax.module.platform.jsonNumber
 import com.wax.module.platform.jsonObject
 import com.wax.module.platform.jsonString
@@ -16,11 +17,8 @@ enum class TargetPackage(
     val packageName: String,
     val displayName: String,
 ) {
-    WHATSAPP(SupportedPackages.WHATSAPP, SupportedPackages.DISPLAY_NAMES.getValue(SupportedPackages.WHATSAPP)),
-    BUSINESS(
-        SupportedPackages.WHATSAPP_BUSINESS,
-        SupportedPackages.DISPLAY_NAMES.getValue(SupportedPackages.WHATSAPP_BUSINESS),
-    ),
+    WHATSAPP(TargetApp.WHATSAPP.packageName, TargetApp.WHATSAPP.displayName),
+    BUSINESS(TargetApp.WHATSAPP_BUSINESS.packageName, TargetApp.WHATSAPP_BUSINESS.displayName),
     ;
 
     companion object {

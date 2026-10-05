@@ -6,6 +6,7 @@ import android.os.Process
 import com.topjohnwu.superuser.Shell
 import com.wax.module.R
 import com.wax.module.platform.SupportedPackages
+import com.wax.module.platform.TargetPackageRegistry
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -21,7 +22,7 @@ object RootDiagnostics {
     private val SEPOLICY_PATTERN = Pattern.compile("(?i)sepolicy")
     private val ISSUE_PATTERN = Pattern.compile("(?i)error|invalid|failed|not loaded properly")
 
-    private val WHATSAPP_PACKAGES = SupportedPackages.ALL.toList()
+    private val WHATSAPP_PACKAGES = TargetPackageRegistry.packageNames.toList()
 
     private val WAENHANCER_PACKAGES = listOf(
         "com.wax.module",

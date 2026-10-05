@@ -1,5 +1,7 @@
 package com.wax.module.platform
 
+import com.wax.module.platform.TargetPackageRegistry
+
 /**
  * The single source of truth for every package name this module refers to.
  *
@@ -75,15 +77,18 @@ object SupportedPackages {
      * Whether [packageName] is a package the module enhances.
      *
      * Null is rejected on purpose: an unresolved package name is a failure to
-     * identify the process, and guessing a target there is how a hook ends up in
-     * the wrong app.
+     * identify the process, and guessing a target there is how a hook ends up in the
+     * wrong app.
+     *
+     * Delegates to [TargetPackageRegistry] so there is one place that answers this,
+     * not two that can disagree.
      */
     @JvmStatic
-    fun isTarget(packageName: String?): Boolean = packageName != null && packageName in ALL
+    fun isTarget(packageName: String?): Boolean = TargetPackageRegistry.isTarget(packageName)
 
     /** Whether [packageName] is a target or one of the infrastructure processes. */
     @JvmStatic
-    fun isInHookScope(packageName: String?): Boolean = packageName != null && packageName in HOOK_SCOPE
+    fun isInHookScope(packageName: String?): Boolean = TargetPackageRegistry.isInHookScope(packageName)
 
     /** Whether [packageName] is the system framework package and process. */
     @JvmStatic
@@ -94,5 +99,6 @@ object SupportedPackages {
 
     /** The display name for a target package, or the package name itself if unknown. */
     @JvmStatic
-    fun displayName(packageName: String): String = DISPLAY_NAMES[packageName] ?: packageName
+    fun displayName(packageName: String): String = TargetPackageRegistry.displayName(packageName)
 }
+

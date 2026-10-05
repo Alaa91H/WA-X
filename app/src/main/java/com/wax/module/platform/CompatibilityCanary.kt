@@ -1,6 +1,7 @@
 package com.wax.module.platform
 
 import com.wax.module.compat.TargetVersions
+import com.wax.module.platform.TargetPackageRegistry
 
 /**
  * The identity of one installed target package.
