@@ -3,6 +3,7 @@ package com.wmods.wppenhacer.multipackage
 import com.wmods.wppenhacer.platform.JsonValue
 import com.wmods.wppenhacer.platform.KeyValueStore
 import com.wmods.wppenhacer.platform.MiniJson
+import com.wmods.wppenhacer.platform.SupportedPackages
 import com.wmods.wppenhacer.platform.jsonNumber
 import com.wmods.wppenhacer.platform.jsonObject
 import com.wmods.wppenhacer.platform.jsonString
@@ -15,8 +16,11 @@ enum class TargetPackage(
     val packageName: String,
     val displayName: String,
 ) {
-    WHATSAPP("com.whatsapp", "WhatsApp"),
-    BUSINESS("com.whatsapp.w4b", "WhatsApp Business"),
+    WHATSAPP(SupportedPackages.WHATSAPP, SupportedPackages.DISPLAY_NAMES.getValue(SupportedPackages.WHATSAPP)),
+    BUSINESS(
+        SupportedPackages.WHATSAPP_BUSINESS,
+        SupportedPackages.DISPLAY_NAMES.getValue(SupportedPackages.WHATSAPP_BUSINESS),
+    ),
     ;
 
     companion object {

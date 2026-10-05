@@ -151,6 +151,6 @@ class CompatibilityCanary {
 
     companion object {
         /** The target package name of WhatsApp Business. */
-        const val BUSINESS_PACKAGE: String = "com.whatsapp.w4b"
+        const val BUSINESS_PACKAGE: String = SupportedPackages.WHATSAPP_BUSINESS
     }
 }

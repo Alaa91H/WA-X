@@ -7,7 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.wmods.wppenhacer.BuildConfig;
-import com.wmods.wppenhacer.xposed.core.FeatureLoader;
+import com.wmods.wppenhacer.platform.SupportedPackages;
 import com.wmods.wppenhacer.xposed.utils.ReflectionUtils;
 import com.wmods.wppenhacer.xposed.utils.Utils;
 
@@ -27,9 +27,10 @@ public class ScopeHook {
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
-            if ("android".equals(lpparam.packageName) && "android".equals(lpparam.processName) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (SupportedPackages.isSystemFramework(lpparam.packageName, lpparam.processName)
+                    && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 hookService(lpparam);
-            } else if ("com.android.providers.settings".equals(lpparam.packageName)) {
+            } else if (SupportedPackages.SETTINGS_PROVIDER.equals(lpparam.packageName)) {
                 hookSettings(lpparam);
             }
         } catch (Exception e) {
@@ -118,7 +119,7 @@ public class ScopeHook {
                         if (callingApps == null) return;
                         var targetApp = getPackageNameFromPackageSettings(param.args[3]);
                         for (var caller : callingApps) {
-                            if ((caller.equals(FeatureLoader.PACKAGE_WPP) || caller.equals(FeatureLoader.PACKAGE_BUSINESS)) && targetApp.equals(BuildConfig.APPLICATION_ID)) {
+                            if (SupportedPackages.isTarget(caller) && targetApp.equals(BuildConfig.APPLICATION_ID)) {
                                 param.setResult(Boolean.FALSE);
                                 return;
                             }
@@ -144,7 +145,7 @@ public class ScopeHook {
                         if (callingApps == null) return;
                         var targetApp = getPackageNameFromPackageSettings(param.args[2]);
                         for (var caller : callingApps) {
-                            if ((caller.equals(FeatureLoader.PACKAGE_WPP) || caller.equals(FeatureLoader.PACKAGE_BUSINESS)) && targetApp.equals(BuildConfig.APPLICATION_ID)) {
+                            if (SupportedPackages.isTarget(caller) && targetApp.equals(BuildConfig.APPLICATION_ID)) {
                                 param.setResult(Boolean.FALSE);
                                 return;
                             }

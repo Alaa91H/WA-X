@@ -148,12 +148,26 @@
         <meta-data
             android:name="xposeddescription"
             android:value="@string/app_desc" />
+        <!--
+            xposedminversion is what marks this as a legacy Xposed API module. It also
+            decides which entry point LSPosed loads: with it present and no
+            META-INF/xposed/java_init.list in the APK, LSPosed reads
+            assets/xposed_init and sets staticScope to false unconditionally. Adding
+            the modern META-INF/xposed files (java_init.list, module.prop, scope.list)
+            would therefore not add a static scope, it would make LSPosed ignore
+            assets/xposed_init and load nothing at all.
+        -->
         <meta-data
             android:name="xposedminversion"
             android:value="93" />
         <meta-data
             android:name="xposedsharedprefs"
             android:value="true" />
+        <!--
+            Recommended scope. See the comment on the `scope` array in
+            res/values/arrays.xml for why it contains the system framework and why it
+            cannot be made static on this API.
+        -->
         <meta-data
             android:name="xposedscope"
             android:resource="@array/scope" />

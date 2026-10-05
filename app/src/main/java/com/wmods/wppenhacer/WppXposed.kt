@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.preference.PreferenceManager
 import com.wmods.wppenhacer.activities.MainActivity
+import com.wmods.wppenhacer.platform.SupportedPackages
 import com.wmods.wppenhacer.xposed.AntiUpdater
 import com.wmods.wppenhacer.xposed.bridge.ScopeHook
 import com.wmods.wppenhacer.xposed.core.FeatureLoader
@@ -50,27 +51,30 @@ class WppXposed : IXposedHookLoadPackage, IXposedHookInitPackageResources, IXpos
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         val packageName = lpparam.packageName
         val classLoader = lpparam.classLoader
-        XposedBridge.log("[•] This package: ${lpparam.packageName}")
 
+        // The module's own process. It is hooked, but not enhanced: this is what
+        // makes App.isXposedEnabled report an active module and what forces the
+        // preference file world-readable so hooked WhatsApp processes can read it
+        // through XSharedPreferences. LSPosed adds a legacy module to its own scope
+        // automatically for exactly this reason.
         if (packageName == BuildConfig.APPLICATION_ID) {
-            val clazz = XposedHelpers.findClass(App::class.java.name, classLoader)
-            XposedBridge.hookAllMethods(clazz, "isXposedEnabled", XC_MethodReplacement.returnConstant(true))
-
-            @Suppress("DEPRECATION")
-            @SuppressLint("WorldReadableFiles")
-            XposedHelpers.findAndHookMethod(
-                PreferenceManager::class.java.name,
-                classLoader,
-                "getDefaultSharedPreferencesMode",
-                XC_MethodReplacement.returnConstant(ContextWrapper.MODE_WORLD_READABLE)
-            )
-
-            XposedHelpers.findAndHookMethod(
-                "android.app.ContextImpl", classLoader, "checkMode", Int::class.javaPrimitiveType!!, XC_MethodReplacement.DO_NOTHING)
+            hookSelf(classLoader)
             return
         }
 
-        AntiUpdater.hookSession(lpparam)
+        // Defence in depth for the scope. LSPosed's scope is user editable, so the
+        // scope metadata is a recommendation and not a guarantee. Anything outside
+        // the supported set leaves here without a single hook installed, instead of
+        // running every hook stage against an unrelated application.
+        if (!SupportedPackages.isInHookScope(packageName)) {
+            return
+        }
+
+        XposedBridge.log("[•] This package: ${lpparam.packageName}")
+
+        if (SupportedPackages.isTarget(packageName)) {
+            AntiUpdater.hookSession(lpparam)
+        }
 
         Patch.handleLoadPackage(lpparam)
 
@@ -85,11 +89,32 @@ class WppXposed : IXposedHookLoadPackage, IXposedHookInitPackageResources, IXpos
         }
     }
 
+    /**
+     * Hooks the module's own process. Kept separate from [handleLoadPackage] so the
+     * self-hook cannot accidentally be reached for any other package.
+     */
+    private fun hookSelf(classLoader: ClassLoader) {
+        val clazz = XposedHelpers.findClass(App::class.java.name, classLoader)
+        XposedBridge.hookAllMethods(clazz, "isXposedEnabled", XC_MethodReplacement.returnConstant(true))
+
+        @Suppress("DEPRECATION")
+        @SuppressLint("WorldReadableFiles")
+        XposedHelpers.findAndHookMethod(
+            PreferenceManager::class.java.name,
+            classLoader,
+            "getDefaultSharedPreferencesMode",
+            XC_MethodReplacement.returnConstant(ContextWrapper.MODE_WORLD_READABLE)
+        )
+
+        XposedHelpers.findAndHookMethod(
+            "android.app.ContextImpl", classLoader, "checkMode", Int::class.javaPrimitiveType!!, XC_MethodReplacement.DO_NOTHING)
+    }
+
     @Throws(Throwable::class)
     override fun handleInitPackageResources(resparam: InitPackageResourcesParam) {
         val packageName = resparam.packageName
 
-        if (packageName != FeatureLoader.PACKAGE_WPP && packageName != FeatureLoader.PACKAGE_BUSINESS) {
+        if (!SupportedPackages.isTarget(packageName)) {
             return
         }
 

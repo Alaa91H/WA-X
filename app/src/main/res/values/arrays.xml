@@ -20,7 +20,33 @@
         <item>2.26.39.xx</item>
     </string-array>
 
-    <string-array name="scope">
+    <!--
+        Recommended LSPosed scope, referenced by the `xposedscope` meta-data in
+        AndroidManifest.xml.
+
+        This is the legacy Xposed API, so this array is the only scope mechanism
+        available to the module and it is what LSPosed pre-selects. It cannot make
+        the scope static: LSPosed hard-codes `staticScope = false` for any module
+        that declares `xposedminversion` and is loaded through `assets/xposed_init`,
+        so LSPosed's scope screen always offers the full installed-app list and the
+        user can still add a package by hand. That is a property of the API, not of
+        this declaration.
+
+        Two details are deliberate:
+
+          * `android` is the system framework process. It is not a target the module
+            enhances, but the package-visibility bypass (`AppsFilter`) and the
+            install-downgrade patch have to run inside `system_server`, so without it
+            WhatsApp cannot reach the module's content providers and updates of
+            WhatsApp are rejected by the installer. LSPosed shows this entry as
+            "System Framework" and stores it as `system`; the legacy name `android`
+            is the one it expects here and it performs the swap itself.
+          * The module's own package is absent on purpose. LSPosed adds a legacy
+            module to its own scope automatically, because a legacy module reads its
+            preferences from its own process through world-readable files. Declaring
+            it here would be redundant.
+    -->
+    <string-array name="scope" translatable="false">
         <item>com.whatsapp</item>
         <item>com.whatsapp.w4b</item>
         <item>android</item>

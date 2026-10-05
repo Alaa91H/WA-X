@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Process
 import com.topjohnwu.superuser.Shell
 import com.wmods.wppenhacer.R
+import com.wmods.wppenhacer.platform.SupportedPackages
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -20,10 +21,7 @@ object RootDiagnostics {
     private val SEPOLICY_PATTERN = Pattern.compile("(?i)sepolicy")
     private val ISSUE_PATTERN = Pattern.compile("(?i)error|invalid|failed|not loaded properly")
 
-    private val WHATSAPP_PACKAGES = listOf(
-        "com.whatsapp",
-        "com.whatsapp.w4b"
-    )
+    private val WHATSAPP_PACKAGES = SupportedPackages.ALL.toList()
 
     private val WAENHANCER_PACKAGES = listOf(
         "com.wmods.wppenhacer",

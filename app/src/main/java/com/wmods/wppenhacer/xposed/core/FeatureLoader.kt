@@ -30,6 +30,7 @@ import com.wmods.wppenhacer.diagnostics.FailureReportCodec
 import com.wmods.wppenhacer.diagnostics.FailureReportStore
 import com.wmods.wppenhacer.diagnostics.FeatureFailureReport
 import com.wmods.wppenhacer.diagnostics.ReportRedactor
+import com.wmods.wppenhacer.platform.SupportedPackages
 import com.wmods.wppenhacer.xposed.core.components.AlertDialogWpp
 import com.wmods.wppenhacer.xposed.core.components.FMessageWpp
 import com.wmods.wppenhacer.xposed.core.components.FStatusWpp
@@ -126,8 +127,8 @@ class FeatureLoader {
 
         lateinit var moduleContext: Context
 
-        const val PACKAGE_WPP = "com.whatsapp"
-        const val PACKAGE_BUSINESS = "com.whatsapp.w4b"
+        const val PACKAGE_WPP = SupportedPackages.WHATSAPP
+        const val PACKAGE_BUSINESS = SupportedPackages.WHATSAPP_BUSINESS
 
         private val FALLBACK_SUPPORTED_VERSIONS_WPP = listOf(
             "2.26.32.xx",

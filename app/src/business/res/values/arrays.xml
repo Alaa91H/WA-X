@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="scope">
+    <!--
+        The Business flavor overrides the recommended LSPosed scope declared in
+        src/main/res/values/arrays.xml.
+
+        The business flavor hooks WhatsApp Business only: WppXposed gates plain
+        WhatsApp behind App.isOriginalPackage, which is false for this flavor's
+        application id. Recommending com.whatsapp here would put a package in the
+        scope that the module never enhances, so it is left out.
+
+        See the comment on the `scope` array in src/main/res/values/arrays.xml for
+        what the legacy API can and cannot express, and why `android` is required.
+    -->
+    <string-array name="scope" translatable="false">
         <item>com.whatsapp.w4b</item>
         <item>android</item>
     </string-array>

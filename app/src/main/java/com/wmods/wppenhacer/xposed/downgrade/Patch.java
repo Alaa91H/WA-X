@@ -5,10 +5,9 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
 import android.os.Build;
 
-import com.wmods.wppenhacer.xposed.core.FeatureLoader;
+import com.wmods.wppenhacer.platform.SupportedPackages;
 
 import java.lang.reflect.Field;
-import java.util.Objects;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -17,13 +16,13 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class Patch {
     public static void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (!("android".equals(lpparam.packageName)) || !(lpparam.processName.equals("android")))
+        if (!SupportedPackages.isSystemFramework(lpparam.packageName, lpparam.processName))
             return;
         XC_MethodHook hookDowngradeObject = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 var pkg = (String) XposedHelpers.callMethod(param.args[0], "getPackageName");
-                if (Objects.equals(pkg, FeatureLoader.PACKAGE_WPP) || Objects.equals(pkg, FeatureLoader.PACKAGE_BUSINESS))
+                if (SupportedPackages.isTarget(pkg))
                     param.setResult(null);
             }
         };
@@ -32,7 +31,7 @@ public class Patch {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 var pkg = (String) XposedHelpers.callMethod(param.args[0], "getPackageName");
-                if (Objects.equals(pkg, FeatureLoader.PACKAGE_WPP) || Objects.equals(pkg, FeatureLoader.PACKAGE_BUSINESS))
+                if (SupportedPackages.isTarget(pkg))
                     param.setResult(true);
             }
         };
@@ -68,7 +67,7 @@ public class Patch {
                             "com.android.server.pm.parsing.pkg.AndroidPackage",
                             "android.content.pm.PackageInfoLite");
                     if (checkDowngrade1 != null) {
-                        // 允许降级
+                        // Allow the downgrade that installing an older WhatsApp build requires.
                         XposedBridge.hookMethod(checkDowngrade1, hookDowngradeObject);
                     }
                     // exists on flyme 9(Android 11) only
@@ -86,7 +85,7 @@ public class Patch {
                     public void beforeHookedMethod(MethodHookParam methodHookParam) throws Throwable {
                         Object packageInfoLite = methodHookParam.args[0];
                         var packageName = XposedHelpers.getObjectField(packageInfoLite, "packageName");
-                        if (packageName == FeatureLoader.PACKAGE_WPP || packageName == FeatureLoader.PACKAGE_BUSINESS) {
+                        if (SupportedPackages.isTarget((String) packageName)) {
                             Field field = packageClazz.getField("mVersionCode");
                             field.setAccessible(true);
                             field.set(packageInfoLite, 0);

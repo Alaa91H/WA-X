@@ -1,5 +1,6 @@
 package com.wmods.wppenhacer.xposed.bridge
 
+import com.wmods.wppenhacer.platform.SupportedPackages
 import java.io.File
 
 /**
@@ -23,13 +24,14 @@ import java.io.File
  */
 object BridgeAccessPolicy {
     /** Target packages the module hooks and therefore serves. */
-    val TARGET_PACKAGES: Set<String> = linkedSetOf("com.whatsapp", "com.whatsapp.w4b")
+    @JvmField
+    val TARGET_PACKAGES: Set<String> = SupportedPackages.ALL
 
     /**
      * The settings provider is how [ScopeHook] intercepts `Settings.System` calls from
      * inside the hooked process, so it must be able to obtain the handle.
      */
-    const val SETTINGS_PROVIDER: String = "com.android.providers.settings"
+    const val SETTINGS_PROVIDER: String = SupportedPackages.SETTINGS_PROVIDER
 
     /**
      * Whether a caller may obtain the binder handle.

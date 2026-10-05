@@ -5,13 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import com.wmods.wppenhacer.platform.SupportedPackages
 import java.util.ArrayList
 
 object WhatsAppContactPickerLauncher {
     const val EXTRA_PICKER_MODE = "picker_mode"
     const val EXTRA_CONTACT_MODE = "contact_mode"
 
-    private val whatsappPackages = listOf("com.whatsapp", "com.whatsapp.w4b")
+    private val whatsappPackages = SupportedPackages.ALL.toList()
     private val aboutActivityCandidates = listOf(
         "com.whatsapp.settings.About",
         "com.whatsapp.settings.ui.About"
@@ -65,7 +66,7 @@ object WhatsAppContactPickerLauncher {
 
     @JvmStatic
     fun getPackageLabel(packageName: String): CharSequence =
-        if (packageName == "com.whatsapp.w4b") "WhatsApp Business" else "WhatsApp"
+        if (packageName == SupportedPackages.WHATSAPP_BUSINESS) "WhatsApp Business" else "WhatsApp"
 
     @JvmStatic
     @Throws(Exception::class)

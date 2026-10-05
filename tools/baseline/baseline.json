@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-05T14:20:41Z",
+  "generatedAtUtc": "2026-10-05T16:38:18Z",
   "module": {
     "name": "WaEnhancer",
     "versionName": "1.7.0",
     "versionCode": 170
   },
   "git": {
-    "commit": "0853c9a6b22c",
+    "commit": "46646ccfc026",
     "branch": "master",
     "dirtyWorktree": true
   },
@@ -17,16 +17,16 @@
     "minSdk": 28
   },
   "source": {
-    "kotlinFilesMain": 236,
+    "kotlinFilesMain": 237,
     "kotlinFilesXposed": 116,
     "kotlinFilesFeatures": 67,
     "javaFilesRemaining": 3,
-    "testFiles": 38,
-    "testMethods": 720
+    "testFiles": 39,
+    "testMethods": 731
   },
   "testResults": {
-    "files": 80,
-    "tests": 1440,
+    "files": 82,
+    "tests": 1462,
     "skipped": 0,
     "failures": 0,
     "errors": 0
@@ -70,8 +70,8 @@
     "business": ["2.26.32.xx", "2.26.34.xx", "2.26.35.xx", "2.26.36.xx", "2.26.37.xx", "2.26.38.xx", "2.26.39.xx"]
   },
   "apks": [
-    {"path": "app/build/outputs/apk/business/debug/WaEnhancer-Business-1.7.0-dev+0853C9A6.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38242935, "sizeHuman": "36.47 MiB", "sha256": "4e5656722a16a24ff72567cd869a858cf1f792aaf4a6d4086ec767e943e2a570"},
-    {"path": "app/build/outputs/apk/whatsapp/debug/WaEnhancer-1.7.0-dev+0853C9A6.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38242955, "sizeHuman": "36.47 MiB", "sha256": "3529ed1f0812023acb7157efe560e41088fd5c0fa8c0babd1484ea4765f3f650"}
+    {"path": "app/build/outputs/apk/business/debug/WaEnhancer-Business-1.7.0-dev+46646CCF.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38242935, "sizeHuman": "36.47 MiB", "sha256": "f2ecf0a3979eb288148eb2cf28bf8ab6035ad79d359dc82b1a9b0076429950e8"},
+    {"path": "app/build/outputs/apk/whatsapp/debug/WaEnhancer-1.7.0-dev+46646CCF.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38242951, "sizeHuman": "36.47 MiB", "sha256": "604731f43401971b17d8960cdce08f6602753fd3095dce7210156276c73e156f"}
   ],
   "runtime": {
     "source": "none",
