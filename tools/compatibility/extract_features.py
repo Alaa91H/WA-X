@@ -54,7 +54,21 @@ PACKAGE_IMPORT = re.compile(r"^import\s+([\w.]+)\s*$")
 RESOLVER_CALL = re.compile(r"\bUnobfuscator\s*\.\s*(load\w+)")
 RESOLVER_DECL = re.compile(r"\bfun\s+(load\w+)\s*\(")
 ARRAY_ITEM = re.compile(r"<item>([^<]+)</item>")
+# Deliberately boolean switches only, as before. Widening this to every getter type
+# would rewrite the preferenceKeys of every feature in the matrix, which is a tooling
+# change in its own right and not part of a HD Status fix.
 GET_BOOLEAN = re.compile(r'\bgetBoolean\s*\(\s*"([^"]+)"')
+# A feature may name its preferences through a constant instead of an inline literal,
+# which is what keeps the key in one place. Both forms are read.
+PREF_CONST = re.compile(r'\bconst\s+val\s+PREF_[A-Z0-9_]+\s*=\s*"([^"]+)"')
+# A type token naming another Kotlin file in the feature tree.
+TYPE_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
+# A helper class is *owned* by a feature when the feature constructs it. A bare type
+# mention is not enough: a comment, a KDoc link or a static access such as
+# ``Others.propsInteger`` would otherwise drag a whole unrelated feature in.
+CONSTRUCTS = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\s*\(")
+BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT = re.compile(r"//[^\n]*")
 
 # A feature reaches its hook targets through one or more of these internal layers.
 # Recording which ones a feature touches is what makes its compatibility auditable:
@@ -113,44 +127,87 @@ def resolvers_declared() -> set[str]:
     return set(RESOLVER_DECL.findall(read(UNOBFUSCATOR)))
 
 
-def feature_resolver_usage() -> dict[str, list[str]]:
-    """Map feature simple name -> sorted ``Unobfuscator.load*`` calls in its file."""
-    usage: dict[str, list[str]] = {}
+def feature_files() -> dict[str, str]:
+    """Map Kotlin file stem -> source text, for every file in the feature tree."""
+    files: dict[str, str] = {}
     for dirpath, _dirnames, filenames in os.walk(FEATURES_DIR):
         for filename in filenames:
-            if not filename.endswith(".kt"):
-                continue
-            simple = filename[:-3]
-            calls = sorted(set(RESOLVER_CALL.findall(read(os.path.join(dirpath, filename)))))
-            if calls:
-                usage[simple] = calls
+            if filename.endswith(".kt"):
+                stem = filename[:-3]
+                files.setdefault(stem, read(os.path.join(dirpath, filename)))
+    return files
+
+
+def strip_comments(body: str) -> str:
+    """Remove comments so a KDoc mention is not mistaken for a real reference."""
+    without_block = BLOCK_COMMENT.sub(" ", body)
+    return LINE_COMMENT.sub(" ", without_block)
+
+
+def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
+    """Files that make up one feature: its own file plus the helpers it constructs.
+
+    A feature is not always one file. HD Status, for example, keeps its target
+    resolution and its image and video hooks in sibling classes, and those files hold
+    the resolver calls. Reading only the entry file reported that the feature needed no
+    resolvers at all, which is exactly the kind of wrong-but-passing metadata this
+    matrix exists to prevent.
+
+    The closure follows constructor calls only. Matching every capitalised token would
+    be far too greedy: a KDoc reference, a log string or a static access such as
+    ``Others.propsInteger[...]`` is not ownership, and following those pulled three
+    unrelated features in.
+    """
+    if stem not in files:
+        return set()
+
+    closure: set[str] = set()
+    pending = [stem]
+    while pending:
+        current = pending.pop()
+        if current in closure or current not in files:
+            continue
+        closure.add(current)
+        code = strip_comments(files[current])
+        for token in set(CONSTRUCTS.findall(code)):
+            if token in files and token not in closure:
+                pending.append(token)
+    return closure
+
+
+def aggregate(files: dict[str, str], stems: set[str]) -> str:
+    return "\n".join(files[stem] for stem in sorted(stems) if stem in files)
+
+
+def feature_resolver_usage(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> sorted ``Unobfuscator.load*`` calls in its closure."""
+    usage: dict[str, list[str]] = {}
+    for stem in files:
+        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files)))))
+        if calls:
+            usage[stem] = calls
     return usage
 
 
-def feature_preference_keys() -> dict[str, list[str]]:
-    """Map feature simple name -> preference keys it reads via ``prefs.getBoolean``."""
+def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> preference keys its closure reads."""
     keys: dict[str, list[str]] = {}
-    for dirpath, _dirnames, filenames in os.walk(FEATURES_DIR):
-        for filename in filenames:
-            if not filename.endswith(".kt"):
-                continue
-            found = sorted(set(GET_BOOLEAN.findall(read(os.path.join(dirpath, filename)))))
-            if found:
-                keys[filename[:-3]] = found
+    for stem in files:
+        body = aggregate(files, feature_closure(stem, files))
+        found = sorted(set(GET_BOOLEAN.findall(body)) | set(PREF_CONST.findall(body)))
+        if found:
+            keys[stem] = found
     return keys
 
 
-def feature_resolution_sources() -> dict[str, list[str]]:
-    """Map feature simple name -> internal resolution layers it references."""
+def feature_resolution_sources(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> internal resolution layers its closure references."""
     sources: dict[str, list[str]] = {}
-    for dirpath, _dirnames, filenames in os.walk(FEATURES_DIR):
-        for filename in filenames:
-            if not filename.endswith(".kt"):
-                continue
-            body = read(os.path.join(dirpath, filename))
-            found = [name for name in RESOLUTION_SOURCES if re.search(r"\b%s\b" % name, body)]
-            if found:
-                sources[filename[:-3]] = found
+    for stem in files:
+        body = aggregate(files, feature_closure(stem, files))
+        found = [name for name in RESOLUTION_SOURCES if re.search(r"\b%s\b" % name, body)]
+        if found:
+            sources[stem] = found
     return sources
 
 
@@ -197,9 +254,10 @@ def build() -> dict[str, Any]:
     declared = resolvers_declared()
     order = find_registered_order()
     imported = {simple: package for simple, package in find_feature_classes()}
-    usage = feature_resolver_usage()
-    sources = feature_resolution_sources()
-    pref_keys = feature_preference_keys()
+    files = feature_files()
+    usage = feature_resolver_usage(files)
+    sources = feature_resolution_sources(files)
+    pref_keys = feature_preference_keys(files)
     versions = supported_versions()
 
     missing = [name for name in order if name not in imported]

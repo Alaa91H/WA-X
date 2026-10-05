@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-05T16:38:18Z",
+  "generatedAtUtc": "2026-10-05T18:15:18Z",
   "module": {
     "name": "WaEnhancer",
     "versionName": "1.7.0",
     "versionCode": 170
   },
   "git": {
-    "commit": "46646ccfc026",
+    "commit": "97c5b20049be",
     "branch": "master",
     "dirtyWorktree": true
   },
@@ -17,16 +17,16 @@
     "minSdk": 28
   },
   "source": {
-    "kotlinFilesMain": 237,
-    "kotlinFilesXposed": 116,
-    "kotlinFilesFeatures": 67,
+    "kotlinFilesMain": 242,
+    "kotlinFilesXposed": 121,
+    "kotlinFilesFeatures": 72,
     "javaFilesRemaining": 3,
-    "testFiles": 39,
-    "testMethods": 731
+    "testFiles": 41,
+    "testMethods": 756
   },
   "testResults": {
-    "files": 82,
-    "tests": 1462,
+    "files": 86,
+    "tests": 1512,
     "skipped": 0,
     "failures": 0,
     "errors": 0
@@ -36,8 +36,8 @@
     "names": ["DebugFeature", "MinorFixes", "ContactItemListener", "ConversationItemListener", "MenuStatusProvider", "ShowEditMessage", "AntiRevoke", "CustomToolbar", "CustomView", "SeenTick", "BubbleColors", "CallPrivacy", "ActivityController", "CustomThemeV2", "FloatingBottomBar", "ChatLimit", "SeparateGroup", "ShowOnline", "DndMode", "FreezeLastSeen", "TypingPrivacy", "HideChat", "HideSeen", "HideSeenView", "TagMessage", "HideTabs", "IGStatus", "MediaQuality", "NewChat", "Others", "PinnedLimit", "CustomTime", "ShareLimit", "StatusDownload", "ViewOnce", "CallType", "MediaPreview", "FilterGroups", "Tasker", "DeleteStatus", "DownloadViewOnce", "Channels", "DownloadProfile", "ChatFilters", "GroupAdmin", "Stickers", "CopyStatus", "CopySelectionMessage", "TextStatusComposer", "ToastViewer", "MenuHome", "AntiWa", "CustomPrivacy", "AudioTranscript", "GoogleTranslate", "ContactVerify", "LockedChatsEnhancer", "CallRecording", "BackupRestore", "JumpFirstMessage", "AboutContactPicker", "DefaultEmoji", "CaptureDevice", "ContextMenuActionProvider"]
   },
   "unobfuscator": {
-    "fileLines": 3628,
-    "loadResolvers": 187,
+    "fileLines": 3796,
+    "loadResolvers": 191,
     "nonNullAssertions": 27,
     "throwStatements": 170,
     "runtimeErrorCount": null,
@@ -70,8 +70,8 @@
     "business": ["2.26.32.xx", "2.26.34.xx", "2.26.35.xx", "2.26.36.xx", "2.26.37.xx", "2.26.38.xx", "2.26.39.xx"]
   },
   "apks": [
-    {"path": "app/build/outputs/apk/business/debug/WaEnhancer-Business-1.7.0-dev+46646CCF.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38242935, "sizeHuman": "36.47 MiB", "sha256": "f2ecf0a3979eb288148eb2cf28bf8ab6035ad79d359dc82b1a9b0076429950e8"},
-    {"path": "app/build/outputs/apk/whatsapp/debug/WaEnhancer-1.7.0-dev+46646CCF.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38242951, "sizeHuman": "36.47 MiB", "sha256": "604731f43401971b17d8960cdce08f6602753fd3095dce7210156276c73e156f"}
+    {"path": "app/build/outputs/apk/business/debug/WaEnhancer-Business-1.7.0-dev+97C5B200.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38308471, "sizeHuman": "36.53 MiB", "sha256": "ff139e5a9896b569b8220cd0b0451d6898d1101765cc0ccf6c85fd4003aa9712"},
+    {"path": "app/build/outputs/apk/whatsapp/debug/WaEnhancer-1.7.0-dev+97C5B200.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38308491, "sizeHuman": "36.53 MiB", "sha256": "df38cbf677e4df7aa2b1352f9ced95d070065a9791b919988138d629bcefc438"}
   ],
   "runtime": {
     "source": "none",

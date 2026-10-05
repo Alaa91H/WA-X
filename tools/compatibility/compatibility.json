@@ -538,13 +538,15 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "UnobfuscatorCache",
           "ReflectionUtils"
         ],
         "resolverDependencies": [
           "loadBottomBarConfigClass",
           "loadMediaDataVideoConfigurationClass",
+          "loadMediaQualityOriginalVideoFields",
           "loadMediaQualitySelectionMethod",
+          "loadMediaQualityVideoFields",
+          "loadMediaQualityVideoMethod2",
           "loadMediaTranscoderStart",
           "loadProcessImageQualityClass",
           "loadProcessVideoQualityClass",
@@ -552,6 +554,9 @@
         ],
         "preferenceKeys": [
           "imagequality",
+          "video_limit_size",
+          "video_maxfps",
+          "video_real_resolution",
           "videoquality"
         ]
       },
@@ -765,7 +770,10 @@
         "resolverDependencies": [
           "loadReceiptMethod"
         ],
-        "preferenceKeys": []
+        "preferenceKeys": [
+          "tasker",
+          "tasker_auth_token"
+        ]
       },
       {
         "id": "DeleteStatus",
@@ -992,13 +1000,22 @@
           "loadTranscribeMethod",
           "loadTranscriptSegment"
         ],
-        "preferenceKeys": []
+        "preferenceKeys": [
+          "assemblyai_key",
+          "audio_transcription",
+          "groq_api_key",
+          "transcription_provider"
+        ]
       },
       {
         "id": "GoogleTranslate",
         "category": "others",
-        "resolutionTier": "none",
-        "resolutionSources": [],
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
         "resolverDependencies": [],
         "preferenceKeys": [
           "google_translate"

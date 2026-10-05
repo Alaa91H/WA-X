@@ -30,17 +30,16 @@ How a feature reaches its hook targets. This is derived from the source tree, so
 
 | Tier | Meaning | Features |
 |---|---|---|
-| `none` | The feature references no internal resolution layer (Unobfuscator, ReflectionUtils, WppCore). It is driven purely by preferences or its own UI. | 5 |
-| `indirect` | The feature resolves hook targets through ReflectionUtils or WppCore but calls no Unobfuscator resolver directly. | 12 |
+| `none` | The feature references no internal resolution layer (Unobfuscator, ReflectionUtils, WppCore). It is driven purely by preferences or its own UI. | 4 |
+| `indirect` | The feature resolves hook targets through ReflectionUtils or WppCore but calls no Unobfuscator resolver directly. | 13 |
 | `dexkit` | The feature calls one or more Unobfuscator DexKit resolvers directly and therefore needs resolver evidence. | 47 |
 
 ### Tier `none` cannot break through resolution
 
-5 of 64 features reference no internal resolution layer at all, so no WhatsApp update can break them via DexKit:
+4 of 64 features reference no internal resolution layer at all, so no WhatsApp update can break them via DexKit:
 
 - `DebugFeature`
 - `FloatingBottomBar`
-- `GoogleTranslate`
 - `HideSeenView`
 - `MinorFixes`
 
@@ -92,7 +91,7 @@ All 64 registered features. `W` and `B` are the worst status across the declared
 | 31 | `DownloadProfile` | media | indirect | 0 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 | 32 | `DownloadViewOnce` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
 | 33 | `MediaPreview` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
-| 34 | `MediaQuality` | media | dexkit | 7 | Unobfuscator, UnobfuscatorCache, ReflectionUtils | _unknown_ | _unknown_ |
+| 34 | `MediaQuality` | media | dexkit | 10 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 | 35 | `StatusDownload` | media | indirect | 0 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
 | 36 | `ActivityController` | others | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
 | 37 | `AudioTranscript` | others | dexkit | 2 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
@@ -102,7 +101,7 @@ All 64 registered features. `W` and `B` are the worst status across the declared
 | 41 | `CopySelectionMessage` | others | indirect | 0 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
 | 42 | `CopyStatus` | others | dexkit | 2 | Unobfuscator | _unknown_ | _unknown_ |
 | 43 | `DebugFeature` | others | none | 0 | - | _unknown_ | _unknown_ |
-| 44 | `GoogleTranslate` | others | none | 0 | - | _unknown_ | _unknown_ |
+| 44 | `GoogleTranslate` | others | indirect | 0 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
 | 45 | `GroupAdmin` | others | dexkit | 2 | Unobfuscator, ReflectionUtils, WppCore | _unknown_ | _unknown_ |
 | 46 | `JumpFirstMessage` | others | dexkit | 1 | Unobfuscator, WppCore | _unknown_ | _unknown_ |
 | 47 | `MenuHome` | others | indirect | 0 | WppCore | _unknown_ | _unknown_ |
@@ -134,9 +133,9 @@ These features call DexKit resolvers directly. Each one needs a recorded `verifi
 |---|---|
 | `Others` | `loadAbsViewHolder`, `loadAdVerifyMethod`, `loadAddOptionSearchBarMethod`, `loadChatFilterViewMethod`, `loadCheckOnlineMethod`, `loadConversationRowClass`, `loadConversationsHeightMethod`, `loadCopiedMessageMethod`, `loadFilterDimenId`, `loadForwardAudioTypeMethod`, `loadGetCurrentPageInHomeField`, `loadMediaTypeMethod`, `loadMySearchBarMethod`, `loadNextStatusRunMethod`, `loadOnChangeStatus`, `loadOnPlaybackFinished`, `loadOriginFMessageField`, `loadPlaybackSpeed`, `loadPropsBooleanMethod`, `loadPropsIntegerMethod`, `loadProximitySensorListenerClasses`, `loadStateChangeMethod`, `loadStatusDataClass`, `loadStatusProfileMethod`, `loadStatusStyleMethod`, `loadSwipeUpInGroupMethod`, `loadViewAddSearchBarMethod`, `loadViewHolderField1` |
 | `SeparateGroup` | `loadAddMenuAndroidX`, `loadEnableCountTabBadgeItem`, `loadEnableCountTabBadgeWrapper`, `loadEnableCountTabEmptyBadgeClass`, `loadEnableCountTabMethod`, `loadFabMethod`, `loadFragmentClass`, `loadGetFiltersMethod`, `loadGetTabMethod`, `loadIconTabMethod`, `loadRecreateFragmentConstructor`, `loadTabCountMethod`, `loadTabFragmentMethod`, `loadTabListMethod`, `loadTabNameMethod` |
+| `MediaQuality` | `loadBottomBarConfigClass`, `loadMediaDataVideoConfigurationClass`, `loadMediaQualityOriginalVideoFields`, `loadMediaQualitySelectionMethod`, `loadMediaQualityVideoFields`, `loadMediaQualityVideoMethod2`, `loadMediaTranscoderStart`, `loadProcessImageQualityClass`, `loadProcessVideoQualityClass`, `loadVideoTranscoderStartMethod` |
 | `SeenTick` | `loadBlueOnReplayMessageJobMethod`, `loadBlueOnReplayViewButtonMethod`, `loadBlueOnReplayWaJobManagerMethod`, `loadOnCreatedMenuConversation`, `loadStatusPlaybackReplyContainer`, `loadUnknownStatusPlaybackMethod`, `loadViewOnceDownloadMenuMethod` |
 | `HideSeen` | `loadHideViewSendReadJob`, `loadOndispatchMessage`, `loadReadReceiptMethod`, `loadReceiptMessageInfoClass`, `loadReceiptMethod`, `loadSenderPlayedBusiness`, `loadSenderPlayedMethod` |
-| `MediaQuality` | `loadBottomBarConfigClass`, `loadMediaDataVideoConfigurationClass`, `loadMediaQualitySelectionMethod`, `loadMediaTranscoderStart`, `loadProcessImageQualityClass`, `loadProcessVideoQualityClass`, `loadVideoTranscoderStartMethod` |
 | `IGStatus` | `loadFabMethod`, `loadGetInvokeField`, `loadGetViewConversationMethod`, `loadOnUpdateStatusChanged`, `loadStatusInfoClass`, `loadStatusListUpdatesClass` |
 | `ChatLimit` | `loadChatLimitDelete2Method`, `loadChatLimitDeleteMethod`, `loadEphemeralInsertdb`, `loadFmessageTimestampField`, `loadSeeMoreConstructor` |
 | `AntiRevoke` | `loadAntiRevokeFStatusMethod`, `loadAntiRevokeMessageMethod`, `loadStatusPlaybackViewClass`, `loadUnknownStatusPlaybackMethod` |
@@ -186,9 +185,9 @@ These features call DexKit resolvers directly. Each one needs a recorded `verifi
 |---|---|
 | `Others` | `loadAbsViewHolder`, `loadAdVerifyMethod`, `loadAddOptionSearchBarMethod`, `loadChatFilterViewMethod`, `loadCheckOnlineMethod`, `loadConversationRowClass`, `loadConversationsHeightMethod`, `loadCopiedMessageMethod`, `loadFilterDimenId`, `loadForwardAudioTypeMethod`, `loadGetCurrentPageInHomeField`, `loadMediaTypeMethod`, `loadMySearchBarMethod`, `loadNextStatusRunMethod`, `loadOnChangeStatus`, `loadOnPlaybackFinished`, `loadOriginFMessageField`, `loadPlaybackSpeed`, `loadPropsBooleanMethod`, `loadPropsIntegerMethod`, `loadProximitySensorListenerClasses`, `loadStateChangeMethod`, `loadStatusDataClass`, `loadStatusProfileMethod`, `loadStatusStyleMethod`, `loadSwipeUpInGroupMethod`, `loadViewAddSearchBarMethod`, `loadViewHolderField1` |
 | `SeparateGroup` | `loadAddMenuAndroidX`, `loadEnableCountTabBadgeItem`, `loadEnableCountTabBadgeWrapper`, `loadEnableCountTabEmptyBadgeClass`, `loadEnableCountTabMethod`, `loadFabMethod`, `loadFragmentClass`, `loadGetFiltersMethod`, `loadGetTabMethod`, `loadIconTabMethod`, `loadRecreateFragmentConstructor`, `loadTabCountMethod`, `loadTabFragmentMethod`, `loadTabListMethod`, `loadTabNameMethod` |
+| `MediaQuality` | `loadBottomBarConfigClass`, `loadMediaDataVideoConfigurationClass`, `loadMediaQualityOriginalVideoFields`, `loadMediaQualitySelectionMethod`, `loadMediaQualityVideoFields`, `loadMediaQualityVideoMethod2`, `loadMediaTranscoderStart`, `loadProcessImageQualityClass`, `loadProcessVideoQualityClass`, `loadVideoTranscoderStartMethod` |
 | `SeenTick` | `loadBlueOnReplayMessageJobMethod`, `loadBlueOnReplayViewButtonMethod`, `loadBlueOnReplayWaJobManagerMethod`, `loadOnCreatedMenuConversation`, `loadStatusPlaybackReplyContainer`, `loadUnknownStatusPlaybackMethod`, `loadViewOnceDownloadMenuMethod` |
 | `HideSeen` | `loadHideViewSendReadJob`, `loadOndispatchMessage`, `loadReadReceiptMethod`, `loadReceiptMessageInfoClass`, `loadReceiptMethod`, `loadSenderPlayedBusiness`, `loadSenderPlayedMethod` |
-| `MediaQuality` | `loadBottomBarConfigClass`, `loadMediaDataVideoConfigurationClass`, `loadMediaQualitySelectionMethod`, `loadMediaTranscoderStart`, `loadProcessImageQualityClass`, `loadProcessVideoQualityClass`, `loadVideoTranscoderStartMethod` |
 | `IGStatus` | `loadFabMethod`, `loadGetInvokeField`, `loadGetViewConversationMethod`, `loadOnUpdateStatusChanged`, `loadStatusInfoClass`, `loadStatusListUpdatesClass` |
 | `ChatLimit` | `loadChatLimitDelete2Method`, `loadChatLimitDeleteMethod`, `loadEphemeralInsertdb`, `loadFmessageTimestampField`, `loadSeeMoreConstructor` |
 | `AntiRevoke` | `loadAntiRevokeFStatusMethod`, `loadAntiRevokeMessageMethod`, `loadStatusPlaybackViewClass`, `loadUnknownStatusPlaybackMethod` |
