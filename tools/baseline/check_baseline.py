@@ -251,6 +251,18 @@ def human_size(num_bytes: int) -> str:
     return "%d B" % num_bytes
 
 
+def variant_count(results_dir: Path) -> int:
+    """Number of build variants that produced test results.
+
+    Gradle writes one directory per variant, so the parent directory name is the
+    variant. Distinct names, because one variant can be split across several tasks.
+    """
+    if not results_dir.is_dir():
+        return 0
+    names = {xml.parent.name for xml in results_dir.rglob("*.xml") if xml.name.endswith(".xml")}
+    return len(names)
+
+
 def main() -> int:
     # Counting mode, used by generate_baseline.sh so that the recorded figure and the
     # enforced figure come from one implementation rather than two that can drift.
@@ -385,18 +397,43 @@ def main() -> int:
             failures,
             errors,
         )
-        if base_tests is not None:
-            detail += " (baseline %d)" % base_tests
+
+        # The ratchet is about coverage, not about how many times the same suite ran.
+        # WA X used to run the whole suite once per product flavor, so the recorded
+        # count was twice the number of tests; removing the flavor halved the count
+        # without removing a single test. Comparing raw totals would then punish the
+        # change that removed the duplication, and comparing per variant keeps the
+        # ratchet meaningful in both directions.
+        variants = variant_count(results_dir)
+        base_variants = (baseline.get("testResults") or {}).get("variants")
+        if not base_variants:
+            # A baseline written before the field existed still carries the answer in
+            # its APK list: the suite ran once per APK, so the number of recorded APKs
+            # is how many times the same tests were counted. Falling back to that keeps
+            # the ratchet meaningful instead of silencing it for every older baseline.
+            base_variants = len(baseline.get("apks") or []) or None
+        threshold = base_tests
+        if base_variants and variants:
+            threshold = base_tests * variants // base_variants
+            detail += " (baseline %d over %d variant(s), %d per variant here)" % (
+                base_tests,
+                base_variants,
+                threshold,
+            )
+        elif base_tests is not None:
+            detail += " (baseline %d, no variant count to normalise by)" % base_tests
         else:
             detail += " (no baseline count)"
+
         if failures or errors:
             checks.append((False, "unit tests", detail))
-        elif base_tests is not None and total < base_tests:
+        elif threshold is not None and total < threshold:
             checks.append(
                 (
                     False,
                     "unit tests",
-                    detail + " - fewer tests executed than in the baseline (%d < %d)" % (total, base_tests),
+                    detail
+                    + " - fewer tests executed than in the baseline (%d < %d)" % (total, threshold),
                 )
             )
         else:

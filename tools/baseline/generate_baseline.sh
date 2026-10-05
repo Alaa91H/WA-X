@@ -170,10 +170,18 @@ done < <(find "$TEST_RESULTS_DIR" -type f -name '*.xml' 2>/dev/null | sort || tr
 
 if [[ "$TR_FILES" -eq 0 ]]; then
     TR_JSON_TESTS=null; TR_JSON_SKIPPED=null; TR_JSON_FAILURES=null; TR_JSON_ERRORS=null
+    TR_JSON_VARIANTS=null
     TR_REPORT="n/a (no JUnit XMLs — run unit tests before generating)"
 else
     TR_JSON_TESTS=$TR_TESTS; TR_JSON_SKIPPED=$TR_SKIPPED; TR_JSON_FAILURES=$TR_FAILURES; TR_JSON_ERRORS=$TR_ERRORS
-    TR_REPORT="$TR_TESTS executed, $TR_FAILURES failures, $TR_ERRORS errors ($TR_FILES files)"
+    # Gradle writes one directory per variant, so the directory name is the variant.
+    # Recorded so the regression gate compares tests per variant: the suite used to run
+    # once per product flavor, and halving the variant count must not look like lost tests.
+    TR_VARIANTS="$(find "$TEST_RESULTS_DIR" -type f -name '*.xml' -printf '%h\n' 2>/dev/null \
+        | sed "s|.*/||" | sort -u | awk 'NF' | wc -l | tr -d ' ' || true)"
+    [[ -z "$TR_VARIANTS" || "$TR_VARIANTS" == "0" ]] && TR_VARIANTS=1
+    TR_JSON_VARIANTS=$TR_VARIANTS
+    TR_REPORT="$TR_TESTS executed, $TR_FAILURES failures, $TR_ERRORS errors ($TR_FILES files, $TR_VARIANTS variant(s))"
 fi
 
 # --------------------------------------------------------------- features ---
@@ -317,7 +325,8 @@ cat > "$BASELINE_JSON" <<EOF
     "tests": $TR_JSON_TESTS,
     "skipped": $TR_JSON_SKIPPED,
     "failures": $TR_JSON_FAILURES,
-    "errors": $TR_JSON_ERRORS
+    "errors": $TR_JSON_ERRORS,
+    "variants": $TR_JSON_VARIANTS
   },
   "features": {
     "registeredCount": $FEATURE_COUNT,
