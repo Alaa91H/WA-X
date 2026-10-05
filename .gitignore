@@ -29,3 +29,4 @@ replay_pid*.log
 # Local tool state and build logs: machine specific, never part of the project.
 build_run.log
 /.freebuff/
+__pycache__/
