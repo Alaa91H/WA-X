@@ -88,7 +88,81 @@ object Unobfuscator {
         }
     }
 
+    /**
+     * A successful lookup plus the candidate anchor that produced it.
+     *
+     * Reported so a caller can say *which* known WhatsApp generation matched, which
+     * is what turns "HD Status is not working" into a one-line answer.
+     */
+    data class AnchorMatch<out T>(val value: T, val anchor: String)
+
+    /**
+     * Tries each candidate anchor on its own and returns the first hit.
+     *
+     * [findFirstMethodUsingStrings] combines every string it is given into a single
+     * AND matcher, so passing three alternatives finds a method containing all
+     * three, which never matches. Each candidate must therefore be a separate
+     * lookup, tried in the given order. The first candidate is the most specific
+     * one for the current WhatsApp generation.
+     */
+    @JvmStatic
+    fun findMethodByAnyAnchor(
+        classLoader: ClassLoader,
+        type: StringMatchType,
+        candidates: List<String>,
+        returnType: Class<*>? = null,
+    ): AnchorMatch<Method>? {
+        for (candidate in candidates) {
+            val hit = findFirstMethodUsingStrings(classLoader, type, candidate) ?: continue
+            if (returnType != null && hit.returnType != returnType) continue
+            return AnchorMatch(hit, candidate)
+        }
+        return null
+    }
+
+    /** The [findMethodByAnyAnchor] counterpart for classes. */
+    @JvmStatic
+    fun findClassByAnyAnchor(
+        classLoader: ClassLoader,
+        type: StringMatchType,
+        candidates: List<String>,
+    ): AnchorMatch<Class<*>>? {
+        for (candidate in candidates) {
+            val hit = findFirstClassUsingStrings(classLoader, type, candidate) ?: continue
+            return AnchorMatch(hit, candidate)
+        }
+        return null
+    }
+
+    /**
+     * Resolves a method from an ordered candidate list, failing loudly.
+     *
+     * The error names the resolver and lists every anchor tried, because a
+     * `NoSuchMethodException` with no detail is what made the previous HD Status
+     * breakage undiagnosable from a logcat.
+     */
     @Throws(Exception::class)
+    @JvmStatic
+    fun requireMethodByAnyAnchor(
+        resolver: String,
+        classLoader: ClassLoader,
+        type: StringMatchType,
+        candidates: List<String>,
+        returnType: Class<*>? = null,
+    ): Method = findMethodByAnyAnchor(classLoader, type, candidates, returnType)?.value
+        ?: throw Exception("$resolver: no method matched any of ${candidates.joinToString(", ")}")
+
+    /** The [requireMethodByAnyAnchor] counterpart for classes. */
+    @Throws(Exception::class)
+    @JvmStatic
+    fun requireClassByAnyAnchor(
+        resolver: String,
+        classLoader: ClassLoader,
+        type: StringMatchType,
+        candidates: List<String>,
+    ): Class<*> = findClassByAnyAnchor(classLoader, type, candidates)?.value
+        ?: throw Exception("$resolver: no class matched any of ${candidates.joinToString(", ")}")
+
     @JvmStatic
     fun findFirstMethodUsingStrings(
         classLoader: ClassLoader,
@@ -670,12 +744,12 @@ object Unobfuscator {
 
     fun loadProcessVideoQualityClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
+            requireClassByAnyAnchor(
+                "loadProcessVideoQualityClass",
                 classLoader,
                 StringMatchType.StartsWith,
-                "ProcessVideoQuality("
+                listOf("ProcessVideoQuality(", "VideoQuality(", "MediaQualityLimits(")
             )
-                ?: throw Exception("ProcessVideoQuality method not found")
         }
     }
 
@@ -2397,22 +2471,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadMediaQualitySelectionMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            var methodData = bridge.findMethod {
-                matcher {
-                    addUsingString("enable_media_quality_tool")
-                    returnType(java.lang.Boolean.TYPE)
-                }
-            }
-            if (methodData.isEmpty()) {
-                methodData = bridge.findMethod {
-                    matcher {
-                        addUsingString("show_media_quality_toggle")
-                        returnType(java.lang.Boolean.TYPE)
-                    }
-                }
-            }
-            if (methodData.isEmpty()) throw RuntimeException("MediaQualitySelection method not found")
-            methodData[0].getMethodInstance(classLoader)
+            requireMethodByAnyAnchor(
+                "loadMediaQualitySelectionMethod",
+                classLoader,
+                StringMatchType.Contains,
+                listOf("enable_media_quality_tool", "show_media_quality_toggle", "media_quality_selection_enabled"),
+                // The hook replaces the return value with a boolean, so a
+                // non-boolean match here would break the call site.
+                Boolean::class.javaPrimitiveType
+            )
         }
     }
 
@@ -2836,15 +2903,95 @@ object Unobfuscator {
         }
     }
 
+    /**
+     * The method that reports the corrected output resolution of a transcode.
+     *
+     * Restored for HD Status: this was the anchor behind the real-resolution and
+     * 60fps options, which were left in the settings screen after the hooks that
+     * consumed them were removed in `6a4df80a`. Several anchors are tried because
+     * the method has been renamed at least once; the first hit wins.
+     */
+    fun loadMediaQualityVideoMethod2(classLoader: ClassLoader): Method {
+        return UnobfuscatorCache.getInstance().getMethod(classLoader) {
+            requireMethodByAnyAnchor(
+                "loadMediaQualityVideoMethod2",
+                classLoader,
+                StringMatchType.Contains,
+                listOf("getCorrectedResolution", "correctedResolution", "getOutputResolution")
+            )
+        }
+    }
+
+    /**
+     * The transcode-parameter fields (`targetWidth`, `targetHeight`, `frameRate`),
+     * read off the return type of [loadMediaQualityVideoMethod2].
+     *
+     * These are Kotlin data classes, so the names come from the generated
+     * `toString()` and survive obfuscation; the pairing with the field list is by
+     * index, which is why a skip here is reported rather than ignored.
+     */
+    fun loadMediaQualityVideoFields(classLoader: ClassLoader): HashMap<String, Field> {
+        return UnobfuscatorCache.getInstance().getMapField(classLoader, "loadMediaQualityVideoFields") {
+            val method = loadMediaQualityVideoMethod2(classLoader)
+            val methodString = method.returnType.getDeclaredMethod("toString")
+            val methodData = bridge.getMethodData(methodString)
+                ?: throw Exception("loadMediaQualityVideoFields: no dexkit data for the return type")
+            val usingFields = methodData.usingFields
+            val usingStrings = methodData.usingStrings
+            val result = HashMap<String, Field>()
+            var idxFields = 0
+            for (i in usingStrings.indices) {
+                if (idxFields >= usingFields.size) break
+                // Not a field label: it is a literal compared inside the template.
+                if (usingStrings[i] == "outputAspectRatio") continue
+                val name = usingStrings[i].trim()
+                if (name.isEmpty()) continue
+                result[name] = usingFields[idxFields].field.getFieldInstance(classLoader)
+                idxFields++
+            }
+            result
+        }
+    }
+
+    /**
+     * The source-resolution fields (`widthPx`, `heightPx`, `rotationAngle`) read off
+     * the first parameter of [loadMediaQualityVideoMethod2].
+     */
+    fun loadMediaQualityOriginalVideoFields(classLoader: ClassLoader): HashMap<String, Field> {
+        return UnobfuscatorCache.getInstance().getMapField(classLoader, "loadMediaQualityOriginalVideoFields") {
+            val method = loadMediaQualityVideoMethod2(classLoader)
+            val paramType = method.parameterTypes.firstOrNull()
+                ?: return@getMapField HashMap()
+            val methodString = try {
+                paramType.getDeclaredMethod("toString")
+            } catch (_: Exception) {
+                return@getMapField HashMap()
+            }
+            val methodData = bridge.getMethodData(methodString)
+            if (methodData == null || methodData.usingStrings.isEmpty()) return@getMapField HashMap()
+            val usingFields = methodData.usingFields
+            val usingStrings = methodData.usingStrings
+            val result = HashMap<String, Field>()
+            for (i in usingStrings.indices) {
+                if (i >= usingFields.size) break
+                val name = usingStrings[i].trim()
+                if (name.isEmpty()) continue
+                result[name] = usingFields[i].field.getFieldInstance(classLoader)
+            }
+            result
+        }
+    }
+
     fun loadVideoTranscoderStartMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            requireMethod(
+            requireMethodByAnyAnchor(
                 "loadVideoTranscoderStartMethod",
-                "VideoTranscoder/transcodeVideoNew/",
-                findFirstMethodUsingStrings(
-                    classLoader,
-                    StringMatchType.Contains,
-                    "VideoTranscoder/transcodeVideoNew/"
+                classLoader,
+                StringMatchType.Contains,
+                listOf(
+                    "VideoTranscoder/transcodeVideoNew/",
+                    "VideoTranscoder/transcodeVideo/",
+                    "VideoTranscoder/startTranscode"
                 )
             )
         }
@@ -2853,12 +3000,37 @@ object Unobfuscator {
 
     fun loadMediaTranscoderStart(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            bridge.findMethod {
-                matcher {
-                    usingStrings("MediaTranscode/Starting")
-                }
-            }.first().getMethodInstance(classLoader)
+            requireMethodByAnyAnchor(
+                "loadMediaTranscoderStart",
+                classLoader,
+                StringMatchType.Contains,
+                listOf("MediaTranscode/Starting", "MediaTranscode/start")
+            )
         }
+    }
+
+    /**
+     * The non-throwing counterpart of [loadMediaTranscoderStart].
+     *
+     * HD Status uses this rather than the throwing variant. The original code ended
+     * in `.first()` on a dexkit result, so a WhatsApp build without the anchor threw
+     * `NoSuchElementException` from the middle of the video hook block and every
+     * override after it silently never ran. Returning null keeps a missing anchor
+     * local to the one override that needed it.
+     *
+     * Not routed through [UnobfuscatorCache] because that cache cannot store a
+     * negative result; the lookup happens once per process start, which is the same
+     * cost as the first call of the cached path.
+     */
+    @JvmStatic
+    fun loadMediaTranscoderStartOrNull(classLoader: ClassLoader): Method? = try {
+        findMethodByAnyAnchor(
+            classLoader,
+            StringMatchType.Contains,
+            listOf("MediaTranscode/Starting", "MediaTranscode/start")
+        )?.value
+    } catch (_: Throwable) {
+        null
     }
 
     @Throws(Exception::class)
@@ -3056,14 +3228,11 @@ object Unobfuscator {
     @JvmStatic
     fun loadMediaDataVideoConfigurationClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            requireClass(
+            requireClassByAnyAnchor(
                 "loadMediaDataVideoConfigurationClass",
-                "MediaDataVideoConfiguration(",
-                findFirstClassUsingStrings(
-                    classLoader,
-                    StringMatchType.Contains,
-                    "MediaDataVideoConfiguration("
-                )
+                classLoader,
+                StringMatchType.Contains,
+                listOf("MediaDataVideoConfiguration(", "VideoTranscodeConfiguration(")
             )
         }
     }
@@ -3086,13 +3255,12 @@ object Unobfuscator {
     @JvmStatic
     fun loadProcessImageQualityClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            val classDataList = bridge.findClass {
-                matcher {
-                    addUsingString("ProcessImageQuality(", StringMatchType.StartsWith)
-                }
-            }
-            if (classDataList.isEmpty()) throw RuntimeException("ProcessImageQuality class not found")
-            classDataList[0].getInstance(classLoader)
+            requireClassByAnyAnchor(
+                "loadProcessImageQualityClass",
+                classLoader,
+                StringMatchType.StartsWith,
+                listOf("ProcessImageQuality(", "ImageQuality(")
+            )
         }
     }
 
