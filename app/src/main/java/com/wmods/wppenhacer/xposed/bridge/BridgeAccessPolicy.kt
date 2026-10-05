@@ -150,9 +150,7 @@ object BridgeAccessPolicy {
         if (valueStart >= description.length) return null
 
         var valueEnd = valueStart
-        while (valueEnd < description.length && !description[valueEnd].isWhitespace() &&
-            description[valueEnd] != '}'
-        ) {
+        while (valueEnd < description.length && !description[valueEnd].isWhitespace() && description[valueEnd] != '}') {
             valueEnd++
         }
 

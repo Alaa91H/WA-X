@@ -1,3 +1,31 @@
-# Shell scripts must keep LF endings on every platform (Git Bash on Windows
-# with core.autocrlf=true would otherwise check them out as CRLF).
+# Line endings are fixed per file type, never left to core.autocrlf. A formatting
+# gate that reads different bytes on a Windows checkout than on a Linux runner is
+# not a gate: it either fails for a reason the author cannot reproduce or, worse,
+# passes locally and fails in CI.
 *.sh text eol=lf
+*.kt text eol=lf
+*.kts text eol=lf
+*.java text eol=lf
+*.xml text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.py text eol=lf
+*.pro text eol=lf
+*.cfg text eol=lf
+*.properties text eol=lf
+
+# gradlew and gradlew.bat are left alone on purpose: the shell script and the
+# batch file each need their own ending in the worktree, and their committed
+# blobs already carry it.
+
+# Binary assets must never be touched by an end-of-line conversion.
+*.apk binary
+*.aar binary
+*.so binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.jar binary

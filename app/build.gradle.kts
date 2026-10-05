@@ -1,3 +1,4 @@
+import com.diffplug.spotless.LineEnding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -160,6 +161,10 @@ android {
     // T09: formatting. Scoped to the files this plan created rather than the whole
     // repository, because reformatting 171 pre-existing files in one change would bury
     // the real diff. Widen the target as each area is touched.
+    //
+    // Line endings are fixed by .gitattributes and pinned again here, so a Windows
+    // checkout and a Linux runner hand ktlint the same bytes and a formatting gate
+    // cannot pass locally and fail in CI.
     spotless {
         kotlin {
             target(
@@ -183,10 +188,17 @@ android {
                 "src/test/**/*.kt",
             )
             ktlint("1.5.0")
+            // Pinned, not inherited from .gitattributes: with the endings left to the
+            // checkout, a CRLF working tree makes ktlint 1.5.0 demand a different wrap
+            // for a multi-line boolean expression than an LF one does, so the same commit
+            // fails on one platform and passes on another. Pinning the expected bytes
+            // makes the gate platform-independent.
+            lineEndings = LineEnding.UNIX
         }
         kotlinGradle {
             target("*.kts")
             ktlint("1.5.0")
+            lineEndings = LineEnding.UNIX
         }
     }
 }
