@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-05T18:15:18Z",
+  "generatedAtUtc": "2026-10-05T18:41:31Z",
   "module": {
     "name": "WaEnhancer",
-    "versionName": "1.7.0",
-    "versionCode": 170
+    "versionName": "1.8.0",
+    "versionCode": 180
   },
   "git": {
-    "commit": "97c5b20049be",
+    "commit": "253de0e73c1b",
     "branch": "master",
     "dirtyWorktree": true
   },
