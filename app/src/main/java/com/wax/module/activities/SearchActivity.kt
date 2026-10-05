@@ -14,7 +14,9 @@ import com.wax.module.model.SearchableFeature
 import com.wax.module.utils.FeatureCatalog
 
 /** Activity for searching and navigating to app features. */
-class SearchActivity : BaseActivity(), SearchAdapter.OnFeatureClickListener {
+class SearchActivity :
+    BaseActivity(),
+    SearchAdapter.OnFeatureClickListener {
     private lateinit var binding: ActivitySearchBinding
     private lateinit var adapter: SearchAdapter
 
@@ -38,15 +40,27 @@ class SearchActivity : BaseActivity(), SearchAdapter.OnFeatureClickListener {
     }
 
     private fun setupSearchInput() {
-        binding.searchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+        binding.searchInput.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) = Unit
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                performSearch(s?.toString().orEmpty())
-            }
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int,
+                ) {
+                    performSearch(s?.toString().orEmpty())
+                }
 
-            override fun afterTextChanged(s: Editable?) = Unit
-        })
+                override fun afterTextChanged(s: Editable?) = Unit
+            },
+        )
     }
 
     private fun loadAllFeatures() {
@@ -71,7 +85,10 @@ class SearchActivity : BaseActivity(), SearchAdapter.OnFeatureClickListener {
         }
     }
 
-    private fun updateEmptyState(show: Boolean, message: String) {
+    private fun updateEmptyState(
+        show: Boolean,
+        message: String,
+    ) {
         if (show) {
             binding.emptyState.visibility = View.VISIBLE
             binding.searchResults.visibility = View.GONE
@@ -85,12 +102,13 @@ class SearchActivity : BaseActivity(), SearchAdapter.OnFeatureClickListener {
     override fun onFeatureClick(feature: SearchableFeature) {
         if (feature.fragmentType == SearchableFeature.FragmentType.ACTIVITY) return
 
-        val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra("navigate_to_fragment", feature.fragmentType.position)
-            putExtra("scroll_to_preference", feature.key)
-            putExtra("parent_preference", feature.parentKey)
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
+        val intent =
+            Intent(this, MainActivity::class.java).apply {
+                putExtra("navigate_to_fragment", feature.fragmentType.position)
+                putExtra("scroll_to_preference", feature.key)
+                putExtra("parent_preference", feature.parentKey)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
         startActivity(intent)
         finish()
     }

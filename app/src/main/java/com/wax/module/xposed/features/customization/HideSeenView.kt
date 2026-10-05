@@ -1,6 +1,7 @@
 package com.wax.module.xposed.features.customization
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
@@ -14,7 +15,6 @@ import com.wax.module.xposed.core.components.FMessageWpp
 import com.wax.module.xposed.core.db.MessageHistoryStore
 import com.wax.module.xposed.features.listeners.ConversationItemListener
 import com.wax.module.xposed.utils.Utils
-import android.content.SharedPreferences 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -24,12 +24,18 @@ private const val REFRESH_DEBOUNCE_MS = 80L
 
 private val CACHE_LOCK = Any()
 
-private val jidCache = object : LruCache<String, JidSeenCache>(JID_CACHE_SIZE) {
-    override fun entryRemoved(evicted: Boolean, key: String, oldValue: JidSeenCache?, newValue: JidSeenCache?) {
-        loadedReadStatus.remove(key)
-        loadedPlayedStatus.remove(key)
+private val jidCache =
+    object : LruCache<String, JidSeenCache>(JID_CACHE_SIZE) {
+        override fun entryRemoved(
+            evicted: Boolean,
+            key: String,
+            oldValue: JidSeenCache?,
+            newValue: JidSeenCache?,
+        ) {
+            loadedReadStatus.remove(key)
+            loadedPlayedStatus.remove(key)
+        }
     }
-}
 
 private val mainHandler = Handler(Looper.getMainLooper())
 private val refreshScheduled = AtomicBoolean(false)
@@ -39,49 +45,63 @@ private val loadingPlayedStatus = ConcurrentHashMap<String, Boolean>()
 private val loadedReadStatus = ConcurrentHashMap<String, Boolean>()
 private val loadedPlayedStatus = ConcurrentHashMap<String, Boolean>()
 
-class HideSeenView(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class HideSeenView(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     @Throws(Throwable::class)
     override fun doHook() {
         if (!prefs.getBoolean("hide_seen_view", false)) return
 
-        MessageHistoryStore.setHideSeenChangeListener(object : MessageHistoryStore.HideSeenChangeListener {
-            override fun onHideSeenChanged(
-                jid: String,
-                messageId: String,
-                type: MessageHistoryStore.ReceiptType,
-                viewed: Boolean
-            ) {
-                handleHideSeenChanged(jid, messageId, type, viewed)
-            }
-        })
-
-        ConversationItemListener.conversationListeners.add(object : ConversationItemListener.OnConversationItemListener() {
-            override fun onItemBind(fMessage: FMessageWpp, view: ViewGroup, position: Int, convertView: View?) {
-                if (fMessage.key.isFromMe) {
-                    clearBubbleView(view)
-                    return
+        MessageHistoryStore.setHideSeenChangeListener(
+            object : MessageHistoryStore.HideSeenChangeListener {
+                override fun onHideSeenChanged(
+                    jid: String,
+                    messageId: String,
+                    type: MessageHistoryStore.ReceiptType,
+                    viewed: Boolean,
+                ) {
+                    handleHideSeenChanged(jid, messageId, type, viewed)
                 }
-                updateBubbleView(fMessage, view)
-            }
-        })
+            },
+        )
+
+        ConversationItemListener.conversationListeners.add(
+            object : ConversationItemListener.OnConversationItemListener() {
+                override fun onItemBind(
+                    fMessage: FMessageWpp,
+                    view: ViewGroup,
+                    position: Int,
+                    convertView: View?,
+                ) {
+                    if (fMessage.key.isFromMe) {
+                        clearBubbleView(view)
+                        return
+                    }
+                    updateBubbleView(fMessage, view)
+                }
+            },
+        )
     }
 
-    override fun getPluginName(): String {
-        return "Hide Seen View"
-    }
+    override fun getPluginName(): String = "Hide Seen View"
 }
 
 private fun clearBubbleView(viewGroup: ViewGroup) {
-    viewGroup.findViewById<ImageView>(Utils.getID("view_once_control_icon", "id"))
+    viewGroup
+        .findViewById<ImageView>(Utils.getID("view_once_control_icon", "id"))
         ?.colorFilter = null
-    viewGroup.findViewById<ViewGroup>(Utils.getID("date_wrapper", "id"))
+    viewGroup
+        .findViewById<ViewGroup>(Utils.getID("date_wrapper", "id"))
         ?.findViewWithTag<TextView>("seen_view")
         ?.visibility = View.GONE
 }
 
 @SuppressLint("ResourceType")
-private fun updateBubbleView(fmessage: FMessageWpp, viewGroup: ViewGroup) {
+private fun updateBubbleView(
+    fmessage: FMessageWpp,
+    viewGroup: ViewGroup,
+) {
     val userJid = fmessage.key.remoteJid
     val messageId = fmessage.key.messageID
     if (userJid.isNull) return
@@ -102,11 +122,12 @@ private fun updateBubbleView(fmessage: FMessageWpp, viewGroup: ViewGroup) {
     if (dateWrapper != null) {
         var status = dateWrapper.findViewWithTag("seen_view") as? TextView
         if (status == null) {
-            status = TextView(viewGroup.context).apply {
-                tag = "seen_view"
-                textSize = 8f
-                dateWrapper.addView(this)
-            }
+            status =
+                TextView(viewGroup.context).apply {
+                    tag = "seen_view"
+                    textSize = 8f
+                    dateWrapper.addView(this)
+                }
         }
         val viewedMessage = getCachedStatus(jid, messageId, MessageHistoryStore.ReceiptType.READ)
         if (viewedMessage == null) {
@@ -119,7 +140,11 @@ private fun updateBubbleView(fmessage: FMessageWpp, viewGroup: ViewGroup) {
     }
 }
 
-private fun getCachedStatus(jid: String, messageId: String, type: MessageHistoryStore.ReceiptType): Boolean? {
+private fun getCachedStatus(
+    jid: String,
+    messageId: String,
+    type: MessageHistoryStore.ReceiptType,
+): Boolean? {
     synchronized(CACHE_LOCK) {
         val cache = jidCache.get(jid) ?: return null
         val map = if (type == MessageHistoryStore.ReceiptType.READ) cache.readStatus else cache.playedStatus
@@ -127,7 +152,10 @@ private fun getCachedStatus(jid: String, messageId: String, type: MessageHistory
     }
 }
 
-private fun ensureCacheLoaded(jid: String, type: MessageHistoryStore.ReceiptType) {
+private fun ensureCacheLoaded(
+    jid: String,
+    type: MessageHistoryStore.ReceiptType,
+) {
     val loadingMap = if (type == MessageHistoryStore.ReceiptType.READ) loadingReadStatus else loadingPlayedStatus
     val loadedMap = if (type == MessageHistoryStore.ReceiptType.READ) loadedReadStatus else loadedPlayedStatus
     if (loadedMap.containsKey(jid)) return
@@ -155,7 +183,10 @@ private fun ensureCacheLoaded(jid: String, type: MessageHistoryStore.ReceiptType
     }
 }
 
-private fun loadStatusMap(jid: String, type: MessageHistoryStore.ReceiptType): HashMap<String, Boolean> {
+private fun loadStatusMap(
+    jid: String,
+    type: MessageHistoryStore.ReceiptType,
+): HashMap<String, Boolean> {
     val map = HashMap<String, Boolean>()
     val viewed = MessageHistoryStore.getInstance().getHideSeenMessages(jid, type, true)
     if (viewed != null) {
@@ -172,7 +203,12 @@ private fun loadStatusMap(jid: String, type: MessageHistoryStore.ReceiptType): H
     return map
 }
 
-private fun handleHideSeenChanged(jid: String, messageId: String, type: MessageHistoryStore.ReceiptType, viewed: Boolean) {
+private fun handleHideSeenChanged(
+    jid: String,
+    messageId: String,
+    type: MessageHistoryStore.ReceiptType,
+    viewed: Boolean,
+) {
     synchronized(CACHE_LOCK) {
         var cache = jidCache.get(jid)
         if (cache == null) {

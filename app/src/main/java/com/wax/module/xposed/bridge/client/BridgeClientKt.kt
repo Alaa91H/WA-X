@@ -32,8 +32,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
 
-class BridgeClientKt(private val context: Context) : BaseClient(), ServiceConnection {
-
+class BridgeClientKt(
+    private val context: Context,
+) : BaseClient(),
+    ServiceConnection {
     override var service: WaeIIFace? = null
     private val scope =
         CoroutineScope(Dispatchers.IO + SupervisorJob() + WaeCoroutineExceptionHandler)
@@ -41,69 +43,85 @@ class BridgeClientKt(private val context: Context) : BaseClient(), ServiceConnec
 
     private var connectionContinuation: CancellableContinuation<Boolean>? = null
 
+    override suspend fun connect(): Boolean = performConnection()
 
-    override suspend fun connect(): Boolean {
-        return performConnection()
-    }
+    private suspend fun performConnection(): Boolean =
+        withContext(Dispatchers.IO) {
+            if (service?.asBinder()?.pingBinder() == true) {
+                return@withContext true
+            }
 
-    private suspend fun performConnection(): Boolean = withContext(Dispatchers.IO) {
-        if (service?.asBinder()?.pingBinder() == true) {
-            return@withContext true
-        }
-
-        connectionMutex.withLock {
-            runCatching {
-                val intent = Intent().apply {
-                    component = ComponentName(
-                        BuildConfig.APPLICATION_ID,
-                        ForceStartActivity::class.java.name
-                    )
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                }
-                context.startActivity(intent)
-            }.onFailure { XposedBridge.log("Failed to start ForceStartActivity: ${it.message}") }
-
-            val connected = withTimeoutOrNull(3000L.milliseconds) {
-                suspendCancellableCoroutine<Boolean> { continuation ->
-                    connectionContinuation = continuation
-
-                    try {
-                        if (service != null) {
-                            runCatching { context.unbindService(this@BridgeClientKt) }
-                        }
-
-                        val intent = Intent().apply {
-                            setClassName(BuildConfig.APPLICATION_ID, BridgeService::class.java.name)
-                        }
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            context.bindService(
-                                intent,
-                                Context.BIND_AUTO_CREATE,
-                                { it.run() },
-                                this@BridgeClientKt
-                            )
-                        } else {
-                            val handlerThread = HandlerThread("BridgeClient").apply { start() }
-                            val handler = Handler(handlerThread.looper)
-
-                            XposedHelpers.callMethod(
-                                context, "bindServiceAsUser", intent, this@BridgeClientKt,
-                                Context.BIND_AUTO_CREATE, handler, Process.myUserHandle()
+            connectionMutex.withLock {
+                runCatching {
+                    val intent =
+                        Intent().apply {
+                            component =
+                                ComponentName(
+                                    BuildConfig.APPLICATION_ID,
+                                    ForceStartActivity::class.java.name,
+                                )
+                            addFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
+                                    Intent.FLAG_ACTIVITY_NO_ANIMATION,
                             )
                         }
-                    } catch (e: Exception) {
-                        XposedBridge.log("Bind failed: ${e.message}")
-                        continuation.resume(false)
-                    }
+                    context.startActivity(intent)
+                }.onFailure {
+                    XposedBridge.log("Failed to start ForceStartActivity: ${it.message}")
                 }
-            } ?: false
 
-            return@withContext connected
+                val connected =
+                    withTimeoutOrNull(3000L.milliseconds) {
+                        suspendCancellableCoroutine<Boolean> { continuation ->
+                            connectionContinuation = continuation
+
+                            try {
+                                if (service != null) {
+                                    runCatching { context.unbindService(this@BridgeClientKt) }
+                                }
+
+                                val intent =
+                                    Intent().apply {
+                                        setClassName(BuildConfig.APPLICATION_ID, BridgeService::class.java.name)
+                                    }
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    context.bindService(
+                                        intent,
+                                        Context.BIND_AUTO_CREATE,
+                                        { it.run() },
+                                        this@BridgeClientKt,
+                                    )
+                                } else {
+                                    val handlerThread = HandlerThread("BridgeClient").apply { start() }
+                                    val handler = Handler(handlerThread.looper)
+
+                                    XposedHelpers.callMethod(
+                                        context,
+                                        "bindServiceAsUser",
+                                        intent,
+                                        this@BridgeClientKt,
+                                        Context.BIND_AUTO_CREATE,
+                                        handler,
+                                        Process.myUserHandle(),
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                XposedBridge.log("Bind failed: ${e.message}")
+                                continuation.resume(false)
+                            }
+                        }
+                    } ?: false
+
+                return@withContext connected
+            }
         }
-    }
 
-    override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+    override fun onServiceConnected(
+        name: ComponentName?,
+        binder: IBinder?,
+    ) {
         service = WaeIIFace.Stub.asInterface(binder)
         XposedBridge.log("Service Connected: $service")
         connectionContinuation?.let {

@@ -10,7 +10,10 @@ import com.wax.module.xposed.core.ModuleRuntime.listenerActivity
 import java.util.function.Consumer
 
 class WaCallback : ActivityLifecycleCallbacks {
-    override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
+    override fun onActivityCreated(
+        activity: Activity,
+        bundle: Bundle?,
+    ) {
         ModuleRuntime.mCurrentActivity = activity
         updateState(activity, ActivityChangeState.ChangeType.CREATED)
         triggerActivityState(activity, ActivityChangeState.ChangeType.CREATED)
@@ -44,17 +47,25 @@ class WaCallback : ActivityLifecycleCallbacks {
         cleanup()
     }
 
-    override fun onActivitySaveInstanceState(activity: Activity, bundle: Bundle) {
+    override fun onActivitySaveInstanceState(
+        activity: Activity,
+        bundle: Bundle,
+    ) {
     }
 
     companion object {
-        private fun triggerActivityState(activity: Activity, type: ActivityChangeState.ChangeType) {
-            listenerActivity.forEach(Consumer { listener: ActivityChangeState? ->
-                listener!!.onChange(
-                    activity,
-                    type
-                )
-            })
+        private fun triggerActivityState(
+            activity: Activity,
+            type: ActivityChangeState.ChangeType,
+        ) {
+            listenerActivity.forEach(
+                Consumer { listener: ActivityChangeState? ->
+                    listener!!.onChange(
+                        activity,
+                        type,
+                    )
+                },
+            )
         }
     }
 }

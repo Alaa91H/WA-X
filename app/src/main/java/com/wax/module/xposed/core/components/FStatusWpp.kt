@@ -10,14 +10,14 @@ import java.io.File
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
-class FStatusWpp(val fstatus: Any?) {
-
+class FStatusWpp(
+    val fstatus: Any?,
+) {
     companion object {
-
         private lateinit var classFMediaStatus: Class<*>
         private lateinit var methodGetStatusByKey: Method
 
-        lateinit var TYPE: Class<*>
+        lateinit var type: Class<*>
         private lateinit var fieldFStatusKey: Field
 
         private var mStatusStore: Any? = null
@@ -25,9 +25,9 @@ class FStatusWpp(val fstatus: Any?) {
         @JvmStatic
         fun initialize(classLoader: ClassLoader) {
             FStatusKey.initialize(classLoader)
-            TYPE = Unobfuscator.loadFStatusClass(classLoader)
+            type = Unobfuscator.loadFStatusClass(classLoader)
             val fStatusKeyClass = Unobfuscator.loadFStatusKeyClass(classLoader)
-            fieldFStatusKey = ReflectionUtils.getFieldByType(TYPE, fStatusKeyClass)!!
+            fieldFStatusKey = ReflectionUtils.getFieldByType(type, fStatusKeyClass)!!
             methodGetStatusByKey = Unobfuscator.loadGetStatusByKey(classLoader)
             XposedBridge.hookAllConstructors(
                 methodGetStatusByKey.declaringClass,
@@ -35,7 +35,8 @@ class FStatusWpp(val fstatus: Any?) {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         mStatusStore = param.thisObject
                     }
-                })
+                },
+            )
             classFMediaStatus = Unobfuscator.loadFMediaStatusClass(classLoader)
         }
 
@@ -43,8 +44,10 @@ class FStatusWpp(val fstatus: Any?) {
         fun getFStatusFromFKeyStatus(fStatusKey: FStatusKey): FStatusWpp? {
             try {
                 if (mStatusStore == null) {
-                    mStatusStore = methodGetStatusByKey.declaringClass.declaredConstructors.first()
-                        .newInstance()
+                    mStatusStore =
+                        methodGetStatusByKey.declaringClass.declaredConstructors
+                            .first()
+                            .newInstance()
                 }
                 return FStatusWpp(methodGetStatusByKey.invoke(mStatusStore, fStatusKey.thisObject))
             } catch (e: Exception) {
@@ -52,26 +55,22 @@ class FStatusWpp(val fstatus: Any?) {
             }
             return null
         }
-
     }
-
 
     init {
         if (fstatus == null) throw RuntimeException("Object FStatus is null")
-        if (!TYPE.isInstance(fstatus))
+        if (!type.isInstance(fstatus)) {
             throw RuntimeException("Object is not a FStatus Instance")
+        }
     }
 
     val isMediaFile by lazy {
         classFMediaStatus.isInstance(fstatus)
     }
 
-
     val fStatusKey by lazy {
         FStatusKey(fieldFStatusKey.get(fstatus))
     }
-
-
 
     val fMessage: FMessageWpp? by lazy {
         try {
@@ -86,9 +85,10 @@ class FStatusWpp(val fstatus: Any?) {
         classFMediaStatus.declaredFields.firstNotNullOfOrNull { field ->
             field.isAccessible = true
 
-            val method = field.type.declaredMethods.firstOrNull {
-                it.returnType == File::class.java
-            }
+            val method =
+                field.type.declaredMethods.firstOrNull {
+                    it.returnType == File::class.java
+                }
 
             if (method != null) {
                 method.isAccessible = true
@@ -102,10 +102,11 @@ class FStatusWpp(val fstatus: Any?) {
     fun getMediaFile(): File? {
         if (!isMediaFile) return null
 
-        val (field, method) = mediaFileAccessor ?: run {
-            XposedBridge.log("Media file accessor not found for FStatus class: ${classFMediaStatus.name}")
-            return null
-        }
+        val (field, method) =
+            mediaFileAccessor ?: run {
+                XposedBridge.log("Media file accessor not found for FStatus class: ${classFMediaStatus.name}")
+                return null
+            }
 
         val item = field.get(fstatus) ?: return null
         return runCatching {
@@ -113,23 +114,19 @@ class FStatusWpp(val fstatus: Any?) {
         }.getOrNull()
     }
 
-    override fun toString(): String {
-        return "FStatusWpp(fstatus=$fstatus, isMedia=$isMediaFile, fStatusKey=$fStatusKey)"
-    }
+    override fun toString(): String = "FStatusWpp(fstatus=$fstatus, isMedia=$isMediaFile, fStatusKey=$fStatusKey)"
 
     class FStatusKey {
-
         companion object {
             /**
              * The class type of the key object.
              */
-            lateinit var TYPE: Class<*>
+            lateinit var type: Class<*>
 
             @JvmStatic
             fun initialize(classLoader: ClassLoader) {
-                TYPE = Unobfuscator.loadFStatusKeyClass(classLoader)
+                type = Unobfuscator.loadFStatusKeyClass(classLoader)
             }
-
         }
 
         @JvmField
@@ -159,18 +156,17 @@ class FStatusWpp(val fstatus: Any?) {
         @JvmField
         var remoteJid: FMessageWpp.UserJid
 
-
         @JvmField
         var fStatus: FStatusWpp? = null
 
-
         val key: FMessageWpp.Key by lazy {
             try {
-                ReflectionUtils.findFieldUsingFilter(TYPE) {
-                    FMessageWpp.Key.TYPE.isAssignableFrom(it.type)
-                }.let {
-                    FMessageWpp.Key(it.get(thisObject))
-                }
+                ReflectionUtils
+                    .findFieldUsingFilter(type) {
+                        FMessageWpp.Key.type.isAssignableFrom(it.type)
+                    }.let {
+                        FMessageWpp.Key(it.get(thisObject))
+                    }
             } catch (e: Exception) {
                 XposedBridge.log(e)
                 FMessageWpp.Key(null)
@@ -186,15 +182,13 @@ class FStatusWpp(val fstatus: Any?) {
             this.fStatus = getFStatusFromFKeyStatus(this)
         }
 
-        override fun toString(): String {
-            return "FStatusKey{" +
-                    "thisObject=" + thisObject +
-                    ", messageID='" + messageID + '\'' +
-                    ", isFromMe=" + isFromMe +
-                    ", remoteJid=" + remoteJid +
-                    ", senderJid=" + senderJid +
-                    '}'
-        }
+        override fun toString(): String =
+            "FStatusKey{" +
+                "thisObject=" + thisObject +
+                ", messageID='" + messageID + '\'' +
+                ", isFromMe=" + isFromMe +
+                ", remoteJid=" + remoteJid +
+                ", senderJid=" + senderJid +
+                '}'
     }
-
 }

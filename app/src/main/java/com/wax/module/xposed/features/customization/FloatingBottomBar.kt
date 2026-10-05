@@ -18,9 +18,10 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import java.util.WeakHashMap
 
-class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
-    Feature(loader, preferences) {
-
+class FloatingBottomBar(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     companion object {
         private const val CORNER_RADIUS_DP = 24f
         private const val SIDE_MARGIN_DP = 12f
@@ -40,9 +41,11 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
 
         val bottomNavId = Utils.getID("bottom_nav", "id")
         if (bottomNavId <= 0) return
-        val fabIds = FAB_RESOURCE_NAMES.mapNotNull { name ->
-            Utils.getID(name, "id").takeIf { id -> id > 0 }
-        }.toSet()
+        val fabIds =
+            FAB_RESOURCE_NAMES
+                .mapNotNull { name ->
+                    Utils.getID(name, "id").takeIf { id -> id > 0 }
+                }.toSet()
 
         XposedHelpers.findAndHookMethod(
             View::class.java,
@@ -59,7 +62,8 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
                         view.post { positionFabAboveCurrentBar(view, bottomNavId) }
                     }
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             View::class.java,
@@ -72,7 +76,8 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
                     setupAttempts.remove(bar)
                     processedBars.remove(bar)
                 }
-            })
+            },
+        )
     }
 
     private fun scheduleSetup(bar: ViewGroup) {
@@ -126,13 +131,15 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
 
             (container.parent as? ViewGroup)?.removeView(container)
 
-            val rootParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.BOTTOM
-                bottomMargin = navigationBarInset(rootView) + Utils.dipToPixels(BOTTOM_MARGIN_DP)
-            }
+            val rootParams =
+                FrameLayout
+                    .LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply {
+                        gravity = Gravity.BOTTOM
+                        bottomMargin = navigationBarInset(rootView) + Utils.dipToPixels(BOTTOM_MARGIN_DP)
+                    }
             rootView.addView(container, rootParams)
 
             applyTransparentShadowStyle(container, bar)
@@ -146,24 +153,29 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
         }
     }
 
-    private fun updateOverlayLayout(rootView: FrameLayout, container: ViewGroup, bar: ViewGroup) {
+    private fun updateOverlayLayout(
+        rootView: FrameLayout,
+        container: ViewGroup,
+        bar: ViewGroup,
+    ) {
         val params = container.layoutParams as? FrameLayout.LayoutParams ?: return
         params.gravity = Gravity.BOTTOM
         params.width = ViewGroup.LayoutParams.MATCH_PARENT
         params.height = ViewGroup.LayoutParams.WRAP_CONTENT
         params.bottomMargin = navigationBarInset(rootView) + Utils.dipToPixels(BOTTOM_MARGIN_DP)
         container.layoutParams = params
-        bar.layoutParams = bar.layoutParams.apply {
-            width = ViewGroup.LayoutParams.MATCH_PARENT
-            height = ViewGroup.LayoutParams.WRAP_CONTENT
-        }
+        bar.layoutParams =
+            bar.layoutParams.apply {
+                width = ViewGroup.LayoutParams.MATCH_PARENT
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
     }
 
-    private fun navigationBarInset(view: View): Int {
-        return ViewCompat.getRootWindowInsets(view)
+    private fun navigationBarInset(view: View): Int =
+        ViewCompat
+            .getRootWindowInsets(view)
             ?.getInsets(WindowInsetsCompat.Type.systemBars())
             ?.bottom ?: 0
-    }
 
     private fun findRootView(startView: View): FrameLayout? {
         var current: View? = startView
@@ -177,8 +189,10 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
         return lastFrameLayout
     }
 
-
-    private fun applyTransparentShadowStyle(container: ViewGroup, bar: ViewGroup) {
+    private fun applyTransparentShadowStyle(
+        container: ViewGroup,
+        bar: ViewGroup,
+    ) {
         container.setBackgroundColor(Color.TRANSPARENT)
 
         val parent = container.parent as? ViewGroup
@@ -199,26 +213,36 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
         }
 
         val barColor = resolveBarColor(bar)
-        val transparentColor = (barColor and 0x00FFFFFF) or
+        val transparentColor =
+            (barColor and 0x00FFFFFF) or
                 ((BACKGROUND_ALPHA * 255).toInt() shl 24)
-        val strokeColor = if (isLightColor(barColor)) {
-            Color.argb((STROKE_ALPHA * 255).toInt(), 0, 0, 0)
-        } else {
-            Color.argb((STROKE_ALPHA * 255).toInt(), 255, 255, 255)
-        }
+        val strokeColor =
+            if (isLightColor(barColor)) {
+                Color.argb((STROKE_ALPHA * 255).toInt(), 0, 0, 0)
+            } else {
+                Color.argb((STROKE_ALPHA * 255).toInt(), 255, 255, 255)
+            }
         val radiusDp =
             prefs.getInt("floating_bottom_bar_radius", CORNER_RADIUS_DP.toInt()).toFloat()
         val radius = Utils.dipToPixels(radiusDp).toFloat()
 
-        val background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadii = floatArrayOf(
-                radius, radius, radius, radius,
-                radius, radius, radius, radius
-            )
-            setColor(transparentColor)
-            setStroke(Utils.dipToPixels(1.5f), strokeColor)
-        }
+        val background =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadii =
+                    floatArrayOf(
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                        radius,
+                    )
+                setColor(transparentColor)
+                setStroke(Utils.dipToPixels(1.5f), strokeColor)
+            }
         bar.background = background
         bar.outlineProvider = ViewOutlineProvider.BACKGROUND
         bar.elevation = Utils.dipToPixels(ELEVATION_DP).toFloat()
@@ -239,12 +263,15 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
                 bar.paddingStart,
                 bar.paddingTop,
                 bar.paddingEnd,
-                bottomPadding
+                bottomPadding,
             )
         }
     }
 
-    private fun positionFabsAboveBar(rootView: ViewGroup, container: ViewGroup) {
+    private fun positionFabsAboveBar(
+        rootView: ViewGroup,
+        container: ViewGroup,
+    ) {
         val barHeight = container.height
         if (barHeight <= 0) {
             container.postDelayed({ positionFabsAboveBar(rootView, container) }, 100L)
@@ -262,14 +289,20 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
         }
     }
 
-    private fun positionFabAboveCurrentBar(fab: View, bottomNavId: Int) {
+    private fun positionFabAboveCurrentBar(
+        fab: View,
+        bottomNavId: Int,
+    ) {
         val bottomNav = fab.rootView.findViewById<View>(bottomNavId) ?: return
         val container = bottomNav.parent as? ViewGroup ?: return
         if (container.parent !is FrameLayout) return
         positionFab(fab, container)
     }
 
-    private fun positionFab(fab: View, container: ViewGroup) {
+    private fun positionFab(
+        fab: View,
+        container: ViewGroup,
+    ) {
         val barHeight = container.height
         if (barHeight <= 0) {
             container.postDelayed({ positionFab(fab, container) }, 100L)
@@ -301,7 +334,5 @@ class FloatingBottomBar(loader: ClassLoader, preferences: SharedPreferences) :
         return (red * 299 + green * 587 + blue * 114) / 1000 > 180
     }
 
-    override fun getPluginName(): String {
-        return "Floating Bottom Bar"
-    }
+    override fun getPluginName(): String = "Floating Bottom Bar"
 }

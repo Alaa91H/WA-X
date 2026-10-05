@@ -14,7 +14,10 @@ object RealPathUtil {
     /** Resolve a file path from SAF, MediaStore, or file-provider Uris. */
     @SuppressLint("NewApi")
     @JvmStatic
-    fun getRealFilePath(context: Context, uri: Uri): String? {
+    fun getRealFilePath(
+        context: Context,
+        uri: Uri,
+    ): String? {
         if (DocumentsContract.isDocumentUri(context, uri)) {
             if (isExternalStorageDocument(uri)) {
                 val split = DocumentsContract.getDocumentId(uri).split(":")
@@ -24,19 +27,21 @@ object RealPathUtil {
                 }
             } else if (isDownloadsDocument(uri)) {
                 val id = DocumentsContract.getDocumentId(uri)
-                val contentUri = ContentUris.withAppendedId(
-                    "content://downloads/public_downloads".toUri(),
-                    id.toLong()
-                )
+                val contentUri =
+                    ContentUris.withAppendedId(
+                        "content://downloads/public_downloads".toUri(),
+                        id.toLong(),
+                    )
                 return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
                 val split = DocumentsContract.getDocumentId(uri).split(":")
-                val contentUri = when (split[0]) {
-                    "image" -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    "video" -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    "audio" -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                    else -> MediaStore.Files.getContentUri("external")
-                }
+                val contentUri =
+                    when (split[0]) {
+                        "image" -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                        "video" -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        "audio" -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                        else -> MediaStore.Files.getContentUri("external")
+                    }
                 return getDataColumn(context, contentUri, "_id=?", arrayOf(split[1]))
             }
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
@@ -50,7 +55,10 @@ object RealPathUtil {
 
     @SuppressLint("NewApi")
     @JvmStatic
-    fun getRealFolderPath(context: Context, uri: Uri): String? {
+    fun getRealFolderPath(
+        context: Context,
+        uri: Uri,
+    ): String? {
         if (DocumentsContract.isTreeUri(uri)) {
             if (isExternalStorageDocument(uri)) {
                 val split = DocumentsContract.getTreeDocumentId(uri).split(":")
@@ -60,19 +68,21 @@ object RealPathUtil {
                 }
             } else if (isDownloadsDocument(uri)) {
                 val id = DocumentsContract.getTreeDocumentId(uri)
-                val contentUri = ContentUris.withAppendedId(
-                    Uri.parse("content://downloads/public_downloads"),
-                    id.toLong()
-                )
+                val contentUri =
+                    ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"),
+                        id.toLong(),
+                    )
                 return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
                 val split = DocumentsContract.getTreeDocumentId(uri).split(":")
-                val contentUri = when (split[0]) {
-                    "image" -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    "video" -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    "audio" -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                    else -> MediaStore.Files.getContentUri("external")
-                }
+                val contentUri =
+                    when (split[0]) {
+                        "image" -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                        "video" -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        "audio" -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                        else -> MediaStore.Files.getContentUri("external")
+                    }
                 return getDataColumn(context, contentUri, "_id=?", arrayOf(split[1]))
             }
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
@@ -89,7 +99,7 @@ object RealPathUtil {
         context: Context,
         uri: Uri,
         selection: String?,
-        selectionArgs: Array<String>?
+        selectionArgs: Array<String>?,
     ): String? {
         var cursor: Cursor? = null
         try {
@@ -104,18 +114,14 @@ object RealPathUtil {
     }
 
     @JvmStatic
-    fun isExternalStorageDocument(uri: Uri): Boolean =
-        uri.authority == "com.android.externalstorage.documents"
+    fun isExternalStorageDocument(uri: Uri): Boolean = uri.authority == "com.android.externalstorage.documents"
 
     @JvmStatic
-    fun isDownloadsDocument(uri: Uri): Boolean =
-        uri.authority == "com.android.providers.downloads.documents"
+    fun isDownloadsDocument(uri: Uri): Boolean = uri.authority == "com.android.providers.downloads.documents"
 
     @JvmStatic
-    fun isMediaDocument(uri: Uri): Boolean =
-        uri.authority == "com.android.providers.media.documents"
+    fun isMediaDocument(uri: Uri): Boolean = uri.authority == "com.android.providers.media.documents"
 
     @JvmStatic
-    fun isGooglePhotosUri(uri: Uri): Boolean =
-        uri.authority == "com.google.android.apps.photos.content"
+    fun isGooglePhotosUri(uri: Uri): Boolean = uri.authority == "com.google.android.apps.photos.content"
 }

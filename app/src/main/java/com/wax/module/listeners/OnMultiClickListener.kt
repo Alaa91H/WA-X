@@ -4,7 +4,7 @@ import android.view.View
 
 abstract class OnMultiClickListener(
     private val targetClicks: Int,
-    private val delay: Long
+    private val delay: Long,
 ) : View.OnClickListener {
     private var lastClick = 0L
     private var clicks = 0

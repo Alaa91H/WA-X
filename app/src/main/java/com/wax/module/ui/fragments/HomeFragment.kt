@@ -16,22 +16,23 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.wax.module.ModuleApplication
 import com.wax.module.BuildConfig
+import com.wax.module.ModuleApplication
 import com.wax.module.R
 import com.wax.module.adapter.LogLineAdapter
-import com.wax.module.databinding.DialogDiagnosticsLogBinding
-import com.wax.module.databinding.FragmentHomeBinding
 import com.wax.module.compat.TargetVersions
 import com.wax.module.compat.UpdateOffer
 import com.wax.module.config.BackupEntry
 import com.wax.module.config.ConfigBackupSchema
 import com.wax.module.config.ConfigValue
+import com.wax.module.databinding.DialogDiagnosticsLogBinding
+import com.wax.module.databinding.FragmentHomeBinding
 import com.wax.module.ui.fragments.base.BaseFragment
 import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RootDiagnostics
@@ -51,25 +52,27 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import androidx.core.content.edit
 
 class HomeFragment : BaseFragment() {
-
-    private var _binding: FragmentHomeBinding? = null
-    private val binding get() = _binding!!
+    private var currentBinding: FragmentHomeBinding? = null
+    private val binding get() = currentBinding!!
     private var statusReceiverRegistered = false
 
-    private val statusReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            try {
-                when (intent.getStringExtra("PKG")) {
-                    FeatureLoader.PACKAGE_WPP -> receiverBroadcastWpp(context, intent)
-                    FeatureLoader.PACKAGE_BUSINESS -> receiverBroadcastBusiness(context, intent)
+    private val statusReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(
+                context: Context,
+                intent: Intent,
+            ) {
+                try {
+                    when (intent.getStringExtra("PKG")) {
+                        FeatureLoader.PACKAGE_WPP -> receiverBroadcastWpp(context, intent)
+                        FeatureLoader.PACKAGE_BUSINESS -> receiverBroadcastBusiness(context, intent)
+                    }
+                } catch (_: Exception) {
                 }
-            } catch (_: Exception) {
             }
         }
-    }
 
     override fun onStart() {
         super.onStart()
@@ -79,7 +82,7 @@ class HomeFragment : BaseFragment() {
                 requireContext(),
                 statusReceiver,
                 intentFilter,
-                ContextCompat.RECEIVER_EXPORTED
+                ContextCompat.RECEIVER_EXPORTED,
             )
             statusReceiverRegistered = true
         }
@@ -96,9 +99,9 @@ class HomeFragment : BaseFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        currentBinding = FragmentHomeBinding.inflate(inflater, container, false)
 
         checkStateWpp(requireActivity())
 
@@ -111,7 +114,7 @@ class HomeFragment : BaseFragment() {
         binding.scrollDiagBtn.setOnClickListener { view ->
             animateClick(view)
             binding.nestedScrollView.post {
-                _binding?.let { b ->
+                currentBinding?.let { b ->
                     b.nestedScrollView.smoothScrollTo(0, b.diagCard.top)
                 }
             }
@@ -162,24 +165,24 @@ class HomeFragment : BaseFragment() {
         binding.status.startAnimation(slideUp)
 
         binding.status2.postDelayed({
-            if (!isAdded || _binding == null) return@postDelayed
+            if (!isAdded || currentBinding == null) return@postDelayed
             val anim = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_up)
             binding.status2.startAnimation(anim)
         }, 100)
 
         binding.status3.postDelayed({
-            if (!isAdded || _binding == null) return@postDelayed
+            if (!isAdded || currentBinding == null) return@postDelayed
             val anim = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_up)
             binding.status3.startAnimation(anim)
         }, 200)
 
         binding.infoCard.postDelayed({
-            if (!isAdded || _binding == null) return@postDelayed
+            if (!isAdded || currentBinding == null) return@postDelayed
             binding.infoCard.startAnimation(fadeIn)
         }, 300)
 
         binding.updateCard.postDelayed({
-            if (!isAdded || _binding == null) return@postDelayed
+            if (!isAdded || currentBinding == null) return@postDelayed
             val anim = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_up)
             binding.updateCard.startAnimation(anim)
         }, 400)
@@ -196,7 +199,10 @@ class HomeFragment : BaseFragment() {
         updatePackageStatuses(requireContext())
     }
 
-    private fun receiverBroadcastBusiness(context: Context, intent: Intent) {
+    private fun receiverBroadcastBusiness(
+        context: Context,
+        intent: Intent,
+    ) {
         if (ModuleApplication.isOriginalPackage) binding.status3.visibility = View.VISIBLE
         binding.statusTitle3.setText(R.string.business_in_background)
         val version = intent.getStringExtra("VERSION")
@@ -213,7 +219,10 @@ class HomeFragment : BaseFragment() {
         binding.statusIcon3.setImageResource(R.drawable.ic_round_check_circle_24)
     }
 
-    private fun receiverBroadcastWpp(context: Context, intent: Intent) {
+    private fun receiverBroadcastWpp(
+        context: Context,
+        intent: Intent,
+    ) {
         binding.statusTitle2.setText(R.string.whatsapp_in_background)
         val version = intent.getStringExtra("VERSION")
         val supportedList = context.resources.getStringArray(R.array.supported_versions_wpp).toList()
@@ -323,10 +332,12 @@ class HomeFragment : BaseFragment() {
                         // order removed every existing key first and only then applied the
                         // file, so a partial or unrecognised document silently wiped the
                         // user's settings. Restoring is now all or nothing.
-                        val entries = readBackupEntries(jsonObject)
-                            ?: throw JSONException("Unsupported configuration entry type")
-                        val decoded = ConfigBackupSchema.decodeAll(entries)
-                            ?: throw JSONException("Unsupported configuration entry type")
+                        val entries =
+                            readBackupEntries(jsonObject)
+                                ?: throw JSONException("Unsupported configuration entry type")
+                        val decoded =
+                            ConfigBackupSchema.decodeAll(entries)
+                                ?: throw JSONException("Unsupported configuration entry type")
 
                         prefs.edit {
                             prefs.all.keys.forEach { key -> remove(key) }
@@ -398,14 +409,14 @@ class HomeFragment : BaseFragment() {
             binding.whatsappPackageSummary,
             binding.whatsappPackageIcon,
             FeatureLoader.PACKAGE_WPP,
-            context.resources.getStringArray(R.array.supported_versions_wpp).toList()
+            context.resources.getStringArray(R.array.supported_versions_wpp).toList(),
         )
         updatePackageStatus(
             context,
             binding.businessPackageSummary,
             binding.businessPackageIcon,
             FeatureLoader.PACKAGE_BUSINESS,
-            context.resources.getStringArray(R.array.supported_versions_business).toList()
+            context.resources.getStringArray(R.array.supported_versions_business).toList(),
         )
     }
 
@@ -414,13 +425,14 @@ class HomeFragment : BaseFragment() {
         summary: android.widget.TextView,
         icon: android.widget.ImageView,
         packageName: String,
-        supportedVersions: List<String>
+        supportedVersions: List<String>,
     ) {
-        val packageInfo = try {
-            context.packageManager.getPackageInfo(packageName, 0)
-        } catch (_: Exception) {
-            null
-        }
+        val packageInfo =
+            try {
+                context.packageManager.getPackageInfo(packageName, 0)
+            } catch (_: Exception) {
+                null
+            }
 
         if (packageInfo == null) {
             summary.setText(R.string.app_not_installed)
@@ -436,27 +448,28 @@ class HomeFragment : BaseFragment() {
         }
 
         val supported = isSupportedVersion(version, supportedVersions)
-        summary.text = getString(
-            if (supported) R.string.app_version_s_supported else R.string.app_version_s_unsupported,
-            version
-        )
+        summary.text =
+            getString(
+                if (supported) R.string.app_version_s_supported else R.string.app_version_s_unsupported,
+                version,
+            )
         icon.setImageResource(
-            if (supported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24
+            if (supported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
         )
     }
 
-    private fun isInstalled(packageWpp: String): Boolean {
-        return try {
+    private fun isInstalled(packageWpp: String): Boolean =
+        try {
             ModuleApplication.instance.packageManager.getPackageInfo(packageWpp, 0)
             true
         } catch (_: Exception) {
             false
         }
-    }
 
-    private fun isSupportedVersion(version: String?, supportedVersions: List<String>): Boolean {
-        return TargetVersions.isSupported(version, supportedVersions)
-    }
+    private fun isSupportedVersion(
+        version: String?,
+        supportedVersions: List<String>,
+    ): Boolean = TargetVersions.isSupported(version, supportedVersions)
 
     private fun disableBusiness() {
         binding.statusIcon3.setImageResource(R.drawable.ic_round_error_outline_24)
@@ -476,9 +489,10 @@ class HomeFragment : BaseFragment() {
 
     private fun checkWpp(activity: FragmentActivity) {
         listOf(FeatureLoader.PACKAGE_WPP, FeatureLoader.PACKAGE_BUSINESS).forEach { packageName ->
-            val checkWpp = Intent("${BuildConfig.APPLICATION_ID}.CHECK_WPP").apply {
-                setPackage(packageName)
-            }
+            val checkWpp =
+                Intent("${BuildConfig.APPLICATION_ID}.CHECK_WPP").apply {
+                    setPackage(packageName)
+                }
             activity.sendBroadcast(checkWpp)
         }
     }
@@ -489,14 +503,18 @@ class HomeFragment : BaseFragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val client = OkHttpClient.Builder()
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .readTimeout(10, TimeUnit.SECONDS)
-                    .build()
+                val client =
+                    OkHttpClient
+                        .Builder()
+                        .connectTimeout(10, TimeUnit.SECONDS)
+                        .readTimeout(10, TimeUnit.SECONDS)
+                        .build()
 
-                val request = Request.Builder()
-                    .url("https://api.github.com/repos/Alaa91H/WA X/releases/latest")
-                    .build()
+                val request =
+                    Request
+                        .Builder()
+                        .url("https://api.github.com/repos/Alaa91H/WA X/releases/latest")
+                        .build()
 
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
@@ -528,9 +546,13 @@ class HomeFragment : BaseFragment() {
         }
     }
 
-    private suspend fun updateCardState(success: Boolean, isUpToDate: Boolean, newVersion: String?) {
+    private suspend fun updateCardState(
+        success: Boolean,
+        isUpToDate: Boolean,
+        newVersion: String?,
+    ) {
         withContext(Dispatchers.Main) {
-            if (_binding == null || !isAdded) return@withContext
+            if (currentBinding == null || !isAdded) return@withContext
 
             if (!success) {
                 binding.updateIcon.setImageResource(R.drawable.ic_round_error_outline_24)
@@ -559,12 +581,13 @@ class HomeFragment : BaseFragment() {
         dialogBinding.logRecycler.layoutManager = LinearLayoutManager(context)
         dialogBinding.logRecycler.adapter = logAdapter
 
-        val dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.diag_dialog_title)
-            .setView(dialogBinding.root)
-            .setPositiveButton(R.string.diag_close, null)
-            .setCancelable(true)
-            .show()
+        val dialog =
+            MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.diag_dialog_title)
+                .setView(dialogBinding.root)
+                .setPositiveButton(R.string.diag_close, null)
+                .setCancelable(true)
+                .show()
 
         val handler = Handler(Looper.getMainLooper())
         val queue = ArrayList<RootDiagnostics.LogEntry>()
@@ -574,28 +597,29 @@ class HomeFragment : BaseFragment() {
             queue.add(entry)
         }
 
-        val poller = object : Runnable {
-            private var emptyCycles = 0
+        val poller =
+            object : Runnable {
+                private var emptyCycles = 0
 
-            override fun run() {
-                if (!isAdded || _binding == null || !dialog.isShowing) return
+                override fun run() {
+                    if (!isAdded || currentBinding == null || !dialog.isShowing) return
 
-                if (queue.isNotEmpty()) {
-                    emptyCycles = 0
-                    logAdapter.add(queue.removeAt(0))
-                    dialogBinding.logRecycler.smoothScrollToPosition(logAdapter.itemCount - 1)
-                    handler.postDelayed(this, 120)
-                } else if (emptyCycles < 50) {
-                    emptyCycles++
-                    handler.postDelayed(this, 120)
+                    if (queue.isNotEmpty()) {
+                        emptyCycles = 0
+                        logAdapter.add(queue.removeAt(0))
+                        dialogBinding.logRecycler.smoothScrollToPosition(logAdapter.itemCount - 1)
+                        handler.postDelayed(this, 120)
+                    } else if (emptyCycles < 50) {
+                        emptyCycles++
+                        handler.postDelayed(this, 120)
+                    }
                 }
             }
-        }
         handler.postDelayed(poller, 120)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        currentBinding = null
     }
 }

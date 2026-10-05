@@ -14,27 +14,33 @@ import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XposedBridge
 import java.util.concurrent.ConcurrentHashMap
 
-class MessageHistoryStore private constructor(context: Context) {
-
+class MessageHistoryStore private constructor(
+    context: Context,
+) {
     enum class ReceiptType {
         READ,
-        PLAYED
+        PLAYED,
     }
 
     interface HideSeenChangeListener {
-        fun onHideSeenChanged(jid: String, messageId: String, type: ReceiptType, viewed: Boolean)
+        fun onHideSeenChanged(
+            jid: String,
+            messageId: String,
+            type: ReceiptType,
+            viewed: Boolean,
+        )
     }
 
     data class MessageItem(
         @JvmField val id: Long,
         @JvmField val message: String,
-        @JvmField val timestamp: Long
+        @JvmField val timestamp: Long,
     )
 
     class MessageSeenItem(
         @JvmField val jid: String,
         @JvmField val message: String,
-        @JvmField val viewed: Boolean
+        @JvmField val viewed: Boolean,
     ) {
         private var fMessageWpp: FMessageWpp? = null
 
@@ -61,17 +67,18 @@ class MessageHistoryStore private constructor(context: Context) {
     private val loadingCacheKeys = ConcurrentHashMap.newKeySet<String>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    private val db: MessageHistoryDatabase = Room.databaseBuilder(
-        context.applicationContext,
-        MessageHistoryDatabase::class.java,
-        "MessageHistory.db"
-    )
-        .addMigrations(MIGRATION_5_6, MessageHistoryDatabase.MIGRATION_6_7)
-        .setQueryExecutor(Utils.databaseExecutor)
-        .setTransactionExecutor(Utils.databaseExecutor)
-        .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-        .fallbackToDestructiveMigration(true)
-        .build()
+    private val db: MessageHistoryDatabase =
+        Room
+            .databaseBuilder(
+                context.applicationContext,
+                MessageHistoryDatabase::class.java,
+                "MessageHistory.db",
+            ).addMigrations(MIGRATION_5_6, MessageHistoryDatabase.MIGRATION_6_7)
+            .setQueryExecutor(Utils.databaseExecutor)
+            .setTransactionExecutor(Utils.databaseExecutor)
+            .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+            .fallbackToDestructiveMigration(true)
+            .build()
 
     private val messageDao = db.messageDao()
     private val hideSeenDao = db.hideSeenDao()
@@ -83,14 +90,15 @@ class MessageHistoryStore private constructor(context: Context) {
         private const val SEEN_MESSAGES_LIST_CACHE_SIZE = 50
         private const val DEVICE_CACHE_SIZE = 300
 
-        private val MIGRATION_5_6 = object : androidx.room.migration.Migration(5, 6) {
-            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                db.execSQL(
-                    "CREATE INDEX IF NOT EXISTS idx_message_history_row_id " +
-                            "ON MessageHistory (row_id)"
-                )
+        private val MIGRATION_5_6 =
+            object : androidx.room.migration.Migration(5, 6) {
+                override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS idx_message_history_row_id " +
+                            "ON MessageHistory (row_id)",
+                    )
+                }
             }
-        }
 
         private val EMPTY_SEEN_ITEM = MessageSeenItem("", "", false)
         private const val EMPTY_DEVICE_TYPE = -1
@@ -103,21 +111,22 @@ class MessageHistoryStore private constructor(context: Context) {
         private var mInstance: MessageHistoryStore? = null
 
         @JvmStatic
-        fun getInstance(): MessageHistoryStore {
-            return mInstance ?: synchronized(this) {
+        fun getInstance(): MessageHistoryStore =
+            mInstance ?: synchronized(this) {
                 mInstance ?: MessageHistoryStore(Utils.application).also { mInstance = it }
             }
-        }
 
         @JvmStatic
         fun setHideSeenChangeListener(listener: HideSeenChangeListener?) {
             hideSeenChangeListener = listener
         }
-
-
     }
 
-    fun insertMessage(id: Long, message: String, timestamp: Long) {
+    fun insertMessage(
+        id: Long,
+        message: String,
+        timestamp: Long,
+    ) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             insertMessageAsync(id, message, timestamp)
             return
@@ -127,8 +136,8 @@ class MessageHistoryStore private constructor(context: Context) {
                 MessageEntity(
                     rowId = id,
                     textData = message,
-                    editTimestamp = timestamp
-                )
+                    editTimestamp = timestamp,
+                ),
             )
             messagesCache.remove(id)
         } catch (t: Throwable) {
@@ -136,13 +145,21 @@ class MessageHistoryStore private constructor(context: Context) {
         }
     }
 
-    fun insertMessageAsync(id: Long, message: String, timestamp: Long) {
+    fun insertMessageAsync(
+        id: Long,
+        message: String,
+        timestamp: Long,
+    ) {
         Utils.databaseExecutor.execute {
             insertMessage(id, message, timestamp)
         }
     }
 
-    fun recordEditMessageAsync(id: Long, message: String, timestamp: Long) {
+    fun recordEditMessageAsync(
+        id: Long,
+        message: String,
+        timestamp: Long,
+    ) {
         Utils.databaseExecutor.execute {
             try {
                 val originalMessage = MessageStore.getInstance().getCurrentMessageByID(id)
@@ -175,8 +192,8 @@ class MessageHistoryStore private constructor(context: Context) {
                         MessageItem(
                             entity.rowId,
                             entity.textData,
-                            entity.editTimestamp ?: 0L
-                        )
+                            entity.editTimestamp ?: 0L,
+                        ),
                     )
                 }
                 messagesCache.put(v, messages)
@@ -190,7 +207,10 @@ class MessageHistoryStore private constructor(context: Context) {
         return null
     }
 
-    fun getMessagesAsync(v: Long, callback: (ArrayList<MessageItem>) -> Unit) {
+    fun getMessagesAsync(
+        v: Long,
+        callback: (ArrayList<MessageItem>) -> Unit,
+    ) {
         Utils.databaseExecutor.execute {
             val messages = getMessages(v) ?: ArrayList()
             android.os.Handler(Looper.getMainLooper()).post {
@@ -203,7 +223,7 @@ class MessageHistoryStore private constructor(context: Context) {
         jid: String?,
         messageId: String?,
         type: ReceiptType?,
-        viewed: Boolean
+        viewed: Boolean,
     ) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             insertHideSeenMessageAsync(jid, messageId, type, viewed)
@@ -220,8 +240,8 @@ class MessageHistoryStore private constructor(context: Context) {
                         HideSeenEntity(
                             jid = jid,
                             messageId = messageId,
-                            played = isViewedInt
-                        )
+                            played = isViewedInt,
+                        ),
                     )
                     hideSeenDao.updatePlayed(jid, messageId, isViewedInt)
                 } else {
@@ -229,8 +249,8 @@ class MessageHistoryStore private constructor(context: Context) {
                         HideSeenEntity(
                             jid = jid,
                             messageId = messageId,
-                            read = isViewedInt
-                        )
+                            read = isViewedInt,
+                        ),
                     )
                     hideSeenDao.updateRead(jid, messageId, isViewedInt)
                 }
@@ -249,7 +269,7 @@ class MessageHistoryStore private constructor(context: Context) {
         jid: String?,
         messageId: String?,
         type: ReceiptType?,
-        viewed: Boolean
+        viewed: Boolean,
     ) {
         Utils.databaseExecutor.execute {
             insertHideSeenMessage(jid, messageId, type, viewed)
@@ -260,7 +280,7 @@ class MessageHistoryStore private constructor(context: Context) {
         jid: String?,
         messageIds: Iterable<String?>,
         type: ReceiptType?,
-        viewed: Boolean
+        viewed: Boolean,
     ) {
         Utils.databaseExecutor.execute {
             for (messageId in messageIds) {
@@ -273,7 +293,7 @@ class MessageHistoryStore private constructor(context: Context) {
         jid: String?,
         messageId: String?,
         type: ReceiptType?,
-        viewed: Boolean
+        viewed: Boolean,
     ): Boolean {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             updateViewedMessageAsync(jid, messageId, type, viewed)
@@ -283,11 +303,12 @@ class MessageHistoryStore private constructor(context: Context) {
             if (jid == null || messageId == null || type == null) return false
 
             val isViewedInt = if (viewed) 1 else 0
-            val updatedRows = if (type == ReceiptType.PLAYED) {
-                hideSeenDao.updatePlayed(jid, messageId, isViewedInt)
-            } else {
-                hideSeenDao.updateRead(jid, messageId, isViewedInt)
-            }
+            val updatedRows =
+                if (type == ReceiptType.PLAYED) {
+                    hideSeenDao.updatePlayed(jid, messageId, isViewedInt)
+                } else {
+                    hideSeenDao.updateRead(jid, messageId, isViewedInt)
+                }
 
             if (updatedRows <= 0) return false
 
@@ -311,14 +332,18 @@ class MessageHistoryStore private constructor(context: Context) {
         jid: String?,
         messageId: String?,
         type: ReceiptType?,
-        viewed: Boolean
+        viewed: Boolean,
     ) {
         Utils.databaseExecutor.execute {
             updateViewedMessage(jid, messageId, type, viewed)
         }
     }
 
-    fun getHideSeenMessage(jid: String?, messageId: String?, type: ReceiptType?): MessageSeenItem? {
+    fun getHideSeenMessage(
+        jid: String?,
+        messageId: String?,
+        type: ReceiptType?,
+    ): MessageSeenItem? {
         try {
             if (jid == null || messageId == null || type == null) return null
 
@@ -333,11 +358,12 @@ class MessageHistoryStore private constructor(context: Context) {
                 return null
             }
 
-            val state = if (type == ReceiptType.PLAYED) {
-                hideSeenDao.getPlayedState(jid, messageId)
-            } else {
-                hideSeenDao.getReadState(jid, messageId)
-            }
+            val state =
+                if (type == ReceiptType.PLAYED) {
+                    hideSeenDao.getPlayedState(jid, messageId)
+                } else {
+                    hideSeenDao.getReadState(jid, messageId)
+                }
 
             if (state != null) {
                 val viewed = state == 1
@@ -356,7 +382,7 @@ class MessageHistoryStore private constructor(context: Context) {
     fun getHideSeenMessages(
         jid: String?,
         type: ReceiptType?,
-        viewed: Boolean
+        viewed: Boolean,
     ): List<MessageSeenItem>? {
         try {
             if (jid == null || type == null) return null
@@ -373,11 +399,12 @@ class MessageHistoryStore private constructor(context: Context) {
             }
 
             val isViewedInt = if (viewed) 1 else 0
-            val entities = if (type == ReceiptType.PLAYED) {
-                hideSeenDao.getMessagesByPlayedState(jid, isViewedInt)
-            } else {
-                hideSeenDao.getMessagesByReadState(jid, isViewedInt)
-            }
+            val entities =
+                if (type == ReceiptType.PLAYED) {
+                    hideSeenDao.getMessagesByPlayedState(jid, isViewedInt)
+                } else {
+                    hideSeenDao.getMessagesByReadState(jid, isViewedInt)
+                }
 
             if (entities.isNotEmpty()) {
                 val messages = ArrayList<MessageSeenItem>()
@@ -400,7 +427,11 @@ class MessageHistoryStore private constructor(context: Context) {
         return null
     }
 
-    fun insertDeviceInfo(userjid: String, messageId: String, deviceType: Int) {
+    fun insertDeviceInfo(
+        userjid: String,
+        messageId: String,
+        deviceType: Int,
+    ) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             insertDeviceInfoAsync(userjid, messageId, deviceType)
             return
@@ -411,8 +442,8 @@ class MessageHistoryStore private constructor(context: Context) {
                 DeviceEntity(
                     userjid = userjid,
                     messageId = messageId,
-                    deviceType = deviceType
-                )
+                    deviceType = deviceType,
+                ),
             )
             val cacheKey = createDeviceCacheKey(userjid, messageId)
             synchronized(cacheLock) {
@@ -424,7 +455,11 @@ class MessageHistoryStore private constructor(context: Context) {
         }
     }
 
-    fun insertDeviceInfoAsync(userjid: String, messageId: String, deviceType: Int) {
+    fun insertDeviceInfoAsync(
+        userjid: String,
+        messageId: String,
+        deviceType: Int,
+    ) {
         Utils.databaseExecutor.execute {
             insertDeviceInfo(userjid, messageId, deviceType)
         }
@@ -433,12 +468,13 @@ class MessageHistoryStore private constructor(context: Context) {
     fun getDeviceType(
         userjid: String?,
         messageId: String,
-        onLoaded: (() -> Unit)? = null
+        onLoaded: (() -> Unit)? = null,
     ): Int? {
         val cacheKey = if (userjid != null) createDeviceCacheKey(userjid, messageId) else messageId
-        val cached = synchronized(cacheLock) {
-            deviceCache.get(cacheKey) ?: deviceCache.get(messageId)
-        }
+        val cached =
+            synchronized(cacheLock) {
+                deviceCache.get(cacheKey) ?: deviceCache.get(messageId)
+            }
 
         if (cached != null) {
             return if (cached == EMPTY_DEVICE_TYPE) null else cached
@@ -455,12 +491,13 @@ class MessageHistoryStore private constructor(context: Context) {
         }
 
         try {
-            val type = if (userjid != null) {
-                deviceDao.getDeviceType(userjid, messageId)
-                    ?: deviceDao.getDeviceTypeByMessageId(messageId)
-            } else {
-                deviceDao.getDeviceTypeByMessageId(messageId)
-            }
+            val type =
+                if (userjid != null) {
+                    deviceDao.getDeviceType(userjid, messageId)
+                        ?: deviceDao.getDeviceTypeByMessageId(messageId)
+                } else {
+                    deviceDao.getDeviceTypeByMessageId(messageId)
+                }
 
             synchronized(cacheLock) {
                 if (type != null) {
@@ -487,7 +524,10 @@ class MessageHistoryStore private constructor(context: Context) {
         }
     }
 
-    private fun scheduleCacheLoad(key: String, load: () -> Unit) {
+    private fun scheduleCacheLoad(
+        key: String,
+        load: () -> Unit,
+    ) {
         if (!loadingCacheKeys.add(key)) return
         Utils.databaseExecutor.execute {
             try {
@@ -501,24 +541,24 @@ class MessageHistoryStore private constructor(context: Context) {
     private fun createSeenMessageCacheKey(
         jid: String,
         messageId: String,
-        type: ReceiptType
-    ): String {
-        return "${jid}_${messageId}_${type.ordinal}"
-    }
+        type: ReceiptType,
+    ): String = "${jid}_${messageId}_${type.ordinal}"
 
     private fun createSeenMessagesListCacheKey(
         jid: String,
         type: ReceiptType,
-        viewed: Boolean
-    ): String {
-        return "${jid}_${type.ordinal}_${if (viewed) "1" else "0"}"
-    }
+        viewed: Boolean,
+    ): String = "${jid}_${type.ordinal}_${if (viewed) "1" else "0"}"
 
-    private fun createDeviceCacheKey(userjid: String, messageId: String): String {
-        return "${userjid}_${messageId}"
-    }
+    private fun createDeviceCacheKey(
+        userjid: String,
+        messageId: String,
+    ): String = "${userjid}_$messageId"
 
-    private fun invalidateSeenMessagesListCache(jid: String, type: ReceiptType) {
+    private fun invalidateSeenMessagesListCache(
+        jid: String,
+        type: ReceiptType,
+    ) {
         seenMessagesListCache.remove(createSeenMessagesListCacheKey(jid, type, true))
         seenMessagesListCache.remove(createSeenMessagesListCacheKey(jid, type, false))
     }

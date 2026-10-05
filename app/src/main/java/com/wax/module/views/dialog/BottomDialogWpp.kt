@@ -6,7 +6,9 @@ import android.view.View
 import android.view.WindowManager
 import com.wax.module.xposed.utils.Utils
 
-class BottomDialogWpp(private val dialog: Dialog) {
+class BottomDialogWpp(
+    private val dialog: Dialog,
+) {
     fun dismissDialog() {
         dialog.dismiss()
     }
@@ -16,7 +18,8 @@ class BottomDialogWpp(private val dialog: Dialog) {
         dialog.window?.let { window ->
             window.setBackgroundDrawable(null)
             window.setDimAmount(0f)
-            window.decorView.findViewById<View>(Utils.getID("design_bottom_sheet", "id"))
+            window.decorView
+                .findViewById<View>(Utils.getID("design_bottom_sheet", "id"))
                 .setBackgroundColor(Color.TRANSPARENT)
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
         }

@@ -14,7 +14,6 @@ import java.util.stream.Collectors
 
 @Suppress("unused")
 object ReflectionUtils {
-
     private var cachePrefs: SharedPreferences? = null
 
     @JvmStatic
@@ -25,17 +24,21 @@ object ReflectionUtils {
     }
 
     @JvmField
-    val primitiveClasses: Map<String, Class<*>> = mapOf(
-        "byte" to java.lang.Byte.TYPE,
-        "short" to java.lang.Short.TYPE,
-        "int" to java.lang.Integer.TYPE,
-        "long" to java.lang.Long.TYPE,
-        "float" to java.lang.Float.TYPE,
-        "boolean" to java.lang.Boolean.TYPE
-    )
+    val primitiveClasses: Map<String, Class<*>> =
+        mapOf(
+            "byte" to java.lang.Byte.TYPE,
+            "short" to java.lang.Short.TYPE,
+            "int" to java.lang.Integer.TYPE,
+            "long" to java.lang.Long.TYPE,
+            "float" to java.lang.Float.TYPE,
+            "boolean" to java.lang.Boolean.TYPE,
+        )
 
     @JvmStatic
-    fun findClass(className: String?, classLoader: ClassLoader): Class<*> {
+    fun findClass(
+        className: String?,
+        classLoader: ClassLoader,
+    ): Class<*> {
         if (className == null) throw RuntimeException("Class name is null")
         val primitive = primitiveClasses[className]
         if (primitive != null) return primitive
@@ -43,7 +46,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findMethodUsingFilter(clazz: Class<*>?, predicate: Predicate<Method>): Method {
+    fun findMethodUsingFilter(
+        clazz: Class<*>?,
+        predicate: Predicate<Method>,
+    ): Method {
         var current: Class<*>? = clazz
         while (current != null) {
             for (method in current.declaredMethods) {
@@ -55,7 +61,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findAllMethodsUsingFilter(clazz: Class<*>?, predicate: Predicate<Method>): Array<Method> {
+    fun findAllMethodsUsingFilter(
+        clazz: Class<*>?,
+        predicate: Predicate<Method>,
+    ): Array<Method> {
         var current: Class<*>? = clazz
         while (current != null) {
             val results = current.declaredMethods.filter { predicate.test(it) }
@@ -66,7 +75,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findFieldUsingFilter(clazz: Class<*>?, predicate: Predicate<Field>): Field {
+    fun findFieldUsingFilter(
+        clazz: Class<*>?,
+        predicate: Predicate<Field>,
+    ): Field {
         var current: Class<*>? = clazz
         while (current != null) {
             for (field in current.declaredFields) {
@@ -78,7 +90,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findAllConstructorsUsingFilter(clazz: Class<*>?, predicate: Predicate<Constructor<*>>): Array<Constructor<*>> {
+    fun findAllConstructorsUsingFilter(
+        clazz: Class<*>?,
+        predicate: Predicate<Constructor<*>>,
+    ): Array<Constructor<*>> {
         var current: Class<*>? = clazz
         while (current != null) {
             val results = current.declaredConstructors.filter { predicate.test(it) }
@@ -89,7 +104,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findConstructorUsingFilter(clazz: Class<*>?, predicate: Predicate<Constructor<*>>): Constructor<*> {
+    fun findConstructorUsingFilter(
+        clazz: Class<*>?,
+        predicate: Predicate<Constructor<*>>,
+    ): Constructor<*> {
         var current: Class<*>? = clazz
         while (current != null) {
             for (constructor in current.declaredConstructors) {
@@ -101,7 +119,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findAllFieldsUsingFilter(clazz: Class<*>?, predicate: Predicate<Field>): Array<Field> {
+    fun findAllFieldsUsingFilter(
+        clazz: Class<*>?,
+        predicate: Predicate<Field>,
+    ): Array<Field> {
         var current: Class<*>? = clazz
         while (current != null) {
             val results = current.declaredFields.filter { predicate.test(it) }
@@ -111,9 +132,11 @@ object ReflectionUtils {
         return emptyArray()
     }
 
-
     @JvmStatic
-    fun findMethodUsingFilterIfExists(clazz: Class<*>?, predicate: Predicate<Method>): Method? {
+    fun findMethodUsingFilterIfExists(
+        clazz: Class<*>?,
+        predicate: Predicate<Method>,
+    ): Method? {
         var cls = clazz
         do {
             val results = Arrays.stream(cls!!.declaredMethods).filter(predicate).findFirst()
@@ -123,7 +146,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun findFieldUsingFilterIfExists(clazz: Class<*>?, predicate: Predicate<Field>): Field? {
+    fun findFieldUsingFilterIfExists(
+        clazz: Class<*>?,
+        predicate: Predicate<Field>,
+    ): Field? {
         var cls = clazz
         do {
             val results = Arrays.stream(cls!!.declaredFields).filter(predicate).findFirst()
@@ -144,31 +170,46 @@ object ReflectionUtils {
         }
     }
 
-
     @JvmStatic
-    fun getFieldsByExtendType(cls: Class<*>, type: Class<*>?): List<Field> {
+    fun getFieldsByExtendType(
+        cls: Class<*>,
+        type: Class<*>?,
+    ): List<Field> {
         if (type == null) return emptyList()
         return Arrays.stream(cls.fields).filter { f: Field -> type.isAssignableFrom(f.type) }.collect(Collectors.toList())
     }
 
     @JvmStatic
-    fun getFieldsByType(cls: Class<*>, type: Class<*>?): List<Field> {
+    fun getFieldsByType(
+        cls: Class<*>,
+        type: Class<*>?,
+    ): List<Field> {
         if (type == null) return emptyList()
         return Arrays.stream(cls.fields).filter { f: Field -> type == f.type }.collect(Collectors.toList())
     }
 
     @JvmStatic
-    fun getFieldByExtendType(cls: Class<*>?, className: String?): Field? {
+    fun getFieldByExtendType(
+        cls: Class<*>?,
+        className: String?,
+    ): Field? {
         if (cls == null || className == null) return null
         return getFieldByExtendType(cls, findClass(className, cls.classLoader!!))
     }
 
     @JvmStatic
-    fun getFieldByExtendType(cls: Class<*>?, type: Class<*>?): Field? {
+    fun getFieldByExtendType(
+        cls: Class<*>?,
+        type: Class<*>?,
+    ): Field? {
         if (cls == null) return null
         val t = type ?: return null
         if (cachePrefs == null) {
-            return Arrays.stream(cls.fields).filter { f: Field -> t.isAssignableFrom(f.type) }.findFirst().orElse(null)
+            return Arrays
+                .stream(cls.fields)
+                .filter { f: Field -> t.isAssignableFrom(f.type) }
+                .findFirst()
+                .orElse(null)
         }
 
         val cacheKey = "field_cache_" + cls.name + "_" + t.name
@@ -177,16 +218,21 @@ object ReflectionUtils {
             try {
                 return cls.getField(cachedFieldName)
             } catch (_: NoSuchFieldException) {
-                (cachePrefs as SharedPreferences).edit(commit = true){
+                (cachePrefs as SharedPreferences).edit(commit = true) {
                     remove(cacheKey)
                 }
             }
         }
 
-        val field = Arrays.stream(cls.fields).filter { f: Field -> type.isAssignableFrom(f.type) }.findFirst().orElse(null)
+        val field =
+            Arrays
+                .stream(cls.fields)
+                .filter { f: Field -> type.isAssignableFrom(f.type) }
+                .findFirst()
+                .orElse(null)
 
         if (field != null && field.declaringClass == cls) {
-            (cachePrefs as SharedPreferences).edit(commit = true){
+            (cachePrefs as SharedPreferences).edit(commit = true) {
                 putString(cacheKey, field.name)
             }
         }
@@ -195,18 +241,27 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun getFieldByType(cls: Class<*>?, className: String?): Field? {
+    fun getFieldByType(
+        cls: Class<*>?,
+        className: String?,
+    ): Field? {
         if (cls == null || className == null) return null
         return getFieldByType(cls, findClass(className, cls.classLoader!!))
     }
 
-
     @JvmStatic
-    fun getFieldByType(cls: Class<*>?, type: Class<*>?): Field? {
+    fun getFieldByType(
+        cls: Class<*>?,
+        type: Class<*>?,
+    ): Field? {
         if (cls == null) return null
         val t = type ?: return null
         if (cachePrefs == null) {
-            return Arrays.stream(cls.fields).filter { f: Field -> t == f.type }.findFirst().orElse(null)
+            return Arrays
+                .stream(cls.fields)
+                .filter { f: Field -> t == f.type }
+                .findFirst()
+                .orElse(null)
         }
 
         val cacheKey = "field_cache_direct_" + cls.name + "_" + t.name
@@ -219,7 +274,12 @@ object ReflectionUtils {
             }
         }
 
-        val field = Arrays.stream(cls.fields).filter { f: Field -> type == f.type }.findFirst().orElse(null)
+        val field =
+            Arrays
+                .stream(cls.fields)
+                .filter { f: Field -> type == f.type }
+                .findFirst()
+                .orElse(null)
 
         if (field != null && field.declaringClass == cls) {
             cachePrefs?.edit()?.putString(cacheKey, field.name)?.apply()
@@ -229,7 +289,11 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun callMethod(method: Method?, instance: Any?, vararg args: Any?): Any? {
+    fun callMethod(
+        method: Method?,
+        instance: Any?,
+        vararg args: Any?,
+    ): Any? {
         if (method == null) return null
         return try {
             var actualArgs = args
@@ -255,18 +319,20 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun getDefaultValue(paramType: Class<*>?): Any? {
-        return when (paramType) {
+    fun getDefaultValue(paramType: Class<*>?): Any? =
+        when (paramType) {
             Int::class.java, Int::class.javaObjectType -> 0
             Long::class.java, Long::class.javaObjectType -> 0L
             Double::class.java, Double::class.javaObjectType -> 0.0
             Boolean::class.java, Boolean::class.javaObjectType -> false
             else -> null
         }
-    }
 
     @JvmStatic
-    fun getObjectField(field: Field?, thisObject: Any?): Any? {
+    fun getObjectField(
+        field: Field?,
+        thisObject: Any?,
+    ): Any? {
         if (field == null) return null
         return try {
             field[thisObject]
@@ -275,18 +341,22 @@ object ReflectionUtils {
         }
     }
 
-    fun findIndexOfType(args: Array<out Any?>, type: Class<*>): Int {
-        val targetType = when (type) {
-            java.lang.Float.TYPE -> java.lang.Float::class.java
-            java.lang.Integer.TYPE -> java.lang.Integer::class.java
-            java.lang.Long.TYPE -> java.lang.Long::class.java
-            java.lang.Double.TYPE -> java.lang.Double::class.java
-            java.lang.Boolean.TYPE -> java.lang.Boolean::class.java
-            java.lang.Byte.TYPE -> java.lang.Byte::class.java
-            java.lang.Character.TYPE -> java.lang.Character::class.java
-            java.lang.Short.TYPE -> java.lang.Short::class.java
-            else -> type
-        }
+    fun findIndexOfType(
+        args: Array<out Any?>,
+        type: Class<*>,
+    ): Int {
+        val targetType =
+            when (type) {
+                java.lang.Float.TYPE -> java.lang.Float::class.java
+                java.lang.Integer.TYPE -> java.lang.Integer::class.java
+                java.lang.Long.TYPE -> java.lang.Long::class.java
+                java.lang.Double.TYPE -> java.lang.Double::class.java
+                java.lang.Boolean.TYPE -> java.lang.Boolean::class.java
+                java.lang.Byte.TYPE -> java.lang.Byte::class.java
+                java.lang.Character.TYPE -> java.lang.Character::class.java
+                java.lang.Short.TYPE -> java.lang.Short::class.java
+                else -> type
+            }
         for (i in args.indices) {
             val arg = args[i] ?: continue
             if (arg is Class<*>) {
@@ -299,7 +369,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun <T> findInstancesOfType(args: Array<Any?>, type: Class<T>): List<Pair<Int, T>> {
+    fun <T> findInstancesOfType(
+        args: Array<Any?>,
+        type: Class<T>,
+    ): List<Pair<Int, T>> {
         val result = mutableListOf<Pair<Int, T>>()
         for (i in args.indices) {
             val arg = args[i]
@@ -312,7 +385,10 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun <T> findClassesOfType(args: Array<out Class<*>>, type: Class<T>): List<Pair<Int, Class<out T>>> {
+    fun <T> findClassesOfType(
+        args: Array<out Class<*>>,
+        type: Class<T>,
+    ): List<Pair<Int, Class<out T>>> {
         val result = ArrayList<Pair<Int, Class<out T>>>()
         for (i in args.indices) {
             val arg = args[i]
@@ -325,7 +401,11 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun <T> getArg(args: Array<Any?>, typeClass: Class<T>, i: Int): T? {
+    fun <T> getArg(
+        args: Array<Any?>,
+        typeClass: Class<T>,
+        i: Int,
+    ): T? {
         val list = findInstancesOfType(args, typeClass)
         return if (list.size <= i) null else list[i].second
     }
@@ -355,15 +435,19 @@ object ReflectionUtils {
     }
 
     @JvmStatic
-    fun isClassSimpleNameString(aClass: Class<*>?, s: String?): Boolean {
+    fun isClassSimpleNameString(
+        aClass: Class<*>?,
+        s: String?,
+    ): Boolean {
         if (aClass == null || s == null) return false
         try {
             var cls: Class<*>? = aClass
             @Suppress("SENSELESS_COMPARISON")
             do {
                 if (cls!!.simpleName == s) return true
-                if (cls.name.startsWith("android.widget.") || cls.name.startsWith("android.view."))
+                if (cls.name.startsWith("android.widget.") || cls.name.startsWith("android.view.")) {
                     return false
+                }
             } while (cls.also { cls = it.superclass } != null)
         } catch (_: Exception) {
         }
@@ -400,9 +484,12 @@ object ReflectionUtils {
         return false
     }
 
-
     @JvmStatic
-    fun setObjectField(field: Field?, instance: Any?, value: Any?) {
+    fun setObjectField(
+        field: Field?,
+        instance: Any?,
+        value: Any?,
+    ) {
         if (field == null) return
         try {
             field[instance] = value

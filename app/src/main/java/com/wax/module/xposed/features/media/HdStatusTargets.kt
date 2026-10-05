@@ -23,7 +23,6 @@ class HdStatusTargets(
     private val classLoader: ClassLoader,
     private val log: (String) -> Unit,
 ) {
-
     /** Resolved targets, filled in by [resolveAll]. */
     private val resolved = HashMap<String, Any?>()
 
@@ -65,7 +64,7 @@ class HdStatusTargets(
             "targets: " +
                 resolved.entries.joinToString(", ") { (name, value) ->
                     "$name=" + (value?.let { it.javaClass.simpleName } ?: "missing")
-                }
+                },
         )
     }
 
@@ -73,23 +72,19 @@ class HdStatusTargets(
     fun videoLimitsClass(): Class<*>? = resolved[HdStatusFields.VIDEO_LIMITS.name] as? Class<*>
 
     /** The `MediaDataVideoConfiguration` class, or null. */
-    fun videoConfigurationClass(): Class<*>? =
-        resolved[HdStatusFields.VIDEO_CONFIGURATION.name] as? Class<*>
+    fun videoConfigurationClass(): Class<*>? = resolved[HdStatusFields.VIDEO_CONFIGURATION.name] as? Class<*>
 
     /** The transcoder entry point that decides whether a video is re-encoded. */
-    fun videoTranscoderStartMethod(): Method? =
-        resolved[HdStatusFields.VIDEO_TRANSCODER_START.name] as? Method
+    fun videoTranscoderStartMethod(): Method? = resolved[HdStatusFields.VIDEO_TRANSCODER_START.name] as? Method
 
     /** The media pipeline entry point whose boolean enables HD for stories. */
-    fun mediaTranscoderStartMethod(): Method? =
-        resolved[HdStatusFields.MEDIA_TRANSCODER_START.name] as? Method
+    fun mediaTranscoderStartMethod(): Method? = resolved[HdStatusFields.MEDIA_TRANSCODER_START.name] as? Method
 
     /** The `ProcessImageQuality` class, or null. */
     fun imageLimitsClass(): Class<*>? = resolved[HdStatusFields.IMAGE_LIMITS.name] as? Class<*>
 
     /** The method that gates WhatsApp's own quality picker. */
-    fun qualitySelectionGateMethod(): Method? =
-        resolved[HdStatusFields.QUALITY_SELECTION_GATE.name] as? Method
+    fun qualitySelectionGateMethod(): Method? = resolved[HdStatusFields.QUALITY_SELECTION_GATE.name] as? Method
 
     /** The `BottomBarConfig` class, or null. */
     fun bottomBarConfigClass(): Class<*>? = resolved[HdStatusFields.BOTTOM_BAR_CONFIG.name] as? Class<*>
@@ -114,38 +109,50 @@ class HdStatusTargets(
      * here rather than thrown at the caller.
      */
     private fun resolveMediaTranscoderStart(): Method? {
-        val resolved = HdStatusFields.MEDIA_TRANSCODER_START.resolve { candidate ->
-            Unobfuscator.findFirstMethodUsingStrings(classLoader, StringMatchType.Contains, candidate)
-        }
+        val resolved =
+            HdStatusFields.MEDIA_TRANSCODER_START.resolve { candidate ->
+                Unobfuscator.findFirstMethodUsingStrings(classLoader, StringMatchType.Contains, candidate)
+            }
         report(HdStatusFields.MEDIA_TRANSCODER_START, resolved)
         return resolved.valueOrNull()
     }
 
     /** Runs one resolution step, turning a resolver failure into a logged null. */
-    private inline fun <T> step(name: String, block: () -> T): T? = try {
-        block()
-    } catch (t: Throwable) {
-        log("$name: unresolved (${t.javaClass.simpleName}: ${t.message})")
-        null
-    }
+    private inline fun <T> step(
+        name: String,
+        block: () -> T,
+    ): T? =
+        try {
+            block()
+        } catch (t: Throwable) {
+            log("$name: unresolved (${t.javaClass.simpleName}: ${t.message})")
+            null
+        }
 
-    private fun record(name: String, value: Any) {
+    private fun record(
+        name: String,
+        value: Any,
+    ) {
         resolved[name] = value
         log("$name: ${describe(value)}")
     }
 
-    private fun report(anchor: HdStatusAnchor, resolution: HdStatusResolution<*>) {
+    private fun report(
+        anchor: HdStatusAnchor,
+        resolution: HdStatusResolution<*>,
+    ) {
         when (resolution) {
             is HdStatusResolution.Resolved -> log("${anchor.name}: matched '${resolution.matchedCandidate}'")
             is HdStatusResolution.Missing -> log("${anchor.name}: unresolved [${resolution.reason}]")
         }
     }
 
-    private fun describe(value: Any): String = when (value) {
-        is Class<*> -> value.name
-        is Method -> Unobfuscator.getMethodDescriptor(value) ?: value.name
-        else -> value.javaClass.name
-    }
+    private fun describe(value: Any): String =
+        when (value) {
+            is Class<*> -> value.name
+            is Method -> Unobfuscator.getMethodDescriptor(value) ?: value.name
+            else -> value.javaClass.name
+        }
 }
 
 /**

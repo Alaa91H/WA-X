@@ -35,9 +35,8 @@ import java.lang.reflect.Method
 
 class CustomPrivacy(
     classLoader: ClassLoader,
-    preferences:SharedPreferences
+    preferences: SharedPreferences,
 ) : Feature(classLoader, preferences) {
-
     private lateinit var chatUserJidMethod: Method
     private lateinit var groupUserJidMethod: Method
 
@@ -54,114 +53,126 @@ class CustomPrivacy(
     override fun doHook() {
         if (Utils.xprefs.getString("custom_privacy_type", "0") == "0") return
 
-        val contactInfoActivityClass = Unobfuscator.findFirstClassUsingName(
-            classLoader,
-            StringMatchType.EndsWith,
-            ".ContactInfoActivity"
-        )
-        val groupInfoActivityClass = Unobfuscator.findFirstClassUsingName(
-            classLoader,
-            StringMatchType.EndsWith,
-            ".GroupChatInfoActivity"
-        )
-        val userJidClass = Unobfuscator.findFirstClassUsingName(
-            classLoader,
-            StringMatchType.EndsWith,
-            "jid.UserJid"
-        )
-        val groupJidClass = Unobfuscator.findFirstClassUsingName(
-            classLoader,
-            StringMatchType.EndsWith,
-            "jid.GroupJid"
-        )
+        val contactInfoActivityClass =
+            Unobfuscator.findFirstClassUsingName(
+                classLoader,
+                StringMatchType.EndsWith,
+                ".ContactInfoActivity",
+            )
+        val groupInfoActivityClass =
+            Unobfuscator.findFirstClassUsingName(
+                classLoader,
+                StringMatchType.EndsWith,
+                ".GroupChatInfoActivity",
+            )
+        val userJidClass =
+            Unobfuscator.findFirstClassUsingName(
+                classLoader,
+                StringMatchType.EndsWith,
+                "jid.UserJid",
+            )
+        val groupJidClass =
+            Unobfuscator.findFirstClassUsingName(
+                classLoader,
+                StringMatchType.EndsWith,
+                "jid.GroupJid",
+            )
 
-        chatUserJidMethod = ReflectionUtils.findMethodUsingFilter(contactInfoActivityClass) { method ->
-            method.parameterCount == 0 && userJidClass.isAssignableFrom(method.returnType)
-        }
+        chatUserJidMethod =
+            ReflectionUtils.findMethodUsingFilter(contactInfoActivityClass) { method ->
+                method.parameterCount == 0 && userJidClass.isAssignableFrom(method.returnType)
+            }
 
-        groupUserJidMethod = ReflectionUtils.findMethodUsingFilter(groupInfoActivityClass) { method ->
-            method.parameterCount == 0 && groupJidClass.isAssignableFrom(method.returnType)
-        }
+        groupUserJidMethod =
+            ReflectionUtils.findMethodUsingFilter(groupInfoActivityClass) { method ->
+                method.parameterCount == 0 && groupJidClass.isAssignableFrom(method.returnType)
+            }
 
         val type = Utils.xprefs.getString("custom_privacy_type", "0")!!.toInt()
 
         if (type == 1) {
-
             ModuleRuntime.addListenerActivity(
-            object : ModuleRuntime.ActivityChangeState {
+                object : ModuleRuntime.ActivityChangeState {
+                    @SuppressLint("ResourceType")
+                    override fun onChange(
+                        activity: Activity,
+                        type: ModuleRuntime.ActivityChangeState.ChangeType,
+                    ) {
+                        try {
+                            if (type != ModuleRuntime.ActivityChangeState.ChangeType.STARTED) return
+                            if (!contactInfoActivityClass.isInstance(activity) && !groupInfoActivityClass.isInstance(activity)) {
+                                return
+                            }
+                            if (activity.findViewById<View>(0x7f0a9999) != null) return
 
-                @SuppressLint("ResourceType")
-                override fun onChange(activity: Activity, type: ModuleRuntime.ActivityChangeState.ChangeType) {
-                    try {
-                        if (type != ModuleRuntime.ActivityChangeState.ChangeType.STARTED) return
-                        if (!contactInfoActivityClass.isInstance(activity) && !groupInfoActivityClass.isInstance(activity)) {
-                            return
+                            val id = Utils.getID("contact_info_security_card_layout", "id")
+                            val infoLayout = activity.window.findViewById<ViewGroup>(id)
+                            val icon = activity.getDrawable(R.drawable.ic_privacy)!!
+                            val itemView =
+                                createItemView(
+                                    activity,
+                                    activity.getString(R.string.custom_privacy),
+                                    activity.getString(R.string.custom_privacy_sum),
+                                    icon,
+                                )
+
+                            itemView.id = 0x7f0a9999
+                            itemView.setOnClickListener {
+                                showPrivacyDialog(activity, contactInfoActivityClass.isInstance(activity))
+                            }
+
+                            infoLayout.addView(itemView)
+                        } catch (e: Throwable) {
+                            logDebug(e)
+                            Utils.showToast(e.message, Toast.LENGTH_SHORT)
                         }
-                        if (activity.findViewById<View>(0x7f0a9999) != null) return
-
-                        val id = Utils.getID("contact_info_security_card_layout", "id")
-                        val infoLayout = activity.window.findViewById<ViewGroup>(id)
-                        val icon = activity.getDrawable(R.drawable.ic_privacy)!!
-                        val itemView = createItemView(
-                            activity,
-                            activity.getString(R.string.custom_privacy),
-                            activity.getString(R.string.custom_privacy_sum),
-                            icon
-                        )
-
-                        itemView.id = 0x7f0a9999
-                        itemView.setOnClickListener {
-                            showPrivacyDialog(activity, contactInfoActivityClass.isInstance(activity))
-                        }
-
-                        infoLayout.addView(itemView)
-                    } catch (e: Throwable) {
-                        logDebug(e)
-                        Utils.showToast(e.message, Toast.LENGTH_SHORT)
                     }
-                }
-            })
+                },
+            )
         } else if (type == 2) {
-            val hooker = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val menu = param.args[0] as Menu
-                    val activity = param.thisObject as Activity
-                    val customPrivacy = menu.add(0, 0, 0, R.string.custom_privacy)
+            val hooker =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val menu = param.args[0] as Menu
+                        val activity = param.thisObject as Activity
+                        val customPrivacy = menu.add(0, 0, 0, R.string.custom_privacy)
 
-                    customPrivacy.setIcon(R.drawable.ic_privacy)
-                    customPrivacy.setOnMenuItemClickListener {
-                        showPrivacyDialog(activity, contactInfoActivityClass.isInstance(activity))
-                        true
+                        customPrivacy.setIcon(R.drawable.ic_privacy)
+                        customPrivacy.setOnMenuItemClickListener {
+                            showPrivacyDialog(activity, contactInfoActivityClass.isInstance(activity))
+                            true
+                        }
                     }
                 }
-            }
 
             XposedHelpers.findAndHookMethod(
                 contactInfoActivityClass,
                 "onCreateOptionsMenu",
                 Menu::class.java,
-                hooker
+                hooker,
             )
             XposedHelpers.findAndHookMethod(
                 groupInfoActivityClass,
                 "onCreateOptionsMenu",
                 Menu::class.java,
-                hooker
+                hooker,
             )
         }
 
         if (type == 0) return
 
-        val icon = DesignUtils.resizeDrawable(
-            DesignUtils.getDrawable(R.drawable.ic_privacy),
-            Utils.dipToPixels(24),
-            Utils.dipToPixels(24)
-        )
+        val icon =
+            DesignUtils.resizeDrawable(
+                DesignUtils.getDrawable(R.drawable.ic_privacy),
+                Utils.dipToPixels(24),
+                Utils.dipToPixels(24),
+            )
         icon.setTint(0xff8696a0.toInt())
 
-        MenuHome.addMenuItem {  menu, activity ->
-            menu.add(0, 0, 0, R.string.custom_privacy)
+        MenuHome.addMenuItem { menu, activity ->
+            menu
+                .add(0, 0, 0, R.string.custom_privacy)
                 .setIcon(icon)
                 .setOnMenuItemClickListener {
                     showCustomPrivacyList(activity, contactInfoActivityClass, groupInfoActivityClass)
@@ -174,54 +185,59 @@ class CustomPrivacy(
         activity: Activity,
         title: String,
         summary: String,
-        icon: Drawable
+        icon: Drawable,
     ): View {
         val mainLayout = LinearLayout(activity)
-        mainLayout.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        mainLayout.layoutParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         mainLayout.orientation = LinearLayout.HORIZONTAL
         mainLayout.setPadding(16, 16, 16, 16)
 
         val imageView = ImageView(activity)
-        val imageParams = LinearLayout.LayoutParams(
-            Utils.dipToPixels(20),
-            Utils.dipToPixels(20)
-        )
+        val imageParams =
+            LinearLayout.LayoutParams(
+                Utils.dipToPixels(20),
+                Utils.dipToPixels(20),
+            )
         imageParams.setMargins(
             Utils.dipToPixels(20),
             0,
             Utils.dipToPixels(16),
-            Utils.dipToPixels(20)
+            Utils.dipToPixels(20),
         )
         imageView.layoutParams = imageParams
         icon.setTint(0xff8696a0.toInt())
         imageView.setImageDrawable(icon)
 
         val textContainer = LinearLayout(activity)
-        val containerParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val containerParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         containerParams.marginStart = 16
         textContainer.layoutParams = containerParams
         textContainer.orientation = LinearLayout.VERTICAL
 
         val titleView = TextView(activity)
-        titleView.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        titleView.layoutParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
         titleView.text = title
         titleView.setTextColor(DesignUtils.getPrimaryTextColor())
 
         val summaryView = TextView(activity)
-        val summaryParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val summaryParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         summaryParams.marginStart = 4
         summaryView.layoutParams = summaryParams
         summaryView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
@@ -239,7 +255,7 @@ class CustomPrivacy(
     private fun showCustomPrivacyList(
         activity: Activity,
         contactClass: Class<*>,
-        groupClass: Class<*>
+        groupClass: Class<*>,
     ) {
         val pprefs: SharedPreferences = ModuleRuntime.getPrivPrefs()
         val maps = pprefs.all
@@ -249,9 +265,10 @@ class CustomPrivacy(
             for (key in maps.keys) {
                 if (key.endsWith("_privacy")) {
                     val number = key.replace("_privacy", "")
-                    val userJid = FMessageWpp.UserJid(
-                        number + if (number.length > 14) "@g.us" else "@s.whatsapp.net"
-                    )
+                    val userJid =
+                        FMessageWpp.UserJid(
+                            number + if (number.length > 14) "@g.us" else "@s.whatsapp.net",
+                        )
 
                     var contactName = ModuleRuntime.getContactName(userJid)
                     if (TextUtils.isEmpty(contactName)) contactName = number
@@ -269,7 +286,7 @@ class CustomPrivacy(
                 if (list.isEmpty()) {
                     Utils.showToast(
                         activity.getString(R.string.no_contact_with_custom_privacy),
-                        Toast.LENGTH_SHORT
+                        Toast.LENGTH_SHORT,
                     )
                     return@post
                 }
@@ -286,7 +303,10 @@ class CustomPrivacy(
         }
     }
 
-    private fun showPrivacyDialog(activity: Activity, isChat: Boolean) {
+    private fun showPrivacyDialog(
+        activity: Activity,
+        isChat: Boolean,
+    ) {
         val userJid = getUserJid(activity, isChat)
         if (userJid.isNull) return
 
@@ -294,35 +314,42 @@ class CustomPrivacy(
         builder.show()
     }
 
-    private fun getUserJid(activity: Activity, isChat: Boolean): FMessageWpp.UserJid {
-        return if (isChat) {
+    private fun getUserJid(
+        activity: Activity,
+        isChat: Boolean,
+    ): FMessageWpp.UserJid =
+        if (isChat) {
             FMessageWpp.UserJid(ReflectionUtils.callMethod(chatUserJidMethod, activity))
         } else {
             FMessageWpp.UserJid(ReflectionUtils.callMethod(groupUserJidMethod, activity))
         }
-    }
 
-    private fun createPrivacyDialog(activity: Activity, number: String): AlertDialogWpp {
+    private fun createPrivacyDialog(
+        activity: Activity,
+        number: String,
+    ): AlertDialogWpp {
         val builder = AlertDialogWpp(activity)
         builder.setTitle(R.string.custom_privacy)
 
-        val items = arrayOf(
-            activity.getString(R.string.hideread),
-            activity.getString(R.string.hidestatusview),
-            activity.getString(R.string.hidereceipt),
-            activity.getString(R.string.ghostmode),
-            activity.getString(R.string.ghostmode_r),
-            activity.getString(R.string.block_call)
-        )
+        val items =
+            arrayOf(
+                activity.getString(R.string.hideread),
+                activity.getString(R.string.hidestatusview),
+                activity.getString(R.string.hidereceipt),
+                activity.getString(R.string.ghostmode),
+                activity.getString(R.string.ghostmode_r),
+                activity.getString(R.string.block_call),
+            )
 
-        val itemsKeys = arrayOf(
-            "HideSeen",
-            "HideViewStatus",
-            "HideReceipt",
-            "HideTyping",
-            "HideRecording",
-            "BlockCall"
-        )
+        val itemsKeys =
+            arrayOf(
+                "HideSeen",
+                "HideViewStatus",
+                "HideReceipt",
+                "HideTyping",
+                "HideRecording",
+                "BlockCall",
+            )
 
         val checkedItems = loadPreferences(number, itemsKeys)
 
@@ -337,7 +364,10 @@ class CustomPrivacy(
         return builder
     }
 
-    private fun loadPreferences(number: String, itemsKeys: Array<String>): BooleanArray {
+    private fun loadPreferences(
+        number: String,
+        itemsKeys: Array<String>,
+    ): BooleanArray {
         val checkedItems = BooleanArray(itemsKeys.size)
         val json = getJSON(number)
 
@@ -349,8 +379,8 @@ class CustomPrivacy(
         return checkedItems
     }
 
-    private fun getGlobalKey(itemKey: String): String {
-        return when (itemKey) {
+    private fun getGlobalKey(itemKey: String): String =
+        when (itemKey) {
             "HideSeen" -> "hideread"
             "HideViewStatus" -> "hidestatusview"
             "HideReceipt" -> "hidereceipt"
@@ -359,20 +389,18 @@ class CustomPrivacy(
             "BlockCall" -> "call_privacy"
             else -> ""
         }
-    }
 
-    private fun getDefaultPreference(globalKey: String): Boolean {
-        return if (globalKey == "call_privacy") {
+    private fun getDefaultPreference(globalKey: String): Boolean =
+        if (globalKey == "call_privacy") {
             prefs.getString(globalKey, "0") == "1"
         } else {
             prefs.getBoolean(globalKey, false)
         }
-    }
 
     private fun savePreferences(
         number: String,
         itemsKeys: Array<String>,
-        checkedItems: BooleanArray
+        checkedItems: BooleanArray,
     ) {
         try {
             val jsonObject = JSONObject()
@@ -397,7 +425,5 @@ class CustomPrivacy(
         }
     }
 
-    override fun getPluginName(): String {
-        return "Custom Privacy"
-    }
+    override fun getPluginName(): String = "Custom Privacy"
 }

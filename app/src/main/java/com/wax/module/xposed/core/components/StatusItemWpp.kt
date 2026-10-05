@@ -6,7 +6,7 @@ import java.lang.reflect.Field
 
 class StatusItemWpp private constructor(
     val fStatus: FStatusWpp?,
-    private val directFMessage: FMessageWpp?
+    private val directFMessage: FMessageWpp?,
 ) {
     val fMessage: FMessageWpp?
         get() = directFMessage ?: fStatus?.fMessage
@@ -31,15 +31,17 @@ class StatusItemWpp private constructor(
         @JvmStatic
         fun from(obj: Any?): StatusItemWpp? {
             if (obj == null) return null
-            val fMsgField = ReflectionUtils.findFieldUsingFilterIfExists(obj.javaClass) { f ->
-                FMessageWpp.TYPE.isAssignableFrom(f.type)
-            }
-            fMsgField?.get(obj)?.let { return StatusItemWpp(null, FMessageWpp(it)) }
-            val fStatusField = fStatusFieldCache.getOrPut(obj.javaClass) {
+            val fMsgField =
                 ReflectionUtils.findFieldUsingFilterIfExists(obj.javaClass) { f ->
-                    FStatusWpp.TYPE.isAssignableFrom(f.type)
+                    FMessageWpp.type.isAssignableFrom(f.type)
                 }
-            }
+            fMsgField?.get(obj)?.let { return StatusItemWpp(null, FMessageWpp(it)) }
+            val fStatusField =
+                fStatusFieldCache.getOrPut(obj.javaClass) {
+                    ReflectionUtils.findFieldUsingFilterIfExists(obj.javaClass) { f ->
+                        FStatusWpp.type.isAssignableFrom(f.type)
+                    }
+                }
             fStatusField?.get(obj)?.let { return StatusItemWpp(FStatusWpp(it), null) }
             return null
         }

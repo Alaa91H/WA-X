@@ -367,7 +367,7 @@ def main() -> int:
             (
                 False,
                 "unit tests",
-                "no JUnit XMLs under %s - run testWhatsappDebugUnitTest/testBusinessDebugUnitTest first"
+                "no JUnit XMLs under %s - run testDebugUnitTest first"
                 % args.test_results,
             )
         )
@@ -403,28 +403,21 @@ def main() -> int:
             checks.append((True, "unit tests", detail))
 
     # --- APKs ------------------------------------------------------------
+    # Keyed by build type only. WA X ships a single APK, so there is no flavor
+    # dimension left to key on and nothing distinguishes WhatsApp from Business
+    # output paths any more.
     apk_root = resolve(args.apk_root)
-    found: dict[tuple[str, str], Path] = {}
+    found: dict[str, Path] = {}
     if apk_root.is_dir():
         for apk in sorted(apk_root.rglob("*.apk")):
-            posix = apk.as_posix()
-            flavor = (
-                "business"
-                if "/business/" in posix
-                else ("whatsapp" if "/whatsapp/" in posix else None)
-            )
-            build = (
-                "release"
-                if "/release/" in posix
-                else ("debug" if "/debug/" in posix else None)
-            )
-            if flavor and build:
-                found[(flavor, build)] = apk
+            build = apk.parent.name
+            if build in ("debug", "release"):
+                found[build] = apk
     for entry in base_apks:
-        key = (str(entry.get("flavor", "?")), str(entry.get("buildType", "?")))
-        label = "APK %s/%s" % key
+        build = str(entry.get("buildType", "?"))
+        label = "APK %s" % build
         base_size = int(entry.get("sizeBytes", 0) or 0)
-        apk = found.get(key)
+        apk = found.get(build)
         if apk is None:
             checks.append(
                 (False, label, "expected artifact not found under %s" % args.apk_root)

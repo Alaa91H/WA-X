@@ -20,11 +20,15 @@ class HookProvider : ContentProvider() {
             packages = context?.packageManager?.getPackagesForUid(callingUid),
             isSelfUid = callingUid == Process.myUid(),
             isSystemUid = callingUid == Process.SYSTEM_UID,
-            modulePackage = BuildConfig.APPLICATION_ID
+            modulePackage = BuildConfig.APPLICATION_ID,
         )
     }
 
-    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+    override fun call(
+        method: String,
+        arg: String?,
+        extras: Bundle?,
+    ): Bundle? {
         if (!isCallerAllowed()) {
             throw SecurityException("Unauthorized WA X hook provider caller")
         }
@@ -41,19 +45,26 @@ class HookProvider : ContentProvider() {
         projection: Array<String?>?,
         selection: String?,
         selectionArgs: Array<String?>?,
-        sortOrder: String?
+        sortOrder: String?,
     ): Cursor? = null
 
     override fun getType(uri: Uri): String = ""
 
-    override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?,
+    ): Uri? = null
 
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String?>?): Int = 0
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<String?>?,
+    ): Int = 0
 
     override fun update(
         uri: Uri,
         values: ContentValues?,
         selection: String?,
-        selectionArgs: Array<String?>?
+        selectionArgs: Array<String?>?,
     ): Int = 0
 }

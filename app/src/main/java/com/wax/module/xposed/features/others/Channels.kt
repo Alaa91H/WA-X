@@ -1,5 +1,6 @@
 package com.wax.module.xposed.features.others
 
+import android.content.SharedPreferences
 import android.view.Menu
 import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.ModuleRuntime
@@ -7,18 +8,19 @@ import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 
-class Channels(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class Channels(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     private fun removeItems(
         arrList: MutableList<Any?>,
         channels: Boolean,
         removechannelRec: Boolean,
         headerChannelItem: Class<*>,
         listChannelItem: Class<*>,
-        removeChannelRecClass: Class<*>
+        removeChannelRecClass: Class<*>,
     ) {
         arrList.removeAll { e ->
             when {
@@ -41,69 +43,77 @@ class Channels(loader: ClassLoader, preferences:SharedPreferences) : Feature(loa
         val listChannelItem = Unobfuscator.loadListChannelItemClass(classLoader)
         val listUpdateItems = Unobfuscator.loadListUpdateItems(classLoader)
 
-        XposedBridge.hookMethod(listUpdateItems, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                param.setObjectExtra("isArgs", false)
-                val listArgs =
-                    ReflectionUtils.findInstancesOfType(param.args, List::class.javaObjectType)
-                if (listArgs.isEmpty()) return
-                val list = listArgs.first().second
-                val index = listArgs.first().first
-                val arrList = ArrayList(list)
-
-                removeItems(
-                    arrList,
-                    channels,
-                    removechannelRec,
-                    headerChannelItem,
-                    listChannelItem,
-                    removeChannelRecClass
-                )
-                param.args[index] = arrList
-                param.setObjectExtra("isArgs", true)
-            }
-
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val isArg = param.getObjectExtra("isArgs") as Boolean? ?: false
-                if (!isArg) {
-                    val list = param.result as? java.util.ArrayList<*> ?: return
+        XposedBridge.hookMethod(
+            listUpdateItems,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.setObjectExtra("isArgs", false)
+                    val listArgs =
+                        ReflectionUtils.findInstancesOfType(param.args, List::class.javaObjectType)
+                    if (listArgs.isEmpty()) return
+                    val list = listArgs.first().second
+                    val index = listArgs.first().first
                     val arrList = ArrayList(list)
+
                     removeItems(
                         arrList,
                         channels,
                         removechannelRec,
                         headerChannelItem,
                         listChannelItem,
-                        removeChannelRecClass
+                        removeChannelRecClass,
                     )
-                    param.result = arrList
+                    param.args[index] = arrList
+                    param.setObjectExtra("isArgs", true)
                 }
-            }
-        })
 
-        XposedBridge.hookAllConstructors(removeChannelRecClass, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val pairs =
-                ReflectionUtils.findInstancesOfType(param.args, List::class.javaObjectType)
-                for (pair in pairs) {
-                    val index = pair.first as Int
-                    param.args[index] = ArrayList<Any>()
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val isArg = param.getObjectExtra("isArgs") as Boolean? ?: false
+                    if (!isArg) {
+                        val list = param.result as? java.util.ArrayList<*> ?: return
+                        val arrList = ArrayList(list)
+                        removeItems(
+                            arrList,
+                            channels,
+                            removechannelRec,
+                            headerChannelItem,
+                            listChannelItem,
+                            removeChannelRecClass,
+                        )
+                        param.result = arrList
+                    }
                 }
-            }
-        })
+            },
+        )
+
+        XposedBridge.hookAllConstructors(
+            removeChannelRecClass,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val pairs =
+                        ReflectionUtils.findInstancesOfType(param.args, List::class.javaObjectType)
+                    for (pair in pairs) {
+                        val index = pair.first as Int
+                        param.args[index] = ArrayList<Any>()
+                    }
+                }
+            },
+        )
 
         if (channels) {
-            XposedBridge.hookAllMethods(ModuleRuntime.homeActivityClass,"onPrepareOptionsMenu", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val menu = param.args[0] as? Menu ?: return
-                    val id = Utils.getID("menuitem_create_newsletter", "id")
-                    menu.findItem(id)?.isVisible = false
-                }
-            })
+            XposedBridge.hookAllMethods(
+                ModuleRuntime.homeActivityClass,
+                "onPrepareOptionsMenu",
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val menu = param.args[0] as? Menu ?: return
+                        val id = Utils.getID("menuitem_create_newsletter", "id")
+                        menu.findItem(id)?.isVisible = false
+                    }
+                },
+            )
         }
     }
 
-    override fun getPluginName(): String {
-        return "Channels"
-    }
+    override fun getPluginName(): String = "Channels"
 }

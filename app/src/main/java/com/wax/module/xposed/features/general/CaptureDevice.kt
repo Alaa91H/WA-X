@@ -15,19 +15,22 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 
-class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Feature(
-    classLoader,
-    xprefs,
-) {
-
-    enum class DeviceType(val value: Int) {
+class CaptureDevice(
+    classLoader: ClassLoader,
+    xprefs: SharedPreferences,
+) : Feature(
+        classLoader,
+        xprefs,
+    ) {
+    enum class DeviceType(
+        val value: Int,
+    ) {
         PHONE(0),
-        LINKED_DEVICE(1);
+        LINKED_DEVICE(1),
+        ;
 
         companion object {
-            fun fromInt(value: Int): DeviceType {
-                return if (value == PHONE.value) PHONE else LINKED_DEVICE
-            }
+            fun fromInt(value: Int): DeviceType = if (value == PHONE.value) PHONE else LINKED_DEVICE
         }
     }
 
@@ -36,15 +39,18 @@ class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Featu
 
         val handlePlaintextMethod =
             Unobfuscator.loadSharedMessageProcessorHandlePlaintextMethod(classLoader)
-        XposedBridge.hookMethod(handlePlaintextMethod, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                try {
-                    captureDeviceInfo(param.args.firstOrNull())
-                } catch (t: Throwable) {
-                    logDebug(t)
+        XposedBridge.hookMethod(
+            handlePlaintextMethod,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    try {
+                        captureDeviceInfo(param.args.firstOrNull())
+                    } catch (t: Throwable) {
+                        logDebug(t)
+                    }
                 }
-            }
-        })
+            },
+        )
 
         ConversationItemListener.conversationListeners.add(
             object : ConversationItemListener.OnConversationItemListener() {
@@ -52,11 +58,11 @@ class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Featu
                     fMessage: FMessageWpp,
                     view: ViewGroup,
                     position: Int,
-                    convertView: View?
+                    convertView: View?,
                 ) {
                     updateDeviceIndicator(fMessage, view)
                 }
-            }
+            },
         )
     }
 
@@ -65,35 +71,38 @@ class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Featu
 
         val fMessage = findFMessage(firstArg) ?: return
         val deviceJid = fMessage.deviceJid ?: return
-        val device = (XposedHelpers.callMethod(deviceJid, "getDevice") as? Number)?.toInt()
-            ?: return
+        val device =
+            (XposedHelpers.callMethod(deviceJid, "getDevice") as? Number)?.toInt()
+                ?: return
         val userjid = fMessage.key.remoteJid.userRawString ?: return
         val messageId = fMessage.key.messageID
         if (messageId.isEmpty()) return
 
-        val deviceType = if (device == DeviceType.PHONE.value) {
-            DeviceType.PHONE
-        } else {
-            DeviceType.LINKED_DEVICE
-        }
+        val deviceType =
+            if (device == DeviceType.PHONE.value) {
+                DeviceType.PHONE
+            } else {
+                DeviceType.LINKED_DEVICE
+            }
 
         MessageHistoryStore.getInstance().insertDeviceInfoAsync(
             userjid = userjid,
             messageId = messageId,
-            deviceType = deviceType.value
+            deviceType = deviceType.value,
         )
     }
 
     private fun findFMessage(firstArg: Any): FMessageWpp? {
-        if (FMessageWpp.TYPE.isInstance(firstArg)) {
+        if (FMessageWpp.type.isInstance(firstArg)) {
             return FMessageWpp(firstArg)
         }
 
         var currentClass: Class<*>? = firstArg.javaClass
         while (currentClass != null) {
-            val field = currentClass.declaredFields.firstOrNull { field ->
-                FMessageWpp.TYPE.isAssignableFrom(field.type)
-            }
+            val field =
+                currentClass.declaredFields.firstOrNull { field ->
+                    FMessageWpp.type.isAssignableFrom(field.type)
+                }
             if (field != null) {
                 field.isAccessible = true
                 return FMessageWpp(field.get(firstArg))
@@ -103,16 +112,20 @@ class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Featu
         return null
     }
 
-    private fun updateDeviceIndicator(fMessage: FMessageWpp, view: ViewGroup) {
+    private fun updateDeviceIndicator(
+        fMessage: FMessageWpp,
+        view: ViewGroup,
+    ) {
         val deviceIndicator = view.findViewWithTag<ImageView>(DEVICE_TYPE_TAG)
         val messageId = fMessage.key.messageID
         val userjid = fMessage.key.remoteJid.userRawString
-        val deviceTypeValue = MessageHistoryStore.getInstance().getDeviceType(
-            userjid,
-            messageId
-        ) {
-            ConversationItemListener.notifyDataSetChanged()
-        }
+        val deviceTypeValue =
+            MessageHistoryStore.getInstance().getDeviceType(
+                userjid,
+                messageId,
+            ) {
+                ConversationItemListener.notifyDataSetChanged()
+            }
 
         if (deviceTypeValue == null) {
             removeDeviceIndicator(deviceIndicator)
@@ -125,9 +138,10 @@ class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Featu
             return
         }
 
-        val target = deviceIndicator ?: ImageView(dateWrapper.context).apply {
-            tag = DEVICE_TYPE_TAG
-        }
+        val target =
+            deviceIndicator ?: ImageView(dateWrapper.context).apply {
+                tag = DEVICE_TYPE_TAG
+            }
         if (target.parent !== dateWrapper) {
             (target.parent as? ViewGroup)?.removeView(target)
             dateWrapper.addView(target, 0)
@@ -138,7 +152,7 @@ class CaptureDevice(classLoader: ClassLoader, xprefs: SharedPreferences) : Featu
                 R.drawable.device
             } else {
                 R.drawable.linked_device
-            }
+            },
         )
     }
 

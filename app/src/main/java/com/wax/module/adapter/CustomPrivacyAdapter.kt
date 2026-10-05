@@ -10,19 +10,22 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.edit
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.Utils
-import androidx.core.content.edit
 
 class CustomPrivacyAdapter(
     context: Context,
     private val prefs: SharedPreferences,
     private val items: MutableList<Item>,
     private val contactClass: Class<*>,
-    private val groupClass: Class<*>
+    private val groupClass: Class<*>,
 ) : ArrayAdapter<CustomPrivacyAdapter.Item>(context, 0) {
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+    override fun getView(
+        position: Int,
+        convertView: View?,
+        parent: ViewGroup,
+    ): View {
         val item = items[position]
         val holder: ViewHolder
         val row: View
@@ -56,28 +59,34 @@ class CustomPrivacyAdapter(
     override fun getCount(): Int = items.size
 
     private fun createLayout(holder: ViewHolder): ViewGroup {
-        val layout = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(Utils.dipToPixels(25), 0, Utils.dipToPixels(25), 0)
-        }
+        val layout =
+            LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(Utils.dipToPixels(25), 0, Utils.dipToPixels(25), 0)
+            }
 
-        holder.textView = TextView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { weight = 1f }
-        }
+        holder.textView =
+            TextView(context).apply {
+                layoutParams =
+                    LinearLayout
+                        .LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                        ).apply { weight = 1f }
+            }
         layout.addView(holder.textView)
 
-        holder.button = Button(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                Utils.dipToPixels(40),
-                Utils.dipToPixels(40)
-            )
-            val drawable = DesignUtils.createDrawable("stroke_border", Color.BLACK)
-            background = DesignUtils.alphaDrawable(drawable, DesignUtils.getPrimaryTextColor(), 25)
-            text = "X"
-        }
+        holder.button =
+            Button(context).apply {
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        Utils.dipToPixels(40),
+                        Utils.dipToPixels(40),
+                    )
+                val drawable = DesignUtils.createDrawable("stroke_border", Color.BLACK)
+                background = DesignUtils.alphaDrawable(drawable, DesignUtils.getPrimaryTextColor(), 25)
+                text = "X"
+            }
         layout.addView(holder.button)
         return layout
     }
@@ -89,7 +98,9 @@ class CustomPrivacyAdapter(
 
     class Item {
         @JvmField var name: String = ""
+
         @JvmField var number: String = ""
+
         @JvmField var key: String = ""
     }
 }

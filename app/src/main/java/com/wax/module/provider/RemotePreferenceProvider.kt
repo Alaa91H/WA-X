@@ -6,11 +6,16 @@ import com.crossbowffs.remotepreferences.RemotePreferenceProvider
 import com.wax.module.BuildConfig
 import com.wax.module.xposed.core.FeatureLoader
 
-class RemotePreferenceProvider : RemotePreferenceProvider(
-    BuildConfig.APPLICATION_ID + ".preferences",
-    arrayOf(BuildConfig.APPLICATION_ID + "_preferences")
-) {
-    override fun checkAccess(prefFileName: String, prefKey: String, write: Boolean): Boolean {
+class RemotePreferenceProvider :
+    RemotePreferenceProvider(
+        BuildConfig.APPLICATION_ID + ".preferences",
+        arrayOf(BuildConfig.APPLICATION_ID + "_preferences"),
+    ) {
+    override fun checkAccess(
+        prefFileName: String,
+        prefKey: String,
+        write: Boolean,
+    ): Boolean {
         if (write) return false
 
         val callingUid = Binder.getCallingUid()

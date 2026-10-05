@@ -20,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -34,11 +35,12 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.CompletableFuture
 import java.util.zip.ZipInputStream
-import androidx.core.content.edit
 
-class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(context, attrs),
+class ThemePreference(
+    context: Context,
+    attrs: AttributeSet?,
+) : Preference(context, attrs),
     FilePicker.OnUriPickedListener {
-
     private var mainDialog: AlertDialog? = null
 
     init {
@@ -49,10 +51,12 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
         super.onClick()
         val needsPermission =
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) ||
-                (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED)
+                (
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R && ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    ) != PackageManager.PERMISSION_GRANTED
+                )
         if (needsPermission) {
             ModuleApplication.showRequestStoragePermission(context as Activity)
         } else {
@@ -90,8 +94,8 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
                     com.google.android.material.color.MaterialColors.getColor(
                         currentContext,
                         R.attr.colorPrimary,
-                        0
-                    )
+                        0,
+                    ),
                 )
             }
             if (cssFile.exists()) {
@@ -107,7 +111,7 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
                 preferences.edit(commit = true) {
                     putString(
                         "custom_css",
-                        if (cssFile.exists()) cssFile.readText(Charset.defaultCharset()) else ""
+                        if (cssFile.exists()) cssFile.readText(Charset.defaultCharset()) else "",
                     )
                 }
                 mainDialog?.dismiss()
@@ -118,9 +122,10 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
                 editButton.visibility = View.INVISIBLE
             } else {
                 editButton.setOnClickListener {
-                    val intent = Intent(currentContext, TextEditorActivity::class.java)
-                        .putExtra("folder_name", folder)
-                        .putExtra("key", key)
+                    val intent =
+                        Intent(currentContext, TextEditorActivity::class.java)
+                            .putExtra("folder_name", folder)
+                            .putExtra("key", key)
                     ContextCompat.startActivity(currentContext, intent, null)
                 }
             }
@@ -129,9 +134,11 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
         mainDialog = builder.show()
     }
 
-    private fun getFolders(): List<String> = rootDirectory.listFiles { file -> file.isDirectory }
-        ?.map { it.name }
-        ?: emptyList()
+    private fun getFolders(): List<String> =
+        rootDirectory
+            .listFiles { file -> file.isDirectory }
+            ?.map { it.name }
+            ?: emptyList()
 
     private fun showCreateNewThemeDialog() {
         val input = EditText(context)
@@ -141,8 +148,7 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
             .setPositiveButton(R.string.create) { _, _ ->
                 val folderName = input.text.toString()
                 if (!TextUtils.isEmpty(folderName)) createNewFolder(folderName)
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -219,6 +225,6 @@ class ThemePreference(context: Context, attrs: AttributeSet?) : Preference(conte
 
     companion object {
         @JvmField
-        val rootDirectory = File(ModuleApplication.MODULE_FOLDER, "themes")
+        val rootDirectory = File(ModuleApplication.moduleFolder, "themes")
     }
 }

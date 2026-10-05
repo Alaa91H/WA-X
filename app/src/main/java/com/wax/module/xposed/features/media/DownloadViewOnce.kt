@@ -1,6 +1,7 @@
 package com.wax.module.xposed.features.media
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
@@ -14,51 +15,55 @@ import com.wax.module.xposed.core.devkit.Unobfuscator.loadViewOnceDownloadMenuMe
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
-class DownloadViewOnce(classLoader: ClassLoader, preferences:SharedPreferences) :
-    Feature(classLoader, preferences) {
-
+class DownloadViewOnce(
+    classLoader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(classLoader, preferences) {
     override fun doHook() {
         if (prefs.getBoolean("downloadviewonce", false)) {
             val menuMethod = loadViewOnceDownloadMenuMethod(classLoader)
             // Media Activity
-            XposedBridge.hookMethod(menuMethod, object : XC_MethodHook() {
-                @SuppressLint("DiscouragedApi")
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val fmessageObj: Any? = ReflectionUtils.getArg(param.args, FMessageWpp.TYPE, 0)
-                    val fMessage = FMessageWpp(fmessageObj)
+            XposedBridge.hookMethod(
+                menuMethod,
+                object : XC_MethodHook() {
+                    @SuppressLint("DiscouragedApi")
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val fmessageObj: Any? = ReflectionUtils.getArg(param.args, FMessageWpp.type, 0)
+                        val fMessage = FMessageWpp(fmessageObj)
 
-                    // check media is view once
-                    if (!fMessage.isViewOnce) return
-                    val menu = ReflectionUtils.getArg(param.args, Menu::class.java, 0)
-                    val item = menu!!.add(0, 0, 0, R.string.download).setIcon(R.drawable.download)
-                    item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                    item.setOnMenuItemClickListener {
-                        CompletableFuture.runAsync {
-                            try {
-                                val file = fMessage.mediaFile
-                                if (file == null) {
-                                    Utils.showToast(
-                                        Utils.application
-                                            .getString(R.string.download_not_available), 1
-                                    )
-                                    return@runAsync
+                        // check media is view once
+                        if (!fMessage.isViewOnce) return
+                        val menu = ReflectionUtils.getArg(param.args, Menu::class.java, 0)
+                        val item = menu!!.add(0, 0, 0, R.string.download).setIcon(R.drawable.download)
+                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                        item.setOnMenuItemClickListener {
+                            CompletableFuture.runAsync {
+                                try {
+                                    val file = fMessage.mediaFile
+                                    if (file == null) {
+                                        Utils.showToast(
+                                            Utils.application
+                                                .getString(R.string.download_not_available),
+                                            1,
+                                        )
+                                        return@runAsync
+                                    }
+                                    downloadFile(fMessage.key.remoteJid, file)
+                                } catch (e: Exception) {
+                                    Utils.showToast(e.message, Toast.LENGTH_LONG)
                                 }
-                                downloadFile(fMessage.key.remoteJid, file)
-                            } catch (e: Exception) {
-                                Utils.showToast(e.message, Toast.LENGTH_LONG)
                             }
+                            true
                         }
-                        true
                     }
-                }
-            })
+                },
+            )
             // View Once Activity
             XposedHelpers.findAndHookMethod(
                 viewOnceViewerActivityClass,
@@ -72,11 +77,12 @@ class DownloadViewOnce(classLoader: ClassLoader, preferences:SharedPreferences) 
                         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
                         item.setOnMenuItemClickListener {
                             CompletableFuture.runAsync {
-                                val keyClass: Class<*> = FMessageWpp.Key.TYPE
-                                val fieldType = ReflectionUtils.getFieldByType(
-                                    param.thisObject.javaClass,
-                                    keyClass
-                                )
+                                val keyClass: Class<*> = FMessageWpp.Key.type
+                                val fieldType =
+                                    ReflectionUtils.getFieldByType(
+                                        param.thisObject.javaClass,
+                                        keyClass,
+                                    )
                                 val keyMessageObj =
                                     ReflectionUtils.getObjectField(fieldType, param.thisObject)
                                 val fmessage = FMessageWpp.Key(keyMessageObj).fMessage
@@ -84,7 +90,8 @@ class DownloadViewOnce(classLoader: ClassLoader, preferences:SharedPreferences) 
                                 if (file == null) {
                                     Utils.showToast(
                                         Utils.application
-                                            .getString(R.string.download_not_available), 1
+                                            .getString(R.string.download_not_available),
+                                        1,
                                     )
                                     return@runAsync
                                 }
@@ -97,17 +104,18 @@ class DownloadViewOnce(classLoader: ClassLoader, preferences:SharedPreferences) 
                             true
                         }
                     }
-                })
+                },
+            )
         }
     }
 
-    override fun getPluginName(): String {
-        return "Download View Once"
-    }
+    override fun getPluginName(): String = "Download View Once"
 
     companion object {
-
-        private fun downloadFile(userJid: UserJid?, file: File) {
+        private fun downloadFile(
+            userJid: UserJid?,
+            file: File,
+        ) {
             val dest = Utils.getDestination("View Once")
             val fileExtension =
                 file.absolutePath.substring(file.absolutePath.lastIndexOf(".") + 1)
@@ -116,13 +124,13 @@ class DownloadViewOnce(classLoader: ClassLoader, preferences:SharedPreferences) 
             if (TextUtils.isEmpty(error)) {
                 Utils.showToast(
                     Utils.application.getString(R.string.saved_to) + dest,
-                    Toast.LENGTH_LONG
+                    Toast.LENGTH_LONG,
                 )
             } else {
                 Utils.showToast(
                     Utils.application
                         .getString(R.string.error_when_saving_try_again) + ":" + error,
-                    Toast.LENGTH_LONG
+                    Toast.LENGTH_LONG,
                 )
             }
         }

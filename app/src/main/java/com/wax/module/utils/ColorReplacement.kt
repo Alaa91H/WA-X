@@ -12,7 +12,10 @@ import java.util.HashMap
 
 object ColorReplacement {
     @JvmStatic
-    fun replaceColors(view: View?, colors: HashMap<String, String>?) {
+    fun replaceColors(
+        view: View?,
+        colors: HashMap<String, String>?,
+    ) {
         if (view == null) return
         val colorMap = colors!!
         when (view) {
@@ -23,7 +26,10 @@ object ColorReplacement {
         }
     }
 
-    private fun replaceImage(view: ImageView, colors: HashMap<String, String>) {
+    private fun replaceImage(
+        view: ImageView,
+        colors: HashMap<String, String>,
+    ) {
         DrawableColors.replaceColor(view.background, colors)
         val colorFilter = view.colorFilter ?: return
         if (colorFilter is PorterDuffColorFilter) {
@@ -40,7 +46,10 @@ object ColorReplacement {
         }
     }
 
-    private fun replaceText(view: TextView, colors: HashMap<String, String>) {
+    private fun replaceText(
+        view: TextView,
+        colors: HashMap<String, String>,
+    ) {
         val stringColor = IColors.toString(view.currentTextColor)
         if (stringColor == "#ffffffff" && !DesignUtils.isNightMode()) return
 
@@ -55,7 +64,10 @@ object ColorReplacement {
         }
     }
 
-    private fun replaceGroup(view: ViewGroup, colors: HashMap<String, String>) {
+    private fun replaceGroup(
+        view: ViewGroup,
+        colors: HashMap<String, String>,
+    ) {
         val background = view.background
         for (index in 0 until view.childCount) {
             replaceColors(view.getChildAt(index), colors)

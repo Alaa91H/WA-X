@@ -9,24 +9,23 @@ import java.io.InputStream
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
-class WaContactWpp(instance: Any?) {
-
+class WaContactWpp(
+    instance: Any?,
+) {
     val mInstance: Any
 
     init {
         if (instance == null) {
             throw RuntimeException("instance cannot be null")
         }
-        if (!TYPE.isInstance(instance)) {
+        if (!type.isInstance(instance)) {
             throw RuntimeException("object is not a WaContactWpp")
         }
         this.mInstance = instance
     }
 
     companion object {
-
-
-        lateinit var TYPE: Class<*>
+        lateinit var type: Class<*>
 
         // Fields
         private var fieldContactData: Field? = null
@@ -46,22 +45,23 @@ class WaContactWpp(instance: Any?) {
         @JvmStatic
         fun initialize(classLoader: ClassLoader) {
             try {
-                TYPE = Unobfuscator.loadWaContactClass(classLoader)
+                type = Unobfuscator.loadWaContactClass(classLoader)
                 val convertLidToJid = Unobfuscator.loadConvertLidToJid(classLoader)
                 val classPhoneUserJid = convertLidToJid.returnType
-                val classJid = Unobfuscator.findFirstClassUsingName(
-                    classLoader,
-                    StringMatchType.EndsWith,
-                    "jid.Jid"
-                )
+                val classJid =
+                    Unobfuscator.findFirstClassUsingName(
+                        classLoader,
+                        StringMatchType.EndsWith,
+                        "jid.Jid",
+                    )
 
-                val phoneUserJid = ReflectionUtils.getFieldByExtendType(TYPE, classPhoneUserJid)
+                val phoneUserJid = ReflectionUtils.getFieldByExtendType(type, classPhoneUserJid)
                 if (phoneUserJid == null) {
                     val contactDataClass = Unobfuscator.loadWaContactDataClass(classLoader)
-                    fieldContactData = ReflectionUtils.getFieldByType(TYPE, contactDataClass)
+                    fieldContactData = ReflectionUtils.getFieldByType(type, contactDataClass)
                     fieldUserJid = ReflectionUtils.getFieldByExtendType(contactDataClass, classJid)
                 } else {
-                    fieldUserJid = ReflectionUtils.getFieldByExtendType(TYPE, classJid)
+                    fieldUserJid = ReflectionUtils.getFieldByExtendType(type, classJid)
                 }
 
                 fieldDataGetDisplayName =
@@ -76,7 +76,8 @@ class WaContactWpp(instance: Any?) {
                             override fun afterHookedMethod(param: MethodHookParam) {
                                 mInstanceGetWaContact = param.thisObject
                             }
-                        })
+                        },
+                    )
                 }
 
                 getProfilePhoto = Unobfuscator.loadGetProfilePhotoMethod(classLoader)
@@ -87,20 +88,19 @@ class WaContactWpp(instance: Any?) {
                             override fun afterHookedMethod(param: MethodHookParam) {
                                 mInstanceGetProfilePhoto = param.thisObject
                             }
-                        })
+                        },
+                    )
                 }
 
                 fieldNumber = Unobfuscator.loadWaContactNumberField(classLoader)
-
-
             } catch (e: Exception) {
                 XposedBridge.log(e)
             }
         }
 
         @JvmStatic
-        fun getWaContactFromJid(userJid: FMessageWpp.UserJid): WaContactWpp? {
-            return try {
+        fun getWaContactFromJid(userJid: FMessageWpp.UserJid): WaContactWpp? =
+            try {
                 val instance = mInstanceGetWaContact
                 val method = getWaContactMethod
                 if (instance != null && method != null) {
@@ -110,12 +110,13 @@ class WaContactWpp(instance: Any?) {
                     }
                     val result = method.invoke(instance, jid)
                     result?.let { WaContactWpp(it) }
-                } else null
+                } else {
+                    null
+                }
             } catch (e: Exception) {
                 XposedBridge.log(e)
                 null
             }
-        }
     }
 
     fun getObject(): Any = mInstance
@@ -162,26 +163,25 @@ class WaContactWpp(instance: Any?) {
         }
     }
 
-    fun getProfilePhoto(fullImage: Boolean): InputStream? {
-        return try {
+    fun getProfilePhoto(fullImage: Boolean): InputStream? =
+        try {
             val instance = mInstanceGetProfilePhoto
             val method = getProfilePhoto
             if (instance != null && method != null) {
                 method.invoke(instance, mInstance, fullImage) as? InputStream
-            } else null
+            } else {
+                null
+            }
         } catch (e: Exception) {
             XposedBridge.log(e)
             null
         }
-    }
 
-    fun isSavedContact(): Boolean {
-        return try {
+    fun isSavedContact(): Boolean =
+        try {
             fieldNumber?.get(mInstance) != null
         } catch (e: Exception) {
             XposedBridge.log(e)
             false
         }
-    }
-
 }

@@ -10,7 +10,10 @@ import com.wax.module.preference.ContactPickerPreference
 import com.wax.module.ui.fragments.base.BasePreferenceFragment
 
 class PrivacyFragment : BasePreferenceFragment() {
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?,
+    ) {
         super.onCreatePreferences(savedInstanceState, rootKey)
         setPreferencesFromResource(R.xml.fragment_privacy, rootKey)
     }
@@ -22,7 +25,11 @@ class PrivacyFragment : BasePreferenceFragment() {
 
     @Suppress("DEPRECATION")
     @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
         println("onActivityResult: $requestCode $resultCode $data")
         if (requestCode == ContactPickerPreference.REQUEST_CONTACT_PICKER && resultCode == Activity.RESULT_OK) {
@@ -32,7 +39,10 @@ class PrivacyFragment : BasePreferenceFragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         val activityIntent = activity?.intent
         val scrollToKey = activityIntent?.getStringExtra("scroll_to_preference")

@@ -26,8 +26,7 @@ enum class TargetApp(
 
     companion object {
         /** The target for a package name, or null when it is not a supported one. */
-        fun fromPackageName(packageName: String?): TargetApp? =
-            entries.firstOrNull { it.packageName == packageName }
+        fun fromPackageName(packageName: String?): TargetApp? = entries.firstOrNull { it.packageName == packageName }
 
         /** The target for a persisted code such as "business". */
         fun fromCode(code: String?): TargetApp? = entries.firstOrNull { it.code == code }
@@ -54,7 +53,6 @@ enum class TargetApp(
  *    `system_server`, and the settings bridge is answered from the settings provider.
  */
 object TargetPackageRegistry {
-
     /** The targets, in declaration order. */
     val targets: List<TargetApp> = TargetApp.entries.toList()
 
@@ -88,11 +86,9 @@ object TargetPackageRegistry {
      * by the entry point before a single hook is installed.
      */
     @JvmStatic
-    fun isInHookScope(packageName: String?): Boolean =
-        packageName != null && packageName in SupportedPackages.HOOK_SCOPE
+    fun isInHookScope(packageName: String?): Boolean = packageName != null && packageName in SupportedPackages.HOOK_SCOPE
 
     /** The display name for a package, falling back to the package name. */
     @JvmStatic
-    fun displayName(packageName: String?): String =
-        TargetApp.fromPackageName(packageName)?.displayName ?: (packageName ?: "unknown")
+    fun displayName(packageName: String?): String = TargetApp.fromPackageName(packageName)?.displayName ?: (packageName ?: "unknown")
 }

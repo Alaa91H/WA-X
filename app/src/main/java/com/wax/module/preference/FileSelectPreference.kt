@@ -16,6 +16,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.developer.filepicker.model.DialogConfigs
@@ -30,11 +31,12 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.concurrent.CompletableFuture
-import androidx.core.content.edit
 
-class FileSelectPreference : Preference, Preference.OnPreferenceClickListener,
-    FilePicker.OnFilePickedListener, FilePicker.OnUriPickedListener {
-
+class FileSelectPreference :
+    Preference,
+    Preference.OnPreferenceClickListener,
+    FilePicker.OnFilePickedListener,
+    FilePicker.OnUriPickedListener {
     private var mineTypes: Array<String> = arrayOf("*/*")
     private var selectDirectory = false
 
@@ -57,13 +59,13 @@ class FileSelectPreference : Preference, Preference.OnPreferenceClickListener,
             .setTitle(R.string.storage_permission)
             .setMessage(R.string.permission_storage)
             .setPositiveButton(R.string.allow) { _, _ ->
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    data = Uri.fromParts("package", context.packageName, null)
-                }
+                val intent =
+                    Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
                 context.startActivity(intent)
-            }
-            .setNegativeButton(R.string.deny) { dialog, _ -> dialog.dismiss() }
+            }.setNegativeButton(R.string.deny) { dialog, _ -> dialog.dismiss() }
             .show()
     }
 
@@ -96,9 +98,10 @@ class FileSelectPreference : Preference, Preference.OnPreferenceClickListener,
         if (mineTypes.size == 1 && mineTypes[0].contains("image")) {
             FilePicker.setOnUriPickedListener(this)
             FilePicker.imageCapture.launch(
-                PickVisualMediaRequest.Builder()
+                PickVisualMediaRequest
+                    .Builder()
                     .setMediaType(ActivityResultContracts.PickVisualMedia.SingleMimeType(mineTypes[0]))
-                    .build()
+                    .build(),
             )
             return true
         }
@@ -107,13 +110,14 @@ class FileSelectPreference : Preference, Preference.OnPreferenceClickListener,
     }
 
     private fun showSelectDirectoryDialog() {
-        val properties = DialogProperties().apply {
-            selection_mode = DialogConfigs.SINGLE_MODE
-            selection_type = DialogConfigs.DIR_SELECT
-            root = File(DialogConfigs.DEFAULT_DIR)
-            error_dir = File(DialogConfigs.DEFAULT_DIR)
-            offset = File(DialogConfigs.DEFAULT_DIR)
-        }
+        val properties =
+            DialogProperties().apply {
+                selection_mode = DialogConfigs.SINGLE_MODE
+                selection_type = DialogConfigs.DIR_SELECT
+                root = File(DialogConfigs.DEFAULT_DIR)
+                error_dir = File(DialogConfigs.DEFAULT_DIR)
+                offset = File(DialogConfigs.DEFAULT_DIR)
+            }
         val dialog = FilePickerDialog(context, properties)
         dialog.setTitle("Select a local to download")
         dialog.setDialogSelectionListener { selectionPaths ->
@@ -140,7 +144,10 @@ class FileSelectPreference : Preference, Preference.OnPreferenceClickListener,
         summary = file.absolutePath
     }
 
-    private fun init(context: Context, attrs: AttributeSet?) {
+    private fun init(
+        context: Context,
+        attrs: AttributeSet?,
+    ) {
         onPreferenceClickListener = this
         val typedArray = context.theme.obtainStyledAttributes(attrs, R.styleable.FileSelectPreference, 0, 0)
         val values = typedArray.getTextArray(R.styleable.FileSelectPreference_android_entryValues)
@@ -154,7 +161,7 @@ class FileSelectPreference : Preference, Preference.OnPreferenceClickListener,
     override fun onUriPicked(uri: Uri) {
         val contentResolver: ContentResolver = context.contentResolver
         val extension = requireNotNull(contentResolver.getType(uri)).split("/")[1]
-        val folder = File(ModuleApplication.MODULE_FOLDER, "files")
+        val folder = File(ModuleApplication.moduleFolder, "files")
         if (!folder.exists()) folder.mkdirs()
         val outFile = File(folder, "$key.$extension")
         val editor = sharedPreferences!!.edit()

@@ -28,7 +28,6 @@ class HdStatusFieldWriter(
     private val fields: Map<String, Field>,
     private val log: (String) -> Unit,
 ) {
-
     /** Overrides applied so far. */
     var applied: Int = 0
         private set
@@ -52,7 +51,10 @@ class HdStatusFieldWriter(
     private var target: Any? = null
 
     /** Runs [block] with [instance] installed as the write target. */
-    fun <T> withTarget(instance: Any?, block: HdStatusFieldWriter.() -> T): T {
+    fun <T> withTarget(
+        instance: Any?,
+        block: HdStatusFieldWriter.() -> T,
+    ): T {
         val previous = target
         target = instance
         try {
@@ -63,13 +65,19 @@ class HdStatusFieldWriter(
     }
 
     /** Sets the first present alias of [aliases] whose field is an `int`. */
-    fun setInt(aliases: List<String>, value: Int): Boolean =
+    fun setInt(
+        aliases: List<String>,
+        value: Int,
+    ): Boolean =
         setPrimitive(aliases, Int::class.javaPrimitiveType!!) { field, instance ->
             field.setInt(instance, value)
         }
 
     /** Sets the first present alias of [aliases] whose field is a `boolean`. */
-    fun setBoolean(aliases: List<String>, value: Boolean): Boolean =
+    fun setBoolean(
+        aliases: List<String>,
+        value: Boolean,
+    ): Boolean =
         setPrimitive(aliases, Boolean::class.javaPrimitiveType!!) { field, instance ->
             field.setBoolean(instance, value)
         }
@@ -101,15 +109,20 @@ class HdStatusFieldWriter(
      * constant is absent, [fallbackOrdinal] is used if the enum is long enough, and
      * the substitution is logged because it changes behaviour.
      */
-    fun setEnumConstant(aliases: List<String>, constantName: String, fallbackOrdinal: Int?): Boolean {
+    fun setEnumConstant(
+        aliases: List<String>,
+        constantName: String,
+        fallbackOrdinal: Int?,
+    ): Boolean {
         val field = selectField(aliases, null) ?: return recordMissing(aliases, null)
         val instance = target ?: return recordMissing(aliases, field)
         val fieldType = field.type
         if (!fieldType.isEnum) return recordMissing(aliases, field, "expected an enum, found ${fieldType.simpleName}")
         val constants = fieldType.enumConstants ?: return recordMissing(aliases, field, "enum has no constants")
         val byName = constants.firstOrNull { (it as Enum<*>).name == constantName }
-        val chosen = byName ?: fallbackOrdinal?.let { constants.getOrNull(it) }
-            ?: return recordMissing(aliases, field, "no constant '$constantName'")
+        val chosen =
+            byName ?: fallbackOrdinal?.let { constants.getOrNull(it) }
+                ?: return recordMissing(aliases, field, "no constant '$constantName'")
         return try {
             if (byName == null) {
                 log("$label.${field.name}: '$constantName' absent, using ordinal ${constants.indexOf(chosen)}")
@@ -127,11 +140,12 @@ class HdStatusFieldWriter(
 
     /** Writes the closing summary: how many overrides landed and what was missing. */
     fun summarise(context: String) {
-        val losses = buildString {
-            append("$applied applied")
-            if (skipped > 0) append(", $skipped skipped")
-            if (missingNames.isNotEmpty()) append(", missing ${missingNames.distinct().joinToString("/")}")
-        }
+        val losses =
+            buildString {
+                append("$applied applied")
+                if (skipped > 0) append(", $skipped skipped")
+                if (missingNames.isNotEmpty()) append(", missing ${missingNames.distinct().joinToString("/")}")
+            }
         log("$context: $losses")
     }
 
@@ -162,7 +176,10 @@ class HdStatusFieldWriter(
      * `toString()` pairing: a boolean field offered where an int was asked for is
      * skipped rather than written to.
      */
-    private fun selectField(aliases: List<String>, requiredType: Class<*>?): Field? {
+    private fun selectField(
+        aliases: List<String>,
+        requiredType: Class<*>?,
+    ): Field? {
         for (name in aliases) {
             val field = fields[name] ?: continue
             field.isAccessible = true
@@ -172,7 +189,11 @@ class HdStatusFieldWriter(
         return null
     }
 
-    private fun recordMissing(aliases: List<String>, field: Field?, detail: String? = null): Boolean {
+    private fun recordMissing(
+        aliases: List<String>,
+        field: Field?,
+        detail: String? = null,
+    ): Boolean {
         skipped++
         missingNames += aliases.first()
         val suffix = if (detail == null) "" else " ($detail)"
@@ -181,7 +202,11 @@ class HdStatusFieldWriter(
         return false
     }
 
-    private fun recordFailure(aliases: List<String>, field: Field, t: Throwable): Boolean {
+    private fun recordFailure(
+        aliases: List<String>,
+        field: Field,
+        t: Throwable,
+    ): Boolean {
         skipped++
         log("$label.${field.name}: write refused (${t.javaClass.simpleName}: ${t.message})")
         return false

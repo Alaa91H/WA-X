@@ -9,7 +9,6 @@ package com.wax.module.resolver
  * single "disabled".
  */
 enum class FeatureHealth {
-
     /** Installed on the primary path with no fallbacks involved. */
     HEALTHY,
 
@@ -32,7 +31,9 @@ enum class FeatureHealth {
     FAILED,
 
     /** Never attempted, or the outcome was not recorded. */
-    UNKNOWN;
+    UNKNOWN,
+
+    ;
 
     /** Whether the feature is running in any form. */
     val isRunning: Boolean

@@ -12,14 +12,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.wax.module.R
 import com.wax.module.model.Recording
-import java.util.HashSet
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.HashSet
 import java.util.Locale
 
-class RecordingsAdapter(private val listener: OnRecordingActionListener) :
-    RecyclerView.Adapter<RecordingsAdapter.ViewHolder>() {
-
+class RecordingsAdapter(
+    private val listener: OnRecordingActionListener,
+) : RecyclerView.Adapter<RecordingsAdapter.ViewHolder>() {
     private var recordingItems: List<Recording> = emptyList()
     private var isSelectionMode = false
     private val selectedPositions = HashSet<Int>()
@@ -27,9 +27,15 @@ class RecordingsAdapter(private val listener: OnRecordingActionListener) :
 
     interface OnRecordingActionListener {
         fun onPlay(recording: Recording)
+
         fun onShare(recording: Recording)
+
         fun onDelete(recording: Recording)
-        fun onLongPress(recording: Recording, position: Int)
+
+        fun onLongPress(
+            recording: Recording,
+            position: Int,
+        )
     }
 
     fun interface OnSelectionChangeListener {
@@ -77,12 +83,18 @@ class RecordingsAdapter(private val listener: OnRecordingActionListener) :
     val selectedRecordings: List<Recording>
         get() = selectedPositions.mapNotNull { position -> recordingItems.getOrNull(position) }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_recording, parent, false)
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val recording = recordingItems[position]
         holder.contactName.text = recording.contactName
         holder.duration.text = recording.getFormattedDuration()
@@ -116,7 +128,9 @@ class RecordingsAdapter(private val listener: OnRecordingActionListener) :
 
     override fun getItemCount(): Int = recordingItems.size
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView) {
         val card: MaterialCardView = itemView as MaterialCardView
         val checkbox: CheckBox = itemView.findViewById(R.id.checkbox)
         val icon: ImageView = itemView.findViewById(R.id.icon)

@@ -15,9 +15,8 @@ data class FeatureStatusLine(
     val featureId: String,
     val health: FeatureHealth,
     val explanation: String,
-    val code: com.wax.module.diagnostics.FailureCode? = null
+    val code: com.wax.module.diagnostics.FailureCode? = null,
 ) {
-
     /** Whether this line should be shown to the user at all. */
     val isNotable: Boolean get() = health.isNotable
 
@@ -34,7 +33,6 @@ data class FeatureStatusLine(
  * one the user never enabled.
  */
 object ResolverDiagnostics {
-
     private val overrides = Collections.synchronizedList(ArrayList<FeatureStatusLine>())
 
     /**
@@ -55,12 +53,13 @@ object ResolverDiagnostics {
         for (summary in ResolverRegistry.summary()) {
             val owner = lines[summary.resolverId]
             if (owner == null) {
-                lines[summary.resolverId] = FeatureStatusLine(
-                    featureId = summary.resolverId,
-                    health = healthFor(summary.installable, summary.confidence),
-                    explanation = UserExplanation.forCode(codeFor(summary.confidence), summary.reason),
-                    code = codeFor(summary.confidence)
-                )
+                lines[summary.resolverId] =
+                    FeatureStatusLine(
+                        featureId = summary.resolverId,
+                        health = healthFor(summary.installable, summary.confidence),
+                        explanation = UserExplanation.forCode(codeFor(summary.confidence), summary.reason),
+                        code = codeFor(summary.confidence),
+                    )
             }
         }
 
@@ -114,31 +113,38 @@ object ResolverDiagnostics {
             featureId = outcome.featureId,
             health = outcome.health,
             explanation = explanationFor(outcome),
-            code = outcome.code
+            code = outcome.code,
         )
 
-    private fun explanationFor(outcome: FeatureOutcome): String = when (outcome.health) {
-        FeatureHealth.HEALTHY -> "working normally"
-        FeatureHealth.FALLBACK ->
-            "working through a compatibility path because the normal one is unavailable " +
+    private fun explanationFor(outcome: FeatureOutcome): String =
+        when (outcome.health) {
+            FeatureHealth.HEALTHY -> "working normally"
+            FeatureHealth.FALLBACK ->
+                "working through a compatibility path because the normal one is unavailable " +
                     "on this WhatsApp version"
-        FeatureHealth.DEGRADED -> outcome.reason
-        FeatureHealth.INCOMPATIBLE -> UserExplanation.forCode(
-            com.wax.module.diagnostics.FailureCode.INCOMPATIBLE,
-            outcome.reason
-        )
-        else -> UserExplanation.forCode(
-            outcome.code ?: com.wax.module.diagnostics.FailureCode.UNEXPECTED,
-            outcome.reason
-        )
-    }
+            FeatureHealth.DEGRADED -> outcome.reason
+            FeatureHealth.INCOMPATIBLE ->
+                UserExplanation.forCode(
+                    com.wax.module.diagnostics.FailureCode.INCOMPATIBLE,
+                    outcome.reason,
+                )
+            else ->
+                UserExplanation.forCode(
+                    outcome.code ?: com.wax.module.diagnostics.FailureCode.UNEXPECTED,
+                    outcome.reason,
+                )
+        }
 
-    private fun healthFor(installable: Boolean, confidence: Confidence): FeatureHealth = when {
-        !installable && confidence == Confidence.AMBIGUOUS -> FeatureHealth.FAILED
-        !installable -> FeatureHealth.INCOMPATIBLE
-        confidence == Confidence.LIKELY -> FeatureHealth.DEGRADED
-        else -> FeatureHealth.HEALTHY
-    }
+    private fun healthFor(
+        installable: Boolean,
+        confidence: Confidence,
+    ): FeatureHealth =
+        when {
+            !installable && confidence == Confidence.AMBIGUOUS -> FeatureHealth.FAILED
+            !installable -> FeatureHealth.INCOMPATIBLE
+            confidence == Confidence.LIKELY -> FeatureHealth.DEGRADED
+            else -> FeatureHealth.HEALTHY
+        }
 
     private fun codeFor(confidence: Confidence): com.wax.module.diagnostics.FailureCode =
         when (confidence) {

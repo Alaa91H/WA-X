@@ -15,7 +15,10 @@ interface DeviceDao {
     fun getDeviceTypeByMessageId(messageId: String): Int?
 
     @Query("SELECT device_type FROM device_history WHERE userjid = :userjid AND message_id = :messageId LIMIT 1")
-    fun getDeviceType(userjid: String, messageId: String): Int?
+    fun getDeviceType(
+        userjid: String,
+        messageId: String,
+    ): Int?
 
     @Query("DELETE FROM device_history WHERE message_id IN (:messageIds)")
     fun deleteByMessageIds(messageIds: List<String>): Int

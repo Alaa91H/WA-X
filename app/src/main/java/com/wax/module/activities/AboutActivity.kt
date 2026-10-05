@@ -25,31 +25,31 @@ import com.wax.module.databinding.ActivityAboutBinding
  * current maintainer as the author of inherited code would be equally wrong.
  */
 class AboutActivity : BaseActivity() {
-
     /**
      * People credited for their own contributions to this codebase and its
      * predecessors. These are historical credits, not current maintainers.
      */
-    private val upstreamCredits = listOf(
-        "Dev4Mod" to "https://github.com/Alaa91H",
-        "frknkrc44" to "https://github.com/frknkrc44",
-        "mubashardev" to "https://github.com/mubashardev",
-        "masbentoooredoo" to "https://github.com/masbentoooredoo",
-        "zhongerxll" to "https://github.com/zhongerxll",
-        "BryanGIG" to "https://github.com/BryanGIG",
-        "rizqi-developer" to "https://github.com/rizqi-developer",
-        "pedroborraz" to "https://github.com/pedroborraz",
-        "ahmedtohamy1" to "https://github.com/ahmedtohamy1",
-        "mohdafix" to "https://github.com/mohdafix",
-        "maulana-kurniawan" to "https://github.com/maulana-kurniawan",
-        "erzachn" to "https://github.com/erzachn",
-        "cvnertnc" to "https://github.com/cvnertnc",
-        "rkorossy" to "https://github.com/rkorossy",
-        "StupidRepo" to "https://github.com/StupidRepo",
-        "Blank517" to "https://github.com/Blank517",
-        "astola-studio" to "https://github.com/astola-studio",
-        "Strange-IPmart" to "https://github.com/Strange-IPmart",
-    )
+    private val upstreamCredits =
+        listOf(
+            "Dev4Mod" to "https://github.com/Alaa91H",
+            "frknkrc44" to "https://github.com/frknkrc44",
+            "mubashardev" to "https://github.com/mubashardev",
+            "masbentoooredoo" to "https://github.com/masbentoooredoo",
+            "zhongerxll" to "https://github.com/zhongerxll",
+            "BryanGIG" to "https://github.com/BryanGIG",
+            "rizqi-developer" to "https://github.com/rizqi-developer",
+            "pedroborraz" to "https://github.com/pedroborraz",
+            "ahmedtohamy1" to "https://github.com/ahmedtohamy1",
+            "mohdafix" to "https://github.com/mohdafix",
+            "maulana-kurniawan" to "https://github.com/maulana-kurniawan",
+            "erzachn" to "https://github.com/erzachn",
+            "cvnertnc" to "https://github.com/cvnertnc",
+            "rkorossy" to "https://github.com/rkorossy",
+            "StupidRepo" to "https://github.com/StupidRepo",
+            "Blank517" to "https://github.com/Blank517",
+            "astola-studio" to "https://github.com/astola-studio",
+            "Strange-IPmart" to "https://github.com/Strange-IPmart",
+        )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,20 +74,23 @@ class AboutActivity : BaseActivity() {
         // prerequisite for reading the licence or the disclaimer.
         val margin = resources.getDimensionPixelSize(R.dimen.spacing_small)
         upstreamCredits.forEachIndexed { index, (name, url) ->
-            val params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                if (index > 0) topMargin = margin
-            }
-            val button = MaterialButton(ContextThemeWrapper(this, R.style.ModernButton_Outlined)).apply {
-                text = name
-                setIconResource(R.drawable.ic_github)
-                iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
-                iconPadding = margin
-                layoutParams = params
-                setOnClickListener { openUrl(url) }
-            }
+            val params =
+                LinearLayout
+                    .LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                    ).apply {
+                        if (index > 0) topMargin = margin
+                    }
+            val button =
+                MaterialButton(ContextThemeWrapper(this, R.style.ModernButton_Outlined)).apply {
+                    text = name
+                    setIconResource(R.drawable.ic_github)
+                    iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+                    iconPadding = margin
+                    layoutParams = params
+                    setOnClickListener { openUrl(url) }
+                }
             binding.noticesContainer.addView(button)
         }
     }

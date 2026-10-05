@@ -8,7 +8,6 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
-import androidx.annotation.Keep
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -47,56 +46,64 @@ class MainActivity : BaseActivity() {
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         if (!prefs.getBoolean("call_recording_enable", false)) {
-            binding.navView.menu.findItem(R.id.navigation_recordings).isVisible = false
+            binding.navView.menu
+                .findItem(R.id.navigation_recordings)
+                .isVisible = false
         }
 
-        binding.navView.setOnItemSelectedListener(NavigationBarView.OnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_home -> {
-                    binding.viewPager.setCurrentItem(0, true)
-                    true
+        binding.navView.setOnItemSelectedListener(
+            NavigationBarView.OnItemSelectedListener { item ->
+                when (item.itemId) {
+                    R.id.navigation_home -> {
+                        binding.viewPager.setCurrentItem(0, true)
+                        true
+                    }
+                    R.id.navigation_chat -> {
+                        binding.viewPager.setCurrentItem(1, true)
+                        true
+                    }
+                    R.id.navigation_privacy -> {
+                        binding.viewPager.setCurrentItem(2, true)
+                        true
+                    }
+                    R.id.navigation_media -> {
+                        binding.viewPager.setCurrentItem(3, true)
+                        true
+                    }
+                    R.id.navigation_colors -> {
+                        binding.viewPager.setCurrentItem(4, true)
+                        true
+                    }
+                    R.id.navigation_recordings -> {
+                        binding.viewPager.setCurrentItem(5, true)
+                        true
+                    }
+                    else -> false
                 }
-                R.id.navigation_chat -> {
-                    binding.viewPager.setCurrentItem(1, true)
-                    true
-                }
-                R.id.navigation_privacy -> {
-                    binding.viewPager.setCurrentItem(2, true)
-                    true
-                }
-                R.id.navigation_media -> {
-                    binding.viewPager.setCurrentItem(3, true)
-                    true
-                }
-                R.id.navigation_colors -> {
-                    binding.viewPager.setCurrentItem(4, true)
-                    true
-                }
-                R.id.navigation_recordings -> {
-                    binding.viewPager.setCurrentItem(5, true)
-                    true
-                }
-                else -> false
-            }
-        })
+            },
+        )
 
-        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                binding.navView.menu.getItem(position).isChecked = true
+        binding.viewPager.registerOnPageChangeCallback(
+            object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    super.onPageSelected(position)
+                    binding.navView.menu
+                        .getItem(position)
+                        .isChecked = true
 
-                val scrollKey = pendingScrollToPreference
-                if (pendingScrollToFragment == position && scrollKey != null) {
-                    val parentKey = pendingParentKey
-                    pendingScrollToPreference = null
-                    pendingScrollToFragment = -1
-                    pendingParentKey = null
-                    binding.viewPager.postDelayed({
-                        scrollToPreferenceInCurrentFragment(scrollKey, parentKey)
-                    }, 300)
+                    val scrollKey = pendingScrollToPreference
+                    if (pendingScrollToFragment == position && scrollKey != null) {
+                        val parentKey = pendingParentKey
+                        pendingScrollToPreference = null
+                        pendingScrollToFragment = -1
+                        pendingParentKey = null
+                        binding.viewPager.postDelayed({
+                            scrollToPreferenceInCurrentFragment(scrollKey, parentKey)
+                        }, 300)
+                    }
                 }
-            }
-        })
+            },
+        )
 
         binding.viewPager.setCurrentItem(0, false)
         createMainDir()
@@ -105,7 +112,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun createMainDir() {
-        val nomedia = File(ModuleApplication.MODULE_FOLDER, ".nomedia")
+        val nomedia = File(ModuleApplication.moduleFolder, ".nomedia")
         if (nomedia.exists()) nomedia.delete()
     }
 
@@ -134,7 +141,10 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun scrollToPreferenceInCurrentFragment(preferenceKey: String, parentKey: String?) {
+    private fun scrollToPreferenceInCurrentFragment(
+        preferenceKey: String,
+        parentKey: String?,
+    ) {
         val currentItem = binding.viewPager.currentItem
         val fragment = supportFragmentManager.findFragmentByTag("f$currentItem") ?: return
 
@@ -152,17 +162,19 @@ class MainActivity : BaseActivity() {
     private fun navigateToSubFragmentAndScroll(
         parentFragment: Fragment,
         parentKey: String,
-        childPreferenceKey: String
+        childPreferenceKey: String,
     ) {
-        val subFragment = when (parentKey) {
-            "general_home" -> GeneralFragment.HomeGeneralPreference()
-            "homescreen" -> GeneralFragment.HomeScreenGeneralPreference()
-            "conversation" -> GeneralFragment.ConversationGeneralPreference()
-            else -> null
-        } ?: return
+        val subFragment =
+            when (parentKey) {
+                "general_home" -> GeneralFragment.HomeGeneralPreference()
+                "homescreen" -> GeneralFragment.HomeScreenGeneralPreference()
+                "conversation" -> GeneralFragment.ConversationGeneralPreference()
+                else -> null
+            } ?: return
 
         val parentView = parentFragment.view ?: return
-        parentFragment.childFragmentManager.beginTransaction()
+        parentFragment.childFragmentManager
+            .beginTransaction()
             .replace(R.id.frag_container, subFragment)
             .commitNow()
 
@@ -171,13 +183,20 @@ class MainActivity : BaseActivity() {
         }, 400)
     }
 
-    private fun scrollInChildFragment(parentFragment: Fragment, preferenceKey: String) {
+    private fun scrollInChildFragment(
+        parentFragment: Fragment,
+        preferenceKey: String,
+    ) {
         val childFragment = parentFragment.childFragmentManager.findFragmentById(R.id.frag_container)
         (childFragment as? BasePreferenceFragment)?.scrollToPreference(preferenceKey)
     }
 
     @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
         supportFragmentManager.fragments.forEach { it.onActivityResult(requestCode, resultCode, data) }
     }
@@ -195,20 +214,22 @@ class MainActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_search -> {
-                val options = ActivityOptionsCompat.makeCustomAnimation(
-                    this,
-                    R.anim.slide_in_right,
-                    R.anim.slide_out_left
-                )
+                val options =
+                    ActivityOptionsCompat.makeCustomAnimation(
+                        this,
+                        R.anim.slide_in_right,
+                        R.anim.slide_out_left,
+                    )
                 startActivity(Intent(this, SearchActivity::class.java), options.toBundle())
                 return true
             }
             R.id.menu_about -> {
-                val options = ActivityOptionsCompat.makeCustomAnimation(
-                    this,
-                    R.anim.slide_in_right,
-                    R.anim.slide_out_left
-                )
+                val options =
+                    ActivityOptionsCompat.makeCustomAnimation(
+                        this,
+                        R.anim.slide_in_right,
+                        R.anim.slide_out_left,
+                    )
                 startActivity(Intent(this, AboutActivity::class.java), options.toBundle())
                 return true
             }
@@ -216,10 +237,11 @@ class MainActivity : BaseActivity() {
                 if (batteryPermissionHelper.isBatterySaverPermissionAvailable(this, true)) {
                     batteryPermissionHelper.getPermission(this, true, true)
                 } else {
-                    val batteryIntent = Intent().apply {
-                        action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                        data = Uri.parse("package:$packageName")
-                    }
+                    val batteryIntent =
+                        Intent().apply {
+                            action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                            data = Uri.parse("package:$packageName")
+                        }
                     @Suppress("DEPRECATION")
                     startActivityForResult(batteryIntent, 0)
                 }
@@ -233,10 +255,11 @@ class MainActivity : BaseActivity() {
         return super.onSupportNavigateUp()
     }
 
-
-
     private class DepthPageTransformer : ViewPager2.PageTransformer {
-        override fun transformPage(page: android.view.View, position: Float) {
+        override fun transformPage(
+            page: android.view.View,
+            position: Float,
+        ) {
             val pageWidth = page.width
             when {
                 position < -1 -> page.alpha = 0f

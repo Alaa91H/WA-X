@@ -3,8 +3,9 @@ package com.wax.module.xposed.core.db
 import android.content.Context
 import com.wax.module.xposed.core.db.entity.DelMessage
 
-class DelMessageStore private constructor(private val context: Context) {
-
+class DelMessageStore private constructor(
+    private val context: Context,
+) {
     private var database = DelMessageDatabase.getInstance(context)
     private var dao = database.delMessageDao()
 
@@ -13,15 +14,17 @@ class DelMessageStore private constructor(private val context: Context) {
         private var instance: DelMessageStore? = null
 
         @JvmStatic
-        fun getInstance(context: Context): DelMessageStore {
-            return instance ?: synchronized(this) {
+        fun getInstance(context: Context): DelMessageStore =
+            instance ?: synchronized(this) {
                 instance ?: DelMessageStore(context.applicationContext).also { instance = it }
             }
-        }
     }
 
-    private fun <T> safeDbCall(fallback: T, block: () -> T): T {
-        return try {
+    private fun <T> safeDbCall(
+        fallback: T,
+        block: () -> T,
+    ): T =
+        try {
             block()
         } catch (e: IllegalStateException) {
             if (e.message?.contains("Migration didn't properly handle") == true) {
@@ -35,7 +38,6 @@ class DelMessageStore private constructor(private val context: Context) {
                 fallback
             }
         }
-    }
 
     private fun resetDatabase() {
         DelMessageDatabase.resetInstance()
@@ -44,7 +46,11 @@ class DelMessageStore private constructor(private val context: Context) {
         dao = database.delMessageDao()
     }
 
-    fun insertMessage(jid: String, msgid: String, timestamp: Long) {
+    fun insertMessage(
+        jid: String,
+        msgid: String,
+        timestamp: Long,
+    ) {
         safeDbCall(Unit) {
             val message = DelMessage(jid = jid, msgid = msgid, timestamp = timestamp)
             dao.insertMessage(message)
@@ -58,10 +64,8 @@ class DelMessageStore private constructor(private val context: Context) {
         }
     }
 
-    fun getTimestampByMessageId(msgid: String): Long {
-        return safeDbCall(0L) {
+    fun getTimestampByMessageId(msgid: String): Long =
+        safeDbCall(0L) {
             dao.getTimestampByMessageId(msgid) ?: 0L
         }
-    }
-
 }

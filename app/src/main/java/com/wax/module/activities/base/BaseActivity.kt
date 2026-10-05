@@ -27,13 +27,14 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    private fun resolveColorOverlay(colorPreset: String?): Int = when (colorPreset) {
-        "blue" -> R.style.ThemeOverlay_MaterialBlue
-        "cyan" -> R.style.ThemeOverlay_MaterialCyan
-        "purple" -> R.style.ThemeOverlay_MaterialPurple
-        "orange" -> R.style.ThemeOverlay_MaterialOrange
-        "red" -> R.style.ThemeOverlay_MaterialRed
-        "pink" -> R.style.ThemeOverlay_MaterialPink
-        else -> R.style.ThemeOverlay_MaterialGreen
-    }
+    private fun resolveColorOverlay(colorPreset: String?): Int =
+        when (colorPreset) {
+            "blue" -> R.style.ThemeOverlay_MaterialBlue
+            "cyan" -> R.style.ThemeOverlay_MaterialCyan
+            "purple" -> R.style.ThemeOverlay_MaterialPurple
+            "orange" -> R.style.ThemeOverlay_MaterialOrange
+            "red" -> R.style.ThemeOverlay_MaterialRed
+            "pink" -> R.style.ThemeOverlay_MaterialPink
+            else -> R.style.ThemeOverlay_MaterialGreen
+        }
 }

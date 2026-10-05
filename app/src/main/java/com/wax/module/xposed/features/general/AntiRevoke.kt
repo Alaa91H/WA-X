@@ -1,11 +1,12 @@
 package com.wax.module.xposed.features.general
 
+import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import android.os.Handler
-import android.os.Looper
 import com.wax.module.R
 import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.ModuleRuntime
@@ -21,7 +22,6 @@ import com.wax.module.xposed.features.listeners.ConversationItemListener
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.lang.reflect.Method
@@ -30,19 +30,21 @@ import java.util.Collections
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
-class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
-    Feature(loader, preferences) {
-
+class AntiRevoke(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     companion object {
         private val messageRevokedMap = ConcurrentHashMap<String, MutableSet<String>>()
 
-        private val dateFormatThreadLocal = ThreadLocal.withInitial {
-            DateFormat.getDateTimeInstance(
-                DateFormat.SHORT,
-                DateFormat.SHORT,
-                Utils.application.resources.configuration.locales[0]
-            )
-        }
+        private val dateFormatThreadLocal =
+            ThreadLocal.withInitial {
+                DateFormat.getDateTimeInstance(
+                    DateFormat.SHORT,
+                    DateFormat.SHORT,
+                    Utils.application.resources.configuration.locales[0],
+                )
+            }
 
         private val originalMessageKeyCache = ConcurrentHashMap<Long, String>()
         private val revokedTimestampCache = ConcurrentHashMap<String, Long>()
@@ -51,12 +53,11 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
 
         private fun findObjectFMessage(param: XC_MethodHook.MethodHookParam): FMessageWpp? {
             val safeArgs = param.args?.filterNotNull() ?: return null
-            safeArgs.firstOrNull { FMessageWpp.TYPE.isInstance(it) }?.let { return FMessageWpp(it) }
+            safeArgs.firstOrNull { FMessageWpp.type.isInstance(it) }?.let { return FMessageWpp(it) }
             val arg0 = param.args?.getOrNull(0) ?: return null
             val statusItem = StatusItemWpp.from(arg0) ?: return null
             return statusItem.fMessage
         }
-
 
         private fun getRevokedMessagesForJid(fMessage: FMessageWpp): MutableSet<String> {
             val stripJID =
@@ -71,7 +72,7 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
             if (!loadedRevokedJids.add(stripJID)) return
             try {
                 getRevokedMessagesForJid(fMessage).addAll(
-                    DelMessageStore.getInstance(Utils.application).getMessagesByJid(stripJID)
+                    DelMessageStore.getInstance(Utils.application).getMessagesByJid(stripJID),
                 )
             } catch (t: Throwable) {
                 loadedRevokedJids.remove(stripJID)
@@ -93,14 +94,17 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
             }
         }
 
-        private fun persistRevokedMessage(fMessage: FMessageWpp, messageID: String) {
+        private fun persistRevokedMessage(
+            fMessage: FMessageWpp,
+            messageID: String,
+        ) {
             val stripJID = fMessage.key.remoteJid.phoneNumber!!
             val messages = getRevokedMessagesForJid(fMessage)
             messages.add(messageID)
             DelMessageStore.getInstance(Utils.application).insertMessage(
                 stripJID,
                 messageID,
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
             )
         }
     }
@@ -113,107 +117,116 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
         val statusPlaybackClass = Unobfuscator.loadStatusPlaybackViewClass(classLoader)
         val antiRevokeFStatusMethod = Unobfuscator.loadAntiRevokeFStatusMethod(classLoader)
 
-        XposedBridge.hookMethod(antiRevokeFStatusMethod, object : XC_MethodHook() {
+        XposedBridge.hookMethod(
+            antiRevokeFStatusMethod,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val fStatusKey = FStatusWpp.FStatusKey(param.args[1])
+                    val fstatus = fStatusKey.fStatus ?: return
+                    val fMessage = fstatus.fMessage ?: return
+                    if (!fStatusKey.isFromMe && handleRevocationAttempt(
+                            fMessage,
+                            fStatusKey.messageID,
+                        ) != 0
+                    ) {
+                        param.result = 0
+                    }
+                }
+            },
+        )
 
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val fStatusKey = FStatusWpp.FStatusKey(param.args[1])
-                val fstatus = fStatusKey.fStatus ?: return
-                val fMessage = fstatus.fMessage ?: return
-                if (!fStatusKey.isFromMe && handleRevocationAttempt(
-                        fMessage,
-                        fStatusKey.messageID
-                    ) != 0
+        XposedBridge.hookMethod(
+            antiRevokeMessageMethod,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val args = param.args ?: return
+                    val fMessageObj = ReflectionUtils.getArg(args, FMessageWpp.type, 0)
+                    if (fMessageObj == null) {
+                        logDebug("FMessageObj is null in revoke!")
+                        return
+                    }
+                    val fMessage = FMessageWpp(fMessageObj)
+                    val messageKey = fMessage.key
+                    val deviceJid = fMessage.deviceJid
+                    val messageId = XposedHelpers.getObjectField(fMessage.getObject(), "A01") as String
+
+                    val shouldIntercept =
+                        if (messageKey.remoteJid.isGroup) {
+                            deviceJid != null && handleRevocationAttempt(fMessage, messageId) != 0
+                        } else {
+                            !messageKey.isFromMe && handleRevocationAttempt(fMessage, messageId) != 0
+                        }
+                    if (shouldIntercept) {
+                        val method = param.method as Method
+                        if (method.returnType != Boolean::class.javaPrimitiveType) {
+                            val constructor = method.returnType.constructors[0]
+                            val params = ReflectionUtils.initArray(constructor.parameterTypes)
+                            val instance = constructor.newInstance(*params)
+                            param.result = instance
+                        } else {
+                            param.result = true
+                        }
+                    }
+                }
+            },
+        )
+
+        ConversationItemListener.conversationListeners.add(
+            object :
+                ConversationItemListener.OnConversationItemListener() {
+                override fun onItemBind(
+                    fMessage: FMessageWpp,
+                    view: ViewGroup,
+                    position: Int,
+                    convertView: View?,
                 ) {
-                    param.result = 0
+                    val dateTextView = view.findViewById<TextView>(Utils.getID("date", "id"))
+                    bindRevokedMessageUI(fMessage, dateTextView, "antirevoke", view)
                 }
-            }
+            },
+        )
 
-        })
+        XposedBridge.hookMethod(
+            unknownStatusPlaybackMethod,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val obj = ReflectionUtils.getArg(param.args, param.method.declaringClass, 0)
+                    val fMessage = findObjectFMessage(param)
+                    val field =
+                        ReflectionUtils.getFieldByType(param.method.declaringClass, statusPlaybackClass)
 
-        XposedBridge.hookMethod(antiRevokeMessageMethod, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val args = param.args ?: return
-                val fMessageObj = ReflectionUtils.getArg(args, FMessageWpp.TYPE, 0)
-                if (fMessageObj == null) {
-                    logDebug("FMessageObj is null in revoke!")
-                    return
-                }
-                val fMessage = FMessageWpp(fMessageObj)
-                val messageKey = fMessage.key
-                val deviceJid = fMessage.deviceJid
-                val messageId = XposedHelpers.getObjectField(fMessage.getObject(), "A01") as String
+                    if (obj == null || field == null || fMessage == null) {
+                        logDebug("Invalid parameters")
+                        return
+                    }
 
+                    val objView = field.get(obj) ?: return
+                    val textViews =
+                        ReflectionUtils.getFieldsByType(statusPlaybackClass, TextView::class.java)
 
-                val shouldIntercept = if (messageKey.remoteJid.isGroup) {
-                    deviceJid != null && handleRevocationAttempt(fMessage, messageId) != 0
-                } else {
-                    !messageKey.isFromMe && handleRevocationAttempt(fMessage, messageId) != 0
-                }
-                if (shouldIntercept) {
-                    val method = param.method as Method
-                    if (method.returnType != Boolean::class.javaPrimitiveType) {
-                        val constructor = method.returnType.constructors[0]
-                        val params = ReflectionUtils.initArray(constructor.parameterTypes)
-                        val instance = constructor.newInstance(*params)
-                        param.result = instance
-                    } else {
-                        param.result = true
+                    if (textViews.isEmpty()) {
+                        logDebug("No text views found")
+                        return
+                    }
+
+                    val dateId = Utils.getID("date", "id")
+                    for (textViewField in textViews) {
+                        val textView = textViewField.get(objView) as? TextView
+                        if (textView != null && textView.id == dateId) {
+                            bindRevokedMessageUI(fMessage, textView, "antirevokestatus")
+                            break
+                        }
                     }
                 }
-            }
-        })
-
-        ConversationItemListener.conversationListeners.add(object :
-            ConversationItemListener.OnConversationItemListener() {
-            override fun onItemBind(
-                fMessage: FMessageWpp,
-                view: ViewGroup,
-                position: Int,
-                convertView: View?
-            ) {
-                val dateTextView = view.findViewById<TextView>(Utils.getID("date", "id"))
-                bindRevokedMessageUI(fMessage, dateTextView, "antirevoke", view)
-            }
-        })
-
-        XposedBridge.hookMethod(unknownStatusPlaybackMethod, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val obj = ReflectionUtils.getArg(param.args, param.method.declaringClass, 0)
-                val fMessage = findObjectFMessage(param)
-                val field =
-                    ReflectionUtils.getFieldByType(param.method.declaringClass, statusPlaybackClass)
-
-                if (obj == null || field == null || fMessage == null) {
-                    logDebug("Invalid parameters")
-                    return
-                }
-
-                val objView = field.get(obj) ?: return
-                val textViews =
-                    ReflectionUtils.getFieldsByType(statusPlaybackClass, TextView::class.java)
-
-                if (textViews.isEmpty()) {
-                    logDebug("No text views found")
-                    return
-                }
-
-                val dateId = Utils.getID("date", "id")
-                for (textViewField in textViews) {
-                    val textView = textViewField.get(objView) as? TextView
-                    if (textView != null && textView.id == dateId) {
-                        bindRevokedMessageUI(fMessage, textView, "antirevokestatus")
-                        break
-                    }
-                }
-            }
-        })
+            },
+        )
     }
 
     private fun bindRevokedMessageUI(
         fMessage: FMessageWpp,
         dateTextView: TextView?,
         antirevokeType: String,
-        boundView: View? = null
+        boundView: View? = null,
     ) {
         if (dateTextView == null) return
         val antirevokeValue = prefs.getString(antirevokeType, "0")?.toIntOrNull() ?: 0
@@ -234,38 +247,45 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
         Utils.databaseExecutor.execute {
             loadRevokedMessagesForJid(fMessage)
             val messageRevokedList = getRevokedMessagesForJid(fMessage)
-            val messageId = if (messageRevokedList.contains(key.messageID)) {
-                key.messageID
-            } else {
-                val originalKey = originalMessageKeyCache[fMessage.rowId]
-                    ?: MessageStore.getInstance().getOriginalMessageKey(fMessage.rowId).also {
-                        if (it.isNotEmpty()) originalMessageKeyCache[fMessage.rowId] = it
-                    }
-                originalKey.takeIf { messageRevokedList.contains(it) }
-            }
-
-            val timestamp = if (messageId == null) {
-                0L
-            } else {
-                revokedTimestampCache[messageId] ?: run {
-                    val loadedTimestamp = DelMessageStore.getInstance(Utils.application)
-                        .getTimestampByMessageId(messageId)
-                    if (loadedTimestamp > 0) {
-                        revokedTimestampCache[messageId] = loadedTimestamp
-                    }
-                    loadedTimestamp
+            val messageId =
+                if (messageRevokedList.contains(key.messageID)) {
+                    key.messageID
+                } else {
+                    val originalKey =
+                        originalMessageKeyCache[fMessage.rowId]
+                            ?: MessageStore.getInstance().getOriginalMessageKey(fMessage.rowId).also {
+                                if (it.isNotEmpty()) originalMessageKeyCache[fMessage.rowId] = it
+                            }
+                    originalKey.takeIf { messageRevokedList.contains(it) }
                 }
-            }
-            val date = if (timestamp > 0) {
-                dateFormatThreadLocal.get()?.format(Date(timestamp))
-            } else {
-                null
-            }
+
+            val timestamp =
+                if (messageId == null) {
+                    0L
+                } else {
+                    revokedTimestampCache[messageId] ?: run {
+                        val loadedTimestamp =
+                            DelMessageStore
+                                .getInstance(Utils.application)
+                                .getTimestampByMessageId(messageId)
+                        if (loadedTimestamp > 0) {
+                            revokedTimestampCache[messageId] = loadedTimestamp
+                        }
+                        loadedTimestamp
+                    }
+                }
+            val date =
+                if (timestamp > 0) {
+                    dateFormatThreadLocal.get()?.format(Date(timestamp))
+                } else {
+                    null
+                }
 
             mainHandler.post {
-                if (boundView != null && !ConversationItemListener.isViewBoundToMessage(
+                if (boundView != null &&
+                    !ConversationItemListener.isViewBoundToMessage(
                         boundView,
-                        boundMessageId
+                        boundMessageId,
                     )
                 ) {
                     return@post
@@ -275,13 +295,17 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
                     if (date != null) {
                         dateTextView.paint.isUnderlineText = true
                         dateTextView.setOnClickListener {
-                            if (boundView != null && !ConversationItemListener.isViewBoundToMessage(
+                            if (boundView != null &&
+                                !ConversationItemListener.isViewBoundToMessage(
                                     boundView,
-                                    boundMessageId
+                                    boundMessageId,
                                 )
-                            ) return@setOnClickListener
+                            ) {
+                                return@setOnClickListener
+                            }
                             val toastMessage =
-                                Utils.application.getString(R.string.message_removed_on)
+                                Utils.application
+                                    .getString(R.string.message_removed_on)
                                     .format(date)
                             Utils.showToast(toastMessage, Toast.LENGTH_LONG)
                         }
@@ -297,7 +321,7 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
                             XposedHelpers.setAdditionalInstanceField(
                                 dateTextView,
                                 "originalMessage",
-                                messageText.toString()
+                                messageText.toString(),
                             )
                         }
 
@@ -307,7 +331,7 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
                                 null,
                                 null,
                                 drawable,
-                                null
+                                null,
                             )
                             dateTextView.compoundDrawablePadding = 5
                         }
@@ -319,17 +343,22 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
         }
     }
 
-    private fun handleRevocationAttempt(fMessage: FMessageWpp, messageId: String): Int {
+    private fun handleRevocationAttempt(
+        fMessage: FMessageWpp,
+        messageId: String,
+    ): Int {
         try {
             handleRevocationAlert(fMessage)
         } catch (e: Exception) {
             log(e)
         }
 
-        val revokeBoolean = prefs.getString(
-            if (fMessage.key.remoteJid.isStatus) "antirevokestatus" else "antirevoke",
-            "0"
-        )?.toIntOrNull() ?: 0
+        val revokeBoolean =
+            prefs
+                .getString(
+                    if (fMessage.key.remoteJid.isStatus) "antirevokestatus" else "antirevoke",
+                    "0",
+                )?.toIntOrNull() ?: 0
 
         if (revokeBoolean == 0) return 0
 
@@ -364,8 +393,9 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
         }
         val waContact = WaContactWpp.getWaContactFromJid(jidAuthor)
 
-        val name = waContact?.displayName
-            ?: jidAuthor.phoneNumber
+        val name =
+            waContact?.displayName
+                ?: jidAuthor.phoneNumber
 
         return if (jidAuthor.isGroup) {
             var participantJid = fMessage.userJid
@@ -377,8 +407,9 @@ class AntiRevoke(loader: ClassLoader, preferences: SharedPreferences) :
             }
             val participantWaContact = WaContactWpp.getWaContactFromJid(participantJid)
 
-            val participantName = participantWaContact?.displayName
-                ?: participantJid.phoneNumber
+            val participantName =
+                participantWaContact?.displayName
+                    ?: participantJid.phoneNumber
 
             Utils.application
                 .getString(R.string.deleted_a_message_in_group, participantName, name)

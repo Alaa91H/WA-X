@@ -12,20 +12,17 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
-import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wax.module.activities.CrashReportActivity
 import com.wax.module.xposed.utils.Utils
-import de.robv.android.xposed.XposedHelpers
 import rikka.material.app.LocaleDelegate.Companion.defaultLocale
 import java.io.File
 import java.util.Locale
 
 class ModuleApplication : Application() {
-
     @SuppressLint("ApplySharedPref")
     override fun onCreate() {
         super.onCreate()
@@ -53,7 +50,7 @@ class ModuleApplication : Application() {
                 intent.putExtra(CrashReportActivity.EXTRA_CRASH_INFO, buildCrashInfo())
                 intent.putExtra(
                     CrashReportActivity.EXTRA_CRASH_TRACE,
-                    Log.getStackTraceString(throwable)
+                    Log.getStackTraceString(throwable),
                 )
                 startActivity(intent)
             } catch (_: Throwable) {
@@ -71,25 +68,23 @@ class ModuleApplication : Application() {
         val androidVersion = Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")"
         val deviceModel = (Build.MANUFACTURER + " " + Build.MODEL).trim { it <= ' ' }
         return "WAE version: " + BuildConfig.VERSION_NAME + "\n" +
-                "WAE package: " + packageName + "\n" +
-                getString(R.string.crash_android_version) + ": " + androidVersion + "\n" +
-                getString(R.string.device_model) + ": " + deviceModel
+            "WAE package: " + packageName + "\n" +
+            getString(R.string.crash_android_version) + ": " + androidVersion + "\n" +
+            getString(R.string.device_model) + ": " + deviceModel
     }
 
     fun restartApp(packageWpp: String) {
-        val intent = Intent(BuildConfig.APPLICATION_ID + ".WHATSAPP.RESTART").apply {
-            setPackage(packageWpp)
-            putExtra("PKG", packageWpp)
-        }
+        val intent =
+            Intent(BuildConfig.APPLICATION_ID + ".WHATSAPP.RESTART").apply {
+                setPackage(packageWpp)
+                putExtra("PKG", packageWpp)
+            }
         sendBroadcast(intent)
     }
 
-    fun isXposedEnabled(): Boolean  {
-        return System.currentTimeMillis() == 0L
-    }
+    fun isXposedEnabled(): Boolean = System.currentTimeMillis() == 0L
 
     companion object {
-
         lateinit var instance: ModuleApplication
 
         @JvmStatic
@@ -108,9 +103,9 @@ class ModuleApplication : Application() {
                         activity,
                         arrayOf(
                             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
                         ),
-                        0
+                        0,
                     )
                 }
             }
@@ -127,11 +122,12 @@ class ModuleApplication : Application() {
             }
         }
 
-
         @JvmStatic
         fun changeLanguage(context: Context) {
-            val force = PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean("force_english", false)
+            val force =
+                PreferenceManager
+                    .getDefaultSharedPreferences(context)
+                    .getBoolean("force_english", false)
             defaultLocale = if (force) Locale.ENGLISH else Locale.getDefault()
             val res = context.resources
             val config = res.configuration
@@ -141,20 +137,18 @@ class ModuleApplication : Application() {
         }
 
         @JvmStatic
-        val MODULE_FOLDER: File
+        val moduleFolder: File
             get() {
                 val download =
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val MODULE_FOLDER = File(download, "WA X")
-                if (!MODULE_FOLDER.exists()) MODULE_FOLDER.mkdirs()
-                return MODULE_FOLDER
+                val folder = File(download, "WA X")
+                if (!folder.exists()) folder.mkdirs()
+                return folder
             }
 
         @Suppress("SimplifyBooleanWithConstants", "KotlinConstantConditions")
         @JvmStatic
         val isOriginalPackage: Boolean
             get() = BuildConfig.APPLICATION_ID == "com.wax.module"
-
-
     }
 }

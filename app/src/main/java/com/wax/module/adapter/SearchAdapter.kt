@@ -1,6 +1,5 @@
 package com.wax.module.adapter
 
-import android.graphics.Color
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.BackgroundColorSpan
@@ -8,17 +7,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
 import com.wax.module.R
 import com.wax.module.model.SearchableFeature
 import java.util.LinkedHashMap
 import java.util.Locale
-import androidx.core.graphics.toColorInt
 
 /** Adapter for search results grouped under category headers. */
-class SearchAdapter(private val listener: OnFeatureClickListener?) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
+class SearchAdapter(
+    private val listener: OnFeatureClickListener?,
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val items = mutableListOf<Any>()
     private var searchQuery = ""
 
@@ -39,20 +38,26 @@ class SearchAdapter(private val listener: OnFeatureClickListener?) :
         searchQuery = query ?: ""
     }
 
-    override fun getItemViewType(position: Int): Int =
-        if (items[position] is String) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
+    override fun getItemViewType(position: Int): Int = if (items[position] is String) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val layout = if (viewType == VIEW_TYPE_HEADER) {
-            R.layout.item_search_section_header
-        } else {
-            R.layout.item_search_result
-        }
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): RecyclerView.ViewHolder {
+        val layout =
+            if (viewType == VIEW_TYPE_HEADER) {
+                R.layout.item_search_section_header
+            } else {
+                R.layout.item_search_result
+            }
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
         return if (viewType == VIEW_TYPE_HEADER) SectionHeaderViewHolder(view) else SearchResultViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+    ) {
         when (holder) {
             is SectionHeaderViewHolder -> holder.bind(items[position] as String)
             is SearchResultViewHolder -> holder.bind(items[position] as SearchableFeature, searchQuery, listener)
@@ -65,7 +70,9 @@ class SearchAdapter(private val listener: OnFeatureClickListener?) :
         fun onFeatureClick(feature: SearchableFeature)
     }
 
-    private class SectionHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private class SectionHeaderViewHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView) {
         private val sectionTitle: TextView = itemView.findViewById(R.id.sectionTitle)
 
         fun bind(title: String) {
@@ -73,12 +80,18 @@ class SearchAdapter(private val listener: OnFeatureClickListener?) :
         }
     }
 
-    private class SearchResultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private class SearchResultViewHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView) {
         private val titleTextView: TextView = itemView.findViewById(R.id.featureTitle)
         private val summaryTextView: TextView = itemView.findViewById(R.id.featureSummary)
         private val categoryBadge: TextView = itemView.findViewById(R.id.categoryBadge)
 
-        fun bind(feature: SearchableFeature, query: String, listener: OnFeatureClickListener?) {
+        fun bind(
+            feature: SearchableFeature,
+            query: String,
+            listener: OnFeatureClickListener?,
+        ) {
             titleTextView.text = highlightText(feature.title, query)
             val summary = feature.summary
             if (!summary.isNullOrEmpty()) {
@@ -93,7 +106,10 @@ class SearchAdapter(private val listener: OnFeatureClickListener?) :
             itemView.setOnClickListener { listener?.onFeatureClick(feature) }
         }
 
-        private fun highlightText(text: String?, query: String?): CharSequence? {
+        private fun highlightText(
+            text: String?,
+            query: String?,
+        ): CharSequence? {
             if (text == null || query.isNullOrEmpty()) return text
 
             val spannable = SpannableString(text)
@@ -105,23 +121,25 @@ class SearchAdapter(private val listener: OnFeatureClickListener?) :
                     BackgroundColorSpan("#4DFFD700".toColorInt()),
                     start,
                     start + query.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
                 )
             }
             return spannable
         }
 
-        private fun getCategoryColor(category: SearchableFeature.Category): Int = when (category) {
-            SearchableFeature.Category.GENERAL,
-            SearchableFeature.Category.GENERAL_HOME,
-            SearchableFeature.Category.GENERAL_HOMESCREEN,
-            SearchableFeature.Category.GENERAL_CONVERSATION -> "#4CAF50".toColorInt()
-            SearchableFeature.Category.PRIVACY -> "#2196F3".toColorInt()
-            SearchableFeature.Category.MEDIA -> "#FF9800".toColorInt()
-            SearchableFeature.Category.CUSTOMIZATION -> "#9C27B0".toColorInt()
-            SearchableFeature.Category.RECORDINGS -> "#F44336".toColorInt()
-            SearchableFeature.Category.HOME_ACTIONS -> "#607D8B".toColorInt()
-        }
+        private fun getCategoryColor(category: SearchableFeature.Category): Int =
+            when (category) {
+                SearchableFeature.Category.GENERAL,
+                SearchableFeature.Category.GENERAL_HOME,
+                SearchableFeature.Category.GENERAL_HOMESCREEN,
+                SearchableFeature.Category.GENERAL_CONVERSATION,
+                -> "#4CAF50".toColorInt()
+                SearchableFeature.Category.PRIVACY -> "#2196F3".toColorInt()
+                SearchableFeature.Category.MEDIA -> "#FF9800".toColorInt()
+                SearchableFeature.Category.CUSTOMIZATION -> "#9C27B0".toColorInt()
+                SearchableFeature.Category.RECORDINGS -> "#F44336".toColorInt()
+                SearchableFeature.Category.HOME_ACTIONS -> "#607D8B".toColorInt()
+            }
     }
 
     private companion object {

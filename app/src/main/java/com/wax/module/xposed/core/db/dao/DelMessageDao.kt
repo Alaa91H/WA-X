@@ -8,7 +8,6 @@ import com.wax.module.xposed.core.db.entity.DelMessage
 
 @Dao
 interface DelMessageDao {
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertMessage(message: DelMessage)
 
@@ -17,5 +16,4 @@ interface DelMessageDao {
 
     @Query("SELECT timestamp FROM delmessages WHERE msgid = :msgid LIMIT 1")
     fun getTimestampByMessageId(msgid: String): Long?
-
 }

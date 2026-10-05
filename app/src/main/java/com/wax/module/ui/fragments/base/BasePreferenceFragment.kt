@@ -24,24 +24,27 @@ import androidx.preference.SeekBarPreference
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.jaredrummler.android.colorpicker.ColorPreferenceCompat
-import com.wax.module.ModuleApplication
 import com.wax.module.BuildConfig
+import com.wax.module.ModuleApplication
 import com.wax.module.R
 import com.wax.module.preference.FloatSeekBarPreference
 import com.wax.module.xposed.utils.Utils
+import rikka.material.preference.MaterialSwitchPreference
 import java.util.Locale
 import java.util.Objects
-import rikka.material.preference.MaterialSwitchPreference
 
-abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
+abstract class BasePreferenceFragment :
+    PreferenceFragmentCompat(),
     SharedPreferences.OnSharedPreferenceChangeListener {
-
     @JvmField
     protected var mPrefs: SharedPreferences? = null
     private val prefs: SharedPreferences
         get() = checkNotNull(mPrefs)
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?,
+    ) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         prefs.registerOnSharedPreferenceChangeListener(this)
         requireActivity().onBackPressedDispatcher.addCallback(
@@ -54,14 +57,14 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
                         requireActivity().finish()
                     }
                 }
-            }
+            },
         )
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         applyReferencePreferenceStyle(preferenceScreen, R.drawable.ic_general)
         updatePreferenceStates(null)
@@ -69,7 +72,10 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         return super.onCreateView(inflater, container, savedInstanceState)!!
     }
 
-    private fun applyReferencePreferenceStyle(group: PreferenceGroup?, inheritedIcon: Int) {
+    private fun applyReferencePreferenceStyle(
+        group: PreferenceGroup?,
+        inheritedIcon: Int,
+    ) {
         if (group == null) return
 
         for (index in 0 until group.preferenceCount) {
@@ -102,7 +108,10 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         }
     }
 
-    private fun getSectionIcon(title: CharSequence?, fallback: Int): Int {
+    private fun getSectionIcon(
+        title: CharSequence?,
+        fallback: Int,
+    ): Int {
         val value = normalize(title)
         return when {
             value.contains("privacy") || value.contains("privacidade") -> R.drawable.ic_privacy
@@ -118,7 +127,10 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         }
     }
 
-    private fun getPreferenceIcon(preference: Preference, fallback: Int): Int {
+    private fun getPreferenceIcon(
+        preference: Preference,
+        fallback: Int,
+    ): Int {
         val value = "${normalize(preference.key)} ${normalize(preference.title)}"
         return when {
             value.contains("privacy") || value.contains("privacidade") || value.contains("archive") ||
@@ -134,24 +146,29 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         }
     }
 
-    private fun normalize(value: CharSequence?): String = value?.toString()
-        ?.lowercase(Locale.ROOT)
-        ?.replace('í', 'i')
-        ?.replace('ç', 'c')
-        ?.replace('ã', 'a')
-        ?.replace('á', 'a')
-        ?.replace('é', 'e')
-        ?.replace('ê', 'e')
-        ?.replace('ó', 'o')
-        ?.replace('ú', 'u')
-        .orEmpty()
+    private fun normalize(value: CharSequence?): String =
+        value
+            ?.toString()
+            ?.lowercase(Locale.ROOT)
+            ?.replace('í', 'i')
+            ?.replace('ç', 'c')
+            ?.replace('ã', 'a')
+            ?.replace('á', 'a')
+            ?.replace('é', 'e')
+            ?.replace('ê', 'e')
+            ?.replace('ó', 'o')
+            ?.replace('ú', 'u')
+            .orEmpty()
 
     override fun onResume() {
         super.onResume()
         setDisplayHomeAsUpEnabled(true)
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String?) {
+    override fun onSharedPreferenceChanged(
+        sharedPreferences: SharedPreferences,
+        key: String?,
+    ) {
         ModuleApplication.instance.sendBroadcast(Intent("${BuildConfig.APPLICATION_ID}.MANUAL_RESTART"))
         if (isAdded) updatePreferenceStates(key)
     }
@@ -161,7 +178,10 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         mPrefs?.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    private fun setPreferenceState(key: String, enabled: Boolean) {
+    private fun setPreferenceState(
+        key: String,
+        enabled: Boolean,
+    ) {
         val preference = findPreference<Preference>(key) ?: return
         preference.isEnabled = enabled
         if (preference is MaterialSwitchPreference && !enabled) {
@@ -193,11 +213,13 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         if (newValue is Boolean && newValue) {
             val needsPermission =
                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) ||
-                    (Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
-                        ContextCompat.checkSelfPermission(
-                            requireContext(),
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        ) != PackageManager.PERMISSION_GRANTED)
+                    (
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
+                            ContextCompat.checkSelfPermission(
+                                requireContext(),
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            ) != PackageManager.PERMISSION_GRANTED
+                    )
             if (needsPermission) {
                 ModuleApplication.showRequestStoragePermission(requireActivity())
                 return false
@@ -342,7 +364,10 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         }
     }
 
-    private fun findPreferenceAtPosition(group: PreferenceGroup?, targetPosition: Int): Preference? {
+    private fun findPreferenceAtPosition(
+        group: PreferenceGroup?,
+        targetPosition: Int,
+    ): Preference? {
         if (group == null) return null
 
         var currentPosition = 0
@@ -381,12 +406,13 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat(),
         val typedValue = TypedValue()
         view.context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
         val primaryColor = typedValue.data
-        val highlightColor = android.graphics.Color.argb(
-            51,
-            android.graphics.Color.red(primaryColor),
-            android.graphics.Color.green(primaryColor),
-            android.graphics.Color.blue(primaryColor)
-        )
+        val highlightColor =
+            android.graphics.Color.argb(
+                51,
+                android.graphics.Color.red(primaryColor),
+                android.graphics.Color.green(primaryColor),
+                android.graphics.Color.blue(primaryColor),
+            )
         val originalBackground = view.background
         view.setBackgroundColor(highlightColor)
         view.postDelayed({

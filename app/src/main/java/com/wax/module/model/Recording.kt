@@ -9,7 +9,7 @@ import java.util.regex.Pattern
  * Model class representing a call recording with metadata.
  */
 data class Recording(
-    val file: File
+    val file: File,
 ) {
     var contactName: String = "Unknown"
         private set
@@ -44,11 +44,12 @@ data class Recording(
         try {
             retriever.setDataSource(file.absolutePath)
             val timeStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            duration = if (!timeStr.isNullOrEmpty()) {
-                timeStr.toLongOrNull() ?: 0L
-            } else {
-                0L
-            }
+            duration =
+                if (!timeStr.isNullOrEmpty()) {
+                    timeStr.toLongOrNull() ?: 0L
+                } else {
+                    0L
+                }
         } catch (_: Exception) {
             duration = 0
         } finally {
@@ -83,9 +84,7 @@ data class Recording(
         return file == other.file
     }
 
-    override fun hashCode(): Int {
-        return file.hashCode()
-    }
+    override fun hashCode(): Int = file.hashCode()
 
     companion object {
         private val PHONE_PATTERN = Pattern.compile("Call_([+\\w\\s]+)_\\d{8}_\\d{6}.(wav|m4a)")

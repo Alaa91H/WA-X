@@ -11,14 +11,14 @@ import java.io.File
 import java.io.FileNotFoundException
 
 object HookBinder : WaeIIFace.Stub() {
-
     private fun enforceAllowedCaller() {
         val callingUid = Binder.getCallingUid()
         val packages = ModuleApplication.instance.packageManager.getPackagesForUid(callingUid)
-        val allowed = BridgeAccessPolicy.isAllowedTunnelCaller(
-            packages = packages,
-            isSelfUid = callingUid == Process.myUid()
-        )
+        val allowed =
+            BridgeAccessPolicy.isAllowedTunnelCaller(
+                packages = packages,
+                isSelfUid = callingUid == Process.myUid(),
+            )
         if (!allowed) {
             throw SecurityException("Unauthorized WA X bridge caller uid=$callingUid")
         }
@@ -27,7 +27,7 @@ object HookBinder : WaeIIFace.Stub() {
     private fun sharedStorageRoots(): List<File> =
         BridgeAccessPolicy.sharedStorageRoots(
             externalStorageDir = Environment.getExternalStorageDirectory(),
-            externalFilesDirs = ModuleApplication.instance.getExternalFilesDirs(null).toList()
+            externalFilesDirs = ModuleApplication.instance.getExternalFilesDirs(null).toList(),
         )
 
     private fun resolveAllowedPath(path: String): File {
@@ -35,9 +35,10 @@ object HookBinder : WaeIIFace.Stub() {
 
         val target = File(path).canonicalFile
         val targetPath = target.path
-        val isSharedStorage = sharedStorageRoots().any { root ->
-            BridgeAccessPolicy.isUnderRoot(targetPath, root.path)
-        }
+        val isSharedStorage =
+            sharedStorageRoots().any { root ->
+                BridgeAccessPolicy.isUnderRoot(targetPath, root.path)
+            }
 
         if (!isSharedStorage) {
             throw SecurityException("Bridge path is outside shared external storage")
@@ -45,7 +46,10 @@ object HookBinder : WaeIIFace.Stub() {
         return target
     }
 
-    override fun openFile(path: String, create: Boolean): ParcelFileDescriptor? {
+    override fun openFile(
+        path: String,
+        create: Boolean,
+    ): ParcelFileDescriptor? {
         val file = resolveAllowedPath(path)
         if (!file.exists() && create) {
             try {
@@ -66,11 +70,7 @@ object HookBinder : WaeIIFace.Stub() {
         return file.mkdirs() || file.isDirectory
     }
 
-    override fun exists(path: String): Boolean {
-        return resolveAllowedPath(path).exists()
-    }
+    override fun exists(path: String): Boolean = resolveAllowedPath(path).exists()
 
-    override fun listFiles(path: String): List<File> {
-        return resolveAllowedPath(path).listFiles()?.toList() ?: emptyList()
-    }
+    override fun listFiles(path: String): List<File> = resolveAllowedPath(path).listFiles()?.toList() ?: emptyList()
 }

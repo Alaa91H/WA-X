@@ -2,6 +2,7 @@ package com.wax.module.xposed.features.others
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import com.wax.module.model.ContactPickerResult
 import com.wax.module.preference.ContactPickerPreference
@@ -12,15 +13,15 @@ import com.wax.module.xposed.core.ModuleRuntime.addListenerActivity
 import com.wax.module.xposed.core.devkit.Unobfuscator.findFirstClassUsingName
 import com.wax.module.xposed.core.devkit.Unobfuscator.loadLockedAuthCheckMethod
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import org.luckypray.dexkit.query.enums.StringMatchType
 import java.util.concurrent.atomic.AtomicBoolean
 
-
-class ActivityController(classLoader: ClassLoader, preferences:SharedPreferences) :
-    Feature(classLoader, preferences) {
+class ActivityController(
+    classLoader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(classLoader, preferences) {
     private val disableAuth = AtomicBoolean(false)
 
     override fun doHook() {
@@ -28,16 +29,19 @@ class ActivityController(classLoader: ClassLoader, preferences:SharedPreferences
 
         val authCheckMethod = loadLockedAuthCheckMethod(classLoader)
 
-        XposedBridge.hookMethod(authCheckMethod, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                if (disableAuth.get()) param.setResult(false)
-            }
-        })
-
-        addListenerActivity{ activity, type ->
-                if (clazz.isAssignableFrom(activity.javaClass) && type == ActivityChangeState.ChangeType.ENDED) {
-                    disableAuth.set(false)
+        XposedBridge.hookMethod(
+            authCheckMethod,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (disableAuth.get()) param.setResult(false)
                 }
+            },
+        )
+
+        addListenerActivity { activity, type ->
+            if (clazz.isAssignableFrom(activity.javaClass) && type == ActivityChangeState.ChangeType.ENDED) {
+                disableAuth.set(false)
+            }
         }
 
         XposedHelpers.findAndHookMethod(
@@ -55,8 +59,8 @@ class ActivityController(classLoader: ClassLoader, preferences:SharedPreferences
                         contactController(intent, activity)
                     }
                 }
-            })
-
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             Activity::class.java,
@@ -76,18 +80,21 @@ class ActivityController(classLoader: ClassLoader, preferences:SharedPreferences
                     }
                     activity.finish()
                 }
-            })
+            },
+        )
     }
 
-    override fun getPluginName(): String {
-        return "Activity Controller"
-    }
+    override fun getPluginName(): String = "Activity Controller"
 
     companion object {
-        private var Key: String? = null
-        private fun processResultContact(intent: Intent, activity: Activity) {
-            if (!intent.hasExtra("key") && Key != null) {
-                intent.putExtra("key", Key)
+        private var key: String? = null
+
+        private fun processResultContact(
+            intent: Intent,
+            activity: Activity,
+        ) {
+            if (!intent.hasExtra("key") && key != null) {
+                intent.putExtra("key", key)
             }
             if (!intent.hasExtra("contacts")) {
                 intent.putStringArrayListExtra("contacts", ArrayList<String?>())
@@ -98,20 +105,23 @@ class ActivityController(classLoader: ClassLoader, preferences:SharedPreferences
             activity.setResult(Activity.RESULT_OK, intent)
         }
 
-
         @Throws(Exception::class)
-        private fun contactController(intent: Intent, activity: Activity) {
-            Key = intent.getStringExtra("key")
+        private fun contactController(
+            intent: Intent,
+            activity: Activity,
+        ) {
+            key = intent.getStringExtra("key")
             val contacts = intent.getStringArrayListExtra("contacts")
-            val pickerIntent = WhatsAppContactPickerLauncher.createAboutPickerIntent(
-                activity,
-                activity.packageName,
-                (if (Key == null) "" else Key)!!,
-                contacts
-            )
+            val pickerIntent =
+                WhatsAppContactPickerLauncher.createAboutPickerIntent(
+                    activity,
+                    activity.packageName,
+                    (if (key == null) "" else key)!!,
+                    contacts,
+                )
             activity.startActivityForResult(
                 pickerIntent,
-                ContactPickerPreference.REQUEST_CONTACT_PICKER
+                ContactPickerPreference.REQUEST_CONTACT_PICKER,
             )
         }
     }

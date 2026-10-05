@@ -2,6 +2,7 @@ package com.wax.module.xposed.features.media
 
 import android.Manifest
 import android.app.Activity
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Build
@@ -18,7 +19,6 @@ import com.wax.module.xposed.core.components.FMessageWpp
 import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import org.json.JSONArray
@@ -39,9 +39,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 class CallRecording(
     loader: ClassLoader,
-    preferences:SharedPreferences
+    preferences: SharedPreferences,
 ) : Feature(loader, preferences) {
-
     private val isRecording = AtomicBoolean(false)
     private val isCallConnected = AtomicBoolean(false)
     private val mediaRecorderRef = AtomicReference<MediaRecorder?>()
@@ -73,11 +72,12 @@ class CallRecording(
         var hooksInstalled = 0
 
         try {
-            val clsCallEventCallback = Unobfuscator.findFirstClassUsingName(
-                classLoader,
-                StringMatchType.EndsWith,
-                "VoiceServiceEventCallback"
-            )
+            val clsCallEventCallback =
+                Unobfuscator.findFirstClassUsingName(
+                    classLoader,
+                    StringMatchType.EndsWith,
+                    "VoiceServiceEventCallback",
+                )
 
             logDebug("WA X: Found VoiceServiceEventCallback: ${clsCallEventCallback.name}")
 
@@ -89,7 +89,7 @@ class CallRecording(
                         override fun afterHookedMethod(param: MethodHookParam) {
                             handleCallEnded("fieldstatsReady")
                         }
-                    }
+                    },
                 )
                 hooksInstalled++
             } catch (e: Throwable) {
@@ -107,7 +107,7 @@ class CallRecording(
                             isCallConnected.set(true)
                             scheduleDelayedStart()
                         }
-                    }
+                    },
                 )
                 hooksInstalled++
             } catch (e: Throwable) {
@@ -118,11 +118,12 @@ class CallRecording(
         }
 
         try {
-            val voipActivityClass = Unobfuscator.findFirstClassUsingName(
-                classLoader,
-                StringMatchType.Contains,
-                "VoipActivity"
-            )
+            val voipActivityClass =
+                Unobfuscator.findFirstClassUsingName(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "VoipActivity",
+                )
 
             if (Activity::class.java.isAssignableFrom(voipActivityClass)) {
                 logDebug("WA X: Found VoipActivity: ${voipActivityClass.name}")
@@ -134,7 +135,7 @@ class CallRecording(
                         override fun beforeHookedMethod(param: MethodHookParam) {
                             handleCallEnded("VoipActivity.onDestroy")
                         }
-                    }
+                    },
                 )
                 hooksInstalled++
             }
@@ -156,19 +157,20 @@ class CallRecording(
         cancelDelayedStart()
 
         try {
-            val task = Runnable {
-                if (!isCallConnected.get()) {
-                    logDebug("WA X: Delayed start cancelled, call not connected")
-                    return@Runnable
-                }
+            val task =
+                Runnable {
+                    if (!isCallConnected.get()) {
+                        logDebug("WA X: Delayed start cancelled, call not connected")
+                        return@Runnable
+                    }
 
-                if (isRecording.get()) {
-                    logDebug("WA X: Delayed start ignored, already recording")
-                    return@Runnable
-                }
+                    if (isRecording.get()) {
+                        logDebug("WA X: Delayed start ignored, already recording")
+                        return@Runnable
+                    }
 
-                startRecording()
-            }
+                    startRecording()
+                }
 
             val future = delayedStartScheduler.schedule(task, 3, TimeUnit.SECONDS)
 
@@ -188,17 +190,19 @@ class CallRecording(
         try {
             val callInfo = XposedHelpers.callMethod(callback, "getCallInfo") ?: return
 
-            val peerJid = runCatching {
-                XposedHelpers.callMethod(callInfo, "getPeerJid")
-            }.getOrNull()
+            val peerJid =
+                runCatching {
+                    XposedHelpers.callMethod(callInfo, "getPeerJid")
+                }.getOrNull()
 
             if (peerJid != null && setCurrentUserJid(peerJid, "UserJid")) {
                 return
             }
 
-            val participantsObj = runCatching {
-                XposedHelpers.getObjectField(callInfo, "participants")
-            }.getOrNull()
+            val participantsObj =
+                runCatching {
+                    XposedHelpers.getObjectField(callInfo, "participants")
+                }.getOrNull()
 
             if (participantsObj is Map<*, *>) {
                 for (key in participantsObj.keys) {
@@ -212,7 +216,10 @@ class CallRecording(
         }
     }
 
-    private fun setCurrentUserJid(jidObject: Any, source: String): Boolean {
+    private fun setCurrentUserJid(
+        jidObject: Any,
+        source: String,
+    ): Boolean {
         val userJid = FMessageWpp.UserJid(jidObject)
         if (userJid.isNull) return false
 
@@ -225,17 +232,19 @@ class CallRecording(
         if (permissionGranted.get()) return
 
         try {
-            val app = FeatureLoader.mApp ?: run {
-                logDebug("WA X: Could not grant permissions, app context is null")
-                return
-            }
+            val app =
+                FeatureLoader.mApp ?: run {
+                    logDebug("WA X: Could not grant permissions, app context is null")
+                    return
+                }
             val packageName = app.packageName
             logDebug("WA X: Granting CAPTURE_AUDIO_OUTPUT via root")
 
-            val commands = arrayOf(
-                "pm grant $packageName android.permission.CAPTURE_AUDIO_OUTPUT",
-                "appops set $packageName RECORD_AUDIO allow"
-            )
+            val commands =
+                arrayOf(
+                    "pm grant $packageName android.permission.CAPTURE_AUDIO_OUTPUT",
+                    "appops set $packageName RECORD_AUDIO allow",
+                )
 
             for (cmd in commands) {
                 try {
@@ -272,27 +281,30 @@ class CallRecording(
         }
 
         try {
-            val app = FeatureLoader.mApp ?: run {
-                logDebug("WA X: Skipping recording, app context is null")
-                return
-            }
+            val app =
+                FeatureLoader.mApp ?: run {
+                    logDebug("WA X: Skipping recording, app context is null")
+                    return
+                }
 
             if (ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 logDebug("WA X: No RECORD_AUDIO permission")
                 return
             }
 
-            val bridge = runCatching {
-                ModuleRuntime.getClientBridge()
-            }.onFailure {
-                logDebug("WA X: Could not get client bridge: ${it.message}")
-            }.getOrNull()
+            val bridge =
+                runCatching {
+                    ModuleRuntime.getClientBridge()
+                }.onFailure {
+                    logDebug("WA X: Could not get client bridge: ${it.message}")
+                }.getOrNull()
 
             val packageName = app.packageName
             val appName = if (packageName.contains("w4b")) "WA Business" else "WhatsApp"
-            val defaultPath = Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                .absolutePath
+            val defaultPath =
+                Environment
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    .absolutePath
             val settingsPath = prefs.getString("call_recording_path", defaultPath) ?: defaultPath
 
             val parentDir = File(settingsPath, "WA Call Recordings")
@@ -311,22 +323,24 @@ class CallRecording(
                 grantVoiceCallPermission()
             }
 
-            val audioSources = intArrayOf(
-                MediaRecorder.AudioSource.VOICE_CALL,
-                MediaRecorder.AudioSource.VOICE_UPLINK,
-                MediaRecorder.AudioSource.VOICE_DOWNLINK,
-                6,
-                MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                MediaRecorder.AudioSource.MIC
-            )
-            val sourceNames = arrayOf(
-                "VOICE_CALL",
-                "VOICE_UPLINK",
-                "VOICE_DOWNLINK",
-                "VOICE_RECOGNITION",
-                "VOICE_COMMUNICATION",
-                "MIC"
-            )
+            val audioSources =
+                intArrayOf(
+                    MediaRecorder.AudioSource.VOICE_CALL,
+                    MediaRecorder.AudioSource.VOICE_UPLINK,
+                    MediaRecorder.AudioSource.VOICE_DOWNLINK,
+                    6,
+                    MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                    MediaRecorder.AudioSource.MIC,
+                )
+            val sourceNames =
+                arrayOf(
+                    "VOICE_CALL",
+                    "VOICE_UPLINK",
+                    "VOICE_DOWNLINK",
+                    "VOICE_RECOGNITION",
+                    "VOICE_COMMUNICATION",
+                    "MIC",
+                )
 
             val recorderSelection = createStartedRecorder(audioSources, sourceNames, outputTarget.fd)
             if (recorderSelection == null) {
@@ -358,15 +372,19 @@ class CallRecording(
         }
     }
 
-    private fun ensureOutputDirectory(appDir: File, bridge: WaeIIFace?) {
+    private fun ensureOutputDirectory(
+        appDir: File,
+        bridge: WaeIIFace?,
+    ) {
         if (appDir.exists()) return
 
         if (appDir.mkdirs() || appDir.exists()) return
 
         if (bridge != null) {
-            val dirCreated = runCatching {
-                bridge.createDir(appDir.absolutePath)
-            }.getOrDefault(false)
+            val dirCreated =
+                runCatching {
+                    bridge.createDir(appDir.absolutePath)
+                }.getOrDefault(false)
 
             if (dirCreated || appDir.exists()) return
         }
@@ -374,27 +392,33 @@ class CallRecording(
         logDebug("WA X: Could not create preferred output directory, fallback may be used: ${appDir.absolutePath}")
     }
 
-    private fun buildFileName(userJid: FMessageWpp.UserJid?, timestamp: String): String {
+    private fun buildFileName(
+        userJid: FMessageWpp.UserJid?,
+        timestamp: String,
+    ): String {
         if (userJid == null) return "Call_$timestamp.m4a"
 
-        val contactName = runCatching {
-            ModuleRuntime.getContactName(userJid)
-        }.getOrNull()
+        val contactName =
+            runCatching {
+                ModuleRuntime.getContactName(userJid)
+            }.getOrNull()
 
-        val identifier = if (contactName.isNullOrEmpty()) {
-            userJid.phoneNumber
-        } else {
-            contactName
-        }
+        val identifier =
+            if (contactName.isNullOrEmpty()) {
+                userJid.phoneNumber
+            } else {
+                contactName
+            }
 
         return "Call_${sanitizeFileNamePart(identifier)}_$timestamp.m4a"
     }
 
     private fun sanitizeFileNamePart(value: String?): String {
-        val cleaned = value
-            ?.replace(Regex("[\\\\/:*?\"<>|\\r\\n]+"), "_")
-            ?.trim()
-            .orEmpty()
+        val cleaned =
+            value
+                ?.replace(Regex("[\\\\/:*?\"<>|\\r\\n]+"), "_")
+                ?.trim()
+                .orEmpty()
 
         return cleaned.ifEmpty { "Unknown" }
     }
@@ -402,15 +426,16 @@ class CallRecording(
     private fun createStartedRecorder(
         audioSources: IntArray,
         sourceNames: Array<String>,
-        outputFd: FileDescriptor
+        outputFd: FileDescriptor,
     ): RecorderSelection? {
         for (i in audioSources.indices) {
-            val testRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(Utils.application)
-            } else {
-                @Suppress("DEPRECATION")
-                MediaRecorder()
-            }
+            val testRecorder =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    MediaRecorder(Utils.application)
+                } else {
+                    @Suppress("DEPRECATION")
+                    MediaRecorder()
+                }
 
             try {
                 logDebug("WA X: Trying ${sourceNames[i]}")
@@ -475,7 +500,10 @@ class CallRecording(
         }
     }
 
-    private fun releaseRecorder(recorder: MediaRecorder, stopBeforeRelease: Boolean) {
+    private fun releaseRecorder(
+        recorder: MediaRecorder,
+        stopBeforeRelease: Boolean,
+    ) {
         if (stopBeforeRelease) {
             try {
                 recorder.stop()
@@ -513,7 +541,7 @@ class CallRecording(
     private fun openOutputTarget(
         bridge: WaeIIFace?,
         preferredDir: File,
-        fileName: String
+        fileName: String,
     ): OutputTarget {
         val preferredFile = File(preferredDir, fileName)
 
@@ -525,7 +553,7 @@ class CallRecording(
                         preferredFile,
                         parcelFileDescriptor,
                         null,
-                        parcelFileDescriptor.fileDescriptor
+                        parcelFileDescriptor.fileDescriptor,
                     )
                 }
                 logDebug("WA X: Bridge openFile returned null, fallback to Android/data path")
@@ -535,8 +563,9 @@ class CallRecording(
         }
 
         val app = FeatureLoader.mApp ?: throw IOException("Could not resolve app context")
-        val appExternalDir = app.getExternalFilesDir(null)
-            ?: throw IOException("Could not resolve app external files directory")
+        val appExternalDir =
+            app.getExternalFilesDir(null)
+                ?: throw IOException("Could not resolve app external files directory")
 
         val fallbackDir = File(appExternalDir, "Recordings")
         if (!fallbackDir.exists() && !fallbackDir.mkdirs()) {
@@ -554,12 +583,12 @@ class CallRecording(
         val file: File,
         val parcelFileDescriptor: ParcelFileDescriptor?,
         val outputStream: FileOutputStream?,
-        val fd: FileDescriptor
+        val fd: FileDescriptor,
     )
 
     private data class RecorderSelection(
         val recorder: MediaRecorder,
-        val sourceName: String
+        val sourceName: String,
     )
 
     private fun shouldRecord(phoneNumber: String?): Boolean {
@@ -596,7 +625,10 @@ class CallRecording(
         return true
     }
 
-    private fun isNumberInList(phone: String, jsonList: String?): Boolean {
+    private fun isNumberInList(
+        phone: String,
+        jsonList: String?,
+    ): Boolean {
         if (TextUtils.isEmpty(jsonList) || jsonList == "[]") return false
 
         try {

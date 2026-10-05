@@ -2,6 +2,7 @@ package com.wax.module.xposed.features.others
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.view.Menu
 import android.widget.Toast
 import com.wax.module.R
@@ -10,17 +11,15 @@ import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.core.devkit.Unobfuscator.findFirstClassUsingName
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
 import java.util.Locale
 
-class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
-    Feature(loader, preferences) {
-
-    override fun getPluginName(): String {
-        return "BackupRestore"
-    }
+class BackupRestore(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
+    override fun getPluginName(): String = "BackupRestore"
 
     companion object {
         /** Menu item id used to detect and tag the injected entry. */
@@ -48,17 +47,17 @@ class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
     override fun doHook() {
         if (!prefs.getBoolean("force_restore_backup_feature", false)) return
 
-        val restoreFromBackupClass = findFirstClassUsingName(
-            classLoader,
-            StringMatchType.EndsWith,
-            "RestoreFromBackupActivity"
-        )
+        val restoreFromBackupClass =
+            findFirstClassUsingName(
+                classLoader,
+                StringMatchType.EndsWith,
+                "RestoreFromBackupActivity",
+            )
 
         XposedBridge.hookAllMethods(
             Activity::class.java,
             "onPrepareOptionsMenu",
             object : XC_MethodHook() {
-
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!isGoogleDriveActivity(param.thisObject.javaClass.simpleName)) return
                     val menu = param.args[0] as Menu
@@ -70,8 +69,8 @@ class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
                             .setTitle(R.string.force_restore_backup)
                             .setMessage(activity.getString(R.string.warning_restore))
                             .setPositiveButton(
-                                activity.getString(R.string.yes)
-                            ) { _,_ ->
+                                activity.getString(R.string.yes),
+                            ) { _, _ ->
                                 try {
                                     val intent = Intent(activity, restoreFromBackupClass)
                                     intent.action = ACTION_RESTORE_ONE_TIME_SETUP
@@ -80,15 +79,15 @@ class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
                                     XposedBridge.log(e)
                                     Utils.showToast(
                                         "Error launching restore activity: " + e.message,
-                                        Toast.LENGTH_LONG
+                                        Toast.LENGTH_LONG,
                                     )
                                 }
-                            }
-                            .setNegativeButton(activity.getString(R.string.no), null)
+                            }.setNegativeButton(activity.getString(R.string.no), null)
                             .show()
                         true
                     }
                 }
-            })
+            },
+        )
     }
 }

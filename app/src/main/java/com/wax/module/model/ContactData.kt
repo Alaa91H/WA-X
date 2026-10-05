@@ -4,11 +4,12 @@ import java.io.Serializable
 
 class ContactData(
     val name: String?,
-    val jid: String?
+    val jid: String?,
 ) : Serializable {
-    fun getDisplayName(): String = when {
-        !name.isNullOrEmpty() -> name
-        jid != null -> jid.split("@")[0]
-        else -> ""
-    }
+    fun getDisplayName(): String =
+        when {
+            !name.isNullOrEmpty() -> name
+            jid != null -> jid.split("@")[0]
+            else -> ""
+        }
 }

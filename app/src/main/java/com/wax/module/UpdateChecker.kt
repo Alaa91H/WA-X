@@ -13,8 +13,9 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class UpdateChecker(private val mActivity: Activity) : Runnable {
-
+class UpdateChecker(
+    private val mActivity: Activity,
+) : Runnable {
     companion object {
         private const val LATEST_RELEASE_API = "https://api.github.com/repos/Alaa91H/WA X/releases/latest"
         private const val TELEGRAM_UPDATE_URL = "https://t.me/Alaa91h"
@@ -22,7 +23,8 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
         private val DEFAULT_CHANGELOG = UpdateOffer.DEFAULT_CHANGELOG
 
         private val httpClient: OkHttpClient by lazy {
-            OkHttpClient.Builder()
+            OkHttpClient
+                .Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
@@ -32,9 +34,11 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
 
     override fun run() {
         try {
-            val request = okhttp3.Request.Builder()
-                .url(LATEST_RELEASE_API)
-                .build()
+            val request =
+                okhttp3.Request
+                    .Builder()
+                    .url(LATEST_RELEASE_API)
+                    .build()
 
             val releaseVersion: String
             val changelog: String
@@ -60,7 +64,7 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
             if (UpdateOffer.shouldOffer(
                     releaseVersion = releaseVersion,
                     currentVersion = currentVersion,
-                    ignoredVersion = ModuleRuntime.getPrivString("ignored_version", "")
+                    ignoredVersion = ModuleRuntime.getPrivString("ignored_version", ""),
                 )
             ) {
                 mActivity.runOnUiThread {
@@ -72,20 +76,25 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
         }
     }
 
-    private fun showUpdateDialog(version: String, changelog: String, publishedAt: String) {
+    private fun showUpdateDialog(
+        version: String,
+        changelog: String,
+        publishedAt: String,
+    ) {
         try {
             val markwon = Markwon.create(mActivity)
             val dialog = AlertDialogWpp(mActivity)
 
             val formattedDate = formatPublishedDate(publishedAt)
 
-            val message = buildString {
-                append("📦 **Version:** `").append(version).append("`\n")
-                if (formattedDate.isNotEmpty()) {
-                    append("📅 **Released:** ").append(formattedDate).append("\n")
+            val message =
+                buildString {
+                    append("📦 **Version:** `").append(version).append("`\n")
+                    if (formattedDate.isNotEmpty()) {
+                        append("📅 **Released:** ").append(formattedDate).append("\n")
+                    }
+                    append("\n### What's New\n\n").append(changelog)
                 }
-                append("\n### What's New\n\n").append(changelog)
-            }
 
             dialog.setTitle("🎉 New Update Available!")
             dialog.setMessage(markwon.toMarkdown(message))
@@ -112,7 +121,9 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
             if (date != null) {
                 val displayFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
                 displayFormat.format(date)
-            } else ""
+            } else {
+                ""
+            }
         } catch (e: Exception) {
             XposedBridge.log(e)
             ""

@@ -37,7 +37,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class TextEditorActivity : BaseActivity() {
-
     private var folderName: String? = null
     private lateinit var mGetContent: ActivityResultLauncher<String>
     private lateinit var mExportFile: ActivityResultLauncher<String>
@@ -51,16 +50,17 @@ class TextEditorActivity : BaseActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-        val wv = WebView(this).apply {
-            settings.javaScriptEnabled = true
-            settings.allowContentAccess = true
-            settings.domStorageEnabled = true
-            @Suppress("DEPRECATION")
-            settings.allowUniversalAccessFromFileURLs = true
-            settings.javaScriptCanOpenWindowsAutomatically = true
-            webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
-        }
+        val wv =
+            WebView(this).apply {
+                settings.javaScriptEnabled = true
+                settings.allowContentAccess = true
+                settings.domStorageEnabled = true
+                @Suppress("DEPRECATION")
+                settings.allowUniversalAccessFromFileURLs = true
+                settings.javaScriptCanOpenWindowsAutomatically = true
+                webViewClient = WebViewClient()
+                webChromeClient = WebChromeClient()
+            }
         webView = wv
         updateWebViewContent("")
 
@@ -69,18 +69,20 @@ class TextEditorActivity : BaseActivity() {
             wv,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            ),
         )
 
-        mGetContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            onUriSelected(uri)
-        }
-        mExportFile = registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
-            if (uri != null) {
-                exportAsZip(uri)
+        mGetContent =
+            registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+                onUriSelected(uri)
             }
-        }
+        mExportFile =
+            registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
+                if (uri != null) {
+                    exportAsZip(uri)
+                }
+            }
 
         folderName = intent.getStringExtra("folder_name")
         if (!TextUtils.isEmpty(folderName)) {
@@ -102,7 +104,7 @@ class TextEditorActivity : BaseActivity() {
                             finalCode,
                             "text/html",
                             "UTF-8",
-                            null
+                            null,
                         )
                     }
                 }
@@ -122,12 +124,13 @@ class TextEditorActivity : BaseActivity() {
                     if (cleaned.startsWith("\"") && cleaned.endsWith("\"") && cleaned.length >= 2) {
                         cleaned = cleaned.substring(1, cleaned.length - 1)
                     }
-                    cleaned = cleaned
-                        .replace("\\n", "\n")
-                        .replace("\\r", "\r")
-                        .replace("\\\"", "\"")
-                        .replace("\\'", "'")
-                        .replace("\\\\", "\\")
+                    cleaned =
+                        cleaned
+                            .replace("\\n", "\n")
+                            .replace("\\r", "\r")
+                            .replace("\\\"", "\"")
+                            .replace("\\'", "'")
+                            .replace("\\\\", "\\")
                 }
                 future.complete(cleaned)
             }
@@ -240,22 +243,27 @@ class TextEditorActivity : BaseActivity() {
 
     private fun onUriSelected(uri: Uri?) {
         if (uri == null) return
-        val linearLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-        val input = EditText(this).apply {
-            hint = "example.png"
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
+        val linearLayout =
+            LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                    )
+            }
+        val input =
+            EditText(this).apply {
+                hint = "example.png"
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                    )
+            }
         linearLayout.addView(input)
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.enter_image_file_name)
             .setPositiveButton("OK") { _, _ ->
                 val fileName = input.text.toString()
@@ -264,13 +272,15 @@ class TextEditorActivity : BaseActivity() {
                 } else {
                     Toast.makeText(this, R.string.error_image_name, Toast.LENGTH_SHORT).show()
                 }
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .setView(linearLayout)
             .show()
     }
 
-    private fun copyFromUri(fileName: String, uri: Uri) {
+    private fun copyFromUri(
+        fileName: String,
+        uri: Uri,
+    ) {
         lifecycleScope.launch(Dispatchers.IO) {
             val currentFolder = folderName ?: return@launch
             val outFolder = File(ThemePreference.rootDirectory, currentFolder)
@@ -283,11 +293,12 @@ class TextEditorActivity : BaseActivity() {
                     }
                 }
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@TextEditorActivity,
-                        getString(R.string.imported_as) + fileName,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast
+                        .makeText(
+                            this@TextEditorActivity,
+                            getString(R.string.imported_as) + fileName,
+                            Toast.LENGTH_LONG,
+                        ).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

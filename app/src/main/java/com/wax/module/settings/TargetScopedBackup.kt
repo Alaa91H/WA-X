@@ -21,7 +21,6 @@ import com.wax.module.storage.BackupV3Codec
  * target-scoped file.
  */
 object TargetScopedBackup {
-
     /** The section id used for the concrete global defaults. */
     const val GLOBAL_SECTION: String = "global"
 
@@ -72,13 +71,17 @@ object TargetScopedBackup {
      * malformed file cannot leave the user with some targets restored and others
      * wiped, which is the failure the previous typed import already fixed once.
      */
-    fun restore(store: SettingsStore, document: BackupDocument): RestoreResult {
+    fun restore(
+        store: SettingsStore,
+        document: BackupDocument,
+    ): RestoreResult {
         val parsed = parse(document)
         if (parsed is RestoreResult.Rejected) return parsed
 
-        val (global, targets) = (parsed as RestoreResult.Valid).let {
-            it.global to it.targets
-        }
+        val (global, targets) =
+            (parsed as RestoreResult.Valid).let {
+                it.global to it.targets
+            }
         store.replaceAll(global, targets)
         return RestoreResult.Restored(
             globalKeys = global.size,
@@ -100,21 +103,23 @@ object TargetScopedBackup {
         val targets = LinkedHashMap<TargetApp, Map<String, String>>()
 
         for ((sectionId, section) in document.sections) {
-            val obj = (section as? JsonValue.Obj)?.fields
-                ?: return RestoreResult.Rejected("Section '$sectionId' is not an object.")
+            val obj =
+                (section as? JsonValue.Obj)?.fields
+                    ?: return RestoreResult.Rejected("Section '$sectionId' is not an object.")
 
             val values = LinkedHashMap<String, String>()
             for ((key, value) in obj) {
-                val text = when (value) {
-                    is JsonValue.Str -> value.value
-                    is JsonValue.Num -> value.value.toString()
-                    is JsonValue.Flag -> value.value.toString()
-                    // A null or nested value has no meaning for a preference and is a
-                    // sign the file is not a settings backup.
-                    else -> return RestoreResult.Rejected(
-                        "Section '$sectionId' holds an unsupported value for '$key'.",
-                    )
-                }
+                val text =
+                    when (value) {
+                        is JsonValue.Str -> value.value
+                        is JsonValue.Num -> value.value.toString()
+                        is JsonValue.Flag -> value.value.toString()
+                        // A null or nested value has no meaning for a preference and is a
+                        // sign the file is not a settings backup.
+                        else -> return RestoreResult.Rejected(
+                            "Section '$sectionId' holds an unsupported value for '$key'.",
+                        )
+                    }
                 values[key] = text
             }
 
@@ -138,7 +143,9 @@ object TargetScopedBackup {
         ) : RestoreResult
 
         /** Refused; nothing was written. */
-        data class Rejected(val reason: String) : RestoreResult
+        data class Rejected(
+            val reason: String,
+        ) : RestoreResult
 
         /** Parsed but not yet written. */
         data class Valid(
@@ -166,6 +173,5 @@ object TargetScopedBackup {
     ): String = BackupV3Codec.encode(toDocument(store, waxVersion, createdAtMillis))
 
     /** Renders the section ids for diagnostics, without the values. */
-    fun describeSections(document: BackupDocument): String =
-        document.sections.keys.joinToString(", ")
+    fun describeSections(document: BackupDocument): String = document.sections.keys.joinToString(", ")
 }

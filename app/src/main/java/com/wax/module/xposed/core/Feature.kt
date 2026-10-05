@@ -6,12 +6,11 @@ import de.robv.android.xposed.XposedBridge
 
 abstract class Feature(
     @JvmField val classLoader: ClassLoader,
-    @JvmField val prefs: SharedPreferences
+    @JvmField val prefs: SharedPreferences,
 ) {
-
     companion object {
         @JvmField
-        var DEBUG = false
+        var isDebug = false
     }
 
     @Throws(Throwable::class)
@@ -40,7 +39,7 @@ abstract class Feature(
     }
 
     fun logDebug(obj: Any?) {
-        if (!DEBUG) return
+        if (!isDebug) return
 
         // Passamos o objeto formatado para o log do XposedBridge
         val formattedStr = formatObject(obj)
@@ -53,8 +52,11 @@ abstract class Feature(
         }
     }
 
-    fun logDebug(title: String, obj: Any?) {
-        if (!DEBUG) return
+    fun logDebug(
+        title: String,
+        obj: Any?,
+    ) {
+        if (!isDebug) return
 
         val formattedStr = formatObject(obj)
         log("$title: $formattedStr")

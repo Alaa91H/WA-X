@@ -715,8 +715,7 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "UnobfuscatorCache",
-          "ReflectionUtils"
+          "UnobfuscatorCache"
         ],
         "resolverDependencies": [
           "loadStartOutgoingCallMethod"
@@ -731,7 +730,6 @@
         "resolutionTier": "dexkit",
         "resolutionSources": [
           "Unobfuscator",
-          "ReflectionUtils",
           "ModuleRuntime"
         ],
         "resolverDependencies": [
@@ -898,11 +896,8 @@
       {
         "id": "CopySelectionMessage",
         "category": "others",
-        "resolutionTier": "indirect",
-        "resolutionSources": [
-          "Unobfuscator",
-          "ModuleRuntime"
-        ],
+        "resolutionTier": "none",
+        "resolutionSources": [],
         "resolverDependencies": [],
         "preferenceKeys": [
           "copy_selection_message"

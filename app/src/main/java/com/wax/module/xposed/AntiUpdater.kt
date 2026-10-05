@@ -32,6 +32,7 @@ object AntiUpdater {
                         param.setThrowable(IOException("UPDATE LOCKED BY WAENHANCER"))
                     }
                 }
-            })
+            },
+        )
     }
 }

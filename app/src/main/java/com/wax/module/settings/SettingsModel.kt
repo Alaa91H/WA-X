@@ -22,11 +22,12 @@ enum class TriState {
     ;
 
     /** The effective boolean when this state is combined with a global default. */
-    fun resolve(global: Boolean): Boolean = when (this) {
-        INHERIT -> global
-        ENABLED -> true
-        DISABLED -> false
-    }
+    fun resolve(global: Boolean): Boolean =
+        when (this) {
+            INHERIT -> global
+            ENABLED -> true
+            DISABLED -> false
+        }
 
     val isOverride: Boolean get() = this != INHERIT
 
@@ -40,7 +41,10 @@ enum class TriState {
          * the next global change the user makes, which is not what choosing a value
          * means.
          */
-        fun fromValue(value: Boolean, global: Boolean): TriState = if (value) ENABLED else DISABLED
+        fun fromValue(
+            value: Boolean,
+            global: Boolean,
+        ): TriState = if (value) ENABLED else DISABLED
     }
 }
 
@@ -55,12 +59,13 @@ enum class TriState {
  * path.
  */
 sealed interface OverrideValue<out T> {
-
     /** No opinion here; the global value applies. */
     data object Inherit : OverrideValue<Nothing>
 
     /** A concrete value for this scope. */
-    data class Value<out T>(val value: T) : OverrideValue<T>
+    data class Value<out T>(
+        val value: T,
+    ) : OverrideValue<T>
 
     /** The override value, or null when this scope inherits. */
     fun valueOrNull(): T? = (this as? Value<T>)?.value
@@ -74,10 +79,14 @@ sealed interface OverrideValue<out T> {
      * taking a `T` would put it in an `in` position.
      */
     companion object {
-        fun <T> resolve(override: OverrideValue<T>, global: T): T = when (override) {
-            is OverrideValue.Inherit -> global
-            is OverrideValue.Value -> override.value
-        }
+        fun <T> resolve(
+            override: OverrideValue<T>,
+            global: T,
+        ): T =
+            when (override) {
+                is OverrideValue.Inherit -> global
+                is OverrideValue.Value -> override.value
+            }
     }
 }
 
@@ -112,7 +121,6 @@ data class FeatureKey(
  * WhatsApp builds independent.
  */
 sealed interface SettingsScope {
-
     /** The stable short code used in persisted keys and in logs. */
     val code: String
 
@@ -123,19 +131,21 @@ sealed interface SettingsScope {
     }
 
     /** An override for one WhatsApp target. */
-    data class Target(val app: TargetApp) : SettingsScope {
+    data class Target(
+        val app: TargetApp,
+    ) : SettingsScope {
         override val code: String get() = app.code
     }
 
     companion object {
         /** The scope for a hooked process, or null when the process is not a target. */
-        fun forPackage(packageName: String?): SettingsScope.Target? =
-            TargetApp.fromPackageName(packageName)?.let { Target(it) }
+        fun forPackage(packageName: String?): SettingsScope.Target? = TargetApp.fromPackageName(packageName)?.let { Target(it) }
 
         /** The scope matching a persisted code such as "business". */
-        fun fromCode(code: String?): SettingsScope? = when (code) {
-            Global.code -> Global
-            else -> TargetApp.fromCode(code)?.let { Target(it) }
-        }
+        fun fromCode(code: String?): SettingsScope? =
+            when (code) {
+                Global.code -> Global
+                else -> TargetApp.fromCode(code)?.let { Target(it) }
+            }
     }
 }

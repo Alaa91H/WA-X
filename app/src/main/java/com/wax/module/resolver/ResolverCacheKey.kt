@@ -17,7 +17,6 @@ package com.wax.module.resolver
  *    answers produced by the old logic
  */
 object ResolverCacheKey {
-
     /**
      * Bumped whenever the resolution logic itself changes in a way that could produce a
      * different answer for the same APK.
@@ -43,19 +42,20 @@ object ResolverCacheKey {
         whatsAppVersion: String?,
         versionCode: Long,
         apkHash: String?,
-        schemaVersion: Int = SCHEMA_VERSION
-    ): String = buildString {
-        append(whatsAppVersion.orEmpty().trim())
-        append(SEPARATOR)
-        append(versionCode)
-        append(SEPARATOR)
-        // A null hash must still produce a distinct, visibly-degraded key. Using a literal
-        // marker rather than an empty string means "hash unavailable" cannot be confused
-        // with "hash of nothing", and it is obvious in a diagnostics dump.
-        append(apkHash?.trim()?.takeIf { it.isNotEmpty() } ?: HASH_UNAVAILABLE)
-        append(SEPARATOR)
-        append(schemaVersion)
-    }
+        schemaVersion: Int = SCHEMA_VERSION,
+    ): String =
+        buildString {
+            append(whatsAppVersion.orEmpty().trim())
+            append(SEPARATOR)
+            append(versionCode)
+            append(SEPARATOR)
+            // A null hash must still produce a distinct, visibly-degraded key. Using a literal
+            // marker rather than an empty string means "hash unavailable" cannot be confused
+            // with "hash of nothing", and it is obvious in a diagnostics dump.
+            append(apkHash?.trim()?.takeIf { it.isNotEmpty() } ?: HASH_UNAVAILABLE)
+            append(SEPARATOR)
+            append(schemaVersion)
+        }
 
     /**
      * Whether a stored key may be reused for the current target.
@@ -63,7 +63,10 @@ object ResolverCacheKey {
      * A key built without an APK hash is never reusable: accepting it would reintroduce
      * exactly the stale-cache bug T12 exists to remove, just with less visibility.
      */
-    fun isReusable(storedKey: String?, currentKey: String): Boolean {
+    fun isReusable(
+        storedKey: String?,
+        currentKey: String,
+    ): Boolean {
         if (storedKey.isNullOrBlank()) return false
         if (storedKey == currentKey) return !currentKey.contains("$SEPARATOR$HASH_UNAVAILABLE$SEPARATOR")
         return false

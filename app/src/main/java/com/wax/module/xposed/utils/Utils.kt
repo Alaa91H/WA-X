@@ -52,15 +52,11 @@ object Utils {
         notificationManager.createNotificationChannel(channel)
     }
 
-
     @JvmStatic
     val application: Application
         get() = FeatureLoader.mApp ?: ModuleApplication.instance!!
 
-    fun getString(id: Int): String {
-        return application.getString(id)
-    }
-
+    fun getString(id: Int): String = application.getString(id)
 
     val executor: ExecutorService by lazy {
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
@@ -90,14 +86,17 @@ object Utils {
     /**
      * Retrieves the resource ID by name and type.
      * Uses caching to improve performance for repeated lookups.
-     * 
+     *
      * @param name The resource name to look up
      * @param type The resource type (e.g., "id", "drawable", "layout", "string")
      * @return The resource ID or -1 if not found or an error occurred
      */
     @JvmStatic
     @SuppressLint("DiscouragedApi")
-    fun getID(name: String?, type: String?): Int {
+    fun getID(
+        name: String?,
+        type: String?,
+    ): Int {
         if (TextUtils.isEmpty(name) || TextUtils.isEmpty(type)) {
             return -1
         }
@@ -130,10 +129,10 @@ object Utils {
     @JvmStatic
     fun dipToPixels(dipValue: Int): Int {
         val metrics = FeatureLoader.mApp!!.resources.displayMetrics
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue.toFloat(), metrics)
+        return TypedValue
+            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue.toFloat(), metrics)
             .toInt()
     }
-
 
     @JvmStatic
     fun dipToPixels(dipValue: Float): Int {
@@ -142,12 +141,11 @@ object Utils {
     }
 
     @JvmStatic
-    fun getDateTimeFromMillis(timestamp: Long): String {
-        return SimpleDateFormat(
+    fun getDateTimeFromMillis(timestamp: Long): String =
+        SimpleDateFormat(
             "dd/MM/yyyy hh:mm:ss a",
-            Locale.getDefault()
+            Locale.getDefault(),
         ).format(Date(timestamp))
-    }
 
     @SuppressLint("SdCardPath")
     fun getDestination(name: String): String {
@@ -161,7 +159,11 @@ object Utils {
         return filePath.absolutePath + "/"
     }
 
-    fun copyFile(srcFile: File?, destFolder: String, name: String): String? {
+    fun copyFile(
+        srcFile: File?,
+        destFolder: String,
+        name: String,
+    ): String? {
         if (srcFile == null || !srcFile.exists()) return "File not found or is null"
         try {
             return copyFile(FileInputStream(srcFile), destFolder, name)
@@ -171,12 +173,16 @@ object Utils {
         }
     }
 
-
-    fun copyFile(inputStream: InputStream, destFolder: String, name: String): String? {
+    fun copyFile(
+        inputStream: InputStream,
+        destFolder: String,
+        name: String,
+    ): String? {
         val destFile = File(destFolder, name)
         try {
             inputStream.use { `in` ->
-                getClientBridge()!!.openFile(destFile.absolutePath, true)
+                getClientBridge()!!
+                    .openFile(destFile.absolutePath, true)
                     .use { parcelFileDescriptor ->
                         val out = FileOutputStream(parcelFileDescriptor.fileDescriptor)
                         val bArr = ByteArray(1024)
@@ -200,17 +206,21 @@ object Utils {
 
     @JvmStatic
     @JvmOverloads
-    fun showToast(message: String?, length: Int = 0) {
+    fun showToast(
+        message: String?,
+        length: Int = 0,
+    ) {
         if (message == null) return
         if (Looper.myLooper() == Looper.getMainLooper()) {
             Toast.makeText(application, message, length).show()
         } else {
             Handler(Looper.getMainLooper()).post {
-                Toast.makeText(
-                    application,
-                    message,
-                    length
-                ).show()
+                Toast
+                    .makeText(
+                        application,
+                        message,
+                        length,
+                    ).show()
             }
         }
     }
@@ -221,31 +231,36 @@ object Utils {
         clipboard.setPrimaryClip(clip)
     }
 
-    fun generateName(userJid: UserJid, fileFormat: String?): String {
+    fun generateName(
+        userJid: UserJid,
+        fileFormat: String?,
+    ): String {
         val contactName = getContactName(userJid)
         val number = userJid.phoneRawString
-        return toValidFileName(contactName) + "_" + number + "_" + SimpleDateFormat(
-            "yyyyMMdd-HHmmss",
-            Locale.getDefault()
-        ).format(
-            Date()
-        ) + "." + fileFormat
+        return toValidFileName(contactName) + "_" + number + "_" +
+            SimpleDateFormat(
+                "yyyyMMdd-HHmmss",
+                Locale.getDefault(),
+            ).format(
+                Date(),
+            ) + "." + fileFormat
     }
 
-
-    fun toValidFileName(input: String): String {
-        return input.replace("[:\\\\/*\"?|<>']".toRegex(), " ")
-    }
+    fun toValidFileName(input: String): String = input.replace("[:\\\\/*\"?|<>']".toRegex(), " ")
 
     fun scanFile(file: File) {
         MediaScannerConnection.scanFile(
             application,
             arrayOf<String>(file.absolutePath),
-            arrayOf<String?>(MimeTypeUtils.getMimeTypeFromExtension(file.absolutePath))
+            arrayOf<String?>(MimeTypeUtils.getMimeTypeFromExtension(file.absolutePath)),
         ) { _: String?, _: Uri? -> }
     }
 
-    fun getProperties(prefs: SharedPreferences, key: String?, checkKey: String?): Properties {
+    fun getProperties(
+        prefs: SharedPreferences,
+        key: String?,
+        checkKey: String?,
+    ): Properties {
         val properties = Properties()
         if (checkKey != null && !prefs.getBoolean(checkKey, false)) return properties
         val text = prefs.getString(key, "")!!
@@ -255,7 +270,9 @@ object Utils {
         if (matcher.find()) {
             val propertiesText = matcher.group(1)
             val lines =
-                propertiesText!!.split("\\s*\\n\\s*".toRegex()).dropLastWhile { it.isEmpty() }
+                propertiesText!!
+                    .split("\\s*\\n\\s*".toRegex())
+                    .dropLastWhile { it.isEmpty() }
                     .toTypedArray()
 
             for (line in lines) {
@@ -271,20 +288,21 @@ object Utils {
         return properties
     }
 
-    fun tryParseInt(wallpaperAlpha: String?, i: Int): Int {
-        return try {
+    fun tryParseInt(
+        wallpaperAlpha: String?,
+        i: Int,
+    ): Int =
+        try {
             wallpaperAlpha?.trim { it <= ' ' }?.toInt() ?: i
         } catch (_: Exception) {
             i
         }
-    }
 
     fun getMyNumber(): String {
         val dataDir = getAccountDataDir()
         return CDSharedPreferences(File(dataDir, "shared_prefs/${FeatureLoader.mApp!!.packageName}_preferences_light.xml"))
             .getString("ph", "")!!
     }
-
 
     @JvmStatic
     fun <T> binderLocalScope(block: BinderLocalScopeBlock<T?>): T? {
@@ -305,23 +323,31 @@ object Utils {
     }
 
     @SuppressLint("MissingPermission")
-    fun showNotification(title: String?, content: String?) {
+    fun showNotification(
+        title: String?,
+        content: String?,
+    ) {
         val context: Application = application
         val notificationManager = NotificationManagerCompat.from(context)
         val channel =
             NotificationChannel("wppenhacer", "WAE Enhancer", NotificationManager.IMPORTANCE_HIGH)
         notificationManager.createNotificationChannel(channel)
-        val notification = NotificationCompat.Builder(context, "wppenhacer")
-            .setSmallIcon(android.R.mipmap.sym_def_app_icon)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setAutoCancel(true)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(content))
+        val notification =
+            NotificationCompat
+                .Builder(context, "wppenhacer")
+                .setSmallIcon(android.R.mipmap.sym_def_app_icon)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setAutoCancel(true)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(content))
         notificationManager.notify(Random().nextInt(), notification.build())
     }
 
     @JvmStatic
-    fun openLink(mActivity: Activity, url: String?) {
+    fun openLink(
+        mActivity: Activity,
+        url: String?,
+    ) {
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         mActivity.startActivity(browserIntent)
     }

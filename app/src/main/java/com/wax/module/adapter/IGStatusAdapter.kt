@@ -47,16 +47,23 @@ import org.luckypray.dexkit.query.enums.StringMatchType
 import java.lang.reflect.Method
 
 @Suppress("TYPE_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
-    ArrayAdapter<Any?>(context, 0) {
-    private var clazzImageStatus: Class<*> = findFirstClassUsingName(
-        this.context.classLoader,
-        StringMatchType.EndsWith,
-        ".ContactStatusThumbnail"
-    )
+class IGStatusAdapter(
+    context: Context,
+    private val statusInfoClazz: Class<*>,
+) : ArrayAdapter<Any?>(context, 0) {
+    private var clazzImageStatus: Class<*> =
+        findFirstClassUsingName(
+            this.context.classLoader,
+            StringMatchType.EndsWith,
+            ".ContactStatusThumbnail",
+        )
     private val setCountStatus: Method?
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+    override fun getView(
+        position: Int,
+        convertView: View?,
+        parent: ViewGroup,
+    ): View {
         var convertView = convertView
         if (position >= IGStatus.itens.size) {
             return convertView ?: View(context)
@@ -88,8 +95,8 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
                 tabdialog.setTitle(activity.getString(R.string.select_status_type))
                 tabdialog.addTab(
                     getInstance().getString("mystatus"),
-                    getIconByName("ic_status", true))
-                {
+                    getIconByName("ic_status", true),
+                ) {
                     try {
                         val clazz =
                             getClassByName("MyStatusesActivity", context.classLoader)
@@ -106,7 +113,7 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
                 coloredDrawable(iconCamera, if (isNightMode()) Color.WHITE else Color.BLACK)
                 tabdialog.addTab(
                     activity.getString(R.string.open_camera),
-                    iconCamera
+                    iconCamera,
                 ) {
                     try {
                         val intent = Intent()
@@ -131,21 +138,23 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
 
                 tabdialog.addTab(
                     activity.getString(R.string.edit_text),
-                    iconEdit
+                    iconEdit,
                 ) {
                     try {
                         val intent = Intent()
                         var clazz: Class<*>?
                         try {
-                            clazz = getClassByName(
-                                "TextStatusComposerActivity",
-                                activity.classLoader
-                            )
+                            clazz =
+                                getClassByName(
+                                    "TextStatusComposerActivity",
+                                    activity.classLoader,
+                                )
                         } catch (_: Exception) {
-                            clazz = getClassByName(
-                                "ConsolidatedStatusComposerActivity",
-                                context.classLoader
-                            )
+                            clazz =
+                                getClassByName(
+                                    "ConsolidatedStatusComposerActivity",
+                                    context.classLoader,
+                                )
                             intent.putExtra("status_composer_mode", 2)
                         }
                         intent.setClassName(activity.packageName, clazz.name)
@@ -173,23 +182,24 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
     }
 
     init {
-        this.clazzImageStatus = findFirstClassUsingName(
-            context.classLoader,
-            StringMatchType.EndsWith,
-            ".ContactStatusThumbnail"
-        )
-        this.setCountStatus = findMethodUsingFilter(this.clazzImageStatus) { m: Method? ->
-            m!!.parameterCount == 3 && arrayOf<Class<*>>(
-                Int::class.javaPrimitiveType!!,
-                Int::class.javaPrimitiveType!!,
-                Int::class.javaPrimitiveType!!
-            ).contentEquals(m.parameterTypes)
-        }
+        this.clazzImageStatus =
+            findFirstClassUsingName(
+                context.classLoader,
+                StringMatchType.EndsWith,
+                ".ContactStatusThumbnail",
+            )
+        this.setCountStatus =
+            findMethodUsingFilter(this.clazzImageStatus) { m: Method? ->
+                m!!.parameterCount == 3 &&
+                    arrayOf<Class<*>>(
+                        Int::class.javaPrimitiveType!!,
+                        Int::class.javaPrimitiveType!!,
+                        Int::class.javaPrimitiveType!!,
+                    ).contentEquals(m.parameterTypes)
+            }
     }
 
-    override fun getCount(): Int {
-        return IGStatus.itens.size
-    }
+    override fun getCount(): Int = IGStatus.itens.size
 
     internal inner class IGStatusViewHolder {
         var igStatusContactPhoto: ImageView? = null
@@ -209,13 +219,15 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
                 return
             }
             try {
-                val statusInfo = XposedHelpers.getObjectField(item, "A01").takeUnless { it is Number } ?: XposedHelpers.getObjectField(item, "A02")
+                val statusInfo =
+                    XposedHelpers.getObjectField(item, "A01").takeUnless { it is Number } ?: XposedHelpers.getObjectField(item, "A02")
 
-                val classJid = findFirstClassUsingName(
-                    statusInfoClazz.classLoader,
-                    StringMatchType.EndsWith,
-                    "jid.Jid"
-                )
+                val classJid =
+                    findFirstClassUsingName(
+                        statusInfoClazz.classLoader,
+                        StringMatchType.EndsWith,
+                        "jid.Jid",
+                    )
                 val field = getFieldByExtendType(statusInfo.javaClass, classJid)
                 this.userJid = UserJid(getObjectField(field, statusInfo))
                 val waContact = WaContactWpp.getWaContactFromJid(this.userJid!!)
@@ -233,7 +245,10 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
             }
         }
 
-        fun setCountStatus(countUnseen: Int, total: Int) {
+        fun setCountStatus(
+            countUnseen: Int,
+            total: Int,
+        ) {
             if (setCountStatus != null) {
                 try {
                     setCountStatus.invoke(igStatusContactPhoto, total, countUnseen, total)
@@ -256,15 +271,16 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
         frameLayout.layoutParams =
             FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.WRAP_CONTENT,
             )
 
         // Criando o LinearLayout
         val linearLayout = LinearLayout(this.context)
-        val linearParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        val linearParams =
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
         linearLayout.orientation = LinearLayout.VERTICAL
         linearLayout.layoutParams = linearParams
 
@@ -276,16 +292,17 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
         // Adicionando os elementos ao RelativeLayout interno
         val contactPhoto =
             XposedHelpers.newInstance(this.clazzImageStatus, this.context) as ImageView
-        val photoParams = RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        val photoParams =
+            RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
         contactPhoto.layoutParams = photoParams
         contactPhoto.setPadding(
             dipToPixels(2.5f),
             dipToPixels(2.5f),
             dipToPixels(2.5f),
-            dipToPixels(2.5f)
+            dipToPixels(2.5f),
         )
         contactPhoto.scaleType = ImageView.ScaleType.CENTER_CROP
         contactPhoto.setImageDrawable(getDrawableByName("avatar_contact"))
@@ -298,10 +315,11 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
 
         val addBtnRelativeLayout = RelativeLayout(this.context)
         addBtnRelativeLayout.setBackgroundColor(Color.TRANSPARENT)
-        val addBtnParams = RelativeLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        val addBtnParams =
+            RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
         addBtnParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
         addBtnParams.addRule(RelativeLayout.ALIGN_PARENT_END)
         addBtnParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT)
@@ -318,17 +336,17 @@ class IGStatusAdapter(context: Context, private val statusInfoClazz: Class<*>) :
         addBtnRelativeLayout.addView(iconImageView)
         holder.addButton = addBtnRelativeLayout
 
-
         internalRelativeLayout.addView(contactPhoto)
         internalRelativeLayout.addView(addBtnRelativeLayout)
 
         val contactName = TextView(this.context)
         contactName.ellipsize = TextUtils.TruncateAt.END
         contactName.gravity = Gravity.CENTER
-        val nameParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        val nameParams =
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
         contactName.layoutParams = nameParams
         contactName.text = "Name"
         contactName.textAlignment = View.TEXT_ALIGNMENT_CENTER

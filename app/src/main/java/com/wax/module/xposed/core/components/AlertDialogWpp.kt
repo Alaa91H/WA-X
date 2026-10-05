@@ -15,7 +15,9 @@ import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.lang.reflect.Method
 
-open class AlertDialogWpp(val context: Context?) {
+open class AlertDialogWpp(
+    val context: Context?,
+) {
     private var mAlertDialog: AlertDialog.Builder? = null
     private var mAlertDialogWpp: Any? = null
     private var mCreate: Dialog? = null
@@ -23,7 +25,7 @@ open class AlertDialogWpp(val context: Context?) {
     init {
         if (isSystemDialog) {
             mAlertDialog = AlertDialog.Builder(context)
-        }else {
+        } else {
             try {
                 mAlertDialogWpp = getAlertDialog!!.invoke(null, context)
                 setMessage(null)
@@ -65,7 +67,7 @@ open class AlertDialogWpp(val context: Context?) {
 
     fun setItems(
         items: Array<CharSequence?>?,
-        listener: DialogInterface.OnClickListener?
+        listener: DialogInterface.OnClickListener?,
     ): AlertDialogWpp {
         if (isSystemDialog) {
             mAlertDialog!!.setItems(items, listener)
@@ -79,11 +81,10 @@ open class AlertDialogWpp(val context: Context?) {
         return this
     }
 
-
     fun setMultiChoiceItems(
         items: Array<String>,
         checkedItems: BooleanArray?,
-        listener: OnMultiChoiceClickListener?
+        listener: OnMultiChoiceClickListener?,
     ): AlertDialogWpp {
         if (isSystemDialog) {
             mAlertDialog!!.setMultiChoiceItems(items, checkedItems, listener)
@@ -98,7 +99,7 @@ open class AlertDialogWpp(val context: Context?) {
 
     fun setNegativeButton(
         text: CharSequence?,
-        listener: DialogInterface.OnClickListener?
+        listener: DialogInterface.OnClickListener?,
     ): AlertDialogWpp {
         if (isSystemDialog) {
             mAlertDialog!!.setNegativeButton(text, listener)
@@ -113,7 +114,7 @@ open class AlertDialogWpp(val context: Context?) {
 
     fun setPositiveButton(
         text: CharSequence?,
-        listener: DialogInterface.OnClickListener?
+        listener: DialogInterface.OnClickListener?,
     ): AlertDialogWpp {
         if (isSystemDialog) {
             mAlertDialog!!.setPositiveButton(text, listener)
@@ -135,14 +136,14 @@ open class AlertDialogWpp(val context: Context?) {
         return this
     }
 
-
     open fun create(): Dialog {
         if (mCreate != null) return mCreate!!
-        mCreate = if (isSystemDialog) {
-            mAlertDialog!!.create()
-        } else {
-            XposedHelpers.callMethod(mAlertDialogWpp, "create") as Dialog
-        }
+        mCreate =
+            if (isSystemDialog) {
+                mAlertDialog!!.create()
+            } else {
+                XposedHelpers.callMethod(mAlertDialogWpp, "create") as Dialog
+            }
         return mCreate!!
     }
 
@@ -173,22 +174,39 @@ open class AlertDialogWpp(val context: Context?) {
         private var setNegativeButtonMethod: Method? = null
         private var setPositiveButtonMethod: Method? = null
         private var setMultiChoiceItemsMethod: Method? = null
+
         fun initDialog(loader: ClassLoader) {
             try {
                 getAlertDialog = loadMaterialAlertDialog(loader)
                 val alertDialogClass: Class<*> = getAlertDialog!!.returnType
-                setItemsMethod = ReflectionUtils.findMethodUsingFilter(
-                    alertDialogClass
-                ) { method: Method? -> method!!.parameterCount == 2 && method.parameterTypes[0] == DialogInterface.OnClickListener::class.java && method.parameterTypes[1] == Array<CharSequence>::class.java }
-                setMultiChoiceItemsMethod = ReflectionUtils.findMethodUsingFilter(
-                    alertDialogClass
-                ) { method: Method? -> method!!.parameterCount == 3 && method.parameterTypes[0] == OnMultiChoiceClickListener::class.java && method.parameterTypes[1] == Array<CharSequence>::class.java }
-                setMessageMethod = ReflectionUtils.findMethodUsingFilter(
-                    alertDialogClass
-                ) { method: Method? -> method!!.parameterCount == 1 && method.parameterTypes[0] == CharSequence::class.java }
-                val buttons = ReflectionUtils.findAllMethodsUsingFilter(
-                    alertDialogClass
-                ) { method: Method? -> method!!.parameterCount == 2 && method.parameterTypes[0] == DialogInterface.OnClickListener::class.java && method.parameterTypes[1] == CharSequence::class.java }
+                setItemsMethod =
+                    ReflectionUtils.findMethodUsingFilter(
+                        alertDialogClass,
+                    ) { method: Method? ->
+                        method!!.parameterCount == 2 &&
+                            method.parameterTypes[0] == DialogInterface.OnClickListener::class.java &&
+                            method.parameterTypes[1] == Array<CharSequence>::class.java
+                    }
+                setMultiChoiceItemsMethod =
+                    ReflectionUtils.findMethodUsingFilter(
+                        alertDialogClass,
+                    ) { method: Method? ->
+                        method!!.parameterCount == 3 &&
+                            method.parameterTypes[0] == OnMultiChoiceClickListener::class.java &&
+                            method.parameterTypes[1] == Array<CharSequence>::class.java
+                    }
+                setMessageMethod =
+                    ReflectionUtils.findMethodUsingFilter(
+                        alertDialogClass,
+                    ) { method: Method? -> method!!.parameterCount == 1 && method.parameterTypes[0] == CharSequence::class.java }
+                val buttons =
+                    ReflectionUtils.findAllMethodsUsingFilter(
+                        alertDialogClass,
+                    ) { method: Method? ->
+                        method!!.parameterCount == 2 &&
+                            method.parameterTypes[0] == DialogInterface.OnClickListener::class.java &&
+                            method.parameterTypes[1] == CharSequence::class.java
+                    }
                 setNegativeButtonMethod = buttons[0]
                 setPositiveButtonMethod = buttons[2]
                 isAvailable = true

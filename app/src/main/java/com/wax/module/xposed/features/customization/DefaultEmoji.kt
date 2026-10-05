@@ -1,5 +1,6 @@
 package com.wax.module.xposed.features.customization
 
+import android.content.SharedPreferences
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
@@ -9,7 +10,6 @@ import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.lang.reflect.Method
@@ -19,9 +19,8 @@ import kotlin.math.max
 
 class DefaultEmoji(
     classLoader: ClassLoader,
-    prefs:SharedPreferences
+    prefs: SharedPreferences,
 ) : Feature(classLoader, prefs) {
-
     private val minScale = 1.00f
     private val maxScale = 2.00f
     private val widthPaddingRatio = 0.40f
@@ -33,30 +32,41 @@ class DefaultEmoji(
     override fun doHook() {
         if (prefs.getBoolean("force_disable_emojis", false)) {
             val assetsClass = Utils.application.resources.assets.javaClass
-            XposedBridge.hookAllMethods(assetsClass, "openFd", object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val name = param.args[0] as String
-                    if (name.contains("emojis.oba"))
-                        param.result = null
-                }
-            })
+            XposedBridge.hookAllMethods(
+                assetsClass,
+                "openFd",
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        val name = param.args[0] as String
+                        if (name.contains("emojis.oba")) {
+                            param.result = null
+                        }
+                    }
+                },
+            )
             return
         }
         if (!prefs.getBoolean("disable_defemojis", false)) return
         Unobfuscator.loadGetSizeSpanMethods(classLoader).forEach { method ->
-            XposedBridge.hookMethod(method, object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    overrideGetSize(param)
-                }
-            })
+            XposedBridge.hookMethod(
+                method,
+                object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        overrideGetSize(param)
+                    }
+                },
+            )
         }
 
         Unobfuscator.loadDrawSpanMethods(classLoader).forEach { method ->
-            XposedBridge.hookMethod(method, object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    drawSystemEmoji(param)
-                }
-            })
+            XposedBridge.hookMethod(
+                method,
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        drawSystemEmoji(param)
+                    }
+                },
+            )
         }
     }
 
@@ -74,16 +84,18 @@ class DefaultEmoji(
         val drawable = getEmojiDrawable(span)
         val drawableBounds = drawable?.bounds ?: Rect()
 
-        val emojiPaint = createEmojiPaint(
-            paint = paint,
-            emojiText = emojiText,
-            drawableBounds = drawableBounds
-        )
+        val emojiPaint =
+            createEmojiPaint(
+                paint = paint,
+                emojiText = emojiText,
+                drawableBounds = drawableBounds,
+            )
 
-        val baseWidth = max(
-            drawableBounds.width().toFloat(),
-            emojiPaint.measureText(emojiText)
-        )
+        val baseWidth =
+            max(
+                drawableBounds.width().toFloat(),
+                emojiPaint.measureText(emojiText),
+            )
 
         val paddingSource = max(drawableBounds.width(), paint.textSize.toInt())
         val widthPadding = ceil(paddingSource * widthPaddingRatio).toInt()
@@ -92,7 +104,7 @@ class DefaultEmoji(
         updateExpandedFontMetrics(
             paint = emojiPaint,
             drawableBounds = drawableBounds,
-            target = fontMetrics
+            target = fontMetrics,
         )
 
         synchronized(spanWidths) {
@@ -117,23 +129,25 @@ class DefaultEmoji(
         val drawable = getEmojiDrawable(param.thisObject)
         val drawableBounds = drawable?.bounds ?: Rect()
 
-        val emojiPaint = createEmojiPaint(
-            paint = paint,
-            emojiText = emojiText,
-            drawableBounds = drawableBounds
-        )
+        val emojiPaint =
+            createEmojiPaint(
+                paint = paint,
+                emojiText = emojiText,
+                drawableBounds = drawableBounds,
+            )
 
-        val drawY = calculateCenteredBaseline(
-            originalPaint = paint,
-            emojiPaint = emojiPaint,
-            baselineY = y
-        )
+        val drawY =
+            calculateCenteredBaseline(
+                originalPaint = paint,
+                emojiPaint = emojiPaint,
+                baselineY = y,
+            )
 
         canvas.drawText(
             emojiText,
             x,
             drawY,
-            emojiPaint
+            emojiPaint,
         )
 
         param.result = null
@@ -142,21 +156,24 @@ class DefaultEmoji(
     private fun createEmojiPaint(
         paint: Paint,
         emojiText: String,
-        drawableBounds: Rect
+        drawableBounds: Rect,
     ): Paint {
-        val heightScale = calculateHeightScale(
-            paint = paint,
-            drawableBounds = drawableBounds
-        )
+        val heightScale =
+            calculateHeightScale(
+                paint = paint,
+                drawableBounds = drawableBounds,
+            )
 
-        val widthScale = calculateWidthScale(
-            paint = paint,
-            emojiText = emojiText,
-            drawableBounds = drawableBounds
-        )
+        val widthScale =
+            calculateWidthScale(
+                paint = paint,
+                emojiText = emojiText,
+                drawableBounds = drawableBounds,
+            )
 
-        val scale = max(heightScale, widthScale)
-            .coerceIn(minScale, maxScale)
+        val scale =
+            max(heightScale, widthScale)
+                .coerceIn(minScale, maxScale)
 
         return Paint(paint).apply {
             textSize = paint.textSize * scale
@@ -165,7 +182,7 @@ class DefaultEmoji(
 
     private fun calculateHeightScale(
         paint: Paint,
-        drawableBounds: Rect
+        drawableBounds: Rect,
     ): Float {
         val targetHeight = drawableBounds.height().toFloat()
         if (targetHeight <= 0f) return minScale
@@ -179,7 +196,7 @@ class DefaultEmoji(
     private fun calculateWidthScale(
         paint: Paint,
         emojiText: String,
-        drawableBounds: Rect
+        drawableBounds: Rect,
     ): Float {
         val targetWidth = drawableBounds.width().toFloat()
         if (targetWidth <= 0f) return minScale
@@ -193,7 +210,7 @@ class DefaultEmoji(
     private fun calculateCenteredBaseline(
         originalPaint: Paint,
         emojiPaint: Paint,
-        baselineY: Int
+        baselineY: Int,
     ): Float {
         val originalMetrics = originalPaint.fontMetrics
         val emojiMetrics = emojiPaint.fontMetrics
@@ -205,7 +222,7 @@ class DefaultEmoji(
     private fun updateExpandedFontMetrics(
         paint: Paint,
         drawableBounds: Rect,
-        target: Paint.FontMetricsInt?
+        target: Paint.FontMetricsInt?,
     ) {
         if (target == null) return
 
@@ -223,18 +240,20 @@ class DefaultEmoji(
         if (span == null) return null
 
         return runCatching {
-            val method = synchronized(drawableMethodCache) {
-                if (drawableMethodCache.containsKey(span.javaClass)) {
-                    drawableMethodCache[span.javaClass]
-                } else {
-                    val found = span.javaClass.declaredMethods.firstOrNull {
-                        it.name.length == 3 && it.returnType == Drawable::class.java
+            val method =
+                synchronized(drawableMethodCache) {
+                    if (drawableMethodCache.containsKey(span.javaClass)) {
+                        drawableMethodCache[span.javaClass]
+                    } else {
+                        val found =
+                            span.javaClass.declaredMethods.firstOrNull {
+                                it.name.length == 3 && it.returnType == Drawable::class.java
+                            }
+                        found?.isAccessible = true
+                        drawableMethodCache[span.javaClass] = found
+                        found
                     }
-                    found?.isAccessible = true
-                    drawableMethodCache[span.javaClass] = found
-                    found
                 }
-            }
             method?.invoke(span) as? Drawable
         }.getOrNull() ?: runCatching {
             XposedHelpers.callMethod(span, "getDrawable") as? Drawable
@@ -244,10 +263,8 @@ class DefaultEmoji(
     private fun isValidRange(
         text: CharSequence,
         start: Int,
-        end: Int
-    ): Boolean {
-        return start >= 0 && end <= text.length && start < end
-    }
+        end: Int,
+    ): Boolean = start >= 0 && end <= text.length && start < end
 
     override fun getPluginName(): String = "Default Emoji"
 }

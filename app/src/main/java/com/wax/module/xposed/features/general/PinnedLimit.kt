@@ -3,12 +3,12 @@
 package com.wax.module.xposed.features.general
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.ReflectionUtils
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XC_MethodReplacement
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.util.Spliterator
@@ -17,106 +17,124 @@ import java.lang.reflect.Array as ReflectArray
 
 class PinnedLimit(
     loader: ClassLoader,
-    preferences:SharedPreferences
+    preferences: SharedPreferences,
 ) : Feature(loader, preferences) {
-
     @SuppressLint("DiscouragedApi")
     override fun doHook() {
         if (!prefs.getBoolean(PINNED_LIMIT_PREF_KEY, false)) return
 
         val pinnedHashSetMethod = Unobfuscator.loadPinnedHashSetMethod(classLoader)
-        XposedBridge.hookMethod(Unobfuscator.loadPinnedInChatMethod(classLoader),
-            XC_MethodReplacement.returnConstant(PINNED_LIMIT_ENABLED))
+        XposedBridge.hookMethod(
+            Unobfuscator.loadPinnedInChatMethod(classLoader),
+            XC_MethodReplacement.returnConstant(PINNED_LIMIT_ENABLED),
+        )
 
-        XposedBridge.hookMethod(Unobfuscator.loadSetPinnedLimitMethod(classLoader), object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                if (ReflectionUtils.isCalledFromStrings(SYNC_RESPONSE_HANDLER_CLASS_NAME)) {
-                    param.result = null
-                }
-            }
-        })
-
-        XposedHelpers.findAndHookConstructor(LinkedHashSet::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook(){
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val initialCapacity = param.args[0] as Int
-                if (initialCapacity < 0) {
-                    param.args[0] = abs(initialCapacity)
-                }
-            }
-        })
-
-        XposedHelpers.findAndHookConstructor(ArrayList::class.java, Int::class.javaPrimitiveType, object : XC_MethodHook(){
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val initialCapacity = param.args[0] as Int
-                if (initialCapacity < 0) {
-                    param.args[0] = abs(initialCapacity)
-                }
-            }
-        })
-        XposedBridge.hookMethod(pinnedHashSetMethod, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val map = param.result as Map<Any?, Any?>
-                val thisObject = param.thisObject ?: param.args[0]!!
-                val pinnedMap = if (map is PinnedLinkedHashMap<*>) {
-                    map as PinnedLinkedHashMap<Any?>
-                } else {
-                    PinnedLinkedHashMap<Any?>().apply {
-                        putAll(map)
-                        param.result = this
+        XposedBridge.hookMethod(
+            Unobfuscator.loadSetPinnedLimitMethod(classLoader),
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (ReflectionUtils.isCalledFromStrings(SYNC_RESPONSE_HANDLER_CLASS_NAME)) {
+                        param.result = null
                     }
                 }
+            },
+        )
 
-                pinnedMap.limit = getPinnedLimit()
-
-                val keySet = map.keys
-                val setFields = ReflectionUtils.getFieldsByType(thisObject.javaClass, Set::class.java)
-
-                for (setField in setFields) {
-                    val set = setField.get(thisObject)
-
-                    if (set == keySet) {
-                        val newKeySet = pinnedMap.keys as PinnedLinkedHashMap.PinnedKeySet<Any?>
-                        newKeySet.setDisableInterator(false)
-                        setField.set(thisObject, newKeySet)
+        XposedHelpers.findAndHookConstructor(
+            LinkedHashSet::class.java,
+            Int::class.javaPrimitiveType,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val initialCapacity = param.args[0] as Int
+                    if (initialCapacity < 0) {
+                        param.args[0] = abs(initialCapacity)
                     }
                 }
-            }
-        })
+            },
+        )
 
-        XposedBridge.hookMethod( Unobfuscator.loadPinnedFilterMethod(classLoader), object : XC_MethodHook(){
-            override fun afterHookedMethod(param: MethodHookParam) {
-                if (param.args[0] !is PinnedLinkedHashMap.PinnedKeySet<*>) {
-                    return
-                }
-
-                val set = param.result as Set<*>
-                val pinnedMap = PinnedLinkedHashMap<Any?>().apply {
-                    limit = getPinnedLimit()
-
-                    for (item in set) {
-                        put(item, item)
+        XposedHelpers.findAndHookConstructor(
+            ArrayList::class.java,
+            Int::class.javaPrimitiveType,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val initialCapacity = param.args[0] as Int
+                    if (initialCapacity < 0) {
+                        param.args[0] = abs(initialCapacity)
                     }
                 }
+            },
+        )
+        XposedBridge.hookMethod(
+            pinnedHashSetMethod,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val map = param.result as Map<Any?, Any?>
+                    val thisObject = param.thisObject ?: param.args[0]!!
+                    val pinnedMap =
+                        if (map is PinnedLinkedHashMap<*>) {
+                            map as PinnedLinkedHashMap<Any?>
+                        } else {
+                            PinnedLinkedHashMap<Any?>().apply {
+                                putAll(map)
+                                param.result = this
+                            }
+                        }
 
-                val newKeySet = pinnedMap.keys as PinnedLinkedHashMap.PinnedKeySet<Any?>
-                newKeySet.setDisableInterator(false)
-                param.result = pinnedMap.keys
-            }
-        })
+                    pinnedMap.limit = getPinnedLimit()
+
+                    val keySet = map.keys
+                    val setFields = ReflectionUtils.getFieldsByType(thisObject.javaClass, Set::class.java)
+
+                    for (setField in setFields) {
+                        val set = setField.get(thisObject)
+
+                        if (set == keySet) {
+                            val newKeySet = pinnedMap.keys as PinnedLinkedHashMap.PinnedKeySet<Any?>
+                            newKeySet.setDisableInterator(false)
+                            setField.set(thisObject, newKeySet)
+                        }
+                    }
+                }
+            },
+        )
+
+        XposedBridge.hookMethod(
+            Unobfuscator.loadPinnedFilterMethod(classLoader),
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (param.args[0] !is PinnedLinkedHashMap.PinnedKeySet<*>) {
+                        return
+                    }
+
+                    val set = param.result as Set<*>
+                    val pinnedMap =
+                        PinnedLinkedHashMap<Any?>().apply {
+                            limit = getPinnedLimit()
+
+                            for (item in set) {
+                                put(item, item)
+                            }
+                        }
+
+                    val newKeySet = pinnedMap.keys as PinnedLinkedHashMap.PinnedKeySet<Any?>
+                    newKeySet.setDisableInterator(false)
+                    param.result = pinnedMap.keys
+                }
+            },
+        )
     }
 
     override fun getPluginName(): String = "Pinned Limit"
 
-    private fun getPinnedLimit(): Int {
-        return if (prefs.getBoolean(PINNED_LIMIT_PREF_KEY, false)) {
+    private fun getPinnedLimit(): Int =
+        if (prefs.getBoolean(PINNED_LIMIT_PREF_KEY, false)) {
             PINNED_LIMIT_ENABLED
         } else {
             PINNED_LIMIT_DEFAULT
         }
-    }
 
     private class PinnedLinkedHashMap<T> : LinkedHashMap<T, T>() {
-
         var limit: Int = PINNED_LIMIT_DEFAULT
 
         override val keys: MutableSet<T>
@@ -130,9 +148,8 @@ class PinnedLimit(
 
         class PinnedKeySet<T>(
             private val pinnedMap: PinnedLinkedHashMap<T>,
-            private val set: MutableSet<T>
+            private val set: MutableSet<T>,
         ) : AbstractMutableSet<T>() {
-
             override val size: Int
                 get() = pinnedMap.size
 
@@ -140,9 +157,7 @@ class PinnedLimit(
 
             override fun contains(element: T): Boolean = set.contains(element)
 
-            override fun containsAll(elements: Collection<T>): Boolean {
-                return set.containsAll(elements)
-            }
+            override fun containsAll(elements: Collection<T>): Boolean = set.containsAll(elements)
 
             override fun iterator(): MutableIterator<T> {
                 if (disableInterator && pinnedMap.size < pinnedMap.limit) {
@@ -178,21 +193,15 @@ class PinnedLimit(
                 return hadKey
             }
 
-            override fun removeAll(elements: Collection<T>): Boolean {
-                return set.removeAll(elements.toSet())
-            }
+            override fun removeAll(elements: Collection<T>): Boolean = set.removeAll(elements.toSet())
 
-            override fun retainAll(elements: Collection<T>): Boolean {
-                return set.retainAll(elements.toSet())
-            }
+            override fun retainAll(elements: Collection<T>): Boolean = set.retainAll(elements.toSet())
 
             override fun clear() {
                 set.clear()
             }
 
-            override fun spliterator(): Spliterator<T> {
-                return set.spliterator()
-            }
+            override fun spliterator(): Spliterator<T> = set.spliterator()
 
             override fun toArray(): Array<Any?> {
                 val result = arrayOfNulls<Any?>(set.size)
@@ -207,11 +216,12 @@ class PinnedLimit(
 
             override fun <E> toArray(array: Array<E>): Array<E> {
                 @Suppress("UNCHECKED_CAST")
-                val result = if (array.size >= set.size) {
-                    array
-                } else {
-                    ReflectArray.newInstance(array.javaClass.componentType!!, set.size) as Array<E>
-                }
+                val result =
+                    if (array.size >= set.size) {
+                        array
+                    } else {
+                        ReflectArray.newInstance(array.javaClass.componentType!!, set.size) as Array<E>
+                    }
 
                 var index = 0
                 for (item in set) {
@@ -232,12 +242,9 @@ class PinnedLimit(
             }
 
             private class EmptyMutableIterator<T> : MutableIterator<T> {
-
                 override fun hasNext(): Boolean = false
 
-                override fun next(): T {
-                    throw NoSuchElementException()
-                }
+                override fun next(): T = throw NoSuchElementException()
 
                 override fun remove() = Unit
             }

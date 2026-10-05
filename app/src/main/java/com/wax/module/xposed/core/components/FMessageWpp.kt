@@ -16,10 +16,11 @@ import java.util.Objects
 /**
  * @noinspection unused
  */
-class FMessageWpp(fMessage: Any?) {
-
+class FMessageWpp(
+    fMessage: Any?,
+) {
     companion object {
-        lateinit var TYPE: Class<*>
+        lateinit var type: Class<*>
         private var userJidMethod: Method? = null
         private var keyMessage: Field? = null
         private var getFieldIdMessage: Field? = null
@@ -31,28 +32,38 @@ class FMessageWpp(fMessage: Any?) {
         private var broadcastField: Field? = null
         private var timestampField: Field? = null
 
-        private val VALID_DOMAINS: Set<String> = setOf(
-            "s.whatsapp.net", "newsletter", "lid", "g.us", "broadcast", "status"
-        )
+        private val VALID_DOMAINS: Set<String> =
+            setOf(
+                "s.whatsapp.net",
+                "newsletter",
+                "lid",
+                "g.us",
+                "broadcast",
+                "status",
+            )
 
         @JvmStatic
         fun initialize(classLoader: ClassLoader) {
             try {
-                TYPE = Unobfuscator.loadFMessageClass(classLoader)
+                type = Unobfuscator.loadFMessageClass(classLoader)
                 UserJid.initialize(classLoader)
                 userJidMethod =
-                    ReflectionUtils.findMethodUsingFilter(TYPE) { method -> method.parameterCount == 0 && method.returnType == UserJid.TYPE_USERJID }
+                    ReflectionUtils.findMethodUsingFilter(type) { method ->
+                        method.parameterCount == 0 &&
+                            method.returnType == UserJid.typeUserjid
+                    }
                 keyMessage = Unobfuscator.loadMessageKeyField(classLoader)
-                Key.TYPE = keyMessage!!.type
+                Key.type = keyMessage!!.type
                 messageMethod = Unobfuscator.loadNewMessageMethod(classLoader)
                 getFieldIdMessage = Unobfuscator.loadSetEditMessageField(classLoader)
-                val deviceJidClass = Unobfuscator.findFirstClassUsingName(
-                    classLoader,
-                    StringMatchType.EndsWith,
-                    "jid.DeviceJid"
-                )
+                val deviceJidClass =
+                    Unobfuscator.findFirstClassUsingName(
+                        classLoader,
+                        StringMatchType.EndsWith,
+                        "jid.DeviceJid",
+                    )
                 deviceJidField =
-                    ReflectionUtils.findFieldUsingFilter(TYPE) { field -> field.type == deviceJidClass }
+                    ReflectionUtils.findFieldUsingFilter(type) { field -> field.type == deviceJidClass }
                 mediaTypeField = Unobfuscator.loadMediaTypeField(classLoader)
                 getOriginalMessageKey = Unobfuscator.loadOriginalMessageKey(classLoader)
                 abstractMediaMessageClass = Unobfuscator.loadAbstractMediaMessageClass(classLoader)
@@ -65,7 +76,10 @@ class FMessageWpp(fMessage: Any?) {
 
         @JvmStatic
         @Throws(Exception::class)
-        fun checkUnsafeIsFMessage(classLoader: ClassLoader, clazz: Class<*>): Boolean {
+        fun checkUnsafeIsFMessage(
+            classLoader: ClassLoader,
+            clazz: Class<*>,
+        ): Boolean {
             val fmessageClass = Unobfuscator.loadFMessageClass(classLoader)
             if (fmessageClass.isAssignableFrom(clazz)) return true
             val interfaces = fmessageClass.interfaces
@@ -80,8 +94,9 @@ class FMessageWpp(fMessage: Any?) {
 
     init {
         if (fMessage == null) throw RuntimeException("Object fMessage is null")
-        if (!TYPE.isInstance(fMessage))
+        if (!type.isInstance(fMessage)) {
             throw RuntimeException("Object fMessage is not a FMessage Instance")
+        }
         this.fmessage = fMessage
     }
 
@@ -115,7 +130,6 @@ class FMessageWpp(fMessage: Any?) {
             }
         }
 
-
     val key: Key by lazy {
         Key(keyMessage?.get(fmessage), this)
     }
@@ -134,9 +148,7 @@ class FMessageWpp(fMessage: Any?) {
             }
         }
 
-    fun getObject(): Any {
-        return fmessage
-    }
+    fun getObject(): Any = fmessage
 
     val messageStr: String?
         get() {
@@ -239,7 +251,7 @@ class FMessageWpp(fMessage: Any?) {
             /**
              * The class type of the key object.
              */
-            lateinit var TYPE: Class<*>
+            lateinit var type: Class<*>
         }
 
         /**
@@ -300,13 +312,13 @@ class FMessageWpp(fMessage: Any?) {
             this.messageID = messageID
             this.isFromMe = isFromMe
             this.remoteJid = remoteJid
-            var keyObj = XposedHelpers.newInstance(TYPE, remoteJid.userJid, messageID, isFromMe)
+            var keyObj = XposedHelpers.newInstance(type, remoteJid.userJid, messageID, isFromMe)
             var fmessageObj = ModuleRuntime.getFMessageFromKey(keyObj)
             if (fmessageObj != null) {
                 this.thisObject = keyObj
                 this.fMessage = FMessageWpp(fmessageObj)
             } else {
-                keyObj = XposedHelpers.newInstance(TYPE, remoteJid.phoneJid, messageID, isFromMe)
+                keyObj = XposedHelpers.newInstance(type, remoteJid.phoneJid, messageID, isFromMe)
                 fmessageObj = ModuleRuntime.getFMessageFromKey(keyObj)
                 if (fmessageObj != null) {
                     this.thisObject = keyObj
@@ -315,64 +327,64 @@ class FMessageWpp(fMessage: Any?) {
             }
         }
 
-        override fun toString(): String {
-            return "Key{" +
-                    "thisObject=" + thisObject +
-                    ", messageID='" + messageID + '\'' +
-                    ", isFromMe=" + isFromMe +
-                    ", remoteJid=" + remoteJid +
-                    '}'
-        }
+        override fun toString(): String =
+            "Key{" +
+                "thisObject=" + thisObject +
+                ", messageID='" + messageID + '\'' +
+                ", isFromMe=" + isFromMe +
+                ", remoteJid=" + remoteJid +
+                '}'
     }
 
-    override fun toString(): String {
-        return "FMessageWpp{" +
-                "fmessage=" + fmessage +
-                " key = " + key +
-                " }"
-    }
+    override fun toString(): String =
+        "FMessageWpp{" +
+            "fmessage=" + fmessage +
+            " key = " + key +
+            " }"
 
     class UserJid {
         companion object {
-            lateinit var TYPE_DEVICEJID: Class<*>
+            lateinit var typeDevicejid: Class<*>
 
-            lateinit var TYPE_USERJID: Class<*>
+            lateinit var typeUserjid: Class<*>
 
-            lateinit var TYPE_JID: Class<*>
+            lateinit var typeJid: Class<*>
 
-            lateinit var TYPE_PHONEUSERJID: Class<*>
+            lateinit var typePhoneuserjid: Class<*>
 
-            private fun checkValidLID(lid: String?): Boolean {
-                return lid != null && lid.endsWith("@lid")
-            }
+            private fun checkValidLID(lid: String?): Boolean = lid != null && lid.endsWith("@lid")
 
             fun initialize(classLoader: ClassLoader) {
-                TYPE_USERJID = Unobfuscator.findFirstClassUsingName(
-                    classLoader,
-                    StringMatchType.EndsWith,
-                    "jid.UserJid"
-                )
-                TYPE_JID = Unobfuscator.findFirstClassUsingName(
-                    classLoader,
-                    StringMatchType.EndsWith,
-                    "jid.Jid"
-                )
+                typeUserjid =
+                    Unobfuscator.findFirstClassUsingName(
+                        classLoader,
+                        StringMatchType.EndsWith,
+                        "jid.UserJid",
+                    )
+                typeJid =
+                    Unobfuscator.findFirstClassUsingName(
+                        classLoader,
+                        StringMatchType.EndsWith,
+                        "jid.Jid",
+                    )
                 val convertLidToJid = Unobfuscator.loadConvertLidToJid(classLoader)
-                TYPE_PHONEUSERJID = convertLidToJid.returnType
+                typePhoneuserjid = convertLidToJid.returnType
 
-                TYPE_DEVICEJID = Unobfuscator.findFirstClassUsingName(
-                    classLoader,
-                    StringMatchType.EndsWith,
-                    "jid.DeviceJid"
-                )
+                typeDevicejid =
+                    Unobfuscator.findFirstClassUsingName(
+                        classLoader,
+                        StringMatchType.EndsWith,
+                        "jid.DeviceJid",
+                    )
             }
 
             fun forceConverter(lidOrJid: Any?): UserJid {
-                val raw = try {
-                    XposedHelpers.callMethod(lidOrJid, "getRawString") as? String
-                } catch (ignored: Throwable) {
-                    null
-                }
+                val raw =
+                    try {
+                        XposedHelpers.callMethod(lidOrJid, "getRawString") as? String
+                    } catch (ignored: Throwable) {
+                        null
+                    }
                 raw?.let {
                     val rawJidSanitized = raw.replaceFirst("\\.[\\d:]+@".toRegex(), "@")
                     if (checkValidLID(rawJidSanitized)) {
@@ -381,7 +393,6 @@ class FMessageWpp(fMessage: Any?) {
                 }
                 return UserJid()
             }
-
         }
 
         @JvmField
@@ -389,7 +400,6 @@ class FMessageWpp(fMessage: Any?) {
 
         @JvmField
         var userJid: Any? = null
-
 
         constructor()
 
@@ -450,8 +460,9 @@ class FMessageWpp(fMessage: Any?) {
                     if (str == null) return null
                     if (str.contains(".") && str.contains("@") && str.indexOf(".") < str.indexOf("@")) {
                         return str.substring(0, str.indexOf("."))
-                    } else if (str.contains("@g.us") || str.contains("@s.whatsapp.net") || str.contains(
-                            "@broadcast"
+                    } else if (str.contains("@g.us") || str.contains("@s.whatsapp.net") ||
+                        str.contains(
+                            "@broadcast",
                         ) || str.contains("@lid")
                     ) {
                         return str.substring(0, str.indexOf("@"))
@@ -511,11 +522,10 @@ class FMessageWpp(fMessage: Any?) {
                 return this.phoneJid == null && this.userJid == null
             }
 
-        override fun toString(): String {
-            return "UserJid{" +
-                    "PhoneJid=" + phoneJid +
-                    ", UserJid=" + userJid +
-                    '}'
-        }
+        override fun toString(): String =
+            "UserJid{" +
+                "PhoneJid=" + phoneJid +
+                ", UserJid=" + userJid +
+                '}'
     }
 }

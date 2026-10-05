@@ -27,10 +27,11 @@ import java.io.File
 import java.io.IOException
 import java.util.LinkedHashSet
 
-class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListener {
-
-    private var _binding: FragmentRecordingsBinding? = null
-    private val binding get() = _binding!!
+class RecordingsFragment :
+    Fragment(),
+    RecordingsAdapter.OnRecordingActionListener {
+    private var currentBinding: FragmentRecordingsBinding? = null
+    private val binding get() = currentBinding!!
 
     private lateinit var adapter: RecordingsAdapter
     private val allRecordings = ArrayList<Recording>()
@@ -40,13 +41,16 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentRecordingsBinding.inflate(inflater, container, false)
+        currentBinding = FragmentRecordingsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         adapter = RecordingsAdapter(this)
@@ -71,7 +75,7 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
 
     override fun onResume() {
         super.onResume()
-        if (_binding == null) return
+        if (currentBinding == null) return
         loadRecordings()
     }
 
@@ -83,10 +87,14 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
         val dirs = ArrayList<File>()
         val addedPaths = LinkedHashSet<String>()
 
-        addBaseDir(dirs, addedPaths, File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "WA Call Recordings"
-        ))
+        addBaseDir(
+            dirs,
+            addedPaths,
+            File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "WA Call Recordings",
+            ),
+        )
 
         if (!configuredPath.isNullOrEmpty()) {
             addBaseDir(dirs, addedPaths, File(configuredPath, "WA Call Recordings"))
@@ -99,23 +107,26 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
         return dirs
     }
 
-    private fun addBaseDir(dirs: MutableList<File>, addedPaths: MutableSet<String>, dir: File) {
+    private fun addBaseDir(
+        dirs: MutableList<File>,
+        addedPaths: MutableSet<String>,
+        dir: File,
+    ) {
         val normalizedPath = normalizePath(dir)
         if (addedPaths.add(normalizedPath)) {
             dirs.add(dir)
         }
     }
 
-    private fun normalizePath(dir: File): String {
-        return try {
+    private fun normalizePath(dir: File): String =
+        try {
             dir.canonicalPath
         } catch (ignored: IOException) {
             dir.absolutePath
         }
-    }
 
     private fun loadRecordings() {
-        if (_binding == null) return
+        if (currentBinding == null) return
 
         binding.swipeRefresh.isRefreshing = true
         val baseDirs = getBaseDirs()
@@ -131,7 +142,7 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
             applySort(loaded)
 
             withContext(Dispatchers.Main) {
-                if (_binding == null) return@withContext
+                if (currentBinding == null) return@withContext
                 allRecordings.clear()
                 allRecordings.addAll(loaded)
                 binding.swipeRefresh.isRefreshing = false
@@ -148,7 +159,10 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
         }
     }
 
-    private fun traverseDirectory(dir: File, result: MutableList<Recording>) {
+    private fun traverseDirectory(
+        dir: File,
+        result: MutableList<Recording>,
+    ) {
         val files = dir.listFiles() ?: return
         for (file in files) {
             if (file.isDirectory) {
@@ -196,7 +210,8 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
     }
 
     override fun onDelete(recording: Recording) {
-        AlertDialog.Builder(requireContext())
+        AlertDialog
+            .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
             .setMessage(recording.file.name)
             .setPositiveButton(android.R.string.yes) { _, _ ->
@@ -210,28 +225,32 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
                         }
                     }
                 }
-            }
-            .setNegativeButton(android.R.string.no, null)
+            }.setNegativeButton(android.R.string.no, null)
             .show()
     }
 
-    override fun onLongPress(recording: Recording, position: Int) {
+    override fun onLongPress(
+        recording: Recording,
+        position: Int,
+    ) {
         adapter.setSelectionMode(true)
         adapter.toggleSelection(position)
     }
 
     private fun shareRecording(file: File) {
         try {
-            val uri = FileProvider.getUriForFile(
-                requireContext(),
-                requireContext().packageName + ".fileprovider",
-                file
-            )
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "audio/*"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            val uri =
+                FileProvider.getUriForFile(
+                    requireContext(),
+                    requireContext().packageName + ".fileprovider",
+                    file,
+                )
+            val intent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "audio/*"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             startActivity(Intent.createChooser(intent, getString(R.string.share_recording)))
         } catch (e: Exception) {
             Toast.makeText(requireContext(), "Error sharing: " + e.message, Toast.LENGTH_SHORT).show()
@@ -251,21 +270,24 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
         val uris = ArrayList<Uri>()
         for (rec in selected) {
             try {
-                val uri = FileProvider.getUriForFile(
-                    requireContext(),
-                    requireContext().packageName + ".fileprovider",
-                    rec.file
-                )
+                val uri =
+                    FileProvider.getUriForFile(
+                        requireContext(),
+                        requireContext().packageName + ".fileprovider",
+                        rec.file,
+                    )
                 uris.add(uri)
-            } catch (ignored: Exception) {}
+            } catch (ignored: Exception) {
+            }
         }
 
         if (uris.isNotEmpty()) {
-            val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-                type = "audio/*"
-                putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            val intent =
+                Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                    type = "audio/*"
+                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             startActivity(Intent.createChooser(intent, getString(R.string.share_recordings)))
         }
         adapter.clearSelection()
@@ -275,7 +297,8 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
         val selected = adapter.selectedRecordings
         if (selected.isEmpty()) return
 
-        AlertDialog.Builder(requireContext())
+        AlertDialog
+            .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
             .setMessage(getString(R.string.delete_multiple_confirmation, selected.size))
             .setPositiveButton(android.R.string.yes) { _, _ ->
@@ -292,13 +315,12 @@ class RecordingsFragment : Fragment(), RecordingsAdapter.OnRecordingActionListen
                         loadRecordings()
                     }
                 }
-            }
-            .setNegativeButton(android.R.string.no, null)
+            }.setNegativeButton(android.R.string.no, null)
             .show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        currentBinding = null
     }
 }

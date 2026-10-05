@@ -17,7 +17,6 @@ import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
-import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import com.wax.module.ModuleEntryPoint
 import com.wax.module.utils.IColors
@@ -25,14 +24,11 @@ import com.wax.module.xposed.core.ModuleRuntime
 import de.robv.android.xposed.XposedBridge
 
 object DesignUtils {
-
     private var mPrefs: SharedPreferences? = null
 
     @SuppressLint("UseCompatLoadingForDrawables")
     @JvmStatic
-    fun getDrawable(id: Int): Drawable {
-        return Utils.application.getDrawable(id)!!
-    }
+    fun getDrawable(id: Int): Drawable = Utils.application.getDrawable(id)!!
 
     @JvmStatic
     fun getDrawableByName(name: String): Drawable? {
@@ -42,7 +38,10 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun getIconByName(name: String, isTheme: Boolean): Drawable? {
+    fun getIconByName(
+        name: String,
+        isTheme: Boolean,
+    ): Drawable? {
         val id = Utils.getID(name, "drawable")
         if (id == 0) return null
         val icon = getDrawable(id)
@@ -53,7 +52,10 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun coloredDrawable(drawable: Drawable, color: Int): Drawable {
+    fun coloredDrawable(
+        drawable: Drawable,
+        color: Int,
+    ): Drawable {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             drawable.colorFilter = BlendModeColorFilter(color, BlendMode.SRC_ATOP)
         } else {
@@ -65,36 +67,46 @@ object DesignUtils {
 
     @SuppressLint("UseCompatLoadingForDrawables")
     @JvmStatic
-    fun alphaDrawable(drawable: Drawable, primaryTextColor: Int, i: Int): Drawable {
+    fun alphaDrawable(
+        drawable: Drawable,
+        primaryTextColor: Int,
+        i: Int,
+    ): Drawable {
         val coloredDrawable = coloredDrawable(drawable, primaryTextColor)
         coloredDrawable.alpha = i
         return coloredDrawable
     }
 
     @JvmStatic
-    fun createDrawable(type: String, color: Int): Drawable {
-        return when (type) {
+    fun createDrawable(
+        type: String,
+        color: Int,
+    ): Drawable =
+        when (type) {
             "rc_dialog_bg" -> {
                 val border = Utils.dipToPixels(12.0f).toFloat()
-                val shapeDrawable = ShapeDrawable(
-                    RoundRectShape(floatArrayOf(border, border, border, border, 0f, 0f, 0f, 0f), null, null)
-                )
+                val shapeDrawable =
+                    ShapeDrawable(
+                        RoundRectShape(floatArrayOf(border, border, border, border, 0f, 0f, 0f, 0f), null, null),
+                    )
                 shapeDrawable.paint.color = color
                 shapeDrawable
             }
             "selector_bg" -> {
                 val border = Utils.dipToPixels(18.0f).toFloat()
-                val selectorBg = ShapeDrawable(
-                    RoundRectShape(floatArrayOf(border, border, border, border, border, border, border, border), null, null)
-                )
+                val selectorBg =
+                    ShapeDrawable(
+                        RoundRectShape(floatArrayOf(border, border, border, border, border, border, border, border), null, null),
+                    )
                 selectorBg.paint.color = color
                 selectorBg
             }
             "rc_dotline_dialog" -> {
                 val border = Utils.dipToPixels(16.0f).toFloat()
-                val shapeDrawable = ShapeDrawable(
-                    RoundRectShape(floatArrayOf(border, border, border, border, border, border, border, border), null, null)
-                )
+                val shapeDrawable =
+                    ShapeDrawable(
+                        RoundRectShape(floatArrayOf(border, border, border, border, border, border, border, border), null, null),
+                    )
                 shapeDrawable.paint.color = color
                 shapeDrawable
             }
@@ -113,7 +125,6 @@ object DesignUtils {
             }
             else -> ColorDrawable(Color.BLACK)
         }
-    }
 
     @JvmStatic
     fun getPrimaryTextColor(): Int {
@@ -180,27 +191,29 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun setReplacementDrawable(name: String, replacement: Drawable?) {
-        if (ModuleEntryPoint.ResParam == null) return
-        ModuleEntryPoint.ResParam!!.res.setReplacement(
-            Utils.application.packageName, "drawable", name,
+    fun setReplacementDrawable(
+        name: String,
+        replacement: Drawable?,
+    ) {
+        if (ModuleEntryPoint.resParam == null) return
+        ModuleEntryPoint.resParam!!.res.setReplacement(
+            Utils.application.packageName,
+            "drawable",
+            name,
             object : XResources.DrawableLoader() {
-                override fun newDrawable(res: XResources, id: Int): Drawable {
-                    return replacement!!
-                }
-            }
+                override fun newDrawable(
+                    res: XResources,
+                    id: Int,
+                ): Drawable = replacement!!
+            },
         )
     }
 
     @JvmStatic
-    fun isNightMode(): Boolean {
-        return if (ModuleRuntime.getDefaultTheme() <= 0) isNightModeBySystem() else ModuleRuntime.getDefaultTheme() == 2
-    }
+    fun isNightMode(): Boolean = if (ModuleRuntime.getDefaultTheme() <= 0) isNightModeBySystem() else ModuleRuntime.getDefaultTheme() == 2
 
     @JvmStatic
-    fun isNightModeBySystem(): Boolean {
-        return (Utils.application.resources.configuration.uiMode and 48) == 32
-    }
+    fun isNightModeBySystem(): Boolean = (Utils.application.resources.configuration.uiMode and 48) == 32
 
     @JvmStatic
     fun setPrefs(prefs: SharedPreferences) {
@@ -208,14 +221,13 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun isValidColor(primaryColor: String?): Boolean {
-        return try {
+    fun isValidColor(primaryColor: String?): Boolean =
+        try {
             Color.parseColor(primaryColor)
             true
         } catch (_: Exception) {
             false
         }
-    }
 
     @JvmStatic
     fun checkSystemColor(color: String?): String {
@@ -263,10 +275,12 @@ object DesignUtils {
         if (drawable is BitmapDrawable) {
             return drawable.bitmap
         }
-        val bitmap = Bitmap.createBitmap(
-            drawable.intrinsicWidth, drawable.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
+        val bitmap =
+            Bitmap.createBitmap(
+                drawable.intrinsicWidth,
+                drawable.intrinsicHeight,
+                Bitmap.Config.ARGB_8888,
+            )
         val canvas = Canvas(bitmap)
         drawable.setBounds(0, 0, canvas.width, canvas.height)
         drawable.draw(canvas)
@@ -288,7 +302,10 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun colorDistance(color1: Int, color2: Int): Double {
+    fun colorDistance(
+        color1: Int,
+        color2: Int,
+    ): Double {
         val r1 = Color.red(color1)
         val g1 = Color.green(color1)
         val b1 = Color.blue(color1)
@@ -296,14 +313,21 @@ object DesignUtils {
         val g2 = Color.green(color2)
         val b2 = Color.blue(color2)
         return Math.sqrt(
-            (Math.pow((r1 - r2).toDouble(), 2.0)
-                    + Math.pow((g1 - g2).toDouble(), 2.0)
-                    + Math.pow((b1 - b2).toDouble(), 2.0))
+            (
+                Math.pow((r1 - r2).toDouble(), 2.0) +
+                    Math.pow((g1 - g2).toDouble(), 2.0) +
+                    Math.pow((b1 - b2).toDouble(), 2.0)
+            ),
         )
     }
 
     @JvmStatic
-    fun replaceColor(bitmap: Bitmap, oldColor: Int, newColor: Int, threshold: Double): Bitmap {
+    fun replaceColor(
+        bitmap: Bitmap,
+        oldColor: Int,
+        newColor: Int,
+        threshold: Double,
+    ): Bitmap {
         val newBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
         for (y in 0 until newBitmap.height) {
             for (x in 0 until newBitmap.width) {
@@ -317,7 +341,11 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun resizeDrawable(icon: Drawable, width: Int, height: Int): Drawable {
+    fun resizeDrawable(
+        icon: Drawable,
+        width: Int,
+        height: Int,
+    ): Drawable {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         icon.setBounds(0, 0, canvas.width, canvas.height)

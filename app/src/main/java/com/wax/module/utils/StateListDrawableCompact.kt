@@ -13,11 +13,12 @@ object StateListDrawableCompact {
     fun getStateCount(stateListDrawable: StateListDrawable): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return stateListDrawable.stateCount
         return try {
-            val method = XposedHelpers.findMethodBestMatch(
-                drawableClass,
-                "getStateCount",
-                *emptyArray<Class<*>>()
-            )
+            val method =
+                XposedHelpers.findMethodBestMatch(
+                    drawableClass,
+                    "getStateCount",
+                    *emptyArray<Class<*>>(),
+                )
             val result = method?.invoke(stateListDrawable)
             result as? Int ?: 0
         } catch (exception: Exception) {
@@ -27,14 +28,18 @@ object StateListDrawableCompact {
     }
 
     @JvmStatic
-    fun getStateDrawable(stateListDrawable: StateListDrawable, index: Int): Drawable? {
+    fun getStateDrawable(
+        stateListDrawable: StateListDrawable,
+        index: Int,
+    ): Drawable? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return stateListDrawable.getStateDrawable(index)
         return try {
-            val method = XposedHelpers.findMethodBestMatch(
-                drawableClass,
-                "getStateDrawable",
-                Int::class.javaPrimitiveType
-            )
+            val method =
+                XposedHelpers.findMethodBestMatch(
+                    drawableClass,
+                    "getStateDrawable",
+                    Int::class.javaPrimitiveType,
+                )
             method?.invoke(stateListDrawable, index) as? Drawable
         } catch (exception: Exception) {
             XposedBridge.log(exception)

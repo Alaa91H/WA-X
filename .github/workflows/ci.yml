@@ -174,16 +174,13 @@ jobs:
       - name: Assemble debug APKs and run the unit tests
         run: |
           ./gradlew $GRADLE_ARGS \
-            assembleWhatsappDebug \
-            assembleBusinessDebug \
-            testWhatsappDebugUnitTest \
-            testBusinessDebugUnitTest
+            assembleDebug \
+            testDebugUnitTest
 
       - name: Run Android lint
         run: |
           ./gradlew $GRADLE_ARGS --continue \
-            lintWhatsappDebug \
-            lintBusinessDebug
+            lintDebug
 
       # The reference baseline is taken from the base revision (pull-request base
       # branch, pre-push commit or HEAD^), never from this change's own copy, so a
@@ -273,34 +270,32 @@ jobs:
 
           mkdir -p dist
 
+          # WA X ships one APK that hooks both WhatsApp builds, so there is exactly
+          # one output to stage and one asset to publish. The name is deterministic:
+          # the release uses the version alone, a branch run adds the commit so a test
+          # build is never mistaken for a release.
           if [[ "$IS_TAG" == "true" ]]; then
             ./gradlew $GRADLE_ARGS clean \
-              assembleWhatsappRelease \
-              assembleBusinessRelease \
+              assembleRelease \
               -PreleaseTag="$RELEASE_TAG"
             SOURCE_VARIANT=release
-            WA_NAME="WA-X-$VERSION.apk"
-            WB_NAME="WA-X-Business-$VERSION.apk"
+            APK_NAME="WA-X-v$VERSION.apk"
           else
             SOURCE_VARIANT=debug
             SHA8="${GITHUB_SHA:0:8}"
-            WA_NAME="WA-X-$VERSION-ci-$SHA8.apk"
-            WB_NAME="WA-X-Business-$VERSION-ci-$SHA8.apk"
+            APK_NAME="WA-X-$VERSION-ci-$SHA8.apk"
           fi
 
-          for flavor in whatsapp business; do
-            mapfile -t found < <(
-              find "app/build/outputs/apk/$flavor/$SOURCE_VARIANT" -maxdepth 1 -type f -name '*.apk' | sort
-            )
-            if [[ "${#found[@]}" -ne 1 ]]; then
-              echo "::error::Expected exactly one $SOURCE_VARIANT APK for the $flavor flavor, found ${#found[@]}"
-              printf '%s\n' "${found[@]:-none}"
-              exit 1
-            fi
-          done
+          mapfile -t found < <(
+            find "app/build/outputs/apk/$SOURCE_VARIANT" -maxdepth 1 -type f -name '*.apk' | sort
+          )
+          if [[ "${#found[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one $SOURCE_VARIANT APK, found ${#found[@]}"
+            printf '%s\n' "${found[@]:-none}"
+            exit 1
+          fi
 
-          cp "app/build/outputs/apk/whatsapp/$SOURCE_VARIANT"/*.apk "dist/$WA_NAME"
-          cp "app/build/outputs/apk/business/$SOURCE_VARIANT"/*.apk "dist/$WB_NAME"
+          cp "${found[0]}" "dist/$APK_NAME"
 
           # The staging directory is the release payload. Anything else in it,
           # including mapping files, reports or logs, would end up published.
@@ -309,8 +304,8 @@ jobs:
             find dist -maxdepth 1 -type f -print
             exit 1
           fi
-          if [[ "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -ne 2 ]]; then
-            echo "::error::Expected exactly two staged APKs"
+          if [[ "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -ne 1 ]]; then
+            echo "::error::Expected exactly one staged APK"
             find dist -maxdepth 1 -type f -print
             exit 1
           fi
@@ -428,8 +423,7 @@ jobs:
           {
             echo "version=$VERSION"
             echo "tag=$TAG"
-            echo "wa_name=WA-X-$VERSION.apk"
-            echo "wb_name=WA-X-Business-$VERSION.apk"
+            echo "apk_name=WA-X-v$VERSION.apk"
           } >> "$GITHUB_OUTPUT"
 
       - name: Download the signed APKs from this run
@@ -441,8 +435,7 @@ jobs:
       - name: Validate the release payload
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          WA_NAME: ${{ steps.version.outputs.wa_name }}
-          WB_NAME: ${{ steps.version.outputs.wb_name }}
+          APK_NAME: ${{ steps.version.outputs.apk_name }}
         shell: bash
         run: |
           set -euo pipefail
@@ -459,19 +452,17 @@ jobs:
           fi
 
           mapfile -t apks < <(find dist -maxdepth 1 -type f -name '*.apk' | sort)
-          if [[ "${#apks[@]}" -ne 2 ]]; then
-            echo "::error::Expected exactly two APKs for the release, found ${#apks[@]}"
+          if [[ "${#apks[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one APK for the release, found ${#apks[@]}"
             printf '%s\n' "${apks[@]:-none}"
             exit 1
           fi
 
-          for expected in "$WA_NAME" "$WB_NAME"; do
-            if [[ ! -f "dist/$expected" ]]; then
-              echo "::error::Missing expected release asset: $expected"
-              ls -1 dist
-              exit 1
-            fi
-          done
+          if [[ ! -f "dist/$APK_NAME" ]]; then
+            echo "::error::Missing expected release asset: $APK_NAME"
+            ls -1 dist
+            exit 1
+          fi
 
           if ! grep -qF "WA X $VERSION" changelog.txt; then
             echo "::error::changelog.txt does not announce WA X $VERSION"

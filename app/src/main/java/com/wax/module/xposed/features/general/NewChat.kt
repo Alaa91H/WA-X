@@ -1,15 +1,15 @@
 package com.wax.module.xposed.features.general
 
 import android.app.Activity
-import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
+import android.content.SharedPreferences
 import android.text.InputType
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.core.net.toUri
 import com.wax.module.R
 import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.ModuleRuntime.homeActivityClass
@@ -17,12 +17,12 @@ import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedHelpers
-import androidx.core.net.toUri
 
-class NewChat(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class NewChat(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     override fun doHook() {
         val homeActivity = homeActivityClass
         val action = prefs.getBoolean("buttonaction", true)
@@ -53,28 +53,30 @@ class NewChat(loader: ClassLoader, preferences:SharedPreferences) : Feature(load
                     item.setOnMenuItemClickListener {
                         val view = LinearLayout(activity)
                         view.gravity = Gravity.CENTER
-                        view.layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT
-                        )
-                        val edt = EditText(view.context).apply {
-                            layoutParams = LinearLayout.LayoutParams(
+                        view.layoutParams =
+                            LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                1.0f
                             )
-                            inputType = InputType.TYPE_CLASS_PHONE
-                            transformationMethod = null
-                            setHint(R.string.number_with_country_code)
-                            view.addView(this)
-                        }
-
+                        val edt =
+                            EditText(view.context).apply {
+                                layoutParams =
+                                    LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        1.0f,
+                                    )
+                                inputType = InputType.TYPE_CLASS_PHONE
+                                transformationMethod = null
+                                setHint(R.string.number_with_country_code)
+                                view.addView(this)
+                            }
 
                         AlertDialogWpp(activity)
                             .setTitle(activity.getString(R.string.new_chat))
                             .setView(view)
                             .setPositiveButton(
-                                activity.getString(R.string.message)
+                                activity.getString(R.string.message),
                             ) { _, _ ->
                                 val number = edt.text.toString()
                                 val numberFomatted =
@@ -83,16 +85,14 @@ class NewChat(loader: ClassLoader, preferences:SharedPreferences) : Feature(load
                                 intent.data = ("https://wa.me/$numberFomatted").toUri()
                                 intent.setPackage(Utils.application.packageName)
                                 activity.startActivity(intent)
-                            }
-                            .setNegativeButton(activity.getString(R.string.cancel), null)
+                            }.setNegativeButton(activity.getString(R.string.cancel), null)
                             .show()
                         true
                     }
                 }
-            })
+            },
+        )
     }
 
-    public override fun getPluginName(): String {
-        return "New Chat"
-    }
+    public override fun getPluginName(): String = "New Chat"
 }

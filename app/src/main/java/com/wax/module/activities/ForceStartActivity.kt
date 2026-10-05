@@ -11,7 +11,8 @@ class ForceStartActivity : Activity() {
 
         when (val targetPackage = intent.getStringExtra("pkg")) {
             FeatureLoader.PACKAGE_WPP,
-            FeatureLoader.PACKAGE_BUSINESS -> {
+            FeatureLoader.PACKAGE_BUSINESS,
+            -> {
                 packageManager.getLaunchIntentForPackage(targetPackage)?.let { launchIntent ->
                     launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(launchIntent)

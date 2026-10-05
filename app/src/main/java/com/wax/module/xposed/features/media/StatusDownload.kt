@@ -20,40 +20,56 @@ import com.wax.module.xposed.utils.Utils
 import org.luckypray.dexkit.query.enums.StringMatchType
 import java.io.File
 
-class StatusDownload(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class StatusDownload(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun doHook() {
         if (!prefs.getBoolean("downloadstatus", false)) return
 
-        val downloadStatus = object : MenuStatusProvider.Provider {
-            override fun addMenu(menu: Menu, statusData: MenuStatusProvider.StatusData): MenuItem? {
-                if (menu.findItem(R.string.download) != null) return null
-                val item = statusData.currentItem
-                if (item.isFromMe) return null
-                if (!item.isMediaFile) return null
-                return menu.add(0, R.string.download, 0, R.string.download)
-            }
+        val downloadStatus =
+            object : MenuStatusProvider.Provider {
+                override fun addMenu(
+                    menu: Menu,
+                    statusData: MenuStatusProvider.StatusData,
+                ): MenuItem? {
+                    if (menu.findItem(R.string.download) != null) return null
+                    val item = statusData.currentItem
+                    if (item.isFromMe) return null
+                    if (!item.isMediaFile) return null
+                    return menu.add(0, R.string.download, 0, R.string.download)
+                }
 
-            override fun onClick(item: MenuItem, statusData: MenuStatusProvider.StatusData) {
-                downloadFile(statusData.currentItem)
+                override fun onClick(
+                    item: MenuItem,
+                    statusData: MenuStatusProvider.StatusData,
+                ) {
+                    downloadFile(statusData.currentItem)
+                }
             }
-        }
         MenuStatusProvider.register(downloadStatus)
 
-        val sharedMenu = object : MenuStatusProvider.Provider {
-            override fun addMenu(menu: Menu, statusData: MenuStatusProvider.StatusData): MenuItem? {
-                val item = statusData.currentItem
-                if (item.isFromMe) return null
-                if (menu.findItem(R.string.share_as_status) != null) return null
-                return menu.add(0, R.string.share_as_status, 0, R.string.share_as_status)
-            }
+        val sharedMenu =
+            object : MenuStatusProvider.Provider {
+                override fun addMenu(
+                    menu: Menu,
+                    statusData: MenuStatusProvider.StatusData,
+                ): MenuItem? {
+                    val item = statusData.currentItem
+                    if (item.isFromMe) return null
+                    if (menu.findItem(R.string.share_as_status) != null) return null
+                    return menu.add(0, R.string.share_as_status, 0, R.string.share_as_status)
+                }
 
-            override fun onClick(item: MenuItem, statusData: MenuStatusProvider.StatusData) {
-                sharedStatus(statusData.currentItem)
+                override fun onClick(
+                    item: MenuItem,
+                    statusData: MenuStatusProvider.StatusData,
+                ) {
+                    sharedStatus(statusData.currentItem)
+                }
             }
-        }
         MenuStatusProvider.register(sharedMenu)
     }
 
@@ -66,7 +82,8 @@ class StatusDownload(loader: ClassLoader, preferences:SharedPreferences) : Featu
                 try {
                     clazz = Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "TextStatusComposerActivity")
                 } catch (ignored: Exception) {
-                    clazz = Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "ConsolidatedStatusComposerActivity")
+                    clazz =
+                        Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "ConsolidatedStatusComposerActivity")
                     intent.putExtra("status_composer_mode", 2)
                 }
                 intent.setClassName(Utils.application.packageName, clazz.name)
@@ -83,11 +100,12 @@ class StatusDownload(loader: ClassLoader, preferences:SharedPreferences) : Featu
                         Utils.showToast(Utils.getString(R.string.download_not_available), Toast.LENGTH_SHORT)
                         return@execute
                     }
-                    val clazz = Unobfuscator.findFirstClassUsingName(
-                        classLoader,
-                        StringMatchType.EndsWith,
-                        "MediaComposerActivity"
-                    )
+                    val clazz =
+                        Unobfuscator.findFirstClassUsingName(
+                            classLoader,
+                            StringMatchType.EndsWith,
+                            "MediaComposerActivity",
+                        )
 
                     mainHandler.post {
                         val intent = Intent()
@@ -101,7 +119,6 @@ class StatusDownload(loader: ClassLoader, preferences:SharedPreferences) : Featu
                     Utils.showToast(e.message, Toast.LENGTH_SHORT)
                 }
             }
-
         } catch (e: Throwable) {
             Utils.showToast(e.message, Toast.LENGTH_SHORT)
         }
@@ -132,21 +149,20 @@ class StatusDownload(loader: ClassLoader, preferences:SharedPreferences) : Featu
         }
     }
 
-    override fun getPluginName(): String {
-        return "Download Status"
-    }
+    override fun getPluginName(): String = "Download Status"
 
     @Throws(Exception::class)
     private fun getStatusDestination(f: File): String {
         val fileName = f.name.lowercase()
         val mimeType = MimeTypeUtils.getMimeTypeFromExtension(fileName)
 
-        val folderPath = when {
-            mimeType.contains("video") -> "Status Videos"
-            mimeType.contains("image") -> "Status Images"
-            mimeType.contains("audio") -> "Status Sounds"
-            else -> "Status Media"
-        }
+        val folderPath =
+            when {
+                mimeType.contains("video") -> "Status Videos"
+                mimeType.contains("image") -> "Status Images"
+                mimeType.contains("audio") -> "Status Sounds"
+                else -> "Status Media"
+            }
 
         return Utils.getDestination(folderPath)
     }

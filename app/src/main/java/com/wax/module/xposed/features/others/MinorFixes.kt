@@ -1,7 +1,6 @@
 package com.wax.module.xposed.features.others
 
 import android.app.Activity
-import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.ContentProvider
 import android.content.SharedPreferences
@@ -11,7 +10,10 @@ import com.wax.module.xposed.core.Feature
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 
-class MinorFixes(classLoader: ClassLoader, prefs: SharedPreferences) : Feature(classLoader, prefs) {
+class MinorFixes(
+    classLoader: ClassLoader,
+    prefs: SharedPreferences,
+) : Feature(classLoader, prefs) {
     private val mlKitInitLock = Any()
     private var mlKitInitProviderHandled = false
 
@@ -26,7 +28,8 @@ class MinorFixes(classLoader: ClassLoader, prefs: SharedPreferences) : Feature(c
                     if (activity.javaClass.name != DOCUMENT_PICKER_ACTIVITY) return
                     ensureMlKitInitialized(activity)
                 }
-            })
+            },
+        )
     }
 
     private fun ensureMlKitInitialized(activity: Activity) {
@@ -34,25 +37,30 @@ class MinorFixes(classLoader: ClassLoader, prefs: SharedPreferences) : Feature(c
             if (mlKitInitProviderHandled) return
 
             try {
-                val providerClass = Class.forName(
-                    ML_KIT_INIT_PROVIDER,
-                    true,
-                    activity.classLoader
-                )
-                val provider = providerClass.getDeclaredConstructor()
-                    .newInstance() as ContentProvider
-                val providerInfo = activity.packageManager.getProviderInfo(
-                    ComponentName(activity.packageName, ML_KIT_INIT_PROVIDER),
-                    PackageManager.GET_META_DATA
-                )
+                val providerClass =
+                    Class.forName(
+                        ML_KIT_INIT_PROVIDER,
+                        true,
+                        activity.classLoader,
+                    )
+                val provider =
+                    providerClass
+                        .getDeclaredConstructor()
+                        .newInstance() as ContentProvider
+                val providerInfo =
+                    activity.packageManager.getProviderInfo(
+                        ComponentName(activity.packageName, ML_KIT_INIT_PROVIDER),
+                        PackageManager.GET_META_DATA,
+                    )
 
                 provider.attachInfo(activity.applicationContext, providerInfo)
                 mlKitInitProviderHandled = true
                 log("Initialized MlKitInitProvider before DocumentPickerActivity")
             } catch (error: Throwable) {
-                val alreadyInitialized = generateSequence(error) { it.cause }
-                    .filterIsInstance<IllegalStateException>()
-                    .any { it.message?.contains("MlKitContext is already initialized") == true }
+                val alreadyInitialized =
+                    generateSequence(error) { it.cause }
+                        .filterIsInstance<IllegalStateException>()
+                        .any { it.message?.contains("MlKitContext is already initialized") == true }
 
                 if (alreadyInitialized) {
                     mlKitInitProviderHandled = true

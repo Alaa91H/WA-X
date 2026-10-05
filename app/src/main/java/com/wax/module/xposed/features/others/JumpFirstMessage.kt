@@ -2,10 +2,10 @@ package com.wax.module.xposed.features.others
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.SystemClock
 import android.view.Menu
-import android.view.MenuItem
 import com.wax.module.R
 import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.ModuleRuntime.getCurrentActivity
@@ -15,36 +15,39 @@ import com.wax.module.xposed.core.devkit.Unobfuscator.findFirstClassUsingName
 import com.wax.module.xposed.core.devkit.Unobfuscator.loadOnCreatedMenuConversation
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
 
-class JumpFirstMessage(classLoader: ClassLoader, preferences:SharedPreferences) :
-    Feature(classLoader, preferences) {
-
+class JumpFirstMessage(
+    classLoader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(classLoader, preferences) {
     override fun doHook() {
         if (!prefs.getBoolean("jump_first_message", false)) return
         val onCreateMenuConversationMethod = loadOnCreatedMenuConversation(classLoader)
-        XposedBridge.hookMethod(onCreateMenuConversationMethod, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                try {
-                    val menu = param.args[0] as Menu
-                    if (menu.findItem(R.string.jump_first_message) != null) {
-                        return
+        XposedBridge.hookMethod(
+            onCreateMenuConversationMethod,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    try {
+                        val menu = param.args[0] as Menu
+                        if (menu.findItem(R.string.jump_first_message) != null) {
+                            return
+                        }
+                        val menuItem =
+                            menu.add(0, R.string.jump_first_message, 0, R.string.jump_first_message)
+                        menuItem.setOnMenuItemClickListener {
+                            val activity =
+                                getCurrentActivity() ?: return@setOnMenuItemClickListener false
+                            jumpToFirstMessage(activity)
+                            true
+                        }
+                    } catch (e: Exception) {
+                        logDebug(e)
                     }
-                    val menuItem =
-                        menu.add(0, R.string.jump_first_message, 0, R.string.jump_first_message)
-                    menuItem.setOnMenuItemClickListener {
-                        val activity =
-                            getCurrentActivity() ?: return@setOnMenuItemClickListener false
-                        jumpToFirstMessage(activity)
-                        true
-                    }
-                } catch (e: Exception) {
-                    logDebug(e)
                 }
-            }
-        })
+            },
+        )
     }
 
     private fun jumpToFirstMessage(activity: Activity) {
@@ -89,7 +92,5 @@ class JumpFirstMessage(classLoader: ClassLoader, preferences:SharedPreferences) 
         }
     }
 
-    override fun getPluginName(): String {
-        return "Jump First Message"
-    }
+    override fun getPluginName(): String = "Jump First Message"
 }

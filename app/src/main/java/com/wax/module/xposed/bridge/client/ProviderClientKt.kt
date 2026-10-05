@@ -24,54 +24,51 @@ import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.milliseconds
 
 class ProviderClientKt : BaseClient() {
-
     override var service: WaeIIFace? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + WaeCoroutineExceptionHandler)
     private val reconnectMutex = Mutex()
 
+    override suspend fun connect(): Boolean = performConnection()
 
-    override suspend fun connect(): Boolean {
-        return performConnection()
-    }
-
-    private suspend fun performConnection(): Boolean = withContext(Dispatchers.IO) {
-        if (service?.asBinder()?.pingBinder() == true) {
-            return@withContext true
-        }
-        runCatching {
-            val intent = Intent().apply {
-                component =
-                    ComponentName(BuildConfig.APPLICATION_ID, ForceStartActivity::class.java.name)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+    private suspend fun performConnection(): Boolean =
+        withContext(Dispatchers.IO) {
+            if (service?.asBinder()?.pingBinder() == true) {
+                return@withContext true
             }
-            ModuleRuntime.getCurrentActivity()?.startActivity(intent)
-        }
-
-        try {
-            withTimeout(3000L.milliseconds) {
-                val resolver = Utils.application.contentResolver
-                val bundle =
-                    resolver.call(Settings.System.CONTENT_URI, "WA X", "getHookBinder", null)
-                val binder = bundle?.getBinder("binder")
-                if (binder != null) {
-                    val potentialService = WaeIIFace.Stub.asInterface(binder)
-                    if (potentialService?.asBinder()?.pingBinder() == true) {
-                        service = potentialService
-                        XposedBridge.log("Bridge Connected: $service")
-                        return@withTimeout true
+            runCatching {
+                val intent =
+                    Intent().apply {
+                        component =
+                            ComponentName(BuildConfig.APPLICATION_ID, ForceStartActivity::class.java.name)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
                     }
+                ModuleRuntime.getCurrentActivity()?.startActivity(intent)
+            }
+
+            try {
+                withTimeout(3000L.milliseconds) {
+                    val resolver = Utils.application.contentResolver
+                    val bundle =
+                        resolver.call(Settings.System.CONTENT_URI, "WA X", "getHookBinder", null)
+                    val binder = bundle?.getBinder("binder")
+                    if (binder != null) {
+                        val potentialService = WaeIIFace.Stub.asInterface(binder)
+                        if (potentialService?.asBinder()?.pingBinder() == true) {
+                            service = potentialService
+                            XposedBridge.log("Bridge Connected: $service")
+                            return@withTimeout true
+                        }
+                    }
+                    false
                 }
+            } catch (e: TimeoutCancellationException) {
+                XposedBridge.log("Connection timed out: ${e.message}")
+                false
+            } catch (e: Exception) {
+                XposedBridge.log("Connection error: ${e.message}")
                 false
             }
-        } catch (e: TimeoutCancellationException) {
-            XposedBridge.log("Connection timed out: ${e.message}")
-            false
-        } catch (e: Exception) {
-            XposedBridge.log("Connection error: ${e.message}")
-            false
         }
-    }
-
 
     override fun tryReconnect() {
         scope.launch {
@@ -89,7 +86,7 @@ class ProviderClientKt : BaseClient() {
                 }
                 Utils.showToast(
                     if (success) "Reconnected to Bridge" else "Failed to reconnect to Bridge..",
-                    Toast.LENGTH_SHORT
+                    Toast.LENGTH_SHORT,
                 )
             }
         }

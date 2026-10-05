@@ -7,7 +7,6 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 abstract class HKDF {
-
     companion object {
         @JvmStatic
         fun createFor(version: Int): HKDF {
@@ -18,11 +17,18 @@ abstract class HKDF {
         }
     }
 
-    fun deriveSecrets(arr_b: ByteArray, arr_b1: ByteArray, v: Int): ByteArray {
-        return deriveSecrets(arr_b, ByteArray(0x20), arr_b1, v)
-    }
+    fun deriveSecrets(
+        arr_b: ByteArray,
+        arr_b1: ByteArray,
+        v: Int,
+    ): ByteArray = deriveSecrets(arr_b, ByteArray(0x20), arr_b1, v)
 
-    fun deriveSecrets(inputKeyMaterial: ByteArray, salt: ByteArray, info: ByteArray?, outputLength: Int): ByteArray {
+    fun deriveSecrets(
+        inputKeyMaterial: ByteArray,
+        salt: ByteArray,
+        info: ByteArray?,
+        outputLength: Int,
+    ): ByteArray {
         val derivedKey: ByteArray
         try {
             val mac = Mac.getInstance("HmacSHA256")

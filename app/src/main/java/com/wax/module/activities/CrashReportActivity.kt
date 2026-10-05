@@ -2,7 +2,6 @@ package com.wax.module.activities
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -11,7 +10,6 @@ import com.wax.module.activities.base.BaseActivity
 import com.wax.module.databinding.ActivityCrashReportBinding
 
 class CrashReportActivity : BaseActivity() {
-
     private lateinit var binding: ActivityCrashReportBinding
     private lateinit var reportText: String
 
@@ -48,10 +46,11 @@ class CrashReportActivity : BaseActivity() {
 
     private fun shareReport() {
         reportText = "${binding.tvCrashInfo.text}\n\n${binding.tvCrashTrace.text}"
-        val intent = Intent(Intent.ACTION_SEND)
-            .setType("text/plain")
-            .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.whatsapp_crash_report))
-            .putExtra(Intent.EXTRA_TEXT, reportText)
+        val intent =
+            Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.whatsapp_crash_report))
+                .putExtra(Intent.EXTRA_TEXT, reportText)
         startActivity(Intent.createChooser(intent, getString(R.string.share)))
     }
 

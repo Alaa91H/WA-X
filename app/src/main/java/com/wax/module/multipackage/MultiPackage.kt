@@ -3,7 +3,6 @@ package com.wax.module.multipackage
 import com.wax.module.platform.JsonValue
 import com.wax.module.platform.KeyValueStore
 import com.wax.module.platform.MiniJson
-import com.wax.module.platform.SupportedPackages
 import com.wax.module.platform.TargetApp
 import com.wax.module.platform.jsonNumber
 import com.wax.module.platform.jsonObject

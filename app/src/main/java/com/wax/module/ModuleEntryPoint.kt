@@ -3,12 +3,10 @@ package com.wax.module
 import android.annotation.SuppressLint
 import android.content.ContextWrapper
 import android.content.res.XModuleResources
-import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import androidx.preference.PreferenceManager
-import com.wax.module.activities.MainActivity
-import com.wax.module.platform.SupportedPackages
+import com.wax.module.platform.TargetPackageRegistry
 import com.wax.module.xposed.AntiUpdater
 import com.wax.module.xposed.bridge.ScopeHook
 import com.wax.module.xposed.core.FeatureLoader
@@ -24,27 +22,28 @@ import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 
-class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources, IXposedHookZygoteInit {
-
-    private var MODULE_PATH: String? = null
+class ModuleEntryPoint :
+    IXposedHookLoadPackage,
+    IXposedHookInitPackageResources,
+    IXposedHookZygoteInit {
+    private var modulePath: String? = null
 
     companion object {
         private var pref: XSharedPreferences? = null
 
         @JvmStatic
-        var ResParam: InitPackageResourcesParam? = null
+        var resParam: InitPackageResourcesParam? = null
 
         @JvmStatic
-        fun getPref(): XSharedPreferences {
-            return pref ?: XSharedPreferences(
+        fun getPref(): XSharedPreferences =
+            pref ?: XSharedPreferences(
                 BuildConfig.APPLICATION_ID,
-                BuildConfig.APPLICATION_ID + "_preferences"
+                BuildConfig.APPLICATION_ID + "_preferences",
             ).apply {
                 makeWorldReadable()
                 reload()
                 pref = this
             }
-        }
     }
 
     @Throws(Throwable::class)
@@ -66,13 +65,22 @@ class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources
         // scope metadata is a recommendation and not a guarantee. Anything outside
         // the supported set leaves here without a single hook installed, instead of
         // running every hook stage against an unrelated application.
-        if (!SupportedPackages.isInHookScope(packageName)) {
+        if (!TargetPackageRegistry.isInHookScope(packageName)) {
             return
         }
 
-        XposedBridge.log("[•] This package: ${lpparam.packageName}")
+        // One APK hooks both WhatsApp builds, so the target is resolved from the
+        // process rather than from which build the user installed. That scope is what
+        // every feature below reads, and it is the only thing that keeps one target's
+        // overrides out of the other process.
+        val target = TargetPackageRegistry.targetOf(packageName)
 
-        if (SupportedPackages.isTarget(packageName)) {
+        XposedBridge.log(
+            "[•] This package: $packageName" + (target?.let { " (${it.displayName})" } ?: ""),
+        )
+
+        if (target != null) {
+            TargetRuntime.attach(target)
             AntiUpdater.hookSession(lpparam)
         }
 
@@ -80,12 +88,11 @@ class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources
 
         ScopeHook.hook(lpparam)
 
-        if ((packageName == FeatureLoader.PACKAGE_WPP && ModuleApplication.isOriginalPackage) || packageName == FeatureLoader.PACKAGE_BUSINESS) {
-            if (lpparam.isFirstApplication) { // I believe this may fix the problem when using multiple accounts, not yet tested
-                XposedBridge.log("[•] This package: ${lpparam.packageName}")
-                FeatureLoader.start(classLoader, lpparam.appInfo.sourceDir)
-                disableSecureFlag()
-            }
+        if (target != null && lpparam.isFirstApplication) {
+            // I believe isFirstApplication may fix the problem when using multiple
+            // accounts; not yet tested.
+            FeatureLoader.start(classLoader, lpparam.appInfo.sourceDir)
+            disableSecureFlag()
         }
     }
 
@@ -103,38 +110,43 @@ class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources
             PreferenceManager::class.java.name,
             classLoader,
             "getDefaultSharedPreferencesMode",
-            XC_MethodReplacement.returnConstant(ContextWrapper.MODE_WORLD_READABLE)
+            XC_MethodReplacement.returnConstant(ContextWrapper.MODE_WORLD_READABLE),
         )
 
         XposedHelpers.findAndHookMethod(
-            "android.app.ContextImpl", classLoader, "checkMode", Int::class.javaPrimitiveType!!, XC_MethodReplacement.DO_NOTHING)
+            "android.app.ContextImpl",
+            classLoader,
+            "checkMode",
+            Int::class.javaPrimitiveType!!,
+            XC_MethodReplacement.DO_NOTHING,
+        )
     }
 
     @Throws(Throwable::class)
     override fun handleInitPackageResources(resparam: InitPackageResourcesParam) {
         val packageName = resparam.packageName
 
-        if (!SupportedPackages.isTarget(packageName)) {
+        if (!TargetPackageRegistry.isTarget(packageName)) {
             return
         }
 
-        val modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res)
-        ResParam = resparam
-        val resourceClasses = listOf(
-            R.array::class.java,
-            R.string::class.java,
-            R.drawable::class.java
-        )
+        val modRes = XModuleResources.createInstance(modulePath, resparam.res)
+        resParam = resparam
+        val resourceClasses =
+            listOf(
+                R.array::class.java,
+                R.string::class.java,
+                R.drawable::class.java,
+            )
         resourceClasses.forEach {
             injectResources(it, modRes, resparam)
         }
-
     }
 
     private fun injectResources(
         clazz: Class<*>,
         modRes: XModuleResources?,
-        resparam: InitPackageResourcesParam
+        resparam: InitPackageResourcesParam,
     ) {
         var count = 0
         for (field in clazz.declaredFields) {
@@ -160,16 +172,14 @@ class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources
                     }
                 }
             } catch (_: Exception) {
-
             }
         }
         XposedBridge.log("Injected " + count + " resources for " + clazz.getSimpleName())
     }
 
-
     @Throws(Throwable::class)
     override fun initZygote(startupParam: IXposedHookZygoteInit.StartupParam) {
-        MODULE_PATH = startupParam.modulePath
+        modulePath = startupParam.modulePath
     }
 
     fun disableSecureFlag() {
@@ -186,7 +196,7 @@ class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources
                     param.args[0] = flags and WindowManager.LayoutParams.FLAG_SECURE.inv()
                     param.args[1] = mask and WindowManager.LayoutParams.FLAG_SECURE.inv()
                 }
-            }
+            },
         )
 
         XposedHelpers.findAndHookMethod(
@@ -203,7 +213,7 @@ class ModuleEntryPoint : IXposedHookLoadPackage, IXposedHookInitPackageResources
                         param.result = null
                     }
                 }
-            }
+            },
         )
     }
 }

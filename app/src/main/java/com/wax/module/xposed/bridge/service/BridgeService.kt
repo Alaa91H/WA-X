@@ -5,7 +5,5 @@ import android.content.Intent
 import android.os.IBinder
 
 class BridgeService : Service() {
-    override fun onBind(intent: Intent?): IBinder {
-        return HookBinder
-    }
+    override fun onBind(intent: Intent?): IBinder = HookBinder
 }

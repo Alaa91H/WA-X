@@ -17,11 +17,13 @@ import com.wax.module.diagnostics.FailureCode
 class FallbackChain<T : Any> private constructor(
     private val featureId: String,
     private val primary: () -> Resolution<T>,
-    private val fallbacks: List<Fallback<T>>
+    private val fallbacks: List<Fallback<T>>,
 ) {
-
     /** A named alternative path, tried in declaration order. */
-    data class Fallback<T : Any>(val name: String, val resolve: () -> Resolution<T>)
+    data class Fallback<T : Any>(
+        val name: String,
+        val resolve: () -> Resolution<T>,
+    )
 
     /**
      * Runs the chain and reports what happened.
@@ -40,11 +42,12 @@ class FallbackChain<T : Any> private constructor(
             return finish(primaryResolved, fallbackName = null, install = install)
         }
 
-        val firstFailure = FeatureOutcome.failed(
-            featureId,
-            FailureCode.RESOLVER_NOT_FOUND,
-            "the primary resolver found nothing on this WhatsApp build"
-        )
+        val firstFailure =
+            FeatureOutcome.failed(
+                featureId,
+                FailureCode.RESOLVER_NOT_FOUND,
+                "the primary resolver found nothing on this WhatsApp build",
+            )
 
         // Compatibility fallbacks, in order.
         for (fallback in fallbacks) {
@@ -65,14 +68,15 @@ class FallbackChain<T : Any> private constructor(
     private fun finish(
         resolved: Resolution.Resolved<T>,
         fallbackName: String?,
-        install: (T) -> Unit
+        install: (T) -> Unit,
     ): FeatureOutcome {
         if (!Confidence.mayInstall(resolved.confidence)) {
-            return FeatureOutcome.degraded(
-                featureId,
-                "resolved at ${resolved.confidence} confidence, which is below the " +
-                        "install threshold, so the hook was not installed"
-            ).copy(health = FeatureHealth.FAILED)
+            return FeatureOutcome
+                .degraded(
+                    featureId,
+                    "resolved at ${resolved.confidence} confidence, which is below the " +
+                        "install threshold, so the hook was not installed",
+                ).copy(health = FeatureHealth.FAILED)
         }
 
         // Installation is where a resolver's value is actually used, and it can throw for
@@ -84,7 +88,7 @@ class FallbackChain<T : Any> private constructor(
             return FeatureOutcome.failed(
                 featureId,
                 FailureCode.classify(error, "install"),
-                "installing the hook failed: ${error.javaClass.simpleName}"
+                "installing the hook failed: ${error.javaClass.simpleName}",
             )
         }
 
@@ -92,12 +96,12 @@ class FallbackChain<T : Any> private constructor(
             FeatureOutcome.fallback(
                 featureId,
                 fallbackName,
-                "the primary path did not resolve, so the ${fallbackName} fallback was used"
+                "the primary path did not resolve, so the $fallbackName fallback was used",
             )
         } else if (resolved.confidence == Confidence.LIKELY) {
             FeatureOutcome.degraded(
                 featureId,
-                "resolved only heuristically, so the hook is installed but unverified"
+                "resolved only heuristically, so the hook is installed but unverified",
             )
         } else {
             FeatureOutcome.healthy(featureId)
@@ -109,28 +113,37 @@ class FallbackChain<T : Any> private constructor(
      *
      * Returns null when the path produced no installable value.
      */
-    private fun attempt(resolve: () -> Resolution<T>): Resolution.Resolved<T>? = try {
-        val outcome = resolve()
-        outcome as? Resolution.Resolved<T>
-    } catch (_: Throwable) {
-        null
-    }
+    private fun attempt(resolve: () -> Resolution<T>): Resolution.Resolved<T>? =
+        try {
+            val outcome = resolve()
+            outcome as? Resolution.Resolved<T>
+        } catch (_: Throwable) {
+            null
+        }
 
-    class Builder<T : Any>(private val featureId: String) {
+    class Builder<T : Any>(
+        private val featureId: String,
+    ) {
         private var primary: (() -> Resolution<T>)? = null
         private val fallbacks = ArrayList<Fallback<T>>()
 
-        fun primary(resolve: () -> Resolution<T>): Builder<T> = apply {
-            primary = resolve
-        }
+        fun primary(resolve: () -> Resolution<T>): Builder<T> =
+            apply {
+                primary = resolve
+            }
 
-        fun fallback(name: String, resolve: () -> Resolution<T>): Builder<T> = apply {
-            fallbacks.add(Fallback(name, resolve))
-        }
+        fun fallback(
+            name: String,
+            resolve: () -> Resolution<T>,
+        ): Builder<T> =
+            apply {
+                fallbacks.add(Fallback(name, resolve))
+            }
 
         fun build(): FallbackChain<T> {
-            val primaryPath = primary
-                ?: throw IllegalArgumentException("$featureId: a fallback chain needs a primary path")
+            val primaryPath =
+                primary
+                    ?: throw IllegalArgumentException("$featureId: a fallback chain needs a primary path")
             return FallbackChain(featureId, primaryPath, fallbacks.toList())
         }
     }

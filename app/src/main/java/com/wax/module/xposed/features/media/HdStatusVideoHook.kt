@@ -30,7 +30,6 @@ class HdStatusVideoHook(
     private val targets: HdStatusTargets,
     private val log: (String) -> Unit,
 ) {
-
     /** True when the user asked for HD videos. */
     var enabled: Boolean = false
         private set
@@ -54,7 +53,12 @@ class HdStatusVideoHook(
     val skippedSteps: MutableList<String> = ArrayList()
 
     /** Installs the video overrides. */
-    fun install(requested: Boolean, limitMb: Int, realResolution: Boolean, highFrameRate: Boolean) {
+    fun install(
+        requested: Boolean,
+        limitMb: Int,
+        realResolution: Boolean,
+        highFrameRate: Boolean,
+    ) {
         this.enabled = requested
         this.realResolution = realResolution
         this.highFrameRate = highFrameRate
@@ -89,7 +93,7 @@ class HdStatusVideoHook(
 
         log(
             "video props: edge=${HdStatusLimits.MAX_VIDEO_EDGE} " +
-                "bitrate=${HdStatusLimits.MAX_VIDEO_BITRATE_BPS} limitMb=$limitMb"
+                "bitrate=${HdStatusLimits.MAX_VIDEO_BITRATE_BPS} limitMb=$limitMb",
         )
     }
 
@@ -115,31 +119,34 @@ class HdStatusVideoHook(
 
         val writer = HdStatusFieldWriter(limitsClass.simpleName, fields, log)
         var summarised = false
-        XposedBridge.hookAllConstructors(limitsClass, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val instance = param.thisObject ?: return
-                if (!summarised) {
-                    summarised = true
-                    writer.summarise("video ${limitsClass.simpleName} fields")
+        XposedBridge.hookAllConstructors(
+            limitsClass,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val instance = param.thisObject ?: return
+                    if (!summarised) {
+                        summarised = true
+                        writer.summarise("video ${limitsClass.simpleName} fields")
+                    }
+                    writer.withTarget(instance) {
+                        setInt(HdStatusFields.VIDEO_LIMIT_MB, limitMb)
+                        setInt(HdStatusFields.VIDEO_MAX_EDGE, HdStatusLimits.MAX_VIDEO_EDGE)
+                        setInt(HdStatusFields.VIDEO_MAX_BITRATE, HdStatusLimits.MAX_VIDEO_BITRATE_BPS)
+                        setEnumConstant(
+                            aliases = HdStatusFields.VIDEO_BITRATE_MODE,
+                            constantName = CBR_CONSTANT,
+                            fallbackOrdinal = 0,
+                        )
+                        // Clearing the cached profile stops WhatsApp reusing a
+                        // low-bitrate encode it already produced for this video.
+                        setNull(HdStatusFields.VIDEO_HIGH_BITRATE_URL)
+                    }
+                    if (writer.hasLosses && missingFields.isEmpty()) {
+                        missingFields += writer.missingNames
+                    }
                 }
-                writer.withTarget(instance) {
-                    setInt(HdStatusFields.VIDEO_LIMIT_MB, limitMb)
-                    setInt(HdStatusFields.VIDEO_MAX_EDGE, HdStatusLimits.MAX_VIDEO_EDGE)
-                    setInt(HdStatusFields.VIDEO_MAX_BITRATE, HdStatusLimits.MAX_VIDEO_BITRATE_BPS)
-                    setEnumConstant(
-                        aliases = HdStatusFields.VIDEO_BITRATE_MODE,
-                        constantName = CBR_CONSTANT,
-                        fallbackOrdinal = 0,
-                    )
-                    // Clearing the cached profile stops WhatsApp reusing a
-                    // low-bitrate encode it already produced for this video.
-                    setNull(HdStatusFields.VIDEO_HIGH_BITRATE_URL)
-                }
-                if (writer.hasLosses && missingFields.isEmpty()) {
-                    missingFields += writer.missingNames
-                }
-            }
-        })
+            },
+        )
 
         installed = true
         log("video: hooked ${limitsClass.name} constructors (${fields.size} fields)")
@@ -170,15 +177,18 @@ class HdStatusVideoHook(
         }
 
         val writer = HdStatusFieldWriter(configClass.simpleName, fields, log)
-        XposedBridge.hookMethod(transcoderStart, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val processor = param.args.firstOrNull() ?: return
-                writer.withTarget(processor) {
-                    setBoolean(HdStatusFields.FORCE_SINGLE_TRANSCODING, true)
+        XposedBridge.hookMethod(
+            transcoderStart,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val processor = param.args.firstOrNull() ?: return
+                    writer.withTarget(processor) {
+                        setBoolean(HdStatusFields.FORCE_SINGLE_TRANSCODING, true)
+                    }
+                    disableTranscodeShortcut(processor)
                 }
-                disableTranscodeShortcut(processor)
-            }
-        })
+            },
+        )
 
         installed = true
         log("video: forceSingleTranscoding armed on ${Unobfuscator.getMethodDescriptor(transcoderStart)}")
@@ -221,28 +231,32 @@ class HdStatusVideoHook(
             return
         }
 
-        XposedBridge.hookMethod(start, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val spec = param.args.firstOrNull() ?: return
-                val booleans = spec.javaClass.declaredFields.filter {
-                    it.type == Boolean::class.javaPrimitiveType
-                }
-                if (booleans.isEmpty()) {
-                    log("video: media transcoder spec has no boolean field; left unchanged")
-                    return
-                }
-                booleans.forEach { field ->
-                    try {
-                        field.isAccessible = true
-                        val before = field.getBoolean(spec)
-                        field.setBoolean(spec, true)
-                        if (before != true) log("video: ${field.name} $before -> true")
-                    } catch (t: Throwable) {
-                        log("video: ${field.name} not writable (${t.javaClass.simpleName})")
+        XposedBridge.hookMethod(
+            start,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val spec = param.args.firstOrNull() ?: return
+                    val booleans =
+                        spec.javaClass.declaredFields.filter {
+                            it.type == Boolean::class.javaPrimitiveType
+                        }
+                    if (booleans.isEmpty()) {
+                        log("video: media transcoder spec has no boolean field; left unchanged")
+                        return
+                    }
+                    booleans.forEach { field ->
+                        try {
+                            field.isAccessible = true
+                            val before = field.getBoolean(spec)
+                            field.setBoolean(spec, true)
+                            if (before != true) log("video: ${field.name} $before -> true")
+                        } catch (t: Throwable) {
+                            log("video: ${field.name} not writable (${t.javaClass.simpleName})")
+                        }
                     }
                 }
-            }
-        })
+            },
+        )
 
         installed = true
         log("video: media transcoder HD flag armed on ${Unobfuscator.getMethodDescriptor(start)}")
@@ -266,49 +280,54 @@ class HdStatusVideoHook(
             return
         }
 
-        val outputFields = try {
-            Unobfuscator.loadMediaQualityVideoFields(classLoader)
-        } catch (t: Throwable) {
-            skip("realResolution", "output fields unavailable (${t.javaClass.simpleName})")
-            return
-        }
-        val sourceFields = try {
-            Unobfuscator.loadMediaQualityOriginalVideoFields(classLoader)
-        } catch (t: Throwable) {
-            skip("realResolution", "source fields unavailable (${t.javaClass.simpleName})")
-            return
-        }
+        val outputFields =
+            try {
+                Unobfuscator.loadMediaQualityVideoFields(classLoader)
+            } catch (t: Throwable) {
+                skip("realResolution", "output fields unavailable (${t.javaClass.simpleName})")
+                return
+            }
+        val sourceFields =
+            try {
+                Unobfuscator.loadMediaQualityOriginalVideoFields(classLoader)
+            } catch (t: Throwable) {
+                skip("realResolution", "source fields unavailable (${t.javaClass.simpleName})")
+                return
+            }
 
         val outputWriter = HdStatusFieldWriter("transcodeOutput", outputFields, log)
         val sourceWriter = HdStatusFieldWriter("transcodeSource", sourceFields, log)
 
-        XposedBridge.hookMethod(method, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val output = param.result ?: return
+        XposedBridge.hookMethod(
+            method,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val output = param.result ?: return
 
-                if (highFrameRate) {
+                    if (highFrameRate) {
+                        outputWriter.withTarget(output) {
+                            setInt(HdStatusFields.FRAME_RATE, HdStatusLimits.HIGH_FRAME_RATE)
+                        }
+                    }
+                    if (!realResolution) return
+
+                    val source = param.args.firstOrNull()
+                    val size = readSourceSize(source, sourceFields)
+                    if (size == null) {
+                        log("video: source size unreadable; keeping WhatsApp's own size")
+                        return
+                    }
+                    val safe = HdStatusVideoSize.sanitise(size.first, size.second)
                     outputWriter.withTarget(output) {
-                        setInt(HdStatusFields.FRAME_RATE, HdStatusLimits.HIGH_FRAME_RATE)
+                        setInt(HdStatusFields.TARGET_WIDTH, safe.first)
+                        setInt(HdStatusFields.TARGET_HEIGHT, safe.second)
                     }
                 }
-                if (!realResolution) return
-
-                val source = param.args.firstOrNull()
-                val size = readSourceSize(source, sourceFields)
-                if (size == null) {
-                    log("video: source size unreadable; keeping WhatsApp's own size")
-                    return
-                }
-                val safe = HdStatusVideoSize.sanitise(size.first, size.second)
-                outputWriter.withTarget(output) {
-                    setInt(HdStatusFields.TARGET_WIDTH, safe.first)
-                    setInt(HdStatusFields.TARGET_HEIGHT, safe.second)
-                }
-            }
-        })
+            },
+        )
 
         installed = true
-        log("video: real-resolution=${realResolution} 60fps=$highFrameRate armed")
+        log("video: real-resolution=$realResolution 60fps=$highFrameRate armed")
     }
 
     /**
@@ -318,7 +337,10 @@ class HdStatusVideoHook(
      * pass instead, because that fallback is what kept the option working when the
      * fields were renamed.
      */
-    private fun readSourceSize(source: Any?, fields: Map<String, java.lang.reflect.Field>): Pair<Int, Int>? {
+    private fun readSourceSize(
+        source: Any?,
+        fields: Map<String, java.lang.reflect.Field>,
+    ): Pair<Int, Int>? {
         if (source == null) return null
         val width = fields.fieldByAliases(HdStatusFields.SOURCE_WIDTH)
         val height = fields.fieldByAliases(HdStatusFields.SOURCE_HEIGHT)
@@ -332,14 +354,18 @@ class HdStatusVideoHook(
         return readSizeFromJson(source)
     }
 
-    private fun readSizeFromJson(source: Any): Pair<Int, Int>? = try {
-        val json = XposedHelpers.callMethod(source, JSON_BLOB_ACCESSOR) as? org.json.JSONObject
-        json?.let { Pair(it.getInt("widthPx"), it.getInt("heightPx")) }
-    } catch (_: Throwable) {
-        null
-    }
+    private fun readSizeFromJson(source: Any): Pair<Int, Int>? =
+        try {
+            val json = XposedHelpers.callMethod(source, JSON_BLOB_ACCESSOR) as? org.json.JSONObject
+            json?.let { Pair(it.getInt("widthPx"), it.getInt("heightPx")) }
+        } catch (_: Throwable) {
+            null
+        }
 
-    private fun skip(step: String, reason: String) {
+    private fun skip(
+        step: String,
+        reason: String,
+    ) {
         skippedSteps += step
         log("video: $step skipped, $reason")
     }
@@ -366,7 +392,6 @@ class HdStatusVideoHook(
  * builds this module supports.
  */
 object HdStatusVideoSize {
-
     /** Never emit a dimension below this; encoders reject 0 and 1. */
     const val MIN_EDGE = 2
 
@@ -374,7 +399,10 @@ object HdStatusVideoSize {
     const val MAX_EDGE = HdStatusLimits.MAX_VIDEO_EDGE
 
     /** Returns the width and height to request, preserving the aspect ratio. */
-    fun sanitise(width: Int, height: Int): Pair<Int, Int> {
+    fun sanitise(
+        width: Int,
+        height: Int,
+    ): Pair<Int, Int> {
         if (width <= 0 || height <= 0) return Pair(FALLBACK_LANDSCAPE.first, FALLBACK_LANDSCAPE.second)
 
         // floor() must be applied after making the value even: rounding 1 down to the
@@ -391,8 +419,10 @@ object HdStatusVideoSize {
 
     private fun even(value: Int): Int = if (value % 2 == 0) value else value - 1
 
-    private fun floor(width: Int, height: Int): Pair<Int, Int> =
-        Pair(maxOf(MIN_EDGE, width), maxOf(MIN_EDGE, height))
+    private fun floor(
+        width: Int,
+        height: Int,
+    ): Pair<Int, Int> = Pair(maxOf(MIN_EDGE, width), maxOf(MIN_EDGE, height))
 
     private val FALLBACK_LANDSCAPE = Pair(1280, 720)
 }

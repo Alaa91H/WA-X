@@ -4,7 +4,7 @@
 #
 # Produces a machine-readable baseline (baseline.json) and a human-readable
 # report (BASELINE.md) capturing the metrics we must not regress:
-#   - APK sizes (whatsapp / business) when APKs are available
+#   - APK sizes when APKs are available
 #   - number of features registered in FeatureLoader
 #   - per-feature load times (parsed from an Xposed/LSPosed log via --xposed-log)
 #   - Unobfuscator risk counters (load resolvers, `!!`, throws)
@@ -178,8 +178,15 @@ fi
 
 # --------------------------------------------------------------- features ---
 
-FEATURES_RAW="$(sed -n '/val classes = arrayOf(/,/^[[:space:]]*)/p' "$FEATURE_LOADER" \
-    | grep -o '[A-Za-z0-9_$]*::class\.java' | sed 's/::class\.java//' || true)"
+# ktlint may split `val classes = arrayOf(` across two lines once the list is long, so
+# the range is opened at the assignment and closed at the matching indentation, then the
+# class references are collected from everything inside. Matching the exact one-line
+# form here reported "0 features" instead of failing.
+FEATURES_RAW="$(awk '
+    /val[[:space:]]+classes[[:space:]]*=/ { collecting = 1 }
+    collecting { print }
+    collecting && /^[[:space:]]*\)/ { exit }
+' "$FEATURE_LOADER" | grep -o '[A-Za-z0-9_$]*::class\.java' | sed 's/::class\.java//' || true)"
 FEATURE_NAMES_JSON="$(json_array_from_lines <<< "$FEATURES_RAW")"
 FEATURE_COUNT="$(printf '%s\n' "$FEATURES_RAW" | awk 'NF' | wc -l | tr -d ' ')"
 
@@ -239,20 +246,18 @@ for apk in ${APK_FILES[@]+"${APK_FILES[@]}"}; do
     apk_bytes="$(wc -c < "$apk" | tr -d ' ')"
     apk_human="$(human_size "$apk_bytes")"
     apk_sha="$(sha256_of "$apk")"
-    apk_flavor="unknown"; apk_build="unknown"
-    case "$apk" in
-        */business/*) apk_flavor="business" ;;
-        */whatsapp/*) apk_flavor="whatsapp" ;;
-    esac
+    # Build type only: WA X builds one APK with no flavor dimension, so recording a
+    # flavor here would invent a distinction that no longer exists in the output tree.
+    apk_build="unknown"
     case "$apk" in
         */release/*) apk_build="release" ;;
         */debug/*)   apk_build="debug" ;;
     esac
     [[ $apk_first -eq 0 ]] && APKS_JSON+=","
-    APKS_JSON+="$(printf '\n    {"path": "%s", "flavor": "%s", "buildType": "%s", "sizeBytes": %s, "sizeHuman": "%s", "sha256": "%s"}' \
-        "$(printf '%s' "$apk" | json_escape)" "$apk_flavor" "$apk_build" "$apk_bytes" "$apk_human" "$apk_sha")"
+    APKS_JSON+="$(printf '\n    {"path": "%s", "buildType": "%s", "sizeBytes": %s, "sizeHuman": "%s", "sha256": "%s"}' \
+        "$(printf '%s' "$apk" | json_escape)" "$apk_build" "$apk_bytes" "$apk_human" "$apk_sha")"
     apk_first=0
-    APK_SUMMARY_LINES+="| \`$apk\` | $apk_flavor / $apk_build | $apk_human ($apk_bytes B) | \`${apk_sha:0:16}…\` |"$'\n'
+    APK_SUMMARY_LINES+="| \`$apk\` | $apk_build | $apk_human ($apk_bytes B) | \`${apk_sha:0:16}…\` |"$'\n'
 done
 APKS_JSON+=$'\n  ]'
 
@@ -351,9 +356,9 @@ EOF
 BASELINE_MD="$OUT_DIR/BASELINE.md"
 if [[ "$WRITE_REPORT" -eq 1 ]]; then
     if [[ ${#APK_FILES[@]} -eq 0 ]]; then
-        APK_SECTION="No APKs found under \`app/build/outputs/apk\`. Run a build (e.g. \`./gradlew assembleWhatsappDebug assembleBusinessDebug\`) and re-run the generator to capture sizes."
+        APK_SECTION="No APKs found under \`app/build/outputs/apk\`. Run a build (e.g. \`./gradlew assembleDebug\`) and re-run the generator to capture sizes."
     else
-        APK_SECTION="| APK | Flavor | Size | SHA-256 |"$'\n'"|---|---|---|---|"$'\n'"$APK_SUMMARY_LINES"
+        APK_SECTION="| APK | Build type | Size | SHA-256 |"$'\n'"|---|---|---|---|"$'\n'"$APK_SUMMARY_LINES"
     fi
 
     if [[ "$RUNTIME_SOURCE" == "none" ]]; then

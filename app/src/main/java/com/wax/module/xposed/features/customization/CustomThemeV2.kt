@@ -3,6 +3,7 @@ package com.wax.module.xposed.features.customization
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
 import android.content.res.ColorStateList
@@ -28,34 +29,38 @@ import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
-import java.util.Properties
 import java.util.Collections
+import java.util.Properties
 import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.roundToInt
 
-class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
-    Feature(loader, preferences) {
-
+class CustomThemeV2(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     companion object {
         private const val FIELD_WALLPAPER_TOOLBAR = "wae_wallpaper_toolbar"
 
         @JvmStatic
-        private fun processColors(color: String, mapColors: HashMap<String, String>) {
-            val inputColorFull: String = when (color.length) {
-                7 -> {
-                    "#ff" + color.substring(1)
+        private fun processColors(
+            color: String,
+            mapColors: HashMap<String, String>,
+        ) {
+            val inputColorFull: String =
+                when (color.length) {
+                    7 -> {
+                        "#ff" + color.substring(1)
+                    }
+                    9 -> {
+                        "#ff" + color.substring(3)
+                    }
+                    else -> {
+                        return
+                    }
                 }
-                9 -> {
-                    "#ff" + color.substring(3)
-                }
-                else -> {
-                    return
-                }
-            }
 
             val inputR: Int
             val inputG: Int
@@ -88,13 +93,11 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                             newB = newB.coerceIn(0, 255)
 
                             finalColorStr = "#ff%02x%02x%02x".format(newR, newG, newB)
-
                         } catch (_: NumberFormatException) {
                             finalColorStr = inputColorFull
                         }
                     }
                     mapColors[c] = finalColorStr
-
                 } else if (c.length == 7) {
                     mapColors[c] = inputColorFull.substring(3)
                 }
@@ -108,6 +111,7 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
     private var properties: Properties? = null
     private val resolvedColors = ConcurrentHashMap<Int, Int>()
     private val processedResources = Collections.synchronizedMap(WeakHashMap<Any, Boolean>())
+
     @Volatile
     private var colorsReady = false
 
@@ -124,7 +128,8 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                     loadAndApplyColors()
                     loadAndApplyColorsWallpaper()
                 }
-            })
+            },
+        )
     }
 
     private fun loadAndApplyColorsWallpaper() {
@@ -132,18 +137,30 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
 
         if (customWallpaper || properties?.containsKey("wallpaper") == true) {
             wallAlpha = HashMap(IColors.colors)
-            val wallpaperAlpha = if (customWallpaper) prefs.getInt("wallpaper_alpha", 30)
-            else Utils.tryParseInt(properties?.getProperty("wallpaper_alpha"), 30)
+            val wallpaperAlpha =
+                if (customWallpaper) {
+                    prefs.getInt("wallpaper_alpha", 30)
+                } else {
+                    Utils.tryParseInt(properties?.getProperty("wallpaper_alpha"), 30)
+                }
             wallAlpha?.let { replaceTransparency(it, (100 - wallpaperAlpha) / 100.0f) }
 
             navAlpha = HashMap(IColors.colors)
-            val wallpaperAlphaNav = if (customWallpaper) prefs.getInt("wallpaper_alpha_navigation", 30)
-            else Utils.tryParseInt(properties?.getProperty("wallpaper_alpha_navigation"), 30)
+            val wallpaperAlphaNav =
+                if (customWallpaper) {
+                    prefs.getInt("wallpaper_alpha_navigation", 30)
+                } else {
+                    Utils.tryParseInt(properties?.getProperty("wallpaper_alpha_navigation"), 30)
+                }
             navAlpha?.let { replaceTransparency(it, (100 - wallpaperAlphaNav) / 100.0f) }
 
             toolbarAlpha = HashMap(IColors.colors)
-            val wallpaperToolbarAlpha = if (customWallpaper) prefs.getInt("wallpaper_alpha_toolbar", 30)
-            else Utils.tryParseInt(properties?.getProperty("wallpaper_alpha_toolbar"), 30)
+            val wallpaperToolbarAlpha =
+                if (customWallpaper) {
+                    prefs.getInt("wallpaper_alpha_toolbar", 30)
+                } else {
+                    Utils.tryParseInt(properties?.getProperty("wallpaper_alpha_toolbar"), 30)
+                }
             toolbarAlpha?.let { replaceTransparency(it, (100 - wallpaperToolbarAlpha) / 100.0f) }
         }
     }
@@ -157,51 +174,62 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
         val actionModeBarId = Utils.getID("action_mode_bar", "id")
 
         XposedHelpers.findAndHookMethod(
-            homeActivityClass, "onCreate", Bundle::class.java,
+            homeActivityClass,
+            "onCreate",
+            Bundle::class.java,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val activity = param.thisObject as Activity
                     if (ContextCompat.checkSelfPermission(
                             activity,
-                            Manifest.permission.READ_MEDIA_IMAGES
-                        ) == PackageManager.PERMISSION_GRANTED
-                        || ContextCompat.checkSelfPermission(
+                            Manifest.permission.READ_MEDIA_IMAGES,
+                        ) == PackageManager.PERMISSION_GRANTED ||
+                        ContextCompat.checkSelfPermission(
                             activity,
-                            Manifest.permission.READ_EXTERNAL_STORAGE
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
                         injectWallpaper(activity.findViewById(Utils.getID("root_view", "id")))
                     }
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
-            View::class.java, "onAttachedToWindow",
+            View::class.java,
+            "onAttachedToWindow",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val view = param.thisObject as View
-                    if (actionModeBarId > 0 && view.id == actionModeBarId)
+                    if (actionModeBarId > 0 && view.id == actionModeBarId) {
                         view.background = DesignUtils.getPrimarySurfaceColor().toDrawable()
+                    }
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
-            View::class.java, "setBackgroundColor", Int::class.javaPrimitiveType,
+            View::class.java,
+            "setBackgroundColor",
+            Int::class.javaPrimitiveType,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val colors = toolbarAlpha ?: return
                     if (XposedHelpers.getAdditionalInstanceField(
                             param.thisObject,
-                            FIELD_WALLPAPER_TOOLBAR
+                            FIELD_WALLPAPER_TOOLBAR,
                         ) != true
-                    ) return
+                    ) {
+                        return
+                    }
 
                     val color = colors[IColors.toString(param.args[0] as Int)]
                     if (color != null) {
                         param.args[0] = IColors.parseColor(color)
                     }
                 }
-            })
+            },
+        )
 
         val hookFragmentView = Unobfuscator.loadFragmentViewMethod(classLoader)
 
@@ -214,11 +242,15 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                     val colors = wallAlpha ?: return
                     replaceColors(viewGroup, colors)
                 }
-            })
+            },
+        )
 
         val loadTabFrameClass = Unobfuscator.loadTabFrameClass(classLoader)
         XposedHelpers.findAndHookMethod(
-            FrameLayout::class.java, "onMeasure", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType,
+            FrameLayout::class.java,
+            "onMeasure",
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!loadTabFrameClass.isInstance(param.thisObject)) return
@@ -228,7 +260,8 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                     val colors = navAlpha ?: return
                     replaceColor(background, colors)
                 }
-            })
+            },
+        )
     }
 
     @Throws(Throwable::class)
@@ -236,13 +269,14 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
         loadAndApplyColors()
 
         XposedBridge.hookAllMethods(
-            AssetManager::class.java, "getResourceValue",
+            AssetManager::class.java,
+            "getResourceValue",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!colorsReady) return
                     val typedValue = param.args[2] as TypedValue
-                    if (typedValue.type >= TypedValue.TYPE_FIRST_INT
-                        && typedValue.type <= TypedValue.TYPE_LAST_INT
+                    if (typedValue.type >= TypedValue.TYPE_FIRST_INT &&
+                        typedValue.type <= TypedValue.TYPE_LAST_INT
                     ) {
                         if (typedValue.data == 0) return
                         val originalColor = typedValue.data
@@ -251,12 +285,14 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                         typedValue.data = mappedColor
                     }
                 }
-            })
+            },
+        )
 
         val resourceImpl = XposedHelpers.findClass("android.content.res.ResourcesImpl", classLoader)
 
         XposedBridge.hookAllMethods(
-            resourceImpl, "loadDrawable",
+            resourceImpl,
+            "loadDrawable",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!colorsReady) return
@@ -264,10 +300,12 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                     if (processedResources.put(drawable, true) != null) return
                     replaceColor(drawable, IColors.colors)
                 }
-            })
+            },
+        )
 
         XposedBridge.hookAllMethods(
-            resourceImpl, "loadColorStateList",
+            resourceImpl,
+            "loadColorStateList",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!colorsReady) return
@@ -279,7 +317,8 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
                         mColors[i] = IColors.getFromIntColor(mColors[i], IColors.colors)
                     }
                 }
-            })
+            },
+        )
         val intBgHook = IntBgColorHook()
         XposedHelpers.findAndHookMethod(Paint::class.java, "setColor", Int::class.javaPrimitiveType, intBgHook)
     }
@@ -295,19 +334,24 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
         var backgroundColorInt = prefs.getInt("background_color", 0)
         val changeColorEnabled = prefs.getBoolean("changecolor", false)
         val changeColorMode = prefs.getString("changecolor_mode", "manual")
-        val useMonetColors = changeColorEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && changeColorMode == "monet"
+        val useMonetColors =
+            changeColorEnabled &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                changeColorMode == "monet"
 
         if (useMonetColors) {
-            val primaryMonetColor = resolveMonetColor(
-                if (DesignUtils.isNightMode()) "system_accent1_300" else "system_accent1_600"
-            )
-            val textMonetColor = resolveMonetColor(
-                if (DesignUtils.isNightMode()) "system_neutral1_100" else "system_neutral1_900"
-            )
-            val backgroundMonetColor = resolveMonetColor(
-                if (DesignUtils.isNightMode()) "system_neutral1_900" else "system_neutral1_10"
-            )
+            val primaryMonetColor =
+                resolveMonetColor(
+                    if (DesignUtils.isNightMode()) "system_accent1_300" else "system_accent1_600",
+                )
+            val textMonetColor =
+                resolveMonetColor(
+                    if (DesignUtils.isNightMode()) "system_neutral1_100" else "system_neutral1_900",
+                )
+            val backgroundMonetColor =
+                resolveMonetColor(
+                    if (DesignUtils.isNightMode()) "system_neutral1_900" else "system_neutral1_10",
+                )
 
             if (primaryMonetColor != 0) primaryColorInt = primaryMonetColor
             if (textMonetColor != 0) textColorInt = textMonetColor
@@ -394,7 +438,10 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
         }
     }
 
-    private fun replaceTransparency(wallpaperColors: HashMap<String, String>?, mAlpha: Float) {
+    private fun replaceTransparency(
+        wallpaperColors: HashMap<String, String>?,
+        mAlpha: Float,
+    ) {
         if (wallpaperColors == null) return
         val clampedAlpha = mAlpha.coerceIn(0f, 1f)
         val alphaInt = (clampedAlpha * 255).roundToInt()
@@ -424,7 +471,7 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
             XposedHelpers.setAdditionalInstanceField(
                 toolbarContainer,
                 FIELD_WALLPAPER_TOOLBAR,
-                true
+                true,
             )
             toolbarContainer.background = null
             toolbarContainer.backgroundTintList = null
@@ -451,18 +498,17 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
 
     private fun checkNotApplyColor(color: Int): Boolean {
         val activity = ModuleRuntime.getCurrentActivity()
-        if (activity != null && activity.javaClass.simpleName == "Conversation"
-            && ReflectionUtils.isCalledFromStrings("getValue")
-            && !ReflectionUtils.isCalledFromStrings("android.view")
+        if (activity != null &&
+            activity.javaClass.simpleName == "Conversation" &&
+            ReflectionUtils.isCalledFromStrings("getValue") &&
+            !ReflectionUtils.isCalledFromStrings("android.view")
         ) {
             return color != 0xff12181c.toInt()
         }
         return false
     }
 
-    override fun getPluginName(): String {
-        return "Custom Theme V2"
-    }
+    override fun getPluginName(): String = "Custom Theme V2"
 
     inner class IntBgColorHook : XC_MethodHook() {
         override fun beforeHookedMethod(param: MethodHookParam) {
@@ -471,10 +517,11 @@ class CustomThemeV2(loader: ClassLoader, preferences:SharedPreferences) :
             if (currentActivity == null || currentActivity.javaClass.simpleName == "Conversation") return
 
             val color = param.args[0] as Int
-            val mappedColor = resolvedColors[color]
-                ?: IColors.getFromIntColor(color, IColors.colors).also {
-                    resolvedColors[color] = it
-                }
+            val mappedColor =
+                resolvedColors[color]
+                    ?: IColors.getFromIntColor(color, IColors.colors).also {
+                        resolvedColors[color] = it
+                    }
             param.args[0] = mappedColor
         }
     }

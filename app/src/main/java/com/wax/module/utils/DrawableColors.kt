@@ -29,7 +29,10 @@ object DrawableColors {
     private var materialShapeDrawableClass: Class<*>? = null
 
     @JvmStatic
-    fun replaceColor(drawable: Drawable?, colors: HashMap<String, String>) {
+    fun replaceColor(
+        drawable: Drawable?,
+        colors: HashMap<String, String>,
+    ) {
         when (drawable) {
             null -> return
             is StateListDrawable -> {
@@ -95,14 +98,18 @@ object DrawableColors {
         }
     }
 
-    private fun replaceMaterialShapeDrawable(drawable: Drawable, colors: HashMap<String, String>) {
+    private fun replaceMaterialShapeDrawable(
+        drawable: Drawable,
+        colors: HashMap<String, String>,
+    ) {
         val shapeClass = getMaterialShapeDrawable() ?: return
         if (!shapeClass.isInstance(drawable)) return
 
         val state = XposedHelpers.callMethod(drawable, "getConstantState") as Drawable.ConstantState
-        val colorFields = ReflectionUtils.findAllFieldsUsingFilter(shapeClass) { field ->
-            field.type == ColorStateList::class.java
-        }
+        val colorFields =
+            ReflectionUtils.findAllFieldsUsingFilter(shapeClass) { field ->
+                field.type == ColorStateList::class.java
+            }
         colorFields.forEach { field ->
             val stateList = ReflectionUtils.getObjectField(field, state) as? ColorStateList ?: return@forEach
             val color = stateList.defaultColor
@@ -123,25 +130,27 @@ object DrawableColors {
 
     private fun getMaterialShapeDrawable(): Class<*>? {
         if (materialShapeDrawableClass == null) {
-            materialShapeDrawableClass = try {
-                Unobfuscator.loadMaterialShapeDrawableClass(Utils.application.classLoader)
-            } catch (_: Exception) {
-                return null
-            }
+            materialShapeDrawableClass =
+                try {
+                    Unobfuscator.loadMaterialShapeDrawableClass(Utils.application.classLoader)
+                } catch (_: Exception) {
+                    return null
+                }
         }
         return materialShapeDrawableClass
     }
 
     @JvmStatic
-    fun getColor(drawable: Drawable?): Int = when (drawable) {
-        null -> 0
-        is ColorDrawable -> getColorDrawableColor(drawable)
-        is ShapeDrawable -> getShapeDrawableColor(drawable)
-        is RippleDrawable -> getRippleDrawableColor(drawable)
-        is NinePatchDrawable -> getNinePatchDrawableColor(drawable)
-        is InsetDrawable -> getInsetDrawableColor(drawable)
-        else -> 0
-    }
+    fun getColor(drawable: Drawable?): Int =
+        when (drawable) {
+            null -> 0
+            is ColorDrawable -> getColorDrawableColor(drawable)
+            is ShapeDrawable -> getShapeDrawableColor(drawable)
+            is RippleDrawable -> getRippleDrawableColor(drawable)
+            is NinePatchDrawable -> getNinePatchDrawableColor(drawable)
+            is InsetDrawable -> getInsetDrawableColor(drawable)
+            else -> 0
+        }
 
     private fun getInsetDrawableColor(drawable: InsetDrawable): Int {
         val inner = XposedHelpers.getObjectField(drawable, "mDrawable") as? Drawable

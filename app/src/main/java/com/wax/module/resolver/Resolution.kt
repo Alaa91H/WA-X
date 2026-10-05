@@ -18,7 +18,6 @@ package com.wax.module.resolver
  * @param T what the resolver produces, typically a `Method`, `Field` or `Class`
  */
 sealed interface Resolution<out T> {
-
     /** Human readable explanation. Never contains user data; see `ReportRedactor`. */
     val reason: String
 
@@ -41,7 +40,7 @@ sealed interface Resolution<out T> {
     data class Resolved<out T>(
         val value: T,
         override val confidence: Confidence = Confidence.EXACT,
-        val how: String = "exact"
+        val how: String = "exact",
     ) : Resolution<T> {
         override val reason: String get() = "resolved via $how"
     }
@@ -54,7 +53,7 @@ sealed interface Resolution<out T> {
      */
     data class NotFound(
         override val reason: String = "no match on this build",
-        val searched: List<String> = emptyList()
+        val searched: List<String> = emptyList(),
     ) : Resolution<Nothing> {
         override val confidence: Confidence get() = Confidence.NONE
     }
@@ -68,7 +67,7 @@ sealed interface Resolution<out T> {
      */
     data class Ambiguous(
         val candidates: List<String>,
-        override val reason: String = "multiple candidates matched"
+        override val reason: String = "multiple candidates matched",
     ) : Resolution<Nothing> {
         override val confidence: Confidence get() = Confidence.AMBIGUOUS
     }
@@ -82,16 +81,17 @@ sealed interface Resolution<out T> {
      */
     data class Incompatible(
         override val reason: String,
-        val detail: String? = null
+        val detail: String? = null,
     ) : Resolution<Nothing> {
         override val confidence: Confidence get() = Confidence.NONE
     }
 
     companion object {
-
         /** Wraps a value that was found on a strong signal. */
-        fun <T> exact(value: T, how: String = "exact"): Resolution<T> =
-            Resolved(value, Confidence.EXACT, how)
+        fun <T> exact(
+            value: T,
+            how: String = "exact",
+        ): Resolution<T> = Resolved(value, Confidence.EXACT, how)
 
         /**
          * Wraps a value that was found through a heuristic.
@@ -99,12 +99,13 @@ sealed interface Resolution<out T> {
          * Named `likely` rather than `inferred` because the distinction that matters at the
          * call site is "weaker evidence", not "we deduced something".
          */
-        fun <T> likely(value: T, how: String): Resolution<T> =
-            Resolved(value, Confidence.LIKELY, how)
+        fun <T> likely(
+            value: T,
+            how: String,
+        ): Resolution<T> = Resolved(value, Confidence.LIKELY, how)
 
         /** Not found, listing what was searched for. */
-        fun notFound(vararg searched: String): Resolution<Nothing> =
-            NotFound(searched = searched.toList())
+        fun notFound(vararg searched: String): Resolution<Nothing> = NotFound(searched = searched.toList())
 
         /**
          * Chooses between the outcomes of a lookup that produced [candidates].
@@ -119,17 +120,24 @@ sealed interface Resolution<out T> {
             candidates: List<T>,
             exact: Boolean,
             how: String,
-            describe: (T) -> String
-        ): Resolution<T> = when (candidates.size) {
-            0 -> NotFound(searched = listOf(how))
-            1 -> if (exact) Resolved(candidates[0], Confidence.EXACT, how)
-            else Resolved(candidates[0], Confidence.LIKELY, how)
+            describe: (T) -> String,
+        ): Resolution<T> =
+            when (candidates.size) {
+                0 -> NotFound(searched = listOf(how))
+                1 ->
+                    if (exact) {
+                        Resolved(candidates[0], Confidence.EXACT, how)
+                    } else {
+                        Resolved(candidates[0], Confidence.LIKELY, how)
+                    }
 
-            else -> Ambiguous(candidates.map(describe))
-        }
+                else -> Ambiguous(candidates.map(describe))
+            }
 
         /** Lifts a nullable legacy result into a typed one, preserving current behaviour. */
-        fun <T : Any> fromNullable(value: T?, reason: String = "no match on this build"): Resolution<T> =
-            if (value == null) NotFound(reason) else Resolved(value, Confidence.EXACT, reason)
+        fun <T : Any> fromNullable(
+            value: T?,
+            reason: String = "no match on this build",
+        ): Resolution<T> = if (value == null) NotFound(reason) else Resolved(value, Confidence.EXACT, reason)
     }
 }

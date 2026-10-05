@@ -19,13 +19,15 @@ class LimitedEditTextPreference : EditTextPreference {
     }
 
     private fun init(attrs: AttributeSet?) {
-        maxLength = if (attrs != null) {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.LimitedEditTextPreference)
-            typedArray.getInt(R.styleable.LimitedEditTextPreference_maxLength, DEFAULT_MAX_LENGTH)
-                .also { typedArray.recycle() }
-        } else {
-            DEFAULT_MAX_LENGTH
-        }
+        maxLength =
+            if (attrs != null) {
+                val typedArray = context.obtainStyledAttributes(attrs, R.styleable.LimitedEditTextPreference)
+                typedArray
+                    .getInt(R.styleable.LimitedEditTextPreference_maxLength, DEFAULT_MAX_LENGTH)
+                    .also { typedArray.recycle() }
+            } else {
+                DEFAULT_MAX_LENGTH
+            }
         setOnBindEditTextListener(::setMaxLength)
     }
 

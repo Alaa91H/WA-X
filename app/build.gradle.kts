@@ -38,20 +38,12 @@ android {
     compileSdk = 37
     ndkVersion = "28.2.13676358"
 
-    flavorDimensions += "version"
-
-    productFlavors {
-        create("whatsapp") {
-            dimension = "version"
-            applicationIdSuffix = ""
-            isDefault = true
-        }
-        create("business") {
-            dimension = "version"
-            applicationIdSuffix = ".w4b"
-            resValue("string", "app_name", "WA X Business")
-        }
-    }
+    // No product flavors. WA X ships as one APK that hooks both com.whatsapp and
+    // com.whatsapp.w4b, and keeps their settings apart through the target-aware
+    // settings model rather than through two application ids and two accidental
+    // preference files. Removing the flavors before that model existed would have
+    // merged every user's WhatsApp and Business settings into one, which is why the
+    // settings work landed first and this landed second.
 
     defaultConfig {
         applicationId = "com.wax.module"
@@ -167,24 +159,12 @@ android {
     // cannot pass locally and fail in CI.
     spotless {
         kotlin {
+            // Whole-tree coverage, package structure deliberately not enumerated: an
+            // enumerated list is a promise to update it on every move, and the package
+            // migration silently emptied this one instead. `**/*.kt` over src/main
+            // plus src/test cannot rot that way.
             target(
-                "src/main/java/com/wmods/wppenhacer/compat/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/config/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/diagnostics/**/*.kt",
-                // T76-T160: platform engines and every feature package they serve.
-                "src/main/java/com/wmods/wppenhacer/platform/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/privacy/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/history/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/scheduler/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/automation/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/intelligence/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/media/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/theme/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/notifications/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/storage/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/multipackage/**/*.kt",
-                "src/main/java/com/wmods/wppenhacer/xposed/bridge/BridgeAccessPolicy.kt",
-                "src/main/java/com/wmods/wppenhacer/xposed/core/components/PreferenceValueHooks.kt",
+                "src/main/java/**/*.kt",
                 "src/test/**/*.kt",
             )
             ktlint("1.5.0")
@@ -205,16 +185,11 @@ android {
 
 androidComponents {
     onVariants { variant ->
-        // Output names carry the product identity so a downloaded APK is
-        // recognisable without opening it: WA-X-<version>.apk, and the Business
-        // build gets the same name once the flavors are unified.
-        val appName =
-            when (variant.flavorName) {
-                "business" -> "WA-X-Business"
-                else -> "WA-X"
-            }
+        // One output name for one APK. The old flavors produced a second file with a
+        // `-Business` suffix for the same code, which only existed to give the two
+        // builds separate preference files; the settings model does that now.
         variant.outputs.forEach { output ->
-            output.outputFileName.set(output.versionName.map { "$appName-$it.apk" })
+            output.outputFileName.set(output.versionName.map { "WA-X-$it.apk" })
         }
     }
 }
@@ -275,7 +250,9 @@ interface InjectedExecOps {
 }
 
 afterEvaluate {
-    listOf("installWhatsappDebug", "installBusinessDebug").forEach { taskName ->
+    // One install task now that there is one flavor. The restart helper below is
+    // generic: it reads `debug_package_name`, which is set per install target.
+    listOf("installDebug").forEach { taskName ->
         tasks.findByName(taskName)?.doLast {
             runCatching {
                 val injected = project.objects.newInstance<InjectedExecOps>()

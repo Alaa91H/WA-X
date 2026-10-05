@@ -10,18 +10,18 @@ import java.io.File
 import java.util.stream.Collectors
 
 class MessageStore private constructor() {
-
     private var sqLiteDatabase: SQLiteDatabase? = null
 
     init {
         val dataDir = Utils.getAccountDataDir()
         val dbFile = File(dataDir, "/databases/msgstore.db")
         if (dbFile.exists()) {
-            sqLiteDatabase = SQLiteDatabase.openDatabase(
-                dbFile.absolutePath,
-                null,
-                SQLiteDatabase.OPEN_READONLY
-            )
+            sqLiteDatabase =
+                SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READONLY,
+                )
         }
     }
 
@@ -30,13 +30,12 @@ class MessageStore private constructor() {
         private var mInstance: MessageStore? = null
 
         @JvmStatic
-        fun getInstance(): MessageStore {
-            return mInstance?.takeIf { it.sqLiteDatabase?.isOpen == true }
+        fun getInstance(): MessageStore =
+            mInstance?.takeIf { it.sqLiteDatabase?.isOpen == true }
                 ?: synchronized(this) {
                     mInstance?.takeIf { it.sqLiteDatabase?.isOpen == true }
                         ?: MessageStore().also { mInstance = it }
                 }
-        }
     }
 
     fun getMessageById(id: Long): String {
@@ -47,7 +46,8 @@ class MessageStore private constructor() {
             val selection = "docid=?"
             val selectionArgs = arrayOf(id.toString())
 
-            db.query("message_ftsv2_content", columns, selection, selectionArgs, null, null, null)
+            db
+                .query("message_ftsv2_content", columns, selection, selectionArgs, null, null, null)
                 .use { cursor ->
                     if (cursor.moveToFirst()) {
                         message = cursor.getString(cursor.getColumnIndexOrThrow("c0content"))
@@ -99,7 +99,8 @@ class MessageStore private constructor() {
         val selection = "message_row_id=?"
         val selectionArgs = arrayOf(id.toString())
         try {
-            db.query("message_media", columns, selection, selectionArgs, null, null, null)
+            db
+                .query("message_media", columns, selection, selectionArgs, null, null, null)
                 .use { cursor ->
                     if (cursor.moveToFirst()) {
                         return cursor.getString(0)
@@ -172,7 +173,11 @@ class MessageStore private constructor() {
     }
 
     @Synchronized
-    fun executeWritableSQL(sql: String, maxRetries: Int = 3, retryDelayMs: Long = 500L) {
+    fun executeWritableSQL(
+        sql: String,
+        maxRetries: Int = 3,
+        retryDelayMs: Long = 500L,
+    ) {
         val dataDir = Utils.getAccountDataDir()
         val dbFile = File(dataDir, "/databases/msgstore.db")
         if (!dbFile.exists()) return
@@ -181,14 +186,16 @@ class MessageStore private constructor() {
         while (retries < maxRetries) {
             var writeDb: SQLiteDatabase? = null
             try {
-                writeDb = SQLiteDatabase.openDatabase(
-                    dbFile.absolutePath,
-                    null,
-                    SQLiteDatabase.OPEN_READWRITE
-                )
+                writeDb =
+                    SQLiteDatabase.openDatabase(
+                        dbFile.absolutePath,
+                        null,
+                        SQLiteDatabase.OPEN_READWRITE,
+                    )
                 try {
                     writeDb.rawQuery("PRAGMA busy_timeout = 3000;", null).close()
-                } catch (ignored: Exception) {}
+                } catch (ignored: Exception) {
+                }
 
                 writeDb.execSQL(sql)
                 return
@@ -202,7 +209,8 @@ class MessageStore private constructor() {
                     } else {
                         try {
                             Thread.sleep(retryDelayMs * retries)
-                        } catch (ignored: InterruptedException) {}
+                        } catch (ignored: InterruptedException) {
+                        }
                     }
                 } else {
                     XposedBridge.log(e)
@@ -211,7 +219,8 @@ class MessageStore private constructor() {
             } finally {
                 try {
                     writeDb?.close()
-                } catch (ignored: Exception) {}
+                } catch (ignored: Exception) {
+                }
             }
         }
     }
@@ -242,9 +251,7 @@ class MessageStore private constructor() {
         return result
     }
 
-    fun getDatabase(): SQLiteDatabase? {
-        return sqLiteDatabase
-    }
+    fun getDatabase(): SQLiteDatabase? = sqLiteDatabase
 
     @SuppressLint("Recycle")
     @Synchronized
@@ -254,7 +261,8 @@ class MessageStore private constructor() {
             return null
         }
 
-        val sql = """
+        val sql =
+            """
             WITH resolved(jid_row_id) AS (
                 SELECT _id FROM jid WHERE raw_string=?
                 UNION
@@ -273,7 +281,7 @@ class MessageStore private constructor() {
             INNER JOIN chat_target c ON c._id = m.chat_row_id
             ORDER BY m.sort_id ASC, m._id ASC
             LIMIT 1
-        """.trimIndent()
+            """.trimIndent()
 
         try {
             db.rawQuery(sql, arrayOf(rawJid, rawJid, rawJid)).use { cursor ->
@@ -287,7 +295,10 @@ class MessageStore private constructor() {
         return null
     }
 
-    fun deleteStatusByMessageKey(messageKey: String?, callback: ((Boolean) -> Unit)? = null) {
+    fun deleteStatusByMessageKey(
+        messageKey: String?,
+        callback: ((Boolean) -> Unit)? = null,
+    ) {
         Utils.databaseExecutor.execute {
             val result = deleteStatusByMessageKeySync(messageKey)
             callback?.invoke(result)
@@ -300,20 +311,21 @@ class MessageStore private constructor() {
             return false
         }
         val dbFile = File(Utils.application.filesDir.parentFile, "/databases/status.db")
-        val statusDbInstance: SQLiteDatabase? = if (dbFile.exists()) {
-            try {
-                SQLiteDatabase.openDatabase(
-                    dbFile.absolutePath,
-                    null,
-                    SQLiteDatabase.OPEN_READWRITE
-                )
-            } catch (e: Exception) {
-                XposedBridge.log(e)
+        val statusDbInstance: SQLiteDatabase? =
+            if (dbFile.exists()) {
+                try {
+                    SQLiteDatabase.openDatabase(
+                        dbFile.absolutePath,
+                        null,
+                        SQLiteDatabase.OPEN_READWRITE,
+                    )
+                } catch (e: Exception) {
+                    XposedBridge.log(e)
+                    null
+                }
+            } else {
                 null
             }
-        } else {
-            null
-        }
 
         if (statusDbInstance != null && statusDbInstance.isOpen) {
             try {
@@ -321,59 +333,63 @@ class MessageStore private constructor() {
                 var mediaFilePath: String? = null
 
                 try {
-                    statusDbInstance.query(
-                        "status",
-                        arrayOf("row_id"),
-                        "uuid=?",
-                        arrayOf(messageKey),
-                        null,
-                        null,
-                        null
-                    ).use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            statusRowId = cursor.getLong(0)
+                    statusDbInstance
+                        .query(
+                            "status",
+                            arrayOf("row_id"),
+                            "uuid=?",
+                            arrayOf(messageKey),
+                            null,
+                            null,
+                            null,
+                        ).use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                statusRowId = cursor.getLong(0)
+                            }
                         }
-                    }
                 } catch (e: Exception) {
                     XposedBridge.log(e)
                 }
 
                 if (statusRowId != null) {
                     try {
-                        statusDbInstance.rawQuery(
-                            "SELECT st.thumbnail_path, mc.file_path " +
+                        statusDbInstance
+                            .rawQuery(
+                                "SELECT st.thumbnail_path, mc.file_path " +
                                     "FROM status_thumbnail st " +
                                     "LEFT JOIN media_content mc ON st.media_content_row_id = mc.row_id " +
                                     "WHERE st.status_row_id = ? LIMIT 1",
-                            arrayOf(statusRowId.toString())
-                        ).use { cursor ->
-                            if (cursor.moveToFirst()) {
-                                val thumbPath = if (cursor.isNull(0)) null else cursor.getString(0)
-                                val mcPath = if (cursor.isNull(1)) null else cursor.getString(1)
-                                mediaFilePath = when {
-                                    !thumbPath.isNullOrEmpty() -> thumbPath
-                                    !mcPath.isNullOrEmpty() -> mcPath
-                                    else -> null
+                                arrayOf(statusRowId.toString()),
+                            ).use { cursor ->
+                                if (cursor.moveToFirst()) {
+                                    val thumbPath = if (cursor.isNull(0)) null else cursor.getString(0)
+                                    val mcPath = if (cursor.isNull(1)) null else cursor.getString(1)
+                                    mediaFilePath =
+                                        when {
+                                            !thumbPath.isNullOrEmpty() -> thumbPath
+                                            !mcPath.isNullOrEmpty() -> mcPath
+                                            else -> null
+                                        }
                                 }
                             }
-                        }
                     } catch (e: Exception) {
                         XposedBridge.log(e)
                     }
 
                     if (mediaFilePath.isNullOrEmpty()) {
                         try {
-                            statusDbInstance.rawQuery(
-                                "SELECT mc.file_path " +
+                            statusDbInstance
+                                .rawQuery(
+                                    "SELECT mc.file_path " +
                                         "FROM status_media_link sml " +
                                         "JOIN media_content mc ON sml.media_content_row_id = mc.row_id " +
                                         "WHERE sml.status_row_id = ? LIMIT 1",
-                                arrayOf(statusRowId.toString())
-                            ).use { cursor ->
-                                if (cursor.moveToFirst()) {
-                                    mediaFilePath = if (cursor.isNull(0)) null else cursor.getString(0)
+                                    arrayOf(statusRowId.toString()),
+                                ).use { cursor ->
+                                    if (cursor.moveToFirst()) {
+                                        mediaFilePath = if (cursor.isNull(0)) null else cursor.getString(0)
+                                    }
                                 }
-                            }
                         } catch (e: Exception) {
                             XposedBridge.log(e)
                         }
@@ -401,20 +417,21 @@ class MessageStore private constructor() {
         }
 
         val msgStoreFile = File(Utils.application.filesDir.parentFile, "/databases/msgstore.db")
-        val writeDb = if (msgStoreFile.exists()) {
-            try {
-                SQLiteDatabase.openDatabase(
-                    msgStoreFile.absolutePath,
-                    null,
-                    SQLiteDatabase.OPEN_READWRITE
-                )
-            } catch (e: Exception) {
-                XposedBridge.log(e)
+        val writeDb =
+            if (msgStoreFile.exists()) {
+                try {
+                    SQLiteDatabase.openDatabase(
+                        msgStoreFile.absolutePath,
+                        null,
+                        SQLiteDatabase.OPEN_READWRITE,
+                    )
+                } catch (e: Exception) {
+                    XposedBridge.log(e)
+                    null
+                }
+            } else {
                 null
-            }
-        } else {
-            null
-        } ?: return false
+            } ?: return false
 
         var messageRowId: Long? = null
         var senderJidRowId: Long? = null
@@ -424,19 +441,20 @@ class MessageStore private constructor() {
 
         try {
             try {
-                writeDb.rawQuery(
-                    "SELECT _id, sender_jid_row_id, chat_row_id " +
+                writeDb
+                    .rawQuery(
+                        "SELECT _id, sender_jid_row_id, chat_row_id " +
                             "FROM message " +
                             "WHERE key_id=? AND from_me=0 " +
                             "ORDER BY _id DESC LIMIT 1",
-                    arrayOf(messageKey)
-                ).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        messageRowId = if (cursor.isNull(0)) null else cursor.getLong(0)
-                        senderJidRowId = if (cursor.isNull(1)) null else cursor.getLong(1)
-                        chatRowId = if (cursor.isNull(2)) null else cursor.getLong(2)
+                        arrayOf(messageKey),
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            messageRowId = if (cursor.isNull(0)) null else cursor.getLong(0)
+                            senderJidRowId = if (cursor.isNull(1)) null else cursor.getLong(1)
+                            chatRowId = if (cursor.isNull(2)) null else cursor.getLong(2)
+                        }
                     }
-                }
             } catch (e: Exception) {
                 XposedBridge.log(e)
             }
@@ -446,14 +464,15 @@ class MessageStore private constructor() {
             }
 
             try {
-                writeDb.rawQuery(
-                    "SELECT file_path FROM message_media WHERE message_row_id=? LIMIT 1",
-                    arrayOf(messageRowId.toString())
-                ).use { mediaCursor ->
-                    if (mediaCursor.moveToFirst()) {
-                        mediaFilePath = mediaCursor.getString(0)
+                writeDb
+                    .rawQuery(
+                        "SELECT file_path FROM message_media WHERE message_row_id=? LIMIT 1",
+                        arrayOf(messageRowId.toString()),
+                    ).use { mediaCursor ->
+                        if (mediaCursor.moveToFirst()) {
+                            mediaFilePath = mediaCursor.getString(0)
+                        }
                     }
-                }
             } catch (e: Exception) {
                 XposedBridge.log(e)
             }
@@ -483,7 +502,11 @@ class MessageStore private constructor() {
         return deleted
     }
 
-    private fun refreshStatusRow(db: SQLiteDatabase, senderJidRowId: Long, chatRowId: Long) {
+    private fun refreshStatusRow(
+        db: SQLiteDatabase,
+        senderJidRowId: Long,
+        chatRowId: Long,
+    ) {
         var latestMessageId: Long = -1
         var latestTimestamp: Long = 0
         var totalCount = 0
@@ -491,32 +514,33 @@ class MessageStore private constructor() {
         var firstUnreadMessageId: Long? = null
 
         try {
-            db.rawQuery(
-                "SELECT _id, timestamp, status " +
+            db
+                .rawQuery(
+                    "SELECT _id, timestamp, status " +
                         "FROM message " +
                         "WHERE sender_jid_row_id=? AND chat_row_id=? " +
                         "ORDER BY timestamp DESC, _id DESC",
-                arrayOf(senderJidRowId.toString(), chatRowId.toString())
-            ).use { cursor ->
-                var first = true
-                while (cursor.moveToNext()) {
-                    val rowId = cursor.getLong(0)
-                    val ts = cursor.getLong(1)
-                    val status = cursor.getInt(2)
+                    arrayOf(senderJidRowId.toString(), chatRowId.toString()),
+                ).use { cursor ->
+                    var first = true
+                    while (cursor.moveToNext()) {
+                        val rowId = cursor.getLong(0)
+                        val ts = cursor.getLong(1)
+                        val status = cursor.getInt(2)
 
-                    if (first) {
-                        latestMessageId = rowId
-                        latestTimestamp = ts
-                        first = false
-                    }
+                        if (first) {
+                            latestMessageId = rowId
+                            latestTimestamp = ts
+                            first = false
+                        }
 
-                    totalCount++
-                    if (status == 0) {
-                        unseenCount++
-                        firstUnreadMessageId = rowId
+                        totalCount++
+                        if (status == 0) {
+                            unseenCount++
+                            firstUnreadMessageId = rowId
+                        }
                     }
                 }
-            }
         } catch (e: Exception) {
             XposedBridge.log(e)
         }
@@ -528,16 +552,16 @@ class MessageStore private constructor() {
 
         db.execSQL(
             "UPDATE status " +
-                    "SET message_table_id=?, " +
-                    "timestamp=?, " +
-                    "total_count=?, " +
-                    "unseen_count=?, " +
-                    "unseen_count_close_friends=CASE " +
-                    "WHEN unseen_count_close_friends IS NULL THEN NULL " +
-                    "WHEN unseen_count_close_friends > ? THEN ? " +
-                    "ELSE unseen_count_close_friends END, " +
-                    "first_unread_message_table_id=? " +
-                    "WHERE jid_row_id=?",
+                "SET message_table_id=?, " +
+                "timestamp=?, " +
+                "total_count=?, " +
+                "unseen_count=?, " +
+                "unseen_count_close_friends=CASE " +
+                "WHEN unseen_count_close_friends IS NULL THEN NULL " +
+                "WHEN unseen_count_close_friends > ? THEN ? " +
+                "ELSE unseen_count_close_friends END, " +
+                "first_unread_message_table_id=? " +
+                "WHERE jid_row_id=?",
             arrayOf<Any?>(
                 latestMessageId,
                 latestTimestamp,
@@ -546,31 +570,34 @@ class MessageStore private constructor() {
                 unseenCount,
                 unseenCount,
                 firstUnreadMessageId,
-                senderJidRowId
-            )
+                senderJidRowId,
+            ),
         )
 
         db.execSQL(
             "UPDATE status " +
-                    "SET last_read_message_table_id = CASE " +
-                    "WHEN last_read_message_table_id IN (" +
-                    "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
-                    ") THEN last_read_message_table_id ELSE NULL END, " +
-                    "last_read_receipt_sent_message_table_id = CASE " +
-                    "WHEN last_read_receipt_sent_message_table_id IN (" +
-                    "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
-                    ") THEN last_read_receipt_sent_message_table_id ELSE NULL END, " +
-                    "autodownload_limit_message_table_id = CASE " +
-                    "WHEN autodownload_limit_message_table_id IN (" +
-                    "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
-                    ") THEN autodownload_limit_message_table_id ELSE NULL END " +
-                    "WHERE jid_row_id=?",
+                "SET last_read_message_table_id = CASE " +
+                "WHEN last_read_message_table_id IN (" +
+                "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
+                ") THEN last_read_message_table_id ELSE NULL END, " +
+                "last_read_receipt_sent_message_table_id = CASE " +
+                "WHEN last_read_receipt_sent_message_table_id IN (" +
+                "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
+                ") THEN last_read_receipt_sent_message_table_id ELSE NULL END, " +
+                "autodownload_limit_message_table_id = CASE " +
+                "WHEN autodownload_limit_message_table_id IN (" +
+                "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
+                ") THEN autodownload_limit_message_table_id ELSE NULL END " +
+                "WHERE jid_row_id=?",
             arrayOf<Any>(
-                senderJidRowId, chatRowId,
-                senderJidRowId, chatRowId,
-                senderJidRowId, chatRowId,
-                senderJidRowId
-            )
+                senderJidRowId,
+                chatRowId,
+                senderJidRowId,
+                chatRowId,
+                senderJidRowId,
+                chatRowId,
+                senderJidRowId,
+            ),
         )
     }
 
@@ -602,5 +629,9 @@ class MessageStore private constructor() {
         }
     }
 
-    data class MessageInfo(val rowId: Long, val sortId: Long, val chatRowId: Long)
+    data class MessageInfo(
+        val rowId: Long,
+        val sortId: Long,
+        val chatRowId: Long,
+    )
 }

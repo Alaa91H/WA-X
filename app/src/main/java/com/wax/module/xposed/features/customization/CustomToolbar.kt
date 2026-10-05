@@ -3,6 +3,7 @@ package com.wax.module.xposed.features.customization
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
@@ -20,15 +21,14 @@ import com.wax.module.xposed.features.general.Others
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
+import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
 import org.luckypray.dexkit.query.enums.StringMatchType
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
 
 private const val TYPE_ARCHIVE_MULTI_CLICK = "1"
 private const val TYPE_ARCHIVE_LONG_CLICK = "2"
@@ -39,8 +39,10 @@ private const val SUBTITLE_TEXT_SIZE = 12f
 
 private var onMenuItemSelected: Method? = null
 
-class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class CustomToolbar(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     private var mDateExpiration: String? = null
 
     @Throws(Exception::class)
@@ -56,16 +58,14 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
             ModuleRuntime.homeActivityClass,
             "onCreate",
             Bundle::class.java,
-            methodHook
+            methodHook,
         )
 
         hookExpirationInfo()
         Others.propsBoolean[6481] = false
     }
 
-    override fun getPluginName(): String {
-        return "Show Name and Bio"
-    }
+    override fun getPluginName(): String = "Show Name and Bio"
 
     private fun hookExpirationInfo() {
         hookExpirationDate()
@@ -75,17 +75,22 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
     private fun hookExpirationDate() {
         val expirationClass = Unobfuscator.loadExpirationClass(classLoader)
 
-        XposedBridge.hookAllConstructors(expirationClass, object : XC_MethodHook() {
-            @SuppressLint("SetTextI18n")
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val method = ReflectionUtils.findMethodUsingFilter(
-                    param.thisObject.javaClass
-                ) { m: Method -> m.returnType == Date::class.java }
-                val date = method.invoke(param.thisObject) as Date
-                mDateExpiration = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    .format(date)
-            }
-        })
+        XposedBridge.hookAllConstructors(
+            expirationClass,
+            object : XC_MethodHook() {
+                @SuppressLint("SetTextI18n")
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val method =
+                        ReflectionUtils.findMethodUsingFilter(
+                            param.thisObject.javaClass,
+                        ) { m: Method -> m.returnType == Date::class.java }
+                    val date = method.invoke(param.thisObject) as Date
+                    mDateExpiration =
+                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            .format(date)
+                }
+            },
+        )
     }
 
     private fun hookAboutActivity() {
@@ -105,16 +110,15 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
                         version.text = "${version.text} $expirationText"
                     }
                 }
-            }
+            },
         )
     }
 
     private class ToolbarMethodHook(
         private val showName: Boolean,
         private val showBio: Boolean,
-        private val typeArchive: String
+        private val typeArchive: String,
     ) : XC_MethodHook() {
-
         override fun afterHookedMethod(param: MethodHookParam) {
             val homeActivity = param.thisObject as Activity
             val toolbar = homeActivity.findViewById<ViewGroup>(Utils.getID("toolbar", "id"))
@@ -145,57 +149,78 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
         }
 
         private fun createArchiveIntent(homeActivity: Activity): Intent {
-            val archivedClass = Unobfuscator.findFirstClassUsingName(
-                homeActivity.classLoader,
-                StringMatchType.EndsWith,
-                "ArchivedConversationsActivity"
-            )
+            val archivedClass =
+                Unobfuscator.findFirstClassUsingName(
+                    homeActivity.classLoader,
+                    StringMatchType.EndsWith,
+                    "ArchivedConversationsActivity",
+                )
             return Intent().apply {
                 setClassName(Utils.application.packageName, archivedClass.name)
             }
         }
 
-        private fun setupArchiveListener(toolbar: ViewGroup, homeActivity: Activity, intent: Intent) {
+        private fun setupArchiveListener(
+            toolbar: ViewGroup,
+            homeActivity: Activity,
+            intent: Intent,
+        ) {
             when (typeArchive) {
                 TYPE_ARCHIVE_MULTI_CLICK -> setupMultiClickListener(toolbar, homeActivity, intent)
                 TYPE_ARCHIVE_LONG_CLICK -> setupLongClickListener(toolbar, homeActivity, intent)
             }
         }
 
-        private fun setupMultiClickListener(toolbar: ViewGroup, homeActivity: Activity, intent: Intent) {
-            val listener = object : OnMultiClickListener(MULTI_CLICK_COUNT, MULTI_CLICK_INTERVAL.toLong()) {
-                override fun onMultiClick(v: View) {
-                    homeActivity.startActivity(intent)
+        private fun setupMultiClickListener(
+            toolbar: ViewGroup,
+            homeActivity: Activity,
+            intent: Intent,
+        ) {
+            val listener =
+                object : OnMultiClickListener(MULTI_CLICK_COUNT, MULTI_CLICK_INTERVAL.toLong()) {
+                    override fun onMultiClick(v: View) {
+                        homeActivity.startActivity(intent)
+                    }
                 }
-            }
             toolbar.setOnClickListener(listener)
         }
 
-        private fun setupLongClickListener(toolbar: ViewGroup, homeActivity: Activity, intent: Intent) {
+        private fun setupLongClickListener(
+            toolbar: ViewGroup,
+            homeActivity: Activity,
+            intent: Intent,
+        ) {
             toolbar.setOnLongClickListener {
                 homeActivity.startActivity(intent)
                 true
             }
         }
 
-        private fun createToolbarLayout(homeActivity: Activity, toolbar: ViewGroup): LinearLayout {
+        private fun createToolbarLayout(
+            homeActivity: Activity,
+            toolbar: ViewGroup,
+        ): LinearLayout {
             val linearLayout = LinearLayout(homeActivity)
             linearLayout.orientation = LinearLayout.VERTICAL
             toolbar.addView(linearLayout, 0)
             return linearLayout
         }
 
-        private fun createTitleView(homeActivity: Activity, parent: LinearLayout) {
+        private fun createTitleView(
+            homeActivity: Activity,
+            parent: LinearLayout,
+        ) {
             val name = ModuleRuntime.getMyName()
             val titleText = if (showName) name else "WhatsApp"
 
             val mTitle = TextView(homeActivity)
             mTitle.text = titleText
-            mTitle.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                1f
-            )
+            mTitle.layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f,
+                )
             mTitle.textSize = TITLE_TEXT_SIZE
             mTitle.setTextColor(DesignUtils.getPrimaryTextColor())
 
@@ -206,14 +231,18 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
             parent.addView(mTitle)
         }
 
-        private fun createSubtitleView(homeActivity: Activity, parent: LinearLayout) {
+        private fun createSubtitleView(
+            homeActivity: Activity,
+            parent: LinearLayout,
+        ) {
             val bio = ModuleRuntime.getMyBio()
 
             val mSubtitle = TextView(homeActivity)
-            mSubtitle.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
+            mSubtitle.layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                )
             mSubtitle.text = bio
             mSubtitle.textSize = SUBTITLE_TEXT_SIZE
             mSubtitle.setTextColor(DesignUtils.getPrimaryTextColor())
@@ -225,7 +254,10 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
             parent.addView(mSubtitle)
         }
 
-        private fun hideOriginalLogo(homeActivity: Activity, logo: View) {
+        private fun hideOriginalLogo(
+            homeActivity: Activity,
+            logo: View,
+        ) {
             val parent = logo.parent as ViewGroup
             val window = homeActivity.window.decorView as ViewGroup
 
@@ -239,16 +271,22 @@ class CustomToolbar(loader: ClassLoader, preferences:SharedPreferences) : Featur
             hideLayout.addView(logo)
         }
 
-        private fun setupTabVisibilityHook(tabInstance: Any, toolbarLayout: LinearLayout) {
-            XposedBridge.hookMethod(onMenuItemSelected!!, object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    if (tabInstance != param.thisObject) return
+        private fun setupTabVisibilityHook(
+            tabInstance: Any,
+            toolbarLayout: LinearLayout,
+        ) {
+            XposedBridge.hookMethod(
+                onMenuItemSelected!!,
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        if (tabInstance != param.thisObject) return
 
-                    val currentIndex = param.args[0] as Int
-                    val visibility = if (currentIndex == 0) View.VISIBLE else View.GONE
-                    toolbarLayout.visibility = visibility
-                }
-            })
+                        val currentIndex = param.args[0] as Int
+                        val visibility = if (currentIndex == 0) View.VISIBLE else View.GONE
+                        toolbarLayout.visibility = visibility
+                    }
+                },
+            )
         }
     }
 }

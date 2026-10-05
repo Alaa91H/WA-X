@@ -22,13 +22,14 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.Locale
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
-class UnobfuscatorCache private constructor(private val mApplication: Application) {
-
+class UnobfuscatorCache private constructor(
+    private val mApplication: Application,
+) {
     val sPrefsCacheHooks: SharedPreferences
     private val sPrefsCacheStrings: SharedPreferences
     private val reverseResourceMap = ConcurrentHashMap<String, String>()
@@ -40,21 +41,26 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
             sPrefsCacheStrings =
                 mApplication.getSharedPreferences("UnobfuscatorCacheStrings", Context.MODE_PRIVATE)
             val version = sPrefsCacheHooks.getLong("version", 0)
-            val currentVersion = mApplication.packageManager
-                .getPackageInfo(mApplication.packageName, 0).longVersionCode
+            val currentVersion =
+                mApplication.packageManager
+                    .getPackageInfo(mApplication.packageName, 0)
+                    .longVersionCode
             val savedUpdateTime = sPrefsCacheHooks.getLong("updateTime", 0)
             val savedCacheSchemaVersion = sPrefsCacheHooks.getInt("cache_schema_version", 0)
             val savedVersionName = sPrefsCacheHooks.getString("wae_version_name", "") ?: ""
             val versionName = BuildConfig.VERSION_NAME
             var lastUpdateTime = savedUpdateTime
             try {
-                lastUpdateTime = mApplication.packageManager
-                    .getPackageInfo(BuildConfig.APPLICATION_ID, 0).lastUpdateTime
+                lastUpdateTime =
+                    mApplication.packageManager
+                        .getPackageInfo(BuildConfig.APPLICATION_ID, 0)
+                        .lastUpdateTime
             } catch (_: Exception) {
             }
-            if (version != currentVersion || (savedUpdateTime != lastUpdateTime && BuildConfig.RESET_ON_INSTALL)
-                || versionName != savedVersionName
-                || savedCacheSchemaVersion != CACHE_SCHEMA_VERSION
+            if (version != currentVersion ||
+                (savedUpdateTime != lastUpdateTime && BuildConfig.RESET_ON_INSTALL) ||
+                versionName != savedVersionName ||
+                savedCacheSchemaVersion != CACHE_SCHEMA_VERSION
             ) {
                 Utils.showToast(mApplication.getString(R.string.starting_cache), Toast.LENGTH_LONG)
                 sPrefsCacheHooks.edit(commit = true) { clear() }
@@ -63,7 +69,7 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
                 sPrefsCacheHooks.edit(commit = true) {
                     putInt(
                         "cache_schema_version",
-                        CACHE_SCHEMA_VERSION
+                        CACHE_SCHEMA_VERSION,
                     )
                 }
                 sPrefsCacheHooks.edit(commit = true) { putString("wae_version_name", versionName) }
@@ -87,9 +93,7 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         }
 
         @JvmStatic
-        fun getInstance(): UnobfuscatorCache {
-            return mInstance!!
-        }
+        fun getInstance(): UnobfuscatorCache = mInstance!!
     }
 
     private fun initCacheStrings() {
@@ -110,16 +114,22 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
             val pool = table.stringPool
             val pkg = table.getPackage(app.packageName) ?: return
             val typeChunks = pkg.getTypeChunks("string")
-            val chunk = typeChunks.stream().filter { typeChunk ->
-                typeChunk.configuration.isDefault
-            }.findFirst().orElse(null) ?: return
+            val chunk =
+                typeChunks
+                    .stream()
+                    .filter { typeChunk ->
+                        typeChunk.configuration.isDefault
+                    }.findFirst()
+                    .orElse(null) ?: return
             val entries = chunk.entries
             val baseValue = 0x7f12
             for ((keyHexValue, entry) in entries) {
                 try {
                     val result = baseValue shl 16 or keyHexValue
                     val resourceString =
-                        pool.getString(entry.value()!!.data()).lowercase(Locale.ROOT)
+                        pool
+                            .getString(entry.value()!!.data())
+                            .lowercase(Locale.ROOT)
                             .replace("\\s".toRegex(), "")
                     if (reverseResourceMap.containsKey(resourceString)) continue
                     reverseResourceMap[resourceString] = result.toString()
@@ -157,8 +167,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
                         for (i in threadStartId..threadEndId) {
                             try {
                                 val resourceString = resources.getString(i)
-                                val key = resourceString.lowercase(Locale.ROOT)
-                                    .replace("\\s".toRegex(), "")
+                                val key =
+                                    resourceString
+                                        .lowercase(Locale.ROOT)
+                                        .replace("\\s".toRegex(), "")
                                 if (reverseResourceMap.containsKey(key)) continue
                                 reverseResourceMap[key] = i.toString()
                             } catch (_: Resources.NotFoundException) {
@@ -171,7 +183,7 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
             }
             latch.await()
             XposedBridge.log(
-                "String cache saved in ${System.currentTimeMillis() - currentTime}ms"
+                "String cache saved in ${System.currentTimeMillis() - currentTime}ms",
             )
         } catch (e: Exception) {
             XposedBridge.log(e)
@@ -207,28 +219,36 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return if (id < 1) "" else mApplication.resources.getString(id)
     }
 
-    fun getField(loader: ClassLoader, functionCall: FunctionCall<Field>): Field {
+    fun getField(
+        loader: ClassLoader,
+        functionCall: FunctionCall<Field>,
+    ): Field {
         val methodName = getKeyName()
-        val value = sPrefsCacheHooks.getString(methodName, null) ?: try {
-            val result = functionCall.call() ?: throw NoSuchFieldException("Field is null")
-            saveField(methodName, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting field $methodName: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(methodName, null) ?: try {
+                val result = functionCall.call() ?: throw NoSuchFieldException("Field is null")
+                saveField(methodName, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting field $methodName: ${e.message}", e)
+            }
         return getFieldFromJson(loader, JSONObject(value))
     }
 
     @Suppress("unused")
-    fun getFields(loader: ClassLoader, functionCall: FunctionCall<Array<Field>>): Array<Field> {
+    fun getFields(
+        loader: ClassLoader,
+        functionCall: FunctionCall<Array<Field>>,
+    ): Array<Field> {
         val methodName = getKeyName()
-        val value = sPrefsCacheHooks.getString(methodName, null) ?: try {
-            val result = functionCall.call() ?: throw NoSuchFieldException("Fields is null")
-            saveFields(methodName, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting fields $methodName: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(methodName, null) ?: try {
+                val result = functionCall.call() ?: throw NoSuchFieldException("Fields is null")
+                saveFields(methodName, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting fields $methodName: ${e.message}", e)
+            }
         val fields = ArrayList<Field>()
         val fieldsJson = JSONArray(value)
         for (i in 0 until fieldsJson.length()) {
@@ -237,28 +257,36 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return fields.toTypedArray()
     }
 
-    fun getMethod(loader: ClassLoader, functionCall: FunctionCall<Method>): Method {
+    fun getMethod(
+        loader: ClassLoader,
+        functionCall: FunctionCall<Method>,
+    ): Method {
         val methodName = getKeyName()
-        val value = sPrefsCacheHooks.getString(methodName, null) ?: try {
-            val result = functionCall.call() ?: throw NoSuchMethodException("Method is null")
-            saveMethod(methodName, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting method $methodName: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(methodName, null) ?: try {
+                val result = functionCall.call() ?: throw NoSuchMethodException("Method is null")
+                saveMethod(methodName, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting method $methodName: ${e.message}", e)
+            }
         return getMethodFromJsonString(loader, value)
     }
 
-    fun getMethods(loader: ClassLoader, functionCall: FunctionCall<Array<Method>>): Array<Method> {
+    fun getMethods(
+        loader: ClassLoader,
+        functionCall: FunctionCall<Array<Method>>,
+    ): Array<Method> {
         val methodName = getKeyName()
-        val value = sPrefsCacheHooks.getString(methodName, null) ?: try {
-            val result = functionCall.call() ?: throw NoSuchMethodException("Methods is null")
-            if (result.isEmpty()) throw NoSuchMethodException("Methods is empty")
-            saveMethods(methodName, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting methods $methodName: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(methodName, null) ?: try {
+                val result = functionCall.call() ?: throw NoSuchMethodException("Methods is null")
+                if (result.isEmpty()) throw NoSuchMethodException("Methods is empty")
+                saveMethods(methodName, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting methods $methodName: ${e.message}", e)
+            }
         val methods = ArrayList<Method>()
         val methodsJson = JSONArray(value)
         for (i in 0 until methodsJson.length()) {
@@ -267,41 +295,45 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return methods.toTypedArray()
     }
 
-    private fun getMethodFromJsonString(loader: ClassLoader, value: String): Method {
-        return getMethodFromJson(loader, JSONObject(value))
-    }
+    private fun getMethodFromJsonString(
+        loader: ClassLoader,
+        value: String,
+    ): Method = getMethodFromJson(loader, JSONObject(value))
 
-    fun getClass(loader: ClassLoader, functionCall: FunctionCall<Class<*>>): Class<*> {
-        return getClass(loader, getKeyName(), functionCall)
-    }
+    fun getClass(
+        loader: ClassLoader,
+        functionCall: FunctionCall<Class<*>>,
+    ): Class<*> = getClass(loader, getKeyName(), functionCall)
 
     fun getClass(
         loader: ClassLoader,
         key: String,
-        functionCall: FunctionCall<Class<*>>
+        functionCall: FunctionCall<Class<*>>,
     ): Class<*> {
-        val value = sPrefsCacheHooks.getString(key, null) ?: try {
-            val result = functionCall.call() ?: throw ClassNotFoundException("Class is null")
-            saveClass(key, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting class $key: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(key, null) ?: try {
+                val result = functionCall.call() ?: throw ClassNotFoundException("Class is null")
+                saveClass(key, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting class $key: ${e.message}", e)
+            }
         return getClassFromJson(loader, JSONObject(value))
     }
 
     fun getClasses(
         loader: ClassLoader,
-        functionCall: FunctionCall<Array<Class<*>>>
+        functionCall: FunctionCall<Array<Class<*>>>,
     ): Array<Class<*>> {
         val methodName = getKeyName()
-        val value = sPrefsCacheHooks.getString(methodName, null) ?: try {
-            val result = functionCall.call() ?: throw ClassNotFoundException("Classes is null")
-            saveClasses(methodName, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting classes $methodName: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(methodName, null) ?: try {
+                val result = functionCall.call() ?: throw ClassNotFoundException("Classes is null")
+                saveClasses(methodName, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting classes $methodName: ${e.message}", e)
+            }
         val classes = ArrayList<Class<*>>()
         val classesJson = JSONArray(value)
         for (i in 0 until classesJson.length()) {
@@ -312,15 +344,13 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
 
     fun getMapField(
         loader: ClassLoader,
-        functionCall: FunctionCall<HashMap<String, Field>>
-    ): HashMap<String, Field> {
-        return getMapField(loader, getKeyName(), functionCall)
-    }
+        functionCall: FunctionCall<HashMap<String, Field>>,
+    ): HashMap<String, Field> = getMapField(loader, getKeyName(), functionCall)
 
     fun getMapField(
         loader: ClassLoader,
         key: String,
-        functionCall: FunctionCall<HashMap<String, Field>>
+        functionCall: FunctionCall<HashMap<String, Field>>,
     ): HashMap<String, Field> {
         sPrefsCacheHooks.getString(key, null) ?: try {
             val result = functionCall.call() ?: throw Exception("HashMap is null")
@@ -332,7 +362,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return loadHashMap(loader, key)
     }
 
-    private fun saveHashMap(key: String, map: HashMap<String, Field>) {
+    private fun saveHashMap(
+        key: String,
+        map: HashMap<String, Field>,
+    ) {
         val jsonObject = JSONObject()
         for ((mapKey, field) in map) {
             try {
@@ -344,7 +377,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         sPrefsCacheHooks.edit { putString(key, jsonObject.toString()) }
     }
 
-    private fun loadHashMap(loader: ClassLoader, key: String): HashMap<String, Field> {
+    private fun loadHashMap(
+        loader: ClassLoader,
+        key: String,
+    ): HashMap<String, Field> {
         val map = HashMap<String, Field>()
         val jsonString = sPrefsCacheHooks.getString(key, null) ?: return map
         try {
@@ -364,11 +400,17 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return map
     }
 
-    fun saveField(key: String, field: Field) {
+    fun saveField(
+        key: String,
+        field: Field,
+    ) {
         sPrefsCacheHooks.edit { putString(key, fieldToJson(field).toString()) }
     }
 
-    fun saveFields(key: String, fields: Array<Field>) {
+    fun saveFields(
+        key: String,
+        fields: Array<Field>,
+    ) {
         val values = JSONArray()
         for (field in fields) {
             values.put(fieldToJson(field))
@@ -376,11 +418,17 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         sPrefsCacheHooks.edit { putString(key, values.toString()) }
     }
 
-    fun saveMethod(key: String, method: Method) {
+    fun saveMethod(
+        key: String,
+        method: Method,
+    ) {
         sPrefsCacheHooks.edit { putString(key, methodToJson(method).toString()) }
     }
 
-    fun saveMethods(key: String, methods: Array<Method>) {
+    fun saveMethods(
+        key: String,
+        methods: Array<Method>,
+    ) {
         val values = JSONArray()
         for (method in methods) {
             values.put(methodToJson(method))
@@ -388,11 +436,17 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         sPrefsCacheHooks.edit { putString(key, values.toString()) }
     }
 
-    fun saveClass(key: String, messageClass: Class<*>) {
+    fun saveClass(
+        key: String,
+        messageClass: Class<*>,
+    ) {
         sPrefsCacheHooks.edit { putString(key, classToJson(messageClass).toString()) }
     }
 
-    fun saveClasses(key: String, messageClasses: Array<Class<*>>) {
+    fun saveClasses(
+        key: String,
+        messageClasses: Array<Class<*>>,
+    ) {
         val values = JSONArray()
         for (aClass in messageClasses) {
             values.put(classToJson(aClass))
@@ -411,7 +465,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return value
     }
 
-    private fun getFieldFromJson(loader: ClassLoader, value: JSONObject): Field {
+    private fun getFieldFromJson(
+        loader: ClassLoader,
+        value: JSONObject,
+    ): Field {
         val cls = ReflectionUtils.findClass(value.getString("class"), loader)
         return XposedHelpers.findField(cls, value.getString("name"))
     }
@@ -428,7 +485,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return value
     }
 
-    private fun getMethodFromJson(loader: ClassLoader, value: JSONObject): Method {
+    private fun getMethodFromJson(
+        loader: ClassLoader,
+        value: JSONObject,
+    ): Method {
         val cls = ReflectionUtils.findClass(value.getString("class"), loader)
         val paramTypes = classArrayFromJson(loader, value.getJSONArray("params"))
         return XposedHelpers.findMethodExact(cls, value.getString("name"), *paramTypes)
@@ -444,9 +504,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return value
     }
 
-    private fun getClassFromJson(loader: ClassLoader, value: JSONObject): Class<*> {
-        return XposedHelpers.findClass(value.getString("class"), loader)
-    }
+    private fun getClassFromJson(
+        loader: ClassLoader,
+        value: JSONObject,
+    ): Class<*> = XposedHelpers.findClass(value.getString("class"), loader)
 
     private fun classArrayToJson(classes: Array<Class<*>>): JSONArray {
         val values = JSONArray()
@@ -456,22 +517,27 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return values
     }
 
-    private fun classArrayFromJson(loader: ClassLoader, values: JSONArray): Array<Class<*>> {
-        return Array(values.length()) { i ->
+    private fun classArrayFromJson(
+        loader: ClassLoader,
+        values: JSONArray,
+    ): Array<Class<*>> =
+        Array(values.length()) { i ->
             ReflectionUtils.findClass(values.getString(i), loader)
         }
-    }
 
     private fun getKeyName(): String {
         val keyName = AtomicReference("")
-        Thread.currentThread().stackTrace.firstOrNull { it.className == Unobfuscator::class.java.name }
+        Thread
+            .currentThread()
+            .stackTrace
+            .firstOrNull { it.className == Unobfuscator::class.java.name }
             ?.let { keyName.set(it.methodName) }
         return keyName.get()
     }
 
     fun getConstructor(
         loader: ClassLoader,
-        functionCall: FunctionCall<Constructor<*>>
+        functionCall: FunctionCall<Constructor<*>>,
     ): Constructor<*> {
         val methodName = getKeyName()
         val value = sPrefsCacheHooks.getString(methodName, null)
@@ -486,7 +552,10 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         return XposedHelpers.findConstructorExact(cls, *paramTypes)
     }
 
-    private fun saveConstructor(key: String, constructor: Constructor<*>) {
+    private fun saveConstructor(
+        key: String,
+        constructor: Constructor<*>,
+    ) {
         val value = JSONObject()
         try {
             value.put("class", constructor.declaringClass.name)
@@ -497,19 +566,26 @@ class UnobfuscatorCache private constructor(private val mApplication: Applicatio
         sPrefsCacheHooks.edit { putString(key, value.toString()) }
     }
 
-    fun getNumber(ignored: ClassLoader, functionCall: FunctionCall<Number>): Number {
+    fun getNumber(
+        ignored: ClassLoader,
+        functionCall: FunctionCall<Number>,
+    ): Number {
         val methodName = getKeyName()
-        val value = sPrefsCacheHooks.getString(methodName, null) ?: try {
-            val result = functionCall.call() ?: throw Exception("Number is null")
-            saveNumber(methodName, result)
-            return result
-        } catch (e: Exception) {
-            throw Exception("Error getting number $methodName: ${e.message}", e)
-        }
+        val value =
+            sPrefsCacheHooks.getString(methodName, null) ?: try {
+                val result = functionCall.call() ?: throw Exception("Number is null")
+                saveNumber(methodName, result)
+                return result
+            } catch (e: Exception) {
+                throw Exception("Error getting number $methodName: ${e.message}", e)
+            }
         return loadNumber(JSONObject(value))
     }
 
-    private fun saveNumber(key: String, number: Number) {
+    private fun saveNumber(
+        key: String,
+        number: Number,
+    ) {
         val value = JSONObject()
         try {
             value.put("class", number.javaClass.name)

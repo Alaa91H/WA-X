@@ -11,10 +11,9 @@ import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 
 object AnimationUtil {
-
     @JvmStatic
-    fun getAnimation(animationName: String): Animation? {
-        return when (animationName.lowercase()) {
+    fun getAnimation(animationName: String): Animation? =
+        when (animationName.lowercase()) {
             "fade_in" -> createFadeInAnimation()
             "fade_out" -> createFadeOutAnimation()
             "scale_up" -> createScaleUpAnimation()
@@ -27,7 +26,6 @@ object AnimationUtil {
             "hyperspace_out" -> createHyperspaceOutAnimation()
             else -> null
         }
-    }
 
     private fun createFadeInAnimation(): Animation {
         val anim = AlphaAnimation(0.0f, 1.0f)
@@ -42,56 +40,80 @@ object AnimationUtil {
     }
 
     private fun createScaleUpAnimation(): Animation {
-        val anim = ScaleAnimation(
-            0.0f, 1.0f,
-            0.0f, 1.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val anim =
+            ScaleAnimation(
+                0.0f,
+                1.0f,
+                0.0f,
+                1.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         anim.duration = 500
         return anim
     }
 
     private fun createSlideUpAnimation(): Animation {
-        val anim = TranslateAnimation(
-            Animation.RELATIVE_TO_PARENT, 0.0f,
-            Animation.RELATIVE_TO_PARENT, 0.0f,
-            Animation.RELATIVE_TO_PARENT, 1.0f,
-            Animation.RELATIVE_TO_PARENT, 0.0f
-        )
+        val anim =
+            TranslateAnimation(
+                Animation.RELATIVE_TO_PARENT,
+                0.0f,
+                Animation.RELATIVE_TO_PARENT,
+                0.0f,
+                Animation.RELATIVE_TO_PARENT,
+                1.0f,
+                Animation.RELATIVE_TO_PARENT,
+                0.0f,
+            )
         anim.duration = 500
         return anim
     }
 
     private fun createSlideRightToLeftAnimation(): Animation {
-        val anim = TranslateAnimation(
-            Animation.RELATIVE_TO_PARENT, 1.0f,
-            Animation.RELATIVE_TO_PARENT, 0.0f,
-            Animation.RELATIVE_TO_PARENT, 0.0f,
-            Animation.RELATIVE_TO_PARENT, 0.0f
-        )
+        val anim =
+            TranslateAnimation(
+                Animation.RELATIVE_TO_PARENT,
+                1.0f,
+                Animation.RELATIVE_TO_PARENT,
+                0.0f,
+                Animation.RELATIVE_TO_PARENT,
+                0.0f,
+                Animation.RELATIVE_TO_PARENT,
+                0.0f,
+            )
         anim.duration = 500
         return anim
     }
 
     private fun createRotateAnimation(): Animation {
-        val anim = RotateAnimation(
-            0.0f, 360.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val anim =
+            RotateAnimation(
+                0.0f,
+                360.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         anim.duration = 500
         return anim
     }
 
     @JvmStatic
     fun createBounceAnimation(): Animation {
-        val scaleAnimation = ScaleAnimation(
-            0.5f, 1.0f,
-            0.5f, 1.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val scaleAnimation =
+            ScaleAnimation(
+                0.5f,
+                1.0f,
+                0.5f,
+                1.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         scaleAnimation.duration = 500
         scaleAnimation.interpolator = BounceInterpolator()
 
@@ -102,23 +124,33 @@ object AnimationUtil {
     }
 
     private fun createShrinkAnimation(): Animation {
-        val anim = ScaleAnimation(
-            1.0f, 0.0f,
-            1.0f, 0.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val anim =
+            ScaleAnimation(
+                1.0f,
+                0.0f,
+                1.0f,
+                0.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         anim.duration = 500
         return anim
     }
 
     private fun createFlipAnimation(): Animation {
-        val anim = ScaleAnimation(
-            1.0f, 1.0f,
-            1.0f, -1.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val anim =
+            ScaleAnimation(
+                1.0f,
+                1.0f,
+                1.0f,
+                -1.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         anim.duration = 500
         anim.repeatCount = 1
         anim.repeatMode = Animation.REVERSE
@@ -127,29 +159,43 @@ object AnimationUtil {
 
     @JvmStatic
     fun createHyperspaceOutAnimation(): Animation {
-        val firstScaleAnimation = ScaleAnimation(
-            1.0f, 1.4f,
-            1.0f, 0.6f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val firstScaleAnimation =
+            ScaleAnimation(
+                1.0f,
+                1.4f,
+                1.0f,
+                0.6f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         firstScaleAnimation.duration = 700
         firstScaleAnimation.interpolator = AccelerateDecelerateInterpolator()
         firstScaleAnimation.fillAfter = false
 
-        val secondScaleAnimation = ScaleAnimation(
-            1.4f, 0.0f,
-            0.6f, 0.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val secondScaleAnimation =
+            ScaleAnimation(
+                1.4f,
+                0.0f,
+                0.6f,
+                0.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         secondScaleAnimation.duration = 400
 
-        val rotateAnimation = RotateAnimation(
-            0.0f, -45.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
+        val rotateAnimation =
+            RotateAnimation(
+                0.0f,
+                -45.0f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            )
         rotateAnimation.duration = 400
 
         val innerSet = AnimationSet(true)

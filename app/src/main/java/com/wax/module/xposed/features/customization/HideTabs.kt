@@ -1,5 +1,6 @@
 package com.wax.module.xposed.features.customization
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -9,12 +10,13 @@ import com.wax.module.xposed.core.ModuleRuntime
 import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.ReflectionUtils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 
-class HideTabs(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class HideTabs(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     private var mTabPagerInstance: Any? = null
 
     @Throws(Throwable::class)
@@ -28,73 +30,93 @@ class HideTabs(loader: ClassLoader, preferences:SharedPreferences) : Feature(loa
         val onCreateTabList = Unobfuscator.loadTabListMethod(classLoader)
         logDebug(Unobfuscator.getMethodDescriptor(onCreateTabList))
 
-        XposedBridge.hookMethod(onCreateTabList, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                @Suppress("UNCHECKED_CAST")
-            val tabs = param.result as ArrayList<Int>
-                for (item in hideTabsList) {
-                    if (item != SeparateGroup.STATUS || !igstatus) {
-                        tabs.remove(item)
+        XposedBridge.hookMethod(
+            onCreateTabList,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    @Suppress("UNCHECKED_CAST")
+                    val tabs = param.result as ArrayList<Int>
+                    for (item in hideTabsList) {
+                        if (item != SeparateGroup.STATUS || !igstatus) {
+                            tabs.remove(item)
+                        }
                     }
                 }
-            }
-        })
+            },
+        )
 
         val onTabItemAddMethod = Unobfuscator.loadOnTabItemAddMethod(classLoader)
-        XposedBridge.hookMethod(onTabItemAddMethod, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val menuItem = param.result as MenuItem
-                val menuItemId = menuItem.itemId
-                if (hideTabsList.contains(menuItemId)) {
-                    menuItem.isVisible = false
+        XposedBridge.hookMethod(
+            onTabItemAddMethod,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val menuItem = param.result as MenuItem
+                    val menuItemId = menuItem.itemId
+                    if (hideTabsList.contains(menuItemId)) {
+                        menuItem.isVisible = false
+                    }
                 }
-            }
-        })
+            },
+        )
 
         val loadTabFrameClass = Unobfuscator.loadTabFrameClass(classLoader)
         logDebug(loadTabFrameClass)
 
-        XposedBridge.hookAllMethods(FrameLayout::class.java, "onMeasure", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                if (!loadTabFrameClass.isInstance(param.thisObject)) return
-                if (SeparateGroup.tabs.isNotEmpty()) {
-                    val arr = ArrayList(SeparateGroup.tabs)
-                    arr.removeAll(hideTabsList.toSet())
-                    if (arr.size == 1) {
-                        (param.thisObject as View).visibility = View.GONE
+        XposedBridge.hookAllMethods(
+            FrameLayout::class.java,
+            "onMeasure",
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    if (!loadTabFrameClass.isInstance(param.thisObject)) return
+                    if (SeparateGroup.tabs.isNotEmpty()) {
+                        val arr = ArrayList(SeparateGroup.tabs)
+                        arr.removeAll(hideTabsList.toSet())
+                        if (arr.size == 1) {
+                            (param.thisObject as View).visibility = View.GONE
+                        }
+                    }
+                    for (item in hideTabsList) {
+                        val view = (param.thisObject as View).findViewById<View>(item)
+                        if (view != null) {
+                            view.visibility = View.GONE
+                        }
                     }
                 }
-                for (item in hideTabsList) {
-                    val view = (param.thisObject as View).findViewById<View>(item)
-                    if (view != null) {
-                        view.visibility = View.GONE
-                    }
-                }
-            }
-        })
+            },
+        )
 
-        XposedHelpers.findAndHookMethod(ModuleRuntime.homeActivityClass, "onCreate", Bundle::class.java, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val tabsPagerClass = ModuleRuntime.tabsPagerClass
-                val tabsField = ReflectionUtils.getFieldByType(param.thisObject.javaClass, tabsPagerClass)
-                mTabPagerInstance = tabsField!!.get(param.thisObject)
-            }
-        })
+        XposedHelpers.findAndHookMethod(
+            ModuleRuntime.homeActivityClass,
+            "onCreate",
+            Bundle::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val tabsPagerClass = ModuleRuntime.tabsPagerClass
+                    val tabsField = ReflectionUtils.getFieldByType(param.thisObject.javaClass, tabsPagerClass)
+                    mTabPagerInstance = tabsField!!.get(param.thisObject)
+                }
+            },
+        )
 
         val onMenuItemSelected = Unobfuscator.loadOnMenuItemSelected(classLoader)
 
-        XposedBridge.hookMethod(onMenuItemSelected, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                if (param.thisObject == mTabPagerInstance) {
-                    val index = param.args[0] as Int
-                    val idxAtual = XposedHelpers.callMethod(param.thisObject, "getCurrentItem") as Int
-                    param.args[0] = getNewTabIndex(hideTabsList, idxAtual, index)
+        XposedBridge.hookMethod(
+            onMenuItemSelected,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (param.thisObject == mTabPagerInstance) {
+                        val index = param.args[0] as Int
+                        val idxAtual = XposedHelpers.callMethod(param.thisObject, "getCurrentItem") as Int
+                        param.args[0] = getNewTabIndex(hideTabsList, idxAtual, index)
+                    }
                 }
-            }
-        })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
-            "androidx.viewpager.widget.ViewPager", classLoader, "addView",
+            "androidx.viewpager.widget.ViewPager",
+            classLoader,
+            "addView",
             classLoader.loadClass("android.view.View"),
             Int::class.javaPrimitiveType,
             classLoader.loadClass($$"android.view.ViewGroup$LayoutParams"),
@@ -109,14 +131,17 @@ class HideTabs(loader: ClassLoader, preferences:SharedPreferences) : Feature(loa
                         }
                     }
                 }
-            })
+            },
+        )
     }
 
-    override fun getPluginName(): String {
-        return "Hide Tabs"
-    }
+    override fun getPluginName(): String = "Hide Tabs"
 
-    private fun getNewTabIndex(hidetabs: List<Int>, indexAtual: Int, index: Int): Int {
+    private fun getNewTabIndex(
+        hidetabs: List<Int>,
+        indexAtual: Int,
+        index: Int,
+    ): Int {
         if (SeparateGroup.tabs.size <= index) return index
         val tabIsHidden = hidetabs.contains(SeparateGroup.tabs[index])
         if (!tabIsHidden) return index

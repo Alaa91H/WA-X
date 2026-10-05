@@ -52,9 +52,10 @@ import java.util.Collections
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
-class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
-    Feature(loader, preferences) {
-
+class AboutContactPicker(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     override fun doHook() {
         val aboutClass = ModuleRuntime.aboutActivityClass
 
@@ -67,8 +68,9 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     val activity = param.thisObject as Activity
                     if (!isTargetAboutActivity(
                             activity,
-                            aboutClass
-                        ) || !isPickerLaunch(activity.intent)
+                            aboutClass,
+                        ) ||
+                        !isPickerLaunch(activity.intent)
                     ) {
                         return
                     }
@@ -76,23 +78,29 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     controller.bindIntent(activity.intent)
                     controller.attach()
                 }
-            })
+            },
+        )
 
-        XposedHelpers.findAndHookMethod(Activity::class.java, "onResume", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val activity = param.thisObject as Activity
-                if (!isTargetAboutActivity(
-                        activity,
-                        aboutClass
-                    ) || !isPickerLaunch(activity.intent)
-                ) {
-                    return
+        XposedHelpers.findAndHookMethod(
+            Activity::class.java,
+            "onResume",
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val activity = param.thisObject as Activity
+                    if (!isTargetAboutActivity(
+                            activity,
+                            aboutClass,
+                        ) ||
+                        !isPickerLaunch(activity.intent)
+                    ) {
+                        return
+                    }
+                    val controller = getOrCreateController(activity)
+                    controller.bindIntent(activity.intent)
+                    activity.window.decorView.post { controller.attach() }
                 }
-                val controller = getOrCreateController(activity)
-                controller.bindIntent(activity.intent)
-                activity.window.decorView.post { controller.attach() }
-            }
-        })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             Activity::class.java,
@@ -114,7 +122,8 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     controller.attach()
                     controller.reloadItems()
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             Activity::class.java,
@@ -129,7 +138,8 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     controller?.destroy()
                     XposedHelpers.removeAdditionalInstanceField(activity, FIELD_CONTROLLER)
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             Activity::class.java,
@@ -145,7 +155,8 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                         param.result = null
                     }
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             Activity::class.java,
@@ -156,15 +167,17 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     val activity = param.thisObject as Activity
                     if (!isTargetAboutActivity(
                             activity,
-                            aboutClass
-                        ) || !isPickerLaunch(activity.intent)
+                            aboutClass,
+                        ) ||
+                        !isPickerLaunch(activity.intent)
                     ) {
                         return
                     }
                     (param.args[0] as Menu).clear()
                     param.result = true
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
             Activity::class.java,
@@ -175,22 +188,23 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     val activity = param.thisObject as Activity
                     if (!isTargetAboutActivity(
                             activity,
-                            aboutClass
-                        ) || !isPickerLaunch(activity.intent)
+                            aboutClass,
+                        ) ||
+                        !isPickerLaunch(activity.intent)
                     ) {
                         return
                     }
                     param.result = true
                 }
-            })
+            },
+        )
     }
 
-    private fun getController(activity: Activity): PickerController? {
-        return XposedHelpers.getAdditionalInstanceField(
+    private fun getController(activity: Activity): PickerController? =
+        XposedHelpers.getAdditionalInstanceField(
             activity,
-            FIELD_CONTROLLER
+            FIELD_CONTROLLER,
         ) as? PickerController
-    }
 
     private fun getOrCreateController(activity: Activity): PickerController {
         var current = getController(activity)
@@ -202,31 +216,31 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
         return current
     }
 
-    private fun isPickerLaunch(intent: Intent?): Boolean {
-        return intent?.getBooleanExtra(
+    private fun isPickerLaunch(intent: Intent?): Boolean =
+        intent?.getBooleanExtra(
             WhatsAppContactPickerLauncher.EXTRA_PICKER_MODE,
-            false
+            false,
         ) == true
-    }
 
-    private fun isTargetAboutActivity(activity: Activity, aboutClass: Class<*>): Boolean {
-        return aboutClass.isAssignableFrom(activity.javaClass)
-    }
+    private fun isTargetAboutActivity(
+        activity: Activity,
+        aboutClass: Class<*>,
+    ): Boolean = aboutClass.isAssignableFrom(activity.javaClass)
 
-    override fun getPluginName(): String {
-        return "About Contact Picker"
-    }
+    override fun getPluginName(): String = "About Contact Picker"
 
     companion object {
         private const val FIELD_CONTROLLER = "wae_contact_picker_controller"
         private const val EXTRA_PICKER_RESULTS = "picker_contacts"
     }
 
-    private class PickerController(val activity: Activity) {
-
-        val context: Context = runCatching {
-            ModuleContextWrapper(activity)
-        }.getOrElse { activity }
+    private class PickerController(
+        val activity: Activity,
+    ) {
+        val context: Context =
+            runCatching {
+                ModuleContextWrapper(activity)
+            }.getOrElse { activity }
 
         private val mainHandler = Handler(Looper.getMainLooper())
         private val allItems = ArrayList<ContactPickerItem>()
@@ -249,8 +263,8 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
         private var attached = false
         private var loading = false
 
-        fun getString(resId: Int): String {
-            return runCatching {
+        fun getString(resId: Int): String =
+            runCatching {
                 context.getString(resId)
             }.getOrElse {
                 runCatching {
@@ -259,10 +273,12 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     runCatching { activity.getString(resId) }.getOrDefault("")
                 }
             }
-        }
 
-        fun getString(resId: Int, vararg formatArgs: Any): String {
-            return runCatching {
+        fun getString(
+            resId: Int,
+            vararg formatArgs: Any,
+        ): String =
+            runCatching {
                 context.getString(resId, *formatArgs)
             }.getOrElse {
                 runCatching {
@@ -271,10 +287,9 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     runCatching { activity.getString(resId, *formatArgs) }.getOrDefault("")
                 }
             }
-        }
 
-        fun getDrawable(resId: Int): Drawable? {
-            return runCatching {
+        fun getDrawable(resId: Int): Drawable? =
+            runCatching {
                 ContextCompat.getDrawable(context, resId)
             }.getOrElse {
                 runCatching {
@@ -283,7 +298,6 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     runCatching { ContextCompat.getDrawable(activity, resId) }.getOrNull()
                 }
             }
-        }
 
         fun bindIntent(intent: Intent?) {
             if (intent == null) return
@@ -339,7 +353,10 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
         }
 
         @SuppressLint("InternalInsetResource", "DiscouragedApi")
-        private fun getSystemDimen(name: String, fallbackDp: Float): Int {
+        private fun getSystemDimen(
+            name: String,
+            fallbackDp: Float,
+        ): Int {
             val resourceId = activity.resources.getIdentifier(name, "dimen", "android")
             return if (resourceId > 0) {
                 activity.resources.getDimensionPixelSize(resourceId)
@@ -348,79 +365,93 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             }
         }
 
-        private fun buildRoot(): Boolean {
-            return try {
-                val root = FrameLayout(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
-                }
+        private fun buildRoot(): Boolean =
+            try {
+                val root =
+                    FrameLayout(context).apply {
+                        layoutParams =
+                            ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            )
+                        setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
+                    }
 
-                val content = LinearLayout(context).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
-                }
+                val content =
+                    LinearLayout(context).apply {
+                        orientation = LinearLayout.VERTICAL
+                        layoutParams =
+                            FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            )
+                        setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
+                    }
 
                 content.addView(buildHeader())
                 content.addView(buildSearchField())
                 content.addView(buildFilters())
 
-                val swipeRefresh = SwipeRefreshLayout(context).apply {
-                    setColorSchemeColors(DesignUtils.getUnSeenColor())
-                    setOnRefreshListener { reloadItems() }
-                }
+                val swipeRefresh =
+                    SwipeRefreshLayout(context).apply {
+                        setColorSchemeColors(DesignUtils.getUnSeenColor())
+                        setOnRefreshListener { reloadItems() }
+                    }
                 swipeRefreshLayout = swipeRefresh
 
                 val adapterInstance = ContactPickerAdapter(this)
                 adapter = adapterInstance
 
-                val listView = ListView(context).apply {
-                    setBackgroundColor(Color.TRANSPARENT)
-                    divider = null
-                    dividerHeight = 0
-                    this.adapter = adapterInstance
-                }
+                val listView =
+                    ListView(context).apply {
+                        setBackgroundColor(Color.TRANSPARENT)
+                        divider = null
+                        dividerHeight = 0
+                        this.adapter = adapterInstance
+                    }
 
                 swipeRefresh.addView(
-                    listView, ViewGroup.LayoutParams(
+                    listView,
+                    ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
                 )
 
-                val empty = TextView(context).apply {
-                    gravity = Gravity.CENTER
-                    setTextColor(DesignUtils.getPrimaryTextColor())
-                    textSize = 15f
-                    text = getString(R.string.picker_loading_contacts)
-                    val padding = Utils.dipToPixels(24f)
-                    setPadding(padding, padding, padding, padding)
-                }
+                val empty =
+                    TextView(context).apply {
+                        gravity = Gravity.CENTER
+                        setTextColor(DesignUtils.getPrimaryTextColor())
+                        textSize = 15f
+                        text = getString(R.string.picker_loading_contacts)
+                        val padding = Utils.dipToPixels(24f)
+                        setPadding(padding, padding, padding, padding)
+                    }
                 emptyView = empty
 
-                val listContainer = FrameLayout(context).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
-                    )
-                    addView(
-                        swipeRefresh, FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
+                val listContainer =
+                    FrameLayout(context).apply {
+                        layoutParams =
+                            LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                0,
+                                1f,
+                            )
+                        addView(
+                            swipeRefresh,
+                            FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            ),
                         )
-                    )
-                    addView(
-                        empty, FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
+                        addView(
+                            empty,
+                            FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            ),
                         )
-                    )
-                }
+                    }
 
                 content.addView(listContainer)
                 root.addView(content)
@@ -434,47 +465,54 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                 rootView = null
                 false
             }
-        }
 
         private fun buildHeader(): View {
-            val header = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(
-                    Utils.dipToPixels(14f), Utils.dipToPixels(14f),
-                    Utils.dipToPixels(14f), Utils.dipToPixels(10f)
-                )
-            }
+            val header =
+                LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(10f),
+                    )
+                }
 
-            val cancelView = buildHeaderAction(R.string.cancel).apply {
-                setOnClickListener { finishCancelled() }
-            }
+            val cancelView =
+                buildHeaderAction(R.string.cancel).apply {
+                    setOnClickListener { finishCancelled() }
+                }
 
-            val titleContainer = LinearLayout(context).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                setPadding(Utils.dipToPixels(12f), 0, Utils.dipToPixels(12f), 0)
-            }
+            val titleContainer =
+                LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                    setPadding(Utils.dipToPixels(12f), 0, Utils.dipToPixels(12f), 0)
+                }
 
-            titleView = TextView(context).apply {
-                text = getString(R.string.select_contacts)
-                setTextColor(DesignUtils.getPrimaryTextColor())
-                textSize = 18f
-                typeface = Typeface.DEFAULT_BOLD
-            }
+            titleView =
+                TextView(context).apply {
+                    text = getString(R.string.select_contacts)
+                    setTextColor(DesignUtils.getPrimaryTextColor())
+                    textSize = 18f
+                    typeface = Typeface.DEFAULT_BOLD
+                }
 
-            subtitleView = TextView(context).apply {
-                setTextColor(0xFF8A8A8A.toInt())
-                textSize = 12f
-            }
+            subtitleView =
+                TextView(context).apply {
+                    setTextColor(0xFF8A8A8A.toInt())
+                    textSize = 12f
+                }
 
             titleContainer.addView(titleView)
             titleContainer.addView(subtitleView)
 
-            val doneView = buildHeaderAction(R.string.yes).apply {
-                typeface = Typeface.DEFAULT_BOLD
-                setOnClickListener { submitSelection() }
-            }
+            val doneView =
+                buildHeaderAction(R.string.yes).apply {
+                    typeface = Typeface.DEFAULT_BOLD
+                    setOnClickListener { submitSelection() }
+                }
 
             header.addView(cancelView)
             header.addView(titleContainer)
@@ -483,131 +521,149 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             return header
         }
 
-        private fun buildHeaderAction(textRes: Int): TextView {
-            return TextView(context).apply {
+        private fun buildHeaderAction(textRes: Int): TextView =
+            TextView(context).apply {
                 text = getString(textRes)
                 setTextColor(DesignUtils.getUnSeenColor())
                 textSize = 15f
                 val padding = Utils.dipToPixels(8f)
                 setPadding(padding, padding, padding, padding)
             }
-        }
 
         private fun buildSearchField(): View {
-            searchInput = EditText(context).apply {
-                isSingleLine = true
-                hint = getString(R.string.search_contacts)
-                setTextColor(DesignUtils.getPrimaryTextColor())
-                setHintTextColor(0xFF9A9A9A.toInt())
-                setPadding(
-                    Utils.dipToPixels(14f), Utils.dipToPixels(12f),
-                    Utils.dipToPixels(14f), Utils.dipToPixels(12f)
-                )
-
-                val bg = GradientDrawable().apply {
-                    cornerRadius = Utils.dipToPixels(16f).toFloat()
-                    setColor(if (DesignUtils.isNightMode()) 0xFF182229.toInt() else 0xFFFFFFFF.toInt())
-                }
-                background = bg
-
-                getDrawable(R.drawable.ic_search)?.let { searchDrawable ->
-                    searchDrawable.setTint(DesignUtils.getPrimaryTextColor())
-                    setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        searchDrawable,
-                        null,
-                        null,
-                        null
+            searchInput =
+                EditText(context).apply {
+                    isSingleLine = true
+                    hint = getString(R.string.search_contacts)
+                    setTextColor(DesignUtils.getPrimaryTextColor())
+                    setHintTextColor(0xFF9A9A9A.toInt())
+                    setPadding(
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(12f),
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(12f),
                     )
-                    compoundDrawablePadding = Utils.dipToPixels(10f)
-                }
 
-                addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(
-                        s: CharSequence?,
-                        start: Int,
-                        count: Int,
-                        after: Int
-                    ) {
+                    val bg =
+                        GradientDrawable().apply {
+                            cornerRadius = Utils.dipToPixels(16f).toFloat()
+                            setColor(if (DesignUtils.isNightMode()) 0xFF182229.toInt() else 0xFFFFFFFF.toInt())
+                        }
+                    background = bg
+
+                    getDrawable(R.drawable.ic_search)?.let { searchDrawable ->
+                        searchDrawable.setTint(DesignUtils.getPrimaryTextColor())
+                        setCompoundDrawablesRelativeWithIntrinsicBounds(
+                            searchDrawable,
+                            null,
+                            null,
+                            null,
+                        )
+                        compoundDrawablePadding = Utils.dipToPixels(10f)
                     }
 
-                    override fun onTextChanged(
-                        s: CharSequence?,
-                        start: Int,
-                        before: Int,
-                        count: Int
-                    ) {
-                        scheduleFilterApply()
-                    }
+                    addTextChangedListener(
+                        object : TextWatcher {
+                            override fun beforeTextChanged(
+                                s: CharSequence?,
+                                start: Int,
+                                count: Int,
+                                after: Int,
+                            ) {
+                            }
 
-                    override fun afterTextChanged(s: Editable?) {}
-                })
+                            override fun onTextChanged(
+                                s: CharSequence?,
+                                start: Int,
+                                before: Int,
+                                count: Int,
+                            ) {
+                                scheduleFilterApply()
+                            }
 
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(
-                        Utils.dipToPixels(14f),
-                        0,
-                        Utils.dipToPixels(14f),
-                        Utils.dipToPixels(10f)
+                            override fun afterTextChanged(s: Editable?) {}
+                        },
                     )
+
+                    layoutParams =
+                        LinearLayout
+                            .LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ).apply {
+                                setMargins(
+                                    Utils.dipToPixels(14f),
+                                    0,
+                                    Utils.dipToPixels(14f),
+                                    Utils.dipToPixels(10f),
+                                )
+                            }
                 }
-            }
             return searchInput!!
         }
 
         private fun buildFilters(): View {
-            val wrapper = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(Utils.dipToPixels(14f), 0, Utils.dipToPixels(14f), Utils.dipToPixels(8f))
-            }
+            val wrapper =
+                LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(Utils.dipToPixels(14f), 0, Utils.dipToPixels(14f), Utils.dipToPixels(8f))
+                }
 
-            val scrollView = HorizontalScrollView(context).apply {
-                isHorizontalScrollBarEnabled = false
-                overScrollMode = View.OVER_SCROLL_NEVER
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
+            val scrollView =
+                HorizontalScrollView(context).apply {
+                    isHorizontalScrollBarEnabled = false
+                    overScrollMode = View.OVER_SCROLL_NEVER
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                }
 
-            val filters = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                addView(buildFilterChip(FilterMode.ALL, R.string.mode_all))
-                addView(buildFilterChip(FilterMode.CONTACTS, R.string.picker_contacts))
-                addView(buildFilterChip(FilterMode.GROUPS, R.string.groups))
-            }
+            val filters =
+                LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    addView(buildFilterChip(FilterMode.ALL, R.string.mode_all))
+                    addView(buildFilterChip(FilterMode.CONTACTS, R.string.picker_contacts))
+                    addView(buildFilterChip(FilterMode.GROUPS, R.string.groups))
+                }
             scrollView.addView(filters)
 
-            val selectAllView = TextView(context).apply {
-                text = getString(R.string.select_all)
-                setTextColor(DesignUtils.getUnSeenColor())
-                typeface = Typeface.DEFAULT_BOLD
-                setPadding(Utils.dipToPixels(12f), Utils.dipToPixels(8f), 0, Utils.dipToPixels(8f))
-                setOnClickListener { selectAllVisible() }
-            }
+            val selectAllView =
+                TextView(context).apply {
+                    text = getString(R.string.select_all)
+                    setTextColor(DesignUtils.getUnSeenColor())
+                    typeface = Typeface.DEFAULT_BOLD
+                    setPadding(Utils.dipToPixels(12f), Utils.dipToPixels(8f), 0, Utils.dipToPixels(8f))
+                    setOnClickListener { selectAllVisible() }
+                }
 
             wrapper.addView(scrollView)
             wrapper.addView(selectAllView)
             return wrapper
         }
 
-        private fun buildFilterChip(mode: FilterMode, textRes: Int): TextView {
-            return TextView(context).apply {
+        private fun buildFilterChip(
+            mode: FilterMode,
+            textRes: Int,
+        ): TextView =
+            TextView(context).apply {
                 tag = mode
                 text = getString(textRes)
                 textSize = 13f
                 typeface = Typeface.DEFAULT_BOLD
                 setPadding(
-                    Utils.dipToPixels(14f), Utils.dipToPixels(8f),
-                    Utils.dipToPixels(14f), Utils.dipToPixels(8f)
+                    Utils.dipToPixels(14f),
+                    Utils.dipToPixels(8f),
+                    Utils.dipToPixels(14f),
+                    Utils.dipToPixels(8f),
                 )
 
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    marginEnd = Utils.dipToPixels(8f)
-                }
+                layoutParams =
+                    LinearLayout
+                        .LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ).apply {
+                            marginEnd = Utils.dipToPixels(8f)
+                        }
 
                 setOnClickListener { v ->
                     filterMode = mode
@@ -616,7 +672,6 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                 }
                 updateFilterChipStyle(this, mode == filterMode)
             }
-        }
 
         private fun updateFilterChips(container: ViewGroup?) {
             if (container == null) return
@@ -628,15 +683,19 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             }
         }
 
-        private fun updateFilterChipStyle(chip: TextView, selected: Boolean) {
-            val bg = GradientDrawable().apply {
-                cornerRadius = Utils.dipToPixels(18f).toFloat()
-                setStroke(
-                    Utils.dipToPixels(1f),
-                    if (selected) DesignUtils.getUnSeenColor() else 0x1F888888
-                )
-                setColor(if (selected) (DesignUtils.getUnSeenColor() and 0x22FFFFFF) else Color.TRANSPARENT)
-            }
+        private fun updateFilterChipStyle(
+            chip: TextView,
+            selected: Boolean,
+        ) {
+            val bg =
+                GradientDrawable().apply {
+                    cornerRadius = Utils.dipToPixels(18f).toFloat()
+                    setStroke(
+                        Utils.dipToPixels(1f),
+                        if (selected) DesignUtils.getUnSeenColor() else 0x1F888888,
+                    )
+                    setColor(if (selected) (DesignUtils.getUnSeenColor() and 0x22FFFFFF) else Color.TRANSPARENT)
+                }
             chip.background = bg
             chip.setTextColor(if (selected) DesignUtils.getUnSeenColor() else DesignUtils.getPrimaryTextColor())
         }
@@ -660,10 +719,11 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             val preservedSelection = LinkedHashSet(selectedJids)
             Utils.executor.execute {
                 try {
-                    val loadedItems = ContactPickerDataProvider.loadPickerItems(
-                        activity,
-                        ArrayList(preservedSelection)
-                    )
+                    val loadedItems =
+                        ContactPickerDataProvider.loadPickerItems(
+                            activity,
+                            ArrayList(preservedSelection),
+                        )
                     mainHandler.post {
                         if (activity.isFinishing || activity.isDestroyed) {
                             stopRefreshing()
@@ -707,8 +767,10 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     val displayName = normalize(item.displayName)
                     val waName = normalize(item.waName)
                     val jid = normalize(item.jid)
-                    if (!displayName.contains(query) && !waName.contains(query) && !jid.contains(
-                            query
+                    if (!displayName.contains(query) &&
+                        !waName.contains(query) &&
+                        !jid.contains(
+                            query,
                         )
                     ) {
                         continue
@@ -720,7 +782,7 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             visibleItems.sortWith { left, right ->
                 java.lang.Boolean.compare(
                     selectedJids.contains(right.jid),
-                    selectedJids.contains(left.jid)
+                    selectedJids.contains(left.jid),
                 )
             }
 
@@ -764,9 +826,7 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             updateActionBarTitle()
         }
 
-        fun isSelected(item: ContactPickerItem): Boolean {
-            return selectedJids.contains(item.jid)
-        }
+        fun isSelected(item: ContactPickerItem): Boolean = selectedJids.contains(item.jid)
 
         fun getAvatar(item: ContactPickerItem): Drawable {
             val cached = avatarCache[item.jid]
@@ -805,12 +865,11 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             }
         }
 
-        private fun createAvatarPlaceholder(item: ContactPickerItem): Drawable {
-            return GradientDrawable().apply {
+        private fun createAvatarPlaceholder(item: ContactPickerItem): Drawable =
+            GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(if (item.type == ContactType.GROUP) 0xFF6C8F7F.toInt() else 0xFF7C8DA6.toInt())
             }
-        }
 
         private fun submitSelection() {
             val orderedResults = ArrayList<ContactPickerResult>()
@@ -826,14 +885,15 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                 legacyContacts.add(result.toContactData())
             }
 
-            val intent = Intent().apply {
-                putStringArrayListExtra("contacts", contacts)
-                putExtra("contacts_data", legacyContacts)
-                putExtra(EXTRA_PICKER_RESULTS, orderedResults)
-                if (resultKey != null) {
-                    putExtra("key", resultKey)
+            val intent =
+                Intent().apply {
+                    putStringArrayListExtra("contacts", contacts)
+                    putExtra("contacts_data", legacyContacts)
+                    putExtra(EXTRA_PICKER_RESULTS, orderedResults)
+                    if (resultKey != null) {
+                        putExtra("key", resultKey)
+                    }
                 }
-            }
 
             activity.setResult(Activity.RESULT_OK, intent)
             activity.finish()
@@ -864,27 +924,28 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             adapter = null
         }
 
-        private fun normalize(value: String?): String {
-            return value?.trim()?.lowercase(Locale.ROOT) ?: ""
-        }
+        private fun normalize(value: String?): String = value?.trim()?.lowercase(Locale.ROOT) ?: ""
     }
 
     private enum class FilterMode {
-        ALL, CONTACTS, GROUPS
+        ALL,
+        CONTACTS,
+        GROUPS,
     }
 
     private enum class ContactType {
-        CONTACT, GROUP
+        CONTACT,
+        GROUP,
     }
 
     private data class ContactPickerItem(
         val jid: String,
         val displayName: String,
         val waName: String,
-        val type: ContactType
+        val type: ContactType,
     ) {
-        fun typeLabel(context: Context): String {
-            return if (type == ContactType.GROUP) {
+        fun typeLabel(context: Context): String =
+            if (type == ContactType.GROUP) {
                 runCatching { context.getString(R.string.picker_group) }.getOrElse {
                     runCatching { FeatureLoader.moduleContext.getString(R.string.picker_group) }.getOrDefault("Group")
                 }
@@ -893,11 +954,11 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                     runCatching { FeatureLoader.moduleContext.getString(R.string.picker_contact) }.getOrDefault("Contact")
                 }
             }
-        }
     }
 
-    private class ContactPickerAdapter(private val controller: PickerController) : BaseAdapter() {
-
+    private class ContactPickerAdapter(
+        private val controller: PickerController,
+    ) : BaseAdapter() {
         private val items = ArrayList<ContactPickerItem>()
 
         @SuppressLint("NotifyDataSetChanged")
@@ -911,69 +972,80 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
 
         override fun getItem(position: Int): ContactPickerItem = items[position]
 
-        override fun getItemId(position: Int): Long {
-            return items[position].jid.hashCode().toLong()
-        }
+        override fun getItemId(position: Int): Long = items[position].jid.hashCode().toLong()
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        override fun getView(
+            position: Int,
+            convertView: View?,
+            parent: ViewGroup,
+        ): View {
             val holder: ViewHolder
             val view: View
 
             if (convertView == null) {
                 val context = controller.context
 
-                val root = LinearLayout(context).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    setPadding(
-                        Utils.dipToPixels(14f), Utils.dipToPixels(12f),
-                        Utils.dipToPixels(14f), Utils.dipToPixels(12f)
-                    )
-                }
+                val root =
+                    LinearLayout(context).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(
+                            Utils.dipToPixels(14f),
+                            Utils.dipToPixels(12f),
+                            Utils.dipToPixels(14f),
+                            Utils.dipToPixels(12f),
+                        )
+                    }
 
-                val avatarView = ImageView(context).apply {
-                    layoutParams =
-                        LinearLayout.LayoutParams(Utils.dipToPixels(44f), Utils.dipToPixels(44f))
-                }
+                val avatarView =
+                    ImageView(context).apply {
+                        layoutParams =
+                            LinearLayout.LayoutParams(Utils.dipToPixels(44f), Utils.dipToPixels(44f))
+                    }
 
-                val content = LinearLayout(context).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams =
-                        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                            setMargins(Utils.dipToPixels(12f), 0, Utils.dipToPixels(12f), 0)
-                        }
-                }
+                val content =
+                    LinearLayout(context).apply {
+                        orientation = LinearLayout.VERTICAL
+                        layoutParams =
+                            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                                setMargins(Utils.dipToPixels(12f), 0, Utils.dipToPixels(12f), 0)
+                            }
+                    }
 
-                val title = TextView(context).apply {
-                    setTextColor(DesignUtils.getPrimaryTextColor())
-                    textSize = 16f
-                    typeface = Typeface.DEFAULT_BOLD
-                    maxLines = 1
-                    ellipsize = TextUtils.TruncateAt.END
-                }
+                val title =
+                    TextView(context).apply {
+                        setTextColor(DesignUtils.getPrimaryTextColor())
+                        textSize = 16f
+                        typeface = Typeface.DEFAULT_BOLD
+                        maxLines = 1
+                        ellipsize = TextUtils.TruncateAt.END
+                    }
 
-                val waName = TextView(context).apply {
-                    setTextColor(0xFF8A8A8A.toInt())
-                    textSize = 13f
-                    maxLines = 1
-                    ellipsize = TextUtils.TruncateAt.END
-                }
+                val waName =
+                    TextView(context).apply {
+                        setTextColor(0xFF8A8A8A.toInt())
+                        textSize = 13f
+                        maxLines = 1
+                        ellipsize = TextUtils.TruncateAt.END
+                    }
 
-                val type = TextView(context).apply {
-                    setTextColor(0xFF6A6A6A.toInt())
-                    textSize = 12f
-                    maxLines = 1
-                    ellipsize = TextUtils.TruncateAt.END
-                }
+                val type =
+                    TextView(context).apply {
+                        setTextColor(0xFF6A6A6A.toInt())
+                        textSize = 12f
+                        maxLines = 1
+                        ellipsize = TextUtils.TruncateAt.END
+                    }
 
                 content.addView(title)
                 content.addView(waName)
                 content.addView(type)
 
-                val selectionView = ImageView(context).apply {
-                    layoutParams =
-                        LinearLayout.LayoutParams(Utils.dipToPixels(24f), Utils.dipToPixels(24f))
-                }
+                val selectionView =
+                    ImageView(context).apply {
+                        layoutParams =
+                            LinearLayout.LayoutParams(Utils.dipToPixels(24f), Utils.dipToPixels(24f))
+                    }
 
                 root.addView(avatarView)
                 root.addView(content)
@@ -994,8 +1066,8 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             holder.avatarView.setImageDrawable(controller.getAvatar(item))
             holder.selectionView.setImageDrawable(
                 createSelectionDrawable(
-                    controller.isSelected(item)
-                )
+                    controller.isSelected(item),
+                ),
             )
             holder.itemView.setOnClickListener { controller.toggleSelection(item) }
 
@@ -1013,7 +1085,7 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
                 shape = GradientDrawable.OVAL
                 setStroke(
                     Utils.dipToPixels(2f),
-                    if (checked) DesignUtils.getUnSeenColor() else 0x66888888
+                    if (checked) DesignUtils.getUnSeenColor() else 0x66888888,
                 )
                 setColor(Color.TRANSPARENT)
             }
@@ -1025,15 +1097,14 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
             val titleView: TextView,
             val waNameView: TextView,
             val typeView: TextView,
-            val selectionView: ImageView
+            val selectionView: ImageView,
         )
     }
 
     private object ContactPickerDataProvider {
-
         fun loadPickerItems(
             activity: Activity,
-            pinnedJids: List<String>
+            pinnedJids: List<String>,
         ): ArrayList<ContactPickerItem> {
             val items = LinkedHashMap<String, ContactPickerItem>()
             val database = ModuleRuntime.getWaDatabase()
@@ -1054,33 +1125,41 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
 
         private fun loadFromWaDatabase(
             items: LinkedHashMap<String, ContactPickerItem>,
-            database: SQLiteDatabase
+            database: SQLiteDatabase,
         ) {
             try {
-                database.query(
-                    "wa_contacts",
-                    arrayOf("jid", "display_name"),
-                    "jid IS NOT NULL AND jid != '' AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) AND is_whatsapp_user = 1",
-                    null, null, null,
-                    "display_name COLLATE NOCASE ASC, jid COLLATE NOCASE ASC"
-                ).use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val jid = cursor.getString(0)
-                        if (TextUtils.isEmpty(jid) || items.containsKey(jid) || !isSupportedPickerJid(
-                                jid
-                            )
-                        ) {
-                            continue
+                database
+                    .query(
+                        "wa_contacts",
+                        arrayOf("jid", "display_name"),
+                        "jid IS NOT NULL AND jid != '' AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) AND is_whatsapp_user = 1",
+                        null,
+                        null,
+                        null,
+                        "display_name COLLATE NOCASE ASC, jid COLLATE NOCASE ASC",
+                    ).use { cursor ->
+                        while (cursor.moveToNext()) {
+                            val jid = cursor.getString(0)
+                            if (TextUtils.isEmpty(jid) ||
+                                items.containsKey(jid) ||
+                                !isSupportedPickerJid(
+                                    jid,
+                                )
+                            ) {
+                                continue
+                            }
+                            items[jid] = buildItem(jid, cursor.getString(1))
                         }
-                        items[jid] = buildItem(jid, cursor.getString(1))
                     }
-                }
             } catch (throwable: Throwable) {
                 XposedBridge.log(throwable)
             }
         }
 
-        private fun buildItem(jid: String, fallbackDisplayName: String? = null): ContactPickerItem {
+        private fun buildItem(
+            jid: String,
+            fallbackDisplayName: String? = null,
+        ): ContactPickerItem {
             val type = if (jid.endsWith("@g.us")) ContactType.GROUP else ContactType.CONTACT
             val userJid = FMessageWpp.UserJid(jid)
 
@@ -1102,9 +1181,12 @@ class AboutContactPicker(loader: ClassLoader, preferences:SharedPreferences) :
         private fun isSupportedPickerJid(jid: String): Boolean {
             if (!jid.contains("@")) return false
             if (jid.endsWith("@broadcast") || jid.endsWith("@newsletter") || jid.startsWith("status@")) return false
-            return jid.endsWith("@g.us") || jid.endsWith("@s.whatsapp.net") || jid.endsWith("@lid") || jid.contains(
-                "@lid"
-            )
+            return jid.endsWith("@g.us") ||
+                jid.endsWith("@s.whatsapp.net") ||
+                jid.endsWith("@lid") ||
+                jid.contains(
+                    "@lid",
+                )
         }
 
         private fun localPart(jid: String): String {

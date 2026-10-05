@@ -8,12 +8,15 @@ import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.util.concurrent.CopyOnWriteArraySet
 
-class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : SharedPreferences {
-    override fun getAll(): MutableMap<String?, *>? {
-        return mPreferences.all
-    }
+class SharedPreferencesWrapper(
+    private val mPreferences: SharedPreferences,
+) : SharedPreferences {
+    override fun getAll(): MutableMap<String?, *>? = mPreferences.all
 
-    override fun getString(s: String?, s1: String?): String? {
+    override fun getString(
+        s: String?,
+        s1: String?,
+    ): String? {
         val value = mPreferences.getString(s, s1)
         return applyHook(s, value) as String?
     }
@@ -21,28 +24,43 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
     /**
      * @noinspection unchecked
      */
-    override fun getStringSet(s: String?, set: MutableSet<String?>?): MutableSet<String?>? {
+    override fun getStringSet(
+        s: String?,
+        set: MutableSet<String?>?,
+    ): MutableSet<String?>? {
         val value = mPreferences.getStringSet(s, set)
         @Suppress("UNCHECKED_CAST")
         return applyHook(s, value) as MutableSet<String?>?
     }
 
-    override fun getInt(s: String?, i: Int): Int {
+    override fun getInt(
+        s: String?,
+        i: Int,
+    ): Int {
         val value = mPreferences.getInt(s, i)
         return applyHook(s, value) as Int
     }
 
-    override fun getLong(s: String?, l: Long): Long {
+    override fun getLong(
+        s: String?,
+        l: Long,
+    ): Long {
         val value = mPreferences.getLong(s, l)
         return applyHook(s, value) as Long
     }
 
-    override fun getFloat(s: String?, v: Float): Float {
+    override fun getFloat(
+        s: String?,
+        v: Float,
+    ): Float {
         val value = mPreferences.getFloat(s, v)
         return applyHook(s, value) as Float
     }
 
-    override fun getBoolean(s: String?, b: Boolean): Boolean {
+    override fun getBoolean(
+        s: String?,
+        b: Boolean,
+    ): Boolean {
         val value = mPreferences.getBoolean(s, b)
         return applyHook(s, value) as Boolean
     }
@@ -52,9 +70,7 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
         return applyHook(s, value) as Boolean
     }
 
-    override fun edit(): SharedPreferences.Editor? {
-        return mPreferences.edit()
-    }
+    override fun edit(): SharedPreferences.Editor? = mPreferences.edit()
 
     override fun registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener: OnSharedPreferenceChangeListener?) {
         mPreferences.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener)
@@ -65,7 +81,10 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
     }
 
     fun interface SPrefHook {
-        fun hookValue(key: String?, value: Any?): Any?
+        fun hookValue(
+            key: String?,
+            value: Any?,
+        ): Any?
     }
 
     companion object {
@@ -91,78 +110,86 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
                         if (pref == null || pref is SharedPreferencesWrapper) return
                         param.setResult(SharedPreferencesWrapper(pref))
                     }
-                })
+                },
+            )
             val sharedPreferencesClasses =
                 loadSharedPreferencesClasses(classLoader)
             if (sharedPreferencesClasses.isNullOrEmpty()) return
 
-            val getStringHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val key = param.args[0] as String?
-                    val value = param.result
-                    param.setResult(applyHook(key, value))
-                }
-            }
-
-            val getBooleanHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val key = param.args[0] as String?
-                    val value = param.result
-                    param.setResult(applyHook(key, value))
-                }
-            }
-
-            val getIntHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val key = param.args[0] as String?
-                    val value = param.result
-                    param.setResult(applyHook(key, value))
-                }
-            }
-
-            val getLongHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val key = param.args[0] as String?
-                    val value = param.result
-                    param.setResult(applyHook(key, value))
-                }
-            }
-
-            val getFloatHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val key = param.args[0] as String?
-                    val value = param.result
-                    param.setResult(applyHook(key, value))
-                }
-            }
-
-            val containsHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val key = param.args[0] as String?
-                    val value = param.result
-                    param.setResult(applyHook(key, value))
-                }
-            }
-
-            val getAllHook: XC_MethodHook = object : XC_MethodHook() {
-                @Throws(Throwable::class)
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    @Suppress("UNCHECKED_CAST")
-                    val result = param.result as MutableMap<String?, Any?>?
-                    if (result.isNullOrEmpty()) return
-                    val updated = HashMap<String?, Any?>(result.size)
-                    for (entry in result.entries) {
-                        updated[entry.key] = applyHook(entry.key, entry.value)
+            val getStringHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val key = param.args[0] as String?
+                        val value = param.result
+                        param.setResult(applyHook(key, value))
                     }
-                    param.setResult(updated)
                 }
-            }
+
+            val getBooleanHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val key = param.args[0] as String?
+                        val value = param.result
+                        param.setResult(applyHook(key, value))
+                    }
+                }
+
+            val getIntHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val key = param.args[0] as String?
+                        val value = param.result
+                        param.setResult(applyHook(key, value))
+                    }
+                }
+
+            val getLongHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val key = param.args[0] as String?
+                        val value = param.result
+                        param.setResult(applyHook(key, value))
+                    }
+                }
+
+            val getFloatHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val key = param.args[0] as String?
+                        val value = param.result
+                        param.setResult(applyHook(key, value))
+                    }
+                }
+
+            val containsHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        val key = param.args[0] as String?
+                        val value = param.result
+                        param.setResult(applyHook(key, value))
+                    }
+                }
+
+            val getAllHook: XC_MethodHook =
+                object : XC_MethodHook() {
+                    @Throws(Throwable::class)
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        @Suppress("UNCHECKED_CAST")
+                        val result = param.result as MutableMap<String?, Any?>?
+                        if (result.isNullOrEmpty()) return
+                        val updated = HashMap<String?, Any?>(result.size)
+                        for (entry in result.entries) {
+                            updated[entry.key] = applyHook(entry.key, entry.value)
+                        }
+                        param.setResult(updated)
+                    }
+                }
 
             for (sharedPreferencesClass in sharedPreferencesClasses) {
                 if (SharedPreferencesWrapper::class.java.name == sharedPreferencesClass.name) continue
@@ -182,7 +209,9 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
             prefHook.add(PreferenceValueHooks.Transform { key, value -> hook.hookValue(key, value) })
         }
 
-        private fun applyHook(key: String?, value: Any?): Any? =
-            PreferenceValueHooks.applyAll(prefHook, key, value)
+        private fun applyHook(
+            key: String?,
+            value: Any?,
+        ): Any? = PreferenceValueHooks.applyAll(prefHook, key, value)
     }
 }

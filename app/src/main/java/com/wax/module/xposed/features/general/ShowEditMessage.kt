@@ -1,6 +1,7 @@
 package com.wax.module.xposed.features.general
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.Typeface
 import android.view.View
@@ -29,13 +30,13 @@ import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 
-class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
-    Feature(loader, preferences) {
-
+class ShowEditMessage(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     override fun doHook() {
         if (!prefs.getBoolean("antieditmessages", false)) return
 
@@ -48,35 +49,39 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
         val getEditMessage = loadGetEditMessageMethod(classLoader)
         logDebug(getMethodDescriptor(getEditMessage))
 
-        XposedBridge.hookMethod(onMessageEdit, object : XC_MethodHook() {
-
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val invoked = callerMessageEditMethod.invoke(null, param.args[0])
-                val timestamp = XposedHelpers.getLongField(invoked, "A00")
-                val fMessage = FMessageWpp(param.args[0])
-                val id = fMessage.rowId
-                var newMessage = fMessage.messageStr
-                if (newMessage == null) {
-                    val methods = ReflectionUtils.findAllMethodsUsingFilter(
-                        param.args[0].javaClass
-                    ) { method ->
-                        method.returnType == String::class.java && ReflectionUtils.isOverridden(
-                            method
-                        )
+        XposedBridge.hookMethod(
+            onMessageEdit,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val invoked = callerMessageEditMethod.invoke(null, param.args[0])
+                    val timestamp = XposedHelpers.getLongField(invoked, "A00")
+                    val fMessage = FMessageWpp(param.args[0])
+                    val id = fMessage.rowId
+                    var newMessage = fMessage.messageStr
+                    if (newMessage == null) {
+                        val methods =
+                            ReflectionUtils.findAllMethodsUsingFilter(
+                                param.args[0].javaClass,
+                            ) { method ->
+                                method.returnType == String::class.java &&
+                                    ReflectionUtils.isOverridden(
+                                        method,
+                                    )
+                            }
+                        for (method in methods) {
+                            newMessage = method!!.invoke(param.args[0]) as String?
+                            if (newMessage != null) break
+                        }
+                        if (newMessage == null) return
                     }
-                    for (method in methods) {
-                        newMessage = method!!.invoke(param.args[0]) as String?
-                        if (newMessage != null) break
+                    try {
+                        MessageHistoryStore.getInstance().recordEditMessageAsync(id, newMessage, timestamp)
+                    } catch (e: Exception) {
+                        logDebug(e)
                     }
-                    if (newMessage == null) return
                 }
-                try {
-                    MessageHistoryStore.getInstance().recordEditMessageAsync(id, newMessage, timestamp)
-                } catch (e: Exception) {
-                    logDebug(e)
-                }
-            }
-        })
+            },
+        )
 
         val strEmoji = "\uD83D\uDCDD"
 
@@ -86,7 +91,7 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
                     fMessage: FMessageWpp,
                     view: ViewGroup,
                     position: Int,
-                    convertView: View?
+                    convertView: View?,
                 ) {
                     val textView =
                         view.findViewById<View?>(Utils.getID("edit_label", "id")) as TextView?
@@ -107,7 +112,7 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
                         }
                     }
                 }
-            }
+            },
         )
     }
 
@@ -118,22 +123,27 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
             val dialog = ModuleRuntime.createBottomDialog(ctx!!)
             // NestedScrollView
             val nestedScrollView0 = NestedScrollView(ctx, null)
-            nestedScrollView0.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
+            nestedScrollView0.layoutParams =
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                )
             nestedScrollView0.isFillViewport = true
             nestedScrollView0.fitsSystemWindows = true
             // Main Layout
             val linearLayout = LinearLayout(ctx)
             linearLayout.orientation = LinearLayout.VERTICAL
-            val layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
+            val layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                )
             linearLayout.fitsSystemWindows = true
-            linearLayout.minimumHeight = (Utils.application.resources
-                .displayMetrics.heightPixels / 4).also { layoutParams.height = it }
+            linearLayout.minimumHeight =
+                (
+                    Utils.application.resources
+                        .displayMetrics.heightPixels / 4
+                ).also { layoutParams.height = it }
             linearLayout.layoutParams = layoutParams
             val dip = Utils.dipToPixels(20)
             linearLayout.setPadding(dip, dip, dip, 0)
@@ -143,10 +153,11 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
 
             // Title View
             val titleView = TextView(ctx)
-            val layoutParams1 = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            val layoutParams1 =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                )
             layoutParams1.weight = 1.0f
             layoutParams1.setMargins(0, 0, 0, Utils.dipToPixels(10))
             titleView.layoutParams = layoutParams1
@@ -158,10 +169,11 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
             // List View
             val adapter = MessageAdapter(ctx, messages)
             val listView: ListView = NoScrollListView(ctx)
-            val layoutParams2 = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
+            val layoutParams2 =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                )
             layoutParams2.weight = 1.0f
             listView.layoutParams = layoutParams2
             listView.adapter = adapter
@@ -171,11 +183,12 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
             layoutParams4.gravity = 17
             layoutParams4.setMargins(0, Utils.dipToPixels(5), 0, Utils.dipToPixels(5))
             val bg2 = DesignUtils.createDrawable("rc_dotline_dialog", Color.BLACK)
-            imageView0.background = DesignUtils.alphaDrawable(
-                bg2,
-                DesignUtils.getPrimaryTextColor(),
-                33
-            )
+            imageView0.background =
+                DesignUtils.alphaDrawable(
+                    bg2,
+                    DesignUtils.getPrimaryTextColor(),
+                    33,
+                )
             imageView0.layoutParams = layoutParams4
             // Button View
             val okButton = Button(ctx)
@@ -185,11 +198,12 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
             okButton.layoutParams = layoutParams3
             okButton.gravity = 17
             val drawable = DesignUtils.createDrawable("selector_bg", Color.BLACK)
-            okButton.background = DesignUtils.alphaDrawable(
-                drawable,
-                DesignUtils.getPrimaryTextColor(),
-                25
-            )
+            okButton.background =
+                DesignUtils.alphaDrawable(
+                    drawable,
+                    DesignUtils.getPrimaryTextColor(),
+                    25,
+                )
             okButton.text = "OK"
             okButton.setOnClickListener { dialog.dismissDialog() }
             linearLayout.addView(imageView0)
@@ -203,8 +217,5 @@ class ShowEditMessage(loader: ClassLoader, preferences:SharedPreferences) :
         }
     }
 
-
-    override fun getPluginName(): String {
-        return "Show Edit Message"
-    }
+    override fun getPluginName(): String = "Show Edit Message"
 }

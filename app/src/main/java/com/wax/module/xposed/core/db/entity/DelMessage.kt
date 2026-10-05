@@ -9,20 +9,17 @@ import androidx.room.PrimaryKey
     tableName = "delmessages",
     indices = [
         Index(value = ["jid", "msgid"], unique = true),
-        Index(name = "idx_delmessages_msgid", value = ["msgid"])
-    ]
+        Index(name = "idx_delmessages_msgid", value = ["msgid"]),
+    ],
 )
 data class DelMessage(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "_id")
     var id: Long = 0,
-
     @ColumnInfo(name = "jid")
     var jid: String? = null,
-
     @ColumnInfo(name = "msgid")
     var msgid: String? = null,
-
     @ColumnInfo(name = "timestamp", defaultValue = "0")
-    var timestamp: Long? = 0L
+    var timestamp: Long? = 0L,
 )

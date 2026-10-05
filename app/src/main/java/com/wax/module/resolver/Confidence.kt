@@ -10,7 +10,6 @@ package com.wax.module.resolver
  * caller gets a score and a policy decides, rather than the resolver deciding alone.
  */
 enum class Confidence {
-
     /**
      * A single unambiguous match on a strong signal: an exact class name, an exact method
      * name with a matching signature. Safe to install.
@@ -32,14 +31,15 @@ enum class Confidence {
     /**
      * No match on this WhatsApp build. Nothing to install.
      */
-    NONE;
+    NONE,
+
+    ;
 
     /** Whether a hook may be installed on the strength of this result. */
     val isInstallable: Boolean
         get() = this == EXACT || this == LIKELY
 
     companion object {
-
         /**
          * Central threshold policy.
          *
@@ -49,7 +49,6 @@ enum class Confidence {
         val minimumToInstall: Confidence = LIKELY
 
         /** Returns true when a result at [confidence] may be installed under current policy. */
-        fun mayInstall(confidence: Confidence): Boolean =
-            confidence.isInstallable && confidence.ordinal <= minimumToInstall.ordinal
+        fun mayInstall(confidence: Confidence): Boolean = confidence.isInstallable && confidence.ordinal <= minimumToInstall.ordinal
     }
 }

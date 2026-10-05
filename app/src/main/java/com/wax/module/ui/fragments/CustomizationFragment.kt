@@ -6,7 +6,10 @@ import com.wax.module.R
 import com.wax.module.ui.fragments.base.BasePreferenceFragment
 
 class CustomizationFragment : BasePreferenceFragment() {
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?,
+    ) {
         super.onCreatePreferences(savedInstanceState, rootKey)
         setPreferencesFromResource(R.xml.fragment_customization, rootKey)
     }
@@ -16,7 +19,10 @@ class CustomizationFragment : BasePreferenceFragment() {
         setDisplayHomeAsUpEnabled(false)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         val activityIntent = activity?.intent
         val scrollToKey = activityIntent?.getStringExtra("scroll_to_preference")

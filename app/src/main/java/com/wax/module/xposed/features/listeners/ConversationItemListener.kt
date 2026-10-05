@@ -1,6 +1,7 @@
 package com.wax.module.xposed.features.listeners
 
 import android.app.Activity
+import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -13,7 +14,6 @@ import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.ModuleRuntime
 import com.wax.module.xposed.core.components.FMessageWpp
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.lang.ref.WeakReference
@@ -22,13 +22,12 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 class ConversationItemListener(
     loader: ClassLoader,
-    preferences:SharedPreferences
+    preferences: SharedPreferences,
 ) : Feature(loader, preferences) {
-
     data class BoundConversationItem(
         val messageId: String,
         val rowId: Long,
-        val message: FMessageWpp
+        val message: FMessageWpp,
     )
 
     companion object {
@@ -58,7 +57,9 @@ class ConversationItemListener(
                 if (BaseAdapter::class.java.isAssignableFrom(field.type)) {
                     field.isAccessible = true
                     field.get(cur) as? BaseAdapter
-                } else null
+                } else {
+                    null
+                }
             }
         }
 
@@ -70,20 +71,23 @@ class ConversationItemListener(
             }
         }
 
-        fun getBoundMessageId(view: View): String? {
-            return XposedHelpers.getAdditionalInstanceField(view, FIELD_BOUND_MESSAGE_ID) as? String
-        }
+        fun getBoundMessageId(view: View): String? = XposedHelpers.getAdditionalInstanceField(view, FIELD_BOUND_MESSAGE_ID) as? String
 
-        fun isViewBoundToMessage(view: View, messageId: String): Boolean {
-            return getBoundMessageId(view) == messageId
-        }
+        fun isViewBoundToMessage(
+            view: View,
+            messageId: String,
+        ): Boolean = getBoundMessageId(view) == messageId
 
-        private fun bindViewToMessage(view: View, fMessage: FMessageWpp): BoundConversationItem {
-            val boundItem = BoundConversationItem(
-                messageId = fMessage.key.messageID,
-                rowId = fMessage.rowId,
-                message = fMessage
-            )
+        private fun bindViewToMessage(
+            view: View,
+            fMessage: FMessageWpp,
+        ): BoundConversationItem {
+            val boundItem =
+                BoundConversationItem(
+                    messageId = fMessage.key.messageID,
+                    rowId = fMessage.rowId,
+                    message = fMessage,
+                )
             XposedHelpers.setAdditionalInstanceField(view, FIELD_BOUND_MESSAGE_ID, boundItem.messageId)
             listItems[view] = boundItem
             return boundItem
@@ -138,48 +142,52 @@ class ConversationItemListener(
 
                     hooked?.unhook()
 
-                    val method = XposedHelpers.findMethodBestMatch(
-                        adapter!!.javaClass, "getView",
-                        Int::class.javaPrimitiveType,
-                        View::class.java,
-                        ViewGroup::class.java
-                    )
+                    val method =
+                        XposedHelpers.findMethodBestMatch(
+                            adapter!!.javaClass,
+                            "getView",
+                            Int::class.javaPrimitiveType,
+                            View::class.java,
+                            ViewGroup::class.java,
+                        )
 
-                    hooked = XposedBridge.hookMethod(method, object : XC_MethodHook() {
-                        @Throws(Throwable::class)
-                        override fun afterHookedMethod(param: MethodHookParam) {
-                            if (conversationListeners.isEmpty()) return
-                            val activeAdapter = adapter ?: return
-                            if (param.thisObject !== activeAdapter) return
+                    hooked =
+                        XposedBridge.hookMethod(
+                            method,
+                            object : XC_MethodHook() {
+                                @Throws(Throwable::class)
+                                override fun afterHookedMethod(param: MethodHookParam) {
+                                    if (conversationListeners.isEmpty()) return
+                                    val activeAdapter = adapter ?: return
+                                    if (param.thisObject !== activeAdapter) return
 
-                            val position = param.args[0] as Int
-                            val convertView = param.args[1] as? View
-                            val viewGroup = param.result as? ViewGroup ?: return
+                                    val position = param.args[0] as Int
+                                    val convertView = param.args[1] as? View
+                                    val viewGroup = param.result as? ViewGroup ?: return
 
-                            val fMessageObj = activeAdapter.getItem(position) ?: return
+                                    val fMessageObj = activeAdapter.getItem(position) ?: return
 
-                            if (!FMessageWpp.TYPE.isInstance(fMessageObj)) return
-                            val fMessage = FMessageWpp(fMessageObj)
+                                    if (!FMessageWpp.type.isInstance(fMessageObj)) return
+                                    val fMessage = FMessageWpp(fMessageObj)
 
-                            bindViewToMessage(viewGroup, fMessage)
+                                    bindViewToMessage(viewGroup, fMessage)
 
-                            for (listener in conversationListeners) {
-                                try {
-                                    listener.onItemBind(fMessage, viewGroup, position, convertView)
-                                } catch (e: Throwable) {
-                                    logDebug(e)
+                                    for (listener in conversationListeners) {
+                                        try {
+                                            listener.onItemBind(fMessage, viewGroup, position, convertView)
+                                        } catch (e: Throwable) {
+                                            logDebug(e)
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                    })
+                            },
+                        )
                 }
-            }
+            },
         )
     }
 
-    override fun getPluginName(): String {
-        return "Conversation Item Listener"
-    }
+    override fun getPluginName(): String = "Conversation Item Listener"
 
     abstract class OnConversationItemListener {
         /**
@@ -196,7 +204,7 @@ class ConversationItemListener(
             fMessage: FMessageWpp,
             view: ViewGroup,
             position: Int,
-            convertView: View?
+            convertView: View?,
         )
 
         open fun onAttachAdapter(adapter: ListAdapter?) {

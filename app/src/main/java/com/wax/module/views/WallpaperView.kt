@@ -25,23 +25,25 @@ import java.util.Properties
 class WallpaperView(
     context: Context,
     private val prefs: SharedPreferences,
-    private val properties: Properties
+    private val properties: Properties,
 ) : FrameLayout(context) {
-
     init {
         initView(context)
     }
 
     private fun initView(context: Context) {
-        val bgView = ImageView(context).apply {
-            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            setAdjustViewBounds(false)
-        }
+        val bgView =
+            ImageView(context).apply {
+                layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setAdjustViewBounds(false)
+            }
         addView(bgView)
 
         try {
-            var image = ThemePreference.rootDirectory.absolutePath + "/" + prefs.getString("folder_theme", "") + "/" + properties.getProperty("wallpaper_file")
+            var image =
+                ThemePreference.rootDirectory.absolutePath + "/" + prefs.getString("folder_theme", "") + "/" +
+                    properties.getProperty("wallpaper_file")
             if (prefs.getBoolean("wallpaper", false)) {
                 image = prefs.getString("wallpaper_file", "") ?: ""
             }
@@ -78,12 +80,13 @@ class WallpaperView(
             return BitmapDrawable(resources, bitmap)
         }
 
-        val bitmap = if (!file.canRead()) {
-            val parcelFile = ModuleRuntime.getClientBridge()?.openFile(filePath, false) ?: return null
-            BitmapFactory.decodeStream(FileInputStream(parcelFile.fileDescriptor))
-        } else {
-            BitmapFactory.decodeFile(file.absolutePath)
-        } ?: return null
+        val bitmap =
+            if (!file.canRead()) {
+                val parcelFile = ModuleRuntime.getClientBridge()?.openFile(filePath, false) ?: return null
+                BitmapFactory.decodeStream(FileInputStream(parcelFile.fileDescriptor))
+            } else {
+                BitmapFactory.decodeFile(file.absolutePath)
+            } ?: return null
 
         val displayMetrics = DisplayMetrics()
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager

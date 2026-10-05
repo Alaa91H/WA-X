@@ -4,7 +4,9 @@ import android.content.Context
 import android.widget.FrameLayout
 import com.wax.module.adapter.IGStatusAdapter
 
-class IGStatusView(context: Context) : FrameLayout(context) {
+class IGStatusView(
+    context: Context,
+) : FrameLayout(context) {
     @JvmField
     var mStatusListView: HorizontalListView? = null
 
@@ -41,5 +43,4 @@ class IGStatusView(context: Context) : FrameLayout(context) {
             invalidate()
         }
     }
-
 }

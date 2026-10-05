@@ -31,9 +31,10 @@ import de.robv.android.xposed.XposedBridge
  *
  * On top of that there was no output at all, so none of it could be diagnosed.
  */
-class MediaQuality(loader: ClassLoader, preferences: SharedPreferences) :
-    Feature(loader, preferences) {
-
+class MediaQuality(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     private var targets: HdStatusTargets? = null
     private var imageHook: HdStatusImageHook? = null
     private var videoHook: HdStatusVideoHook? = null
@@ -47,7 +48,7 @@ class MediaQuality(loader: ClassLoader, preferences: SharedPreferences) :
 
         log(
             "images=$imageQuality videos=$videoQuality realResolution=$realResolution " +
-                "60fps=$highFrameRate limitMb=$limitMb"
+                "60fps=$highFrameRate limitMb=$limitMb",
         )
 
         // Resolve once, up front. Everything below reads from this set, and a target
@@ -62,9 +63,10 @@ class MediaQuality(loader: ClassLoader, preferences: SharedPreferences) :
 
         if (videoQuality) {
             step("video") {
-                videoHook = HdStatusVideoHook(classLoader, resolved) { log(it) }.apply {
-                    install(true, limitMb, realResolution, highFrameRate)
-                }
+                videoHook =
+                    HdStatusVideoHook(classLoader, resolved) { log(it) }.apply {
+                        install(true, limitMb, realResolution, highFrameRate)
+                    }
             }
         }
 
@@ -104,14 +106,17 @@ class MediaQuality(loader: ClassLoader, preferences: SharedPreferences) :
         }
 
         val writer = HdStatusFieldWriter(configClass.simpleName, fields) { log(it) }
-        XposedBridge.hookAllConstructors(configClass, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val instance = param.thisObject ?: return
-                writer.withTarget(instance) {
-                    setBoolean(HdStatusFields.SUPPORTS_HD_QUALITY, true)
+        XposedBridge.hookAllConstructors(
+            configClass,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val instance = param.thisObject ?: return
+                    writer.withTarget(instance) {
+                        setBoolean(HdStatusFields.SUPPORTS_HD_QUALITY, true)
+                    }
                 }
-            }
-        })
+            },
+        )
         log("picker: supportsHdQuality armed on ${configClass.name}")
     }
 
@@ -123,7 +128,10 @@ class MediaQuality(loader: ClassLoader, preferences: SharedPreferences) :
      * WhatsApp build with nothing recognisable degrades to "no HD Status" instead of
      * a partial and unpredictable set of overrides.
      */
-    private inline fun step(name: String, block: () -> Unit) {
+    private inline fun step(
+        name: String,
+        block: () -> Unit,
+    ) {
         try {
             block()
         } catch (t: Throwable) {
@@ -136,21 +144,22 @@ class MediaQuality(loader: ClassLoader, preferences: SharedPreferences) :
     private fun report() {
         val video = videoHook
         val image = imageHook
-        val parts = buildList {
-            add("image=" + if (image?.installed == true) "installed" else "off")
-            add("video=" + if (video?.installed == true) "installed" else "off")
-            video?.let {
-                add("realResolution=${it.realResolution}")
-                add("60fps=${it.highFrameRate}")
-                if (it.skippedSteps.isNotEmpty()) add("videoSkipped=${it.skippedSteps.joinToString("/")}")
+        val parts =
+            buildList {
+                add("image=" + if (image?.installed == true) "installed" else "off")
+                add("video=" + if (video?.installed == true) "installed" else "off")
+                video?.let {
+                    add("realResolution=${it.realResolution}")
+                    add("60fps=${it.highFrameRate}")
+                    if (it.skippedSteps.isNotEmpty()) add("videoSkipped=${it.skippedSteps.joinToString("/")}")
+                }
+                if (image != null && image.missingFields.isNotEmpty()) {
+                    add("imageMissing=${image.missingFields.distinct().joinToString("/")}")
+                }
+                if (video != null && video.missingFields.isNotEmpty()) {
+                    add("videoMissing=${video.missingFields.distinct().joinToString("/")}")
+                }
             }
-            if (image != null && image.missingFields.isNotEmpty()) {
-                add("imageMissing=${image.missingFields.distinct().joinToString("/")}")
-            }
-            if (video != null && video.missingFields.isNotEmpty()) {
-                add("videoMissing=${video.missingFields.distinct().joinToString("/")}")
-            }
-        }
         log("summary: ${parts.joinToString(" ")}")
     }
 

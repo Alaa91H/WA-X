@@ -13,7 +13,10 @@ class MediaFragment : BasePreferenceFragment() {
         setDisplayHomeAsUpEnabled(false)
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?,
+    ) {
         super.onCreatePreferences(savedInstanceState, rootKey)
         setPreferencesFromResource(R.xml.fragment_media, rootKey)
 

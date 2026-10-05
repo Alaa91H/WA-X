@@ -38,11 +38,12 @@ object FilePicker {
         }
 
         onFilePickedListener?.let { listener ->
-            val realPath = try {
-                RealPathUtil.getRealFilePath(activity, uri)
-            } catch (_: Exception) {
-                null
-            } ?: return
+            val realPath =
+                try {
+                    RealPathUtil.getRealFilePath(activity, uri)
+                } catch (_: Exception) {
+                    null
+                } ?: return
             listener.onFilePicked(File(realPath))
             onFilePickedListener = null
         }
@@ -57,11 +58,12 @@ object FilePicker {
         }
 
         onFilePickedListener?.let { listener ->
-            val realPath = try {
-                RealPathUtil.getRealFolderPath(activity, uri)
-            } catch (_: Exception) {
-                null
-            } ?: return
+            val realPath =
+                try {
+                    RealPathUtil.getRealFolderPath(activity, uri)
+                } catch (_: Exception) {
+                    null
+                } ?: return
             listener.onFilePicked(File(realPath))
             onFilePickedListener = null
         }

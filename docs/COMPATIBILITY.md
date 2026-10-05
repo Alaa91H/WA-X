@@ -30,14 +30,15 @@ How a feature reaches its hook targets. This is derived from the source tree, so
 
 | Tier | Meaning | Features |
 |---|---|---|
-| `none` | The feature references no internal resolution layer (Unobfuscator, ReflectionUtils, WppCore). It is driven purely by preferences or its own UI. | 4 |
-| `indirect` | The feature resolves hook targets through ReflectionUtils or WppCore but calls no Unobfuscator resolver directly. | 13 |
+| `none` | The feature references no internal resolution layer (Unobfuscator, ReflectionUtils, WppCore). It is driven purely by preferences or its own UI. | 5 |
+| `indirect` | The feature resolves hook targets through ReflectionUtils or WppCore but calls no Unobfuscator resolver directly. | 12 |
 | `dexkit` | The feature calls one or more Unobfuscator DexKit resolvers directly and therefore needs resolver evidence. | 47 |
 
 ### Tier `none` cannot break through resolution
 
-4 of 64 features reference no internal resolution layer at all, so no WhatsApp update can break them via DexKit:
+5 of 64 features reference no internal resolution layer at all, so no WhatsApp update can break them via DexKit:
 
+- `CopySelectionMessage`
 - `DebugFeature`
 - `FloatingBottomBar`
 - `HideSeenView`
@@ -74,7 +75,7 @@ All 64 registered features. `W` and `B` are the worst status across the declared
 | 14 | `ShowOnline` | customization | dexkit | 4 | Unobfuscator, UnobfuscatorCache, ReflectionUtils | _unknown_ | _unknown_ |
 | 15 | `AboutContactPicker` | general | indirect | 0 | ModuleRuntime | _unknown_ | _unknown_ |
 | 16 | `AntiRevoke` | general | dexkit | 4 | Unobfuscator, UnobfuscatorCache, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
-| 17 | `CallType` | general | dexkit | 1 | Unobfuscator, UnobfuscatorCache, ReflectionUtils | _unknown_ | _unknown_ |
+| 17 | `CallType` | general | dexkit | 1 | Unobfuscator, UnobfuscatorCache | _unknown_ | _unknown_ |
 | 18 | `CaptureDevice` | general | dexkit | 1 | Unobfuscator | _unknown_ | _unknown_ |
 | 19 | `ChatLimit` | general | dexkit | 5 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 20 | `DeleteStatus` | general | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
@@ -90,7 +91,7 @@ All 64 registered features. `W` and `B` are the worst status across the declared
 | 30 | `CallRecording` | media | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 31 | `DownloadProfile` | media | indirect | 0 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 | 32 | `DownloadViewOnce` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
-| 33 | `MediaPreview` | media | dexkit | 1 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
+| 33 | `MediaPreview` | media | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 34 | `MediaQuality` | media | dexkit | 10 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
 | 35 | `StatusDownload` | media | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
 | 36 | `ActivityController` | others | dexkit | 1 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
@@ -98,7 +99,7 @@ All 64 registered features. `W` and `B` are the worst status across the declared
 | 38 | `BackupRestore` | others | indirect | 0 | Unobfuscator | _unknown_ | _unknown_ |
 | 39 | `Channels` | others | dexkit | 4 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |
 | 40 | `ChatFilters` | others | dexkit | 1 | Unobfuscator, ReflectionUtils | _unknown_ | _unknown_ |
-| 41 | `CopySelectionMessage` | others | indirect | 0 | Unobfuscator, ModuleRuntime | _unknown_ | _unknown_ |
+| 41 | `CopySelectionMessage` | others | none | 0 | - | _unknown_ | _unknown_ |
 | 42 | `CopyStatus` | others | dexkit | 2 | Unobfuscator | _unknown_ | _unknown_ |
 | 43 | `DebugFeature` | others | none | 0 | - | _unknown_ | _unknown_ |
 | 44 | `GoogleTranslate` | others | indirect | 0 | Unobfuscator, ReflectionUtils, ModuleRuntime | _unknown_ | _unknown_ |

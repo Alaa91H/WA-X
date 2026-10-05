@@ -12,11 +12,12 @@ class GeneralFragment : BaseFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val root = super.onCreateView(inflater, container, savedInstanceState)
         if (savedInstanceState == null) {
-            childFragmentManager.beginTransaction()
+            childFragmentManager
+                .beginTransaction()
                 .add(R.id.frag_container, GeneralPreferenceFragment())
                 .commitNow()
         }
@@ -34,7 +35,10 @@ class GeneralFragment : BaseFragment() {
     }
 
     class GeneralPreferenceFragment : BasePreferenceFragment() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        override fun onCreatePreferences(
+            savedInstanceState: Bundle?,
+            rootKey: String?,
+        ) {
             super.onCreatePreferences(savedInstanceState, rootKey)
             setPreferencesFromResource(R.xml.fragment_general, rootKey)
         }
@@ -46,7 +50,10 @@ class GeneralFragment : BaseFragment() {
     }
 
     class HomeGeneralPreference : BasePreferenceFragment() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        override fun onCreatePreferences(
+            savedInstanceState: Bundle?,
+            rootKey: String?,
+        ) {
             super.onCreatePreferences(savedInstanceState, rootKey)
             setPreferencesFromResource(R.xml.preference_general_home, rootKey)
             setDisplayHomeAsUpEnabled(true)
@@ -54,7 +61,10 @@ class GeneralFragment : BaseFragment() {
     }
 
     class HomeScreenGeneralPreference : BasePreferenceFragment() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        override fun onCreatePreferences(
+            savedInstanceState: Bundle?,
+            rootKey: String?,
+        ) {
             super.onCreatePreferences(savedInstanceState, rootKey)
             setPreferencesFromResource(R.xml.preference_general_homescreen, rootKey)
             setDisplayHomeAsUpEnabled(true)
@@ -62,7 +72,10 @@ class GeneralFragment : BaseFragment() {
     }
 
     class ConversationGeneralPreference : BasePreferenceFragment() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        override fun onCreatePreferences(
+            savedInstanceState: Bundle?,
+            rootKey: String?,
+        ) {
             super.onCreatePreferences(savedInstanceState, rootKey)
             setPreferencesFromResource(R.xml.preference_general_conversation, rootKey)
             setDisplayHomeAsUpEnabled(true)

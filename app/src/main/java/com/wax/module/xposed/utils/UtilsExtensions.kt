@@ -14,7 +14,7 @@ import kotlin.math.abs
 fun View.setTouchClickAndLongClickListener(
     longPressDelayMs: Long = ViewConfiguration.getLongPressTimeout().toLong(),
     onClick: (View) -> Unit,
-    onLongClick: (View) -> Unit
+    onLongClick: (View) -> Unit,
 ) {
     val handler = Handler(Looper.getMainLooper())
     val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
@@ -24,11 +24,12 @@ fun View.setTouchClickAndLongClickListener(
     var isLongClick = false
     var isCanceled = false
 
-    val longClickRunnable = Runnable {
-        isLongClick = true
-        performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        onLongClick(this)
-    }
+    val longClickRunnable =
+        Runnable {
+            isLongClick = true
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            onLongClick(this)
+        }
 
     setOnTouchListener { view, event ->
         when (event.actionMasked) {
@@ -47,7 +48,7 @@ fun View.setTouchClickAndLongClickListener(
             MotionEvent.ACTION_MOVE -> {
                 val movedTooMuch =
                     abs(event.x - downX) > touchSlop ||
-                            abs(event.y - downY) > touchSlop
+                        abs(event.y - downY) > touchSlop
 
                 if (movedTooMuch && !isCanceled) {
                     isCanceled = true

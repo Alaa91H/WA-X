@@ -23,9 +23,8 @@ import java.io.File
 
 class AudioTranscript(
     classLoader: ClassLoader,
-    preferences:SharedPreferences
+    preferences: SharedPreferences,
 ) : Feature(classLoader, preferences) {
-
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient()
     }
@@ -36,10 +35,11 @@ class AudioTranscript(
             return
         }
 
-        val provider = prefs.getString(
-            PREF_TRANSCRIPTION_PROVIDER,
-            PROVIDER_ASSEMBLY_AI
-        ) ?: PROVIDER_ASSEMBLY_AI
+        val provider =
+            prefs.getString(
+                PREF_TRANSCRIPTION_PROVIDER,
+                PROVIDER_ASSEMBLY_AI,
+            ) ?: PROVIDER_ASSEMBLY_AI
 
         val apiKey = getApiKey(provider)
 
@@ -50,29 +50,32 @@ class AudioTranscript(
         val transcribeMethod = Unobfuscator.loadTranscribeMethod(classLoader)
         val transcriptionSegmentClass = Unobfuscator.loadTranscriptSegment(classLoader)
 
-        XposedBridge.hookMethod(transcribeMethod, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                handleTranscriptionHook(
-                    param = param,
-                    provider = provider,
-                    transcriptionSegmentClass = transcriptionSegmentClass
-                )
-            }
-        })
-
+        XposedBridge.hookMethod(
+            transcribeMethod,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    handleTranscriptionHook(
+                        param = param,
+                        provider = provider,
+                        transcriptionSegmentClass = transcriptionSegmentClass,
+                    )
+                }
+            },
+        )
     }
 
     @Throws(Throwable::class)
     private fun handleTranscriptionHook(
         param: XC_MethodHook.MethodHookParam,
         provider: String,
-        transcriptionSegmentClass: Class<*>
+        transcriptionSegmentClass: Class<*>,
     ) {
         val pttTranscriptionRequest = param.args[0]
-        val fieldFMessage = ReflectionUtils.getFieldByExtendType(
-            pttTranscriptionRequest!!.javaClass,
-            FMessageWpp.TYPE
-        ) ?: return
+        val fieldFMessage =
+            ReflectionUtils.getFieldByExtendType(
+                pttTranscriptionRequest!!.javaClass,
+                FMessageWpp.type,
+            ) ?: return
 
         val fmessageObj = fieldFMessage.get(pttTranscriptionRequest)
         val fmessage = FMessageWpp(fmessageObj)
@@ -88,18 +91,20 @@ class AudioTranscript(
         }
 
         val callback = param.args[1]
-        val onComplete = ReflectionUtils.findMethodUsingFilter(callback!!.javaClass) { method ->
-            method.parameterCount == ON_COMPLETE_PARAMETER_COUNT
-        }
+        val onComplete =
+            ReflectionUtils.findMethodUsingFilter(callback!!.javaClass) { method ->
+                method.parameterCount == ON_COMPLETE_PARAMETER_COUNT
+            }
 
         val responseJson = transcribeAudio(file, provider)
         val transcript = responseJson.getString(JSON_TEXT)
-        val segments = buildTranscriptionSegments(
-            responseJson = responseJson,
-            transcript = transcript,
-            provider = provider,
-            transcriptionSegmentClass = transcriptionSegmentClass
-        )
+        val segments =
+            buildTranscriptionSegments(
+                responseJson = responseJson,
+                transcript = transcript,
+                provider = provider,
+                transcriptionSegmentClass = transcriptionSegmentClass,
+            )
 
         ReflectionUtils.callMethod(
             onComplete,
@@ -107,32 +112,33 @@ class AudioTranscript(
             fmessageObj,
             transcript,
             segments,
-            TRANSCRIPTION_STATUS_SUCCESS
+            TRANSCRIPTION_STATUS_SUCCESS,
         )
 
         param.result = null
     }
 
-    private fun getApiKey(provider: String): String {
-        return when (provider) {
+    private fun getApiKey(provider: String): String =
+        when (provider) {
             PROVIDER_GROQ -> prefs.getString(PREF_GROQ_API_KEY, "").orEmpty()
             else -> prefs.getString(PREF_ASSEMBLY_AI_KEY, "").orEmpty()
         }
-    }
 
     @Throws(Exception::class)
-    private fun transcribeAudio(file: File, provider: String): JSONObject {
-        return when (provider) {
+    private fun transcribeAudio(
+        file: File,
+        provider: String,
+    ): JSONObject =
+        when (provider) {
             PROVIDER_GROQ -> transcriptionGroqAI(file)
             else -> transcriptionAssemblyAI(file)
         }
-    }
 
     private fun buildTranscriptionSegments(
         responseJson: JSONObject,
         transcript: String,
         provider: String,
-        transcriptionSegmentClass: Class<*>
+        transcriptionSegmentClass: Class<*>,
     ): ArrayList<Any> {
         val segments = ArrayList<Any>()
         val wordsArray = responseJson.optJSONArray(JSON_WORDS) ?: return segments
@@ -153,14 +159,15 @@ class AudioTranscript(
             val duration = timing.endMs - timing.startMs
             val safeDuration = if (duration < 100) 100 else duration
 
-            val segment = XposedHelpers.newInstance(
-                transcriptionSegmentClass,
-                startChar,
-                length,
-                DEFAULT_CONFIDENCE,
-                timing.startMs,
-                safeDuration
-            )
+            val segment =
+                XposedHelpers.newInstance(
+                    transcriptionSegmentClass,
+                    startChar,
+                    length,
+                    DEFAULT_CONFIDENCE,
+                    timing.startMs,
+                    safeDuration,
+                )
 
             segments.add(segment)
             currentPosition = startChar + length
@@ -169,19 +176,21 @@ class AudioTranscript(
         return segments
     }
 
-    private fun getWordTiming(wordObject: JSONObject, provider: String): WordTiming {
-        return if (provider == PROVIDER_GROQ) {
+    private fun getWordTiming(
+        wordObject: JSONObject,
+        provider: String,
+    ): WordTiming =
+        if (provider == PROVIDER_GROQ) {
             WordTiming(
                 startMs = (wordObject.getDouble(JSON_START) * MILLISECONDS_IN_SECOND).toInt(),
-                endMs = (wordObject.getDouble(JSON_END) * MILLISECONDS_IN_SECOND).toInt()
+                endMs = (wordObject.getDouble(JSON_END) * MILLISECONDS_IN_SECOND).toInt(),
             )
         } else {
             WordTiming(
                 startMs = wordObject.getLong(JSON_START).toInt(),
-                endMs = wordObject.getLong(JSON_END).toInt()
+                endMs = wordObject.getLong(JSON_END).toInt(),
             )
         }
-    }
 
     @Throws(Exception::class)
     private fun transcriptionAssemblyAI(fileOpus: File): JSONObject {
@@ -201,14 +210,19 @@ class AudioTranscript(
     }
 
     @Throws(Exception::class)
-    private fun uploadAudioToAssemblyAI(fileOpus: File, apiKey: String): JSONObject {
+    private fun uploadAudioToAssemblyAI(
+        fileOpus: File,
+        apiKey: String,
+    ): JSONObject {
         val requestBody = fileOpus.asRequestBody(MEDIA_TYPE_OCTET_STREAM.toMediaType())
 
-        val uploadRequest = Request.Builder()
-            .url(ASSEMBLY_AI_UPLOAD_URL)
-            .addHeader(HEADER_AUTHORIZATION, apiKey)
-            .post(requestBody)
-            .build()
+        val uploadRequest =
+            Request
+                .Builder()
+                .url(ASSEMBLY_AI_UPLOAD_URL)
+                .addHeader(HEADER_AUTHORIZATION, apiKey)
+                .post(requestBody)
+                .build()
 
         httpClient.newCall(uploadRequest).execute().use { response ->
             if (!response.isSuccessful) {
@@ -220,21 +234,28 @@ class AudioTranscript(
     }
 
     @Throws(Exception::class)
-    private fun startAssemblyAITranscription(audioUrl: String, apiKey: String): JSONObject {
-        val transcriptionJson = JSONObject()
-            .put(JSON_AUDIO_URL, audioUrl)
-            .put(JSON_LANGUAGE_DETECTION, true)
+    private fun startAssemblyAITranscription(
+        audioUrl: String,
+        apiKey: String,
+    ): JSONObject {
+        val transcriptionJson =
+            JSONObject()
+                .put(JSON_AUDIO_URL, audioUrl)
+                .put(JSON_LANGUAGE_DETECTION, true)
 
         val requestBody =
-            transcriptionJson.toString()
+            transcriptionJson
+                .toString()
                 .toRequestBody(MEDIA_TYPE_JSON.toMediaType())
 
-        val transcribeRequest = Request.Builder()
-            .url(ASSEMBLY_AI_TRANSCRIPT_URL)
-            .addHeader(HEADER_AUTHORIZATION, apiKey)
-            .addHeader(HEADER_CONTENT_TYPE, MEDIA_TYPE_JSON)
-            .post(requestBody)
-            .build()
+        val transcribeRequest =
+            Request
+                .Builder()
+                .url(ASSEMBLY_AI_TRANSCRIPT_URL)
+                .addHeader(HEADER_AUTHORIZATION, apiKey)
+                .addHeader(HEADER_CONTENT_TYPE, MEDIA_TYPE_JSON)
+                .post(requestBody)
+                .build()
 
         httpClient.newCall(transcribeRequest).execute().use { response ->
             if (!response.isSuccessful) {
@@ -248,7 +269,7 @@ class AudioTranscript(
     @Throws(Exception::class)
     private fun waitForAssemblyAITranscription(
         transcriptId: String,
-        apiKey: String
+        apiKey: String,
     ): JSONObject {
         var status = STATUS_PROCESSING
 
@@ -273,12 +294,14 @@ class AudioTranscript(
     @Throws(Exception::class)
     private fun checkAssemblyAITranscriptionStatus(
         transcriptId: String,
-        apiKey: String
+        apiKey: String,
     ): JSONObject {
-        val checkRequest = Request.Builder()
-            .url("$ASSEMBLY_AI_TRANSCRIPT_URL/$transcriptId")
-            .addHeader(HEADER_AUTHORIZATION, apiKey)
-            .build()
+        val checkRequest =
+            Request
+                .Builder()
+                .url("$ASSEMBLY_AI_TRANSCRIPT_URL/$transcriptId")
+                .addHeader(HEADER_AUTHORIZATION, apiKey)
+                .build()
 
         httpClient.newCall(checkRequest).execute().use { response ->
             if (!response.isSuccessful) {
@@ -297,29 +320,32 @@ class AudioTranscript(
             throw Exception("Groq API key not provided")
         }
 
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart(
-                FORM_FILE,
-                fileAudio.name,
-                fileAudio.asRequestBody(MEDIA_TYPE_AUDIO_OGG.toMediaType())
-            )
-            .addFormDataPart(FORM_MODEL, GROQ_MODEL)
-            .addFormDataPart(FORM_RESPONSE_FORMAT, GROQ_RESPONSE_FORMAT_VERBOSE_JSON)
-            .addFormDataPart(FORM_TIMESTAMP_GRANULARITIES, GROQ_TIMESTAMP_GRANULARITY_WORD)
-            .addFormDataPart(FORM_TEMPERATURE, GROQ_TEMPERATURE)
-            .build()
+        val requestBody =
+            MultipartBody
+                .Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    FORM_FILE,
+                    fileAudio.name,
+                    fileAudio.asRequestBody(MEDIA_TYPE_AUDIO_OGG.toMediaType()),
+                ).addFormDataPart(FORM_MODEL, GROQ_MODEL)
+                .addFormDataPart(FORM_RESPONSE_FORMAT, GROQ_RESPONSE_FORMAT_VERBOSE_JSON)
+                .addFormDataPart(FORM_TIMESTAMP_GRANULARITIES, GROQ_TIMESTAMP_GRANULARITY_WORD)
+                .addFormDataPart(FORM_TEMPERATURE, GROQ_TEMPERATURE)
+                .build()
 
-        val transcribeRequest = Request.Builder()
-            .url(GROQ_TRANSCRIPTION_URL)
-            .addHeader(HEADER_AUTHORIZATION, "Bearer $apiKey")
-            .post(requestBody)
-            .build()
+        val transcribeRequest =
+            Request
+                .Builder()
+                .url(GROQ_TRANSCRIPTION_URL)
+                .addHeader(HEADER_AUTHORIZATION, "Bearer $apiKey")
+                .post(requestBody)
+                .build()
 
         httpClient.newCall(transcribeRequest).execute().use { response ->
             if (!response.isSuccessful) {
                 throw Exception(
-                    "Failed to transcribe audio: ${response.code} - ${response.message}"
+                    "Failed to transcribe audio: ${response.code} - ${response.message}",
                 )
             }
 
@@ -327,13 +353,11 @@ class AudioTranscript(
         }
     }
 
-    override fun getPluginName(): String {
-        return "Audio Transcript"
-    }
+    override fun getPluginName(): String = "Audio Transcript"
 
     private data class WordTiming(
         val startMs: Int,
-        val endMs: Int
+        val endMs: Int,
     )
 
     private companion object {

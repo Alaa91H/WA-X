@@ -73,17 +73,20 @@ object ModuleRuntime {
     private var statusToMessageMapper: Any? = null
     private var currentConversationJid: FMessageWpp.UserJid? = null
 
-
     @JvmStatic
     @Throws(Exception::class)
-    fun initialize(loader: ClassLoader, pref: SharedPreferences) {
+    fun initialize(
+        loader: ClassLoader,
+        pref: SharedPreferences,
+    ) {
         _privPrefs = Utils.application.getSharedPreferences("WaGlobal", Context.MODE_PRIVATE)
 
         // init UserJID
-        val companionField = FMessageWpp.UserJid.TYPE_JID.getDeclaredField("Companion")
-        mGenJidMethod = ReflectionUtils.findMethodUsingFilter(companionField.type) { m ->
-            m.parameterCount == 1 && String::class.java == m.parameterTypes[0] && FMessageWpp.UserJid.TYPE_JID == m.returnType
-        }
+        val companionField = FMessageWpp.UserJid.typeJid.getDeclaredField("Companion")
+        mGenJidMethod =
+            ReflectionUtils.findMethodUsingFilter(companionField.type) { m ->
+                m.parameterCount == 1 && String::class.java == m.parameterTypes[0] && FMessageWpp.UserJid.typeJid == m.returnType
+            }
 
         // Bottom Dialog
         bottomDialog = Unobfuscator.loadDialogViewClass(loader)
@@ -96,26 +99,33 @@ object ModuleRuntime {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     mConversationDelegate = param.thisObject
                 }
-            })
+            },
+        )
 
         // StartUpPrefs
         val startPrefsConfig = Unobfuscator.loadStartPrefsConfig(loader)
-        XposedBridge.hookMethod(startPrefsConfig, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                mStartUpConfig = param.thisObject
-            }
-        })
+        XposedBridge.hookMethod(
+            startPrefsConfig,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    mStartUpConfig = param.thisObject
+                }
+            },
+        )
 
         // ActionUser
         actionUser = Unobfuscator.loadActionUser(loader)
         XposedBridge.log("ActionUser: ${actionUser?.name}")
-        XposedBridge.hookAllConstructors(actionUser, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                mActionUser = param.thisObject
-            }
-        })
+        XposedBridge.hookAllConstructors(
+            actionUser,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    mActionUser = param.thisObject
+                }
+            },
+        )
 
         // CachedMessageStore
         cachedMessageStoreKey = Unobfuscator.loadCachedMessageStoreKey(loader)
@@ -126,28 +136,35 @@ object ModuleRuntime {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     mCachedMessageStore = param.thisObject
                 }
-            })
+            },
+        )
 
         // WaJidMap
         convertLidToJid = Unobfuscator.loadConvertLidToJid(loader)
         convertJidToLid = Unobfuscator.loadConvertJidToLid(loader)
-        XposedBridge.hookAllConstructors(convertLidToJid?.declaringClass, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                mWaJidMapRepository = param.thisObject
-            }
-        })
+        XposedBridge.hookAllConstructors(
+            convertLidToJid?.declaringClass,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    mWaJidMapRepository = param.thisObject
+                }
+            },
+        )
 
         // load me current PhoneJid
         val meManagerClass = Unobfuscator.loadMeManagerClass(loader)
         meManagerPhoneJidField =
-            ReflectionUtils.getFieldByType(meManagerClass, FMessageWpp.UserJid.TYPE_PHONEUSERJID)
-        XposedBridge.hookAllConstructors(meManagerClass, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                meManagerInstance = param.thisObject
-            }
-        })
+            ReflectionUtils.getFieldByType(meManagerClass, FMessageWpp.UserJid.typePhoneuserjid)
+        XposedBridge.hookAllConstructors(
+            meManagerClass,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    meManagerInstance = param.thisObject
+                }
+            },
+        )
 
         // Load wa database
         loadWADatabase()
@@ -160,28 +177,35 @@ object ModuleRuntime {
         val conversationClass =
             Unobfuscator.findFirstClassUsingName(loader, StringMatchType.EndsWith, ".Conversation")
 
-        XposedBridge.hookAllMethods(Activity::class.java, "onCreate", object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                if (conversationClass.isInstance(param.thisObject)) {
-                    val extras = (param.thisObject as Activity).intent.extras
-                    val jid = extras?.getString("jid")
-                    if (jid != null) {
-                        currentConversationJid = FMessageWpp.UserJid(jid)
+        XposedBridge.hookAllMethods(
+            Activity::class.java,
+            "onCreate",
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (conversationClass.isInstance(param.thisObject)) {
+                        val extras = (param.thisObject as Activity).intent.extras
+                        val jid = extras?.getString("jid")
+                        if (jid != null) {
+                            currentConversationJid = FMessageWpp.UserJid(jid)
+                        }
                     }
                 }
-            }
-        })
+            },
+        )
 
-        XposedBridge.hookAllMethods(Activity::class.java, "onDestroy", object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                if (conversationClass.isInstance(param.thisObject)) {
-                    currentConversationJid = null
+        XposedBridge.hookAllMethods(
+            Activity::class.java,
+            "onDestroy",
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (conversationClass.isInstance(param.thisObject)) {
+                        currentConversationJid = null
+                    }
                 }
-            }
-        })
-
+            },
+        )
     }
 
     private fun hookStatusToMessageMapper(loader: ClassLoader) {
@@ -193,7 +217,8 @@ object ModuleRuntime {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     statusToMessageMapper = param.thisObject
                 }
-            })
+            },
+        )
     }
 
     @JvmStatic
@@ -249,8 +274,8 @@ object ModuleRuntime {
 
     @JvmStatic
     @Throws(Exception::class)
-    private fun tryConnectBridge(baseClient: BaseClient): Boolean {
-        return try {
+    private fun tryConnectBridge(baseClient: BaseClient): Boolean =
+        try {
             XposedBridge.log("Trying to connect to ${baseClient.javaClass.simpleName}")
             client = baseClient
             runBlocking {
@@ -261,18 +286,21 @@ object ModuleRuntime {
         } catch (_: Exception) {
             false
         }
-    }
 
     @JvmStatic
-    fun sendMessage(number: String, message: String) {
+    fun sendMessage(
+        number: String,
+        message: String,
+    ) {
         try {
-            val senderMethod = ReflectionUtils.findMethodUsingFilterIfExists(actionUser) { method ->
-                List::class.java.isAssignableFrom(method.returnType) &&
+            val senderMethod =
+                ReflectionUtils.findMethodUsingFilterIfExists(actionUser) { method ->
+                    List::class.java.isAssignableFrom(method.returnType) &&
                         ReflectionUtils.findIndexOfType(
                             method.parameterTypes,
-                            String::class.java
+                            String::class.java,
                         ) != -1
-            }
+                }
             if (senderMethod != null) {
                 val userJid = createUserJid("$number@s.whatsapp.net")
                 if (userJid == null) {
@@ -300,17 +328,22 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    fun sendReaction(s: String, objMessage: Any?) {
+    fun sendReaction(
+        s: String,
+        objMessage: Any?,
+    ) {
         try {
-            val senderMethod = ReflectionUtils.findMethodUsingFilter(actionUser) { method ->
-                method.parameterCount == 3 && method.parameterTypes.contentEquals(
-                    arrayOf(
-                        FMessageWpp.TYPE,
-                        String::class.java,
-                        Boolean::class.javaPrimitiveType
-                    )
-                )
-            }
+            val senderMethod =
+                ReflectionUtils.findMethodUsingFilter(actionUser) { method ->
+                    method.parameterCount == 3 &&
+                        method.parameterTypes.contentEquals(
+                            arrayOf(
+                                FMessageWpp.type,
+                                String::class.java,
+                                Boolean::class.javaPrimitiveType,
+                            ),
+                        )
+                }
             senderMethod.invoke(getActionUser(), objMessage, s, !TextUtils.isEmpty(s))
         } catch (e: Exception) {
             Utils.showToast("Error in sending reaction:${e.message}", Toast.LENGTH_SHORT)
@@ -337,24 +370,23 @@ object ModuleRuntime {
         val dataDir = Utils.application.filesDir.parentFile
         val database = File(dataDir, "databases/wa.db")
         if (database.exists()) {
-            mWaDatabase = SQLiteDatabase.openDatabase(
-                database.absolutePath,
-                null,
-                SQLiteDatabase.OPEN_READONLY
-            )
+            mWaDatabase =
+                SQLiteDatabase.openDatabase(
+                    database.absolutePath,
+                    null,
+                    SQLiteDatabase.OPEN_READONLY,
+                )
         }
     }
 
     @JvmStatic
-    fun getCurrentActivity(): Activity? {
-        return mCurrentActivity
-    }
+    fun getCurrentActivity(): Activity? = mCurrentActivity
 
     val homeActivityClass: Class<*> by lazy {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".HomeActivity"
+            ".HomeActivity",
         )
     }
 
@@ -362,7 +394,7 @@ object ModuleRuntime {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".TabsPager"
+            ".TabsPager",
         )
     }
 
@@ -370,7 +402,7 @@ object ModuleRuntime {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".ViewOnceViewerActivity"
+            ".ViewOnceViewerActivity",
         )
     }
 
@@ -378,7 +410,7 @@ object ModuleRuntime {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".About"
+            ".About",
         )
     }
 
@@ -386,7 +418,7 @@ object ModuleRuntime {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".SettingsDataUsageActivity"
+            ".SettingsDataUsageActivity",
         )
     }
 
@@ -394,7 +426,7 @@ object ModuleRuntime {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".Voip"
+            ".Voip",
         )
     }
 
@@ -402,7 +434,7 @@ object ModuleRuntime {
         Unobfuscator.findFirstClassUsingName(
             Utils.appClassLoader,
             StringMatchType.EndsWith,
-            ".CallInfo"
+            ".CallInfo",
         )
     }
 
@@ -437,20 +469,29 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    fun getSContactName(userJid: FMessageWpp.UserJid?, saveOnly: Boolean): String {
+    fun getSContactName(
+        userJid: FMessageWpp.UserJid?,
+        saveOnly: Boolean,
+    ): String {
         loadWADatabase()
         if (mWaDatabase == null || userJid == null) return ""
         val selection = if (saveOnly) "jid = ? AND raw_contact_id > 0" else "jid = ?"
         var name: String? = null
         val rawJid = userJid.phoneRawString
-        mWaDatabase?.query(
-            "wa_contacts", arrayOf("display_name"), selection,
-            arrayOf(rawJid), null, null, null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                name = cursor.getString(0)
+        mWaDatabase
+            ?.query(
+                "wa_contacts",
+                arrayOf("display_name"),
+                selection,
+                arrayOf(rawJid),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    name = cursor.getString(0)
+                }
             }
-        }
         return name ?: ""
     }
 
@@ -460,14 +501,20 @@ object ModuleRuntime {
         if (mWaDatabase == null || userJid.isNull) return ""
         var name: String? = null
         val rawJid = userJid.phoneRawString
-        mWaDatabase?.query(
-            "wa_vnames", arrayOf("verified_name"), "jid = ?",
-            arrayOf(rawJid), null, null, null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                name = cursor.getString(0)
+        mWaDatabase
+            ?.query(
+                "wa_vnames",
+                arrayOf("verified_name"),
+                "jid = ?",
+                arrayOf(rawJid),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    name = cursor.getString(0)
+                }
             }
-        }
         return name ?: ""
     }
 
@@ -523,8 +570,8 @@ object ModuleRuntime {
             if (str == null) return null
             if (str.contains(".") && str.contains("@") && str.indexOf(".") < str.indexOf("@")) {
                 return str.substring(0, str.indexOf("."))
-            } else if (str.contains("@g.us") || str.contains("@s.whatsapp.net") || str.contains("@broadcast")
-                || str.contains("@lid")
+            } else if (str.contains("@g.us") || str.contains("@s.whatsapp.net") || str.contains("@broadcast") ||
+                str.contains("@lid")
             ) {
                 return str.substring(0, str.indexOf("@"))
             }
@@ -534,7 +581,6 @@ object ModuleRuntime {
             return str
         }
     }
-
 
     @JvmStatic
     fun getMyName(): String {
@@ -568,9 +614,8 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    fun createBottomDialog(context: Context): BottomDialogWpp {
-        return BottomDialogWpp(XposedHelpers.newInstance(bottomDialog, context, 0) as Dialog)
-    }
+    fun createBottomDialog(context: Context): BottomDialogWpp =
+        BottomDialogWpp(XposedHelpers.newInstance(bottomDialog, context, 0) as Dialog)
 
     @JvmStatic
     fun getCurrentConversation(): Activity? {
@@ -580,8 +625,9 @@ object ModuleRuntime {
                 XposedHelpers.findClass("com.whatsapp.Conversation", mCurrentActivity!!.classLoader)
             if (conversation.isInstance(mCurrentActivity)) return mCurrentActivity
 
-            if (mCurrentActivity!!.resources.configuration.smallestScreenWidthDp >= 600 && homeActivityClass.isInstance(
-                    mCurrentActivity
+            if (mCurrentActivity!!.resources.configuration.smallestScreenWidthDp >= 600 &&
+                homeActivityClass.isInstance(
+                    mCurrentActivity,
                 )
             ) {
                 return mCurrentActivity
@@ -611,7 +657,9 @@ object ModuleRuntime {
             }
 
             val activityTitle = conversation.title
-            if (!activityTitle.isNullOrEmpty() && !activityTitle.toString()
+            if (!activityTitle.isNullOrEmpty() &&
+                !activityTitle
+                    .toString()
                     .equals("WhatsApp", ignoreCase = true)
             ) {
                 return activityTitle.toString()
@@ -630,17 +678,24 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    fun setPrivString(key: String, value: String?) {
+    fun setPrivString(
+        key: String,
+        value: String?,
+    ) {
         getPrivPrefs().edit(commit = true) { putString(key, value) }
     }
 
     @JvmStatic
-    fun getPrivString(key: String, defaultValue: String?): String? {
-        return getPrivPrefs().getString(key, defaultValue)
-    }
+    fun getPrivString(
+        key: String,
+        defaultValue: String?,
+    ): String? = getPrivPrefs().getString(key, defaultValue)
 
     @JvmStatic
-    fun getPrivJSON(key: String, defaultValue: JSONObject): JSONObject {
+    fun getPrivJSON(
+        key: String,
+        defaultValue: JSONObject,
+    ): JSONObject {
         val jsonStr = getPrivPrefs().getString(key, null) ?: return defaultValue
         return try {
             JSONObject(jsonStr)
@@ -650,7 +705,10 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    fun setPrivJSON(key: String, value: JSONObject) {
+    fun setPrivJSON(
+        key: String,
+        value: JSONObject,
+    ) {
         getPrivPrefs().edit(commit = true) { putString(key, value.toString()) }
     }
 
@@ -665,14 +723,18 @@ object ModuleRuntime {
 
     @SuppressLint("ApplySharedPref")
     @JvmStatic
-    fun setPrivBoolean(key: String, value: Boolean) {
+    fun setPrivBoolean(
+        key: String,
+        value: Boolean,
+    ) {
         getPrivPrefs().edit(commit = true) { putBoolean(key, value) }
     }
 
     @JvmStatic
-    fun getPrivBoolean(key: String, defaultValue: Boolean): Boolean {
-        return getPrivPrefs().getBoolean(key, defaultValue)
-    }
+    fun getPrivBoolean(
+        key: String,
+        defaultValue: Boolean,
+    ): Boolean = getPrivPrefs().getBoolean(key, defaultValue)
 
     @JvmStatic
     fun addListenerActivity(listener: ActivityChangeState) {
@@ -702,19 +764,20 @@ object ModuleRuntime {
     private fun isBridgeConnected(): Boolean {
         val currentClient = client ?: return false
         val service = currentClient.service
-        return service != null && service.asBinder().isBinderAlive && service.asBinder()
-            .pingBinder()
+        return service != null && service.asBinder().isBinderAlive &&
+            service
+                .asBinder()
+                .pingBinder()
     }
 
     @JvmStatic
-    fun getMyUserJid(): FMessageWpp.UserJid? {
-        return try {
+    fun getMyUserJid(): FMessageWpp.UserJid? =
+        try {
             FMessageWpp.UserJid(meManagerPhoneJidField?.get(meManagerInstance))
         } catch (e: Exception) {
             XposedBridge.log(e)
             null
         }
-    }
 
     @JvmStatic
     fun getRootWhatsAppDir(): File {
@@ -760,10 +823,18 @@ object ModuleRuntime {
     }
 
     fun interface ActivityChangeState {
-        fun onChange(activity: Activity, type: ChangeType)
+        fun onChange(
+            activity: Activity,
+            type: ChangeType,
+        )
 
         enum class ChangeType {
-            CREATED, STARTED, ENDED, RESUMED, PAUSED, DESTROYED;
+            CREATED,
+            STARTED,
+            ENDED,
+            RESUMED,
+            PAUSED,
+            DESTROYED,
         }
     }
 }

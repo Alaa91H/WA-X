@@ -3,6 +3,7 @@ package com.wax.module.xposed.features.others
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.view.Menu
 import android.view.MenuItem
 import com.wax.module.BuildConfig
@@ -15,12 +16,13 @@ import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedHelpers
 import java.util.concurrent.CopyOnWriteArraySet
 
-class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
-    Feature(classLoader, preferences) {
+class MenuHome(
+    classLoader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(classLoader, preferences) {
     @Throws(Throwable::class)
     override fun doHook() {
         hookMenu()
@@ -31,7 +33,7 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
             insertRestartButton(
                 menu,
                 activity,
-                action
+                action,
             )
         }
 
@@ -40,7 +42,7 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
             insertDNDOption(
                 menu,
                 activity,
-                action
+                action,
             )
         }
 
@@ -49,7 +51,7 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
             insertGhostModeOption(
                 menu,
                 activity,
-                action
+                action,
             )
         }
 
@@ -58,7 +60,7 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
             insertFreezeLastSeenOption(
                 menu,
                 activity,
-                action
+                action,
             )
         }
 
@@ -66,12 +68,15 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
         addMenuItem { menu, activity ->
             this.insertOpenWae(
                 menu,
-                activity
+                activity,
             )
         }
     }
 
-    private fun insertOpenWae(menu: Menu, activity: Activity) {
+    private fun insertOpenWae(
+        menu: Menu,
+        activity: Activity,
+    ) {
         val waeMenu = prefs.getBoolean("open_wae", true)
         if (!waeMenu) return
         val itemMenu = menu.add(0, 0, 9999, " " + activity.getString(R.string.app_name))
@@ -80,12 +85,13 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
         itemMenu.icon = iconDraw
         itemMenu.setOnMenuItemClickListener {
             try {
-                val intent = activity.packageManager.getLaunchIntentForPackage(
-                    BuildConfig.APPLICATION_ID
-                ) ?: Intent().setClassName(
-                    BuildConfig.APPLICATION_ID,
-                    "com.wax.module.activities.MainActivity"
-                )
+                val intent =
+                    activity.packageManager.getLaunchIntentForPackage(
+                        BuildConfig.APPLICATION_ID,
+                    ) ?: Intent().setClassName(
+                        BuildConfig.APPLICATION_ID,
+                        "com.wax.module.activities.MainActivity",
+                    )
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 activity.startActivity(intent)
             } catch (e: Exception) {
@@ -95,7 +101,11 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
         }
     }
 
-    private fun insertGhostModeOption(menu: Menu, activity: Activity, newSettings: Boolean) {
+    private fun insertGhostModeOption(
+        menu: Menu,
+        activity: Activity,
+        newSettings: Boolean,
+    ) {
         val ghostmode = getPrivBoolean("ghostmode", false)
         if (!prefs.getBoolean("ghostmode", true)) {
             if (ghostmode) {
@@ -116,17 +126,17 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
             itemMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         }
         itemMenu.setOnMenuItemClickListener {
-            AlertDialogWpp(activity).setTitle(
-                activity.getString(
-                    R.string.ghost_mode_s,
-                    (if (ghostmode) "ON" else "OFF")
-                )
-            ).setMessage(activity.getString(R.string.ghost_mode_message))
+            AlertDialogWpp(activity)
+                .setTitle(
+                    activity.getString(
+                        R.string.ghost_mode_s,
+                        (if (ghostmode) "ON" else "OFF"),
+                    ),
+                ).setMessage(activity.getString(R.string.ghost_mode_message))
                 .setPositiveButton(activity.getString(R.string.disable)) { _, _ ->
                     setPrivBoolean("ghostmode", false)
                     Utils.doRestart(activity)
-                }
-                .setNegativeButton(activity.getString(R.string.enable)) { _, _ ->
+                }.setNegativeButton(activity.getString(R.string.enable)) { _, _ ->
                     setPrivBoolean("ghostmode", true)
                     Utils.doRestart(activity)
                 }.show()
@@ -134,7 +144,11 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
         }
     }
 
-    private fun insertRestartButton(menu: Menu, activity: Activity, newSettings: Boolean) {
+    private fun insertRestartButton(
+        menu: Menu,
+        activity: Activity,
+        newSettings: Boolean,
+    ) {
         if (!prefs.getBoolean("restartbutton", true)) return
         val iconDraw = activity.getDrawable(R.drawable.refresh)
         iconDraw!!.setTint(if (newSettings) DesignUtils.getPrimaryTextColor() else -0x796960)
@@ -149,7 +163,11 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
     }
 
     @SuppressLint("DiscouragedApi", "UseCompatLoadingForDrawables", "ApplySharedPref")
-    private fun insertDNDOption(menu: Menu, activity: Activity, newSettings: Boolean) {
+    private fun insertDNDOption(
+        menu: Menu,
+        activity: Activity,
+        newSettings: Boolean,
+    ) {
         val dndmode = getPrivBoolean("dndmode", false)
         if (!prefs.getBoolean("show_dndmode", false)) {
             if (getPrivBoolean("dndmode", false)) {
@@ -159,8 +177,9 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
             return
         }
         val item = menu.add(0, 0, 0, activity.getString(R.string.dnd_mode_title))
-        val drawable = Utils.application
-            .getDrawable(if (dndmode) R.drawable.airplane_enabled else R.drawable.airplane_disabled)
+        val drawable =
+            Utils.application
+                .getDrawable(if (dndmode) R.drawable.airplane_enabled else R.drawable.airplane_disabled)
         if (drawable != null) {
             drawable.setTint(if (newSettings) DesignUtils.getPrimaryTextColor() else -0x796960)
             item.icon = drawable
@@ -176,9 +195,9 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
                     .setPositiveButton(activity.getString(R.string.activate)) { _, _ ->
                         setPrivBoolean("dndmode", true)
                         Utils.doRestart(activity)
-                    }
-                    .setNegativeButton(activity.getString(R.string.cancel)) { dialog, _ -> dialog?.dismiss() }
-                    .create().show()
+                    }.setNegativeButton(activity.getString(R.string.cancel)) { dialog, _ -> dialog?.dismiss() }
+                    .create()
+                    .show()
                 return@setOnMenuItemClickListener true
             }
             setPrivBoolean("dndmode", false)
@@ -187,7 +206,11 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
         }
     }
 
-    private fun insertFreezeLastSeenOption(menu: Menu, activity: Activity, newSettings: Boolean) {
+    private fun insertFreezeLastSeenOption(
+        menu: Menu,
+        activity: Activity,
+        newSettings: Boolean,
+    ) {
         val freezelastseen = getPrivBoolean("freezelastseen", false)
         if (!prefs.getBoolean("show_freezeLastSeen", true)) {
             if (freezelastseen) {
@@ -198,8 +221,9 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
         }
 
         val item = menu.add(0, 0, 0, activity.getString(R.string.freezelastseen_title))
-        val drawable = Utils.application
-            .getDrawable(if (freezelastseen) R.drawable.eye_disabled else R.drawable.eye_enabled)
+        val drawable =
+            Utils.application
+                .getDrawable(if (freezelastseen) R.drawable.eye_disabled else R.drawable.eye_enabled)
         if (drawable != null) {
             drawable.setTint(if (newSettings) DesignUtils.getPrimaryTextColor() else -0x796960)
             item.icon = drawable
@@ -215,9 +239,9 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
                     .setPositiveButton(activity.getString(R.string.activate)) { _, _ ->
                         setPrivBoolean("freezelastseen", true)
                         Utils.doRestart(activity)
-                    }
-                    .setNegativeButton(activity.getString(R.string.cancel)) { dialog, _ -> dialog?.dismiss() }
-                    .create().show()
+                    }.setNegativeButton(activity.getString(R.string.cancel)) { dialog, _ -> dialog?.dismiss() }
+                    .create()
+                    .show()
                 return@setOnMenuItemClickListener true
             }
             setPrivBoolean("freezelastseen", false)
@@ -240,15 +264,17 @@ class MenuHome(classLoader: ClassLoader, preferences:SharedPreferences) :
                         menuItem.addMenu(menu, activity)
                     }
                 }
-            })
+            },
+        )
     }
 
-    override fun getPluginName(): String {
-        return "Menu Home"
-    }
+    override fun getPluginName(): String = "Menu Home"
 
     fun interface HomeMenuItem {
-        fun addMenu(menu: Menu, activity: Activity)
+        fun addMenu(
+            menu: Menu,
+            activity: Activity,
+        )
     }
 
     companion object {

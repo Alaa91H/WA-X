@@ -1,20 +1,19 @@
 package com.wax.module.xposed.features.privacy
 
+import android.content.SharedPreferences
 import com.wax.module.xposed.core.Feature
 import com.wax.module.xposed.core.ModuleRuntime
 import com.wax.module.xposed.core.components.FMessageWpp
 import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.ReflectionUtils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import java.lang.reflect.Method
 
 class TypingPrivacy(
     loader: ClassLoader,
-    preferences:SharedPreferences
+    preferences: SharedPreferences,
 ) : Feature(loader, preferences) {
-
     @Throws(Throwable::class)
     override fun doHook() {
         val ghostmode = ModuleRuntime.getPrivBoolean("ghostmode", false)
@@ -24,31 +23,32 @@ class TypingPrivacy(
         val method: Method = Unobfuscator.loadGhostModeMethod(classLoader)
         logDebug(Unobfuscator.getMethodDescriptor(method))
 
-        XposedBridge.hookMethod(method, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val type = ReflectionUtils.getArg(param.args, Int::class.javaObjectType, 0)
-                val jidObj = ReflectionUtils.getArg(param.args, FMessageWpp.UserJid.TYPE_JID, 0)
+        XposedBridge.hookMethod(
+            method,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val type = ReflectionUtils.getArg(param.args, Int::class.javaObjectType, 0)
+                    val jidObj = ReflectionUtils.getArg(param.args, FMessageWpp.UserJid.typeJid, 0)
 
-                if (jidObj == null) {
-                    logDebug("UserJid not found in Typing Privacy")
+                    if (jidObj == null) {
+                        logDebug("UserJid not found in Typing Privacy")
+                    }
+
+                    val userJid = FMessageWpp.UserJid(jidObj)
+                    val privacy = CustomPrivacy.getJSON(userJid.phoneNumber)
+
+                    val customHideTyping = privacy.optBoolean("HideTyping", ghostmodeT) || ghostmode
+                    val customHideRecording = privacy.optBoolean("HideRecording", ghostmodeR) || ghostmode
+
+                    if ((type == 1 && customHideRecording) ||
+                        (type == 0 && customHideTyping)
+                    ) {
+                        param.result = null
+                    }
                 }
-
-                val userJid = FMessageWpp.UserJid(jidObj)
-                val privacy = CustomPrivacy.getJSON(userJid.phoneNumber)
-
-                val customHideTyping = privacy.optBoolean("HideTyping", ghostmodeT) || ghostmode
-                val customHideRecording = privacy.optBoolean("HideRecording", ghostmodeR) || ghostmode
-
-                if ((type == 1 && customHideRecording) ||
-                    (type == 0 && customHideTyping)
-                ) {
-                    param.result = null
-                }
-            }
-        })
+            },
+        )
     }
 
-    override fun getPluginName(): String {
-        return "Typing Privacy"
-    }
+    override fun getPluginName(): String = "Typing Privacy"
 }

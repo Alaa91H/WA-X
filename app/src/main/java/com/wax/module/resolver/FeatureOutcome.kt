@@ -16,60 +16,69 @@ data class FeatureOutcome(
     val health: FeatureHealth,
     val reason: String,
     val code: com.wax.module.diagnostics.FailureCode? = null,
-    val usedFallback: String? = null
+    val usedFallback: String? = null,
 ) {
-
     /** Whether the feature is running in some form. */
     val isRunning: Boolean get() = health.isRunning
 
     /** One line suitable for a diagnostics list. */
-    fun toDisplayLine(): String = buildString {
-        append(featureId)
-        append(" [")
-        append(health)
-        append(']')
-        if (usedFallback != null) {
-            append(" via ")
-            append(usedFallback)
+    fun toDisplayLine(): String =
+        buildString {
+            append(featureId)
+            append(" [")
+            append(health)
+            append(']')
+            if (usedFallback != null) {
+                append(" via ")
+                append(usedFallback)
+            }
+            append(": ")
+            append(reason)
         }
-        append(": ")
-        append(reason)
-    }
 
     companion object {
-
         /** The feature installed on its primary path. */
-        fun healthy(featureId: String, detail: String = "resolved on the primary path"): FeatureOutcome =
-            FeatureOutcome(featureId, FeatureHealth.HEALTHY, detail)
+        fun healthy(
+            featureId: String,
+            detail: String = "resolved on the primary path",
+        ): FeatureOutcome = FeatureOutcome(featureId, FeatureHealth.HEALTHY, detail)
 
         /**
          * The feature installed, but on a weaker path than intended.
          *
          * @param detail what was weakened: a LIKELY resolution, or the fallback used
          */
-        fun degraded(featureId: String, detail: String, usedFallback: String? = null): FeatureOutcome =
-            FeatureOutcome(featureId, FeatureHealth.DEGRADED, detail, usedFallback = usedFallback)
+        fun degraded(
+            featureId: String,
+            detail: String,
+            usedFallback: String? = null,
+        ): FeatureOutcome = FeatureOutcome(featureId, FeatureHealth.DEGRADED, detail, usedFallback = usedFallback)
 
         /** The feature installed through a compatibility path. */
-        fun fallback(featureId: String, fallbackName: String, detail: String): FeatureOutcome =
-            FeatureOutcome(featureId, FeatureHealth.FALLBACK, detail, usedFallback = fallbackName)
+        fun fallback(
+            featureId: String,
+            fallbackName: String,
+            detail: String,
+        ): FeatureOutcome = FeatureOutcome(featureId, FeatureHealth.FALLBACK, detail, usedFallback = fallbackName)
 
         /** The feature could not be installed and no fallback applied. */
         fun disabled(
             featureId: String,
             code: com.wax.module.diagnostics.FailureCode,
-            detail: String
+            detail: String,
         ): FeatureOutcome = FeatureOutcome(featureId, FeatureHealth.DISABLED, detail, code)
 
         /** The feature cannot work on this WhatsApp build at all. */
-        fun incompatible(featureId: String, detail: String): FeatureOutcome =
-            FeatureOutcome(featureId, FeatureHealth.INCOMPATIBLE, detail)
+        fun incompatible(
+            featureId: String,
+            detail: String,
+        ): FeatureOutcome = FeatureOutcome(featureId, FeatureHealth.INCOMPATIBLE, detail)
 
         /** Resolution was ambiguous or the feature's own installation threw. */
         fun failed(
             featureId: String,
             code: com.wax.module.diagnostics.FailureCode,
-            detail: String
+            detail: String,
         ): FeatureOutcome = FeatureOutcome(featureId, FeatureHealth.FAILED, detail, code)
     }
 }

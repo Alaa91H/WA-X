@@ -116,9 +116,14 @@ def find_feature_classes() -> list[tuple[str, str]]:
 
 
 def find_registered_order() -> list[str]:
-    """Return feature simple names in the exact order ``plugins()`` installs them."""
+    """Return feature simple names in the exact order ``plugins()`` installs them.
+
+    The whitespace between the assignment and the call is matched loosely: ktlint
+    rewraps ``val classes = arrayOf(`` into two lines when the list is long, so a
+    pattern that hardcodes the single-line form silently finds no features at all.
+    """
     source = read(FEATURE_LOADER)
-    match = re.search(r"val classes = arrayOf\((.*?)\n\s*\)", source, re.DOTALL)
+    match = re.search(r"val\s+classes\s*=\s*arrayOf\((.*?)\n\s*\)", source, re.DOTALL)
     if not match:
         raise SystemExit("could not locate the plugins() array in FeatureLoader.kt")
     return re.findall(r"([A-Za-z0-9_]+)::class\.java", match.group(1))

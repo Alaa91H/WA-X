@@ -4,12 +4,13 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import java.nio.charset.StandardCharsets
-import java.util.Arrays
 
 object DebugUtils {
-
     @JvmStatic
-    fun debugFields(cls: Class<*>?, thisObject: Any?) {
+    fun debugFields(
+        cls: Class<*>?,
+        thisObject: Any?,
+    ) {
         if (cls == null) return
         XposedBridge.log("------------------------------------")
         XposedBridge.log("DEBUG FIELDS: Class " + cls.name + " -> Object " + thisObject)
@@ -28,17 +29,29 @@ object DebugUtils {
     }
 
     @JvmStatic
-    fun debugAllMethods(className: String, methodName: String, printMethods: Boolean, printFields: Boolean, printArgs: Boolean, printTrace: Boolean) {
+    fun debugAllMethods(
+        className: String,
+        methodName: String,
+        printMethods: Boolean,
+        printFields: Boolean,
+        printArgs: Boolean,
+        printTrace: Boolean,
+    ) {
         XposedBridge.hookAllMethods(
             XposedHelpers.findClass(className, Utils.application.classLoader),
             methodName,
-            getDebugMethodHook(printMethods, printFields, printArgs, printTrace)
+            getDebugMethodHook(printMethods, printFields, printArgs, printTrace),
         )
     }
 
     @JvmStatic
-    fun getDebugMethodHook(printMethods: Boolean, printFields: Boolean, printArgs: Boolean, printTrace: Boolean): XC_MethodHook {
-        return object : XC_MethodHook() {
+    fun getDebugMethodHook(
+        printMethods: Boolean,
+        printFields: Boolean,
+        printArgs: Boolean,
+        printTrace: Boolean,
+    ): XC_MethodHook =
+        object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 XposedBridge.log("-----------------HOOKED DEBUG START-----------------------------")
                 XposedBridge.log("DEBUG CLASS: " + param.method.declaringClass.name + "->" + param.method.name + ": " + param.thisObject)
@@ -65,7 +78,6 @@ object DebugUtils {
                 XposedBridge.log("-----------------HOOKED DEBUG END-----------------------------\n\n")
             }
         }
-    }
 
     @JvmStatic
     fun debugArgs(args: Array<Any>) {
@@ -77,8 +89,9 @@ object DebugUtils {
     @JvmStatic
     fun parseValue(value: Any?): String {
         val sb = StringBuilder()
-        if (value == null)
+        if (value == null) {
             return "null"
+        }
         when (value) {
             is List<*> -> {
                 sb.append("List[")
@@ -91,7 +104,11 @@ object DebugUtils {
                 val keys = value.keys
                 sb.append("Map[")
                 for (key in keys) {
-                    sb.append(key).append(": ").append(parseValue(value[key])).append(" ")
+                    sb
+                        .append(key)
+                        .append(": ")
+                        .append(parseValue(value[key]))
+                        .append(" ")
                 }
                 sb.append("]")
             }
@@ -109,7 +126,10 @@ object DebugUtils {
     }
 
     @JvmStatic
-    fun debugMethods(cls: Class<*>?, thisObject: Any?) {
+    fun debugMethods(
+        cls: Class<*>?,
+        thisObject: Any?,
+    ) {
         if (cls == null) return
         XposedBridge.log("DEBUG METHODS: Class " + cls.name)
         for (method in cls.declaredMethods) {

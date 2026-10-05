@@ -1,5 +1,6 @@
 package com.wax.module.xposed.features.others
 
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.view.Gravity
 import android.view.View
@@ -13,15 +14,14 @@ import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.Utils
 import com.wax.module.xposed.utils.setTouchClickAndLongClickListener
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 
-class Stickers(classLoader: ClassLoader, preferences:SharedPreferences) :
-    Feature(classLoader, preferences) {
-
+class Stickers(
+    classLoader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(classLoader, preferences) {
     override fun doHook() {
-
         if (!prefs.getBoolean("alertsticker", false)) return
         XposedHelpers.findAndHookMethod(
             View::class.java,
@@ -38,28 +38,32 @@ class Stickers(classLoader: ClassLoader, preferences:SharedPreferences) :
                         },
                         onLongClick = {
                             view.performLongClick()
-                        }
+                        },
                     )
                 }
-            })
+            },
+        )
         if (prefs.getBoolean("remove_sticker_white_outline", false)) {
             val stickerColoredOutline = Unobfuscator.loadStickerColoredOutline(classLoader)
-            XposedBridge.hookMethod(stickerColoredOutline, object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val source = param.args[0] as Bitmap
-                    val safeConfig = source.config ?: Bitmap.Config.ARGB_8888
-                    param.result = source.copy(safeConfig, true)
-                }
-            })
+            XposedBridge.hookMethod(
+                stickerColoredOutline,
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        val source = param.args[0] as Bitmap
+                        val safeConfig = source.config ?: Bitmap.Config.ARGB_8888
+                        param.result = source.copy(safeConfig, true)
+                    }
+                },
+            )
         }
     }
 
-
     private fun showAlertDialog(view: View) {
         val context = view.context
-        val stickerView = view.findViewById<ImageView?>(
-            Utils.getID("sticker", "id")
-        ) ?: return
+        val stickerView =
+            view.findViewById<ImageView?>(
+                Utils.getID("sticker", "id"),
+            ) ?: return
 
         val dialog = AlertDialogWpp(context)
         dialog.setTitle(context.getString(R.string.send_sticker))
@@ -81,20 +85,16 @@ class Stickers(classLoader: ClassLoader, preferences:SharedPreferences) :
         text.textAlignment = View.TEXT_ALIGNMENT_CENTER
         linearLayout.addView(text)
 
-
         dialog.setView(linearLayout)
         dialog.setPositiveButton(
-            context.getString(R.string.send)
+            context.getString(R.string.send),
         ) { _, _ -> view.performClick() }
         dialog.setNegativeButton(
             context.getString(R.string.cancel),
-            null
+            null,
         )
         dialog.show()
     }
 
-
-    override fun getPluginName(): String {
-        return "Stickers"
-    }
+    override fun getPluginName(): String = "Stickers"
 }

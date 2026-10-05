@@ -1,11 +1,11 @@
 package com.wax.module.xposed.features.media
 
-/**
+/*
  * The pure decision logic behind the HD Status hooks.
  *
  * Everything here is free of Android, reflection and Xposed types on purpose. The
  * version-specific knowledge used to be inline string literals spread across
- * [MediaQuality] and [com.wax.module.xposed.core.devkit.Unobfuscator], which
+ * [MediaQuality] and the Unobfuscator, which
  * made it impossible to test and impossible to report: when a WhatsApp build
  * stopped matching an anchor, the corresponding override was skipped by a null-safe
  * `?.` and the feature simply did nothing, with no log line and no counter.
@@ -18,7 +18,9 @@ package com.wax.module.xposed.features.media
  *  * the caller always learns *why* a target did not resolve.
  */
 
-/** One WhatsApp artifact HD Status needs, and how to find it. */
+/**
+ * One WhatsApp artifact HD Status needs, and how to find it.
+ */
 data class HdStatusAnchor(
     /** Resolver name, used in diagnostics so a failure names the missing piece. */
     val name: String,
@@ -41,81 +43,96 @@ data class HdStatusAnchor(
  * entry lists the names seen so far, newest first.
  */
 object HdStatusFields {
-
     /** `ProcessVideoQuality`: the per-media quality ceiling WhatsApp applies. */
-    val VIDEO_LIMITS = HdStatusAnchor(
-        name = "ProcessVideoQuality",
-        candidates = listOf(
-            "ProcessVideoQuality(",
-            "VideoQuality(",
-            "MediaQualityLimits(",
-        ),
-    )
+    val VIDEO_LIMITS =
+        HdStatusAnchor(
+            name = "ProcessVideoQuality",
+            candidates =
+                listOf(
+                    "ProcessVideoQuality(",
+                    "VideoQuality(",
+                    "MediaQualityLimits(",
+                ),
+        )
 
     /** `MediaDataVideoConfiguration`: whether WhatsApp is allowed to transcode. */
-    val VIDEO_CONFIGURATION = HdStatusAnchor(
-        name = "MediaDataVideoConfiguration",
-        candidates = listOf(
-            "MediaDataVideoConfiguration(",
-            "VideoTranscodeConfiguration(",
-        ),
-    )
+    val VIDEO_CONFIGURATION =
+        HdStatusAnchor(
+            name = "MediaDataVideoConfiguration",
+            candidates =
+                listOf(
+                    "MediaDataVideoConfiguration(",
+                    "VideoTranscodeConfiguration(",
+                ),
+        )
 
     /** The transcoder entry point that decides whether to re-encode at all. */
-    val VIDEO_TRANSCODER_START = HdStatusAnchor(
-        name = "VideoTranscoder/transcodeVideoNew",
-        candidates = listOf(
-            "VideoTranscoder/transcodeVideoNew/",
-            "VideoTranscoder/transcodeVideo/",
-            "VideoTranscoder/startTranscode",
-        ),
-    )
+    val VIDEO_TRANSCODER_START =
+        HdStatusAnchor(
+            name = "VideoTranscoder/transcodeVideoNew",
+            candidates =
+                listOf(
+                    "VideoTranscoder/transcodeVideoNew/",
+                    "VideoTranscoder/transcodeVideo/",
+                    "VideoTranscoder/startTranscode",
+                ),
+        )
 
     /** The media pipeline entry point whose boolean enables HD for stories. */
-    val MEDIA_TRANSCODER_START = HdStatusAnchor(
-        name = "MediaTranscode/Starting",
-        candidates = listOf(
-            "MediaTranscode/Starting",
-            "MediaTranscode/start",
-        ),
-    )
+    val MEDIA_TRANSCODER_START =
+        HdStatusAnchor(
+            name = "MediaTranscode/Starting",
+            candidates =
+                listOf(
+                    "MediaTranscode/Starting",
+                    "MediaTranscode/start",
+                ),
+        )
 
     /** `ProcessImageQuality`: the image ceiling, applied on re-encode. */
-    val IMAGE_LIMITS = HdStatusAnchor(
-        name = "ProcessImageQuality",
-        candidates = listOf(
-            "ProcessImageQuality(",
-            "ImageQuality(",
-        ),
-    )
+    val IMAGE_LIMITS =
+        HdStatusAnchor(
+            name = "ProcessImageQuality",
+            candidates =
+                listOf(
+                    "ProcessImageQuality(",
+                    "ImageQuality(",
+                ),
+        )
 
     /** The gate that reveals WhatsApp's own quality picker for stories. */
-    val QUALITY_SELECTION_GATE = HdStatusAnchor(
-        name = "media quality selection gate",
-        candidates = listOf(
-            "enable_media_quality_tool",
-            "show_media_quality_toggle",
-            "media_quality_selection_enabled",
-        ),
-    )
+    val QUALITY_SELECTION_GATE =
+        HdStatusAnchor(
+            name = "media quality selection gate",
+            candidates =
+                listOf(
+                    "enable_media_quality_tool",
+                    "show_media_quality_toggle",
+                    "media_quality_selection_enabled",
+                ),
+        )
 
     /** `BottomBarConfig.supportsHdQuality`, the older location of the same gate. */
-    val BOTTOM_BAR_CONFIG = HdStatusAnchor(
-        name = "BottomBarConfig",
-        candidates = listOf(
-            "BottomBarConfig(",
-            "StoriesTabConfig(",
-        ),
-    )
+    val BOTTOM_BAR_CONFIG =
+        HdStatusAnchor(
+            name = "BottomBarConfig",
+            candidates =
+                listOf(
+                    "BottomBarConfig(",
+                    "StoriesTabConfig(",
+                ),
+        )
 
     /** The resolution-correction method used by the real-resolution path. */
-    val RESOLUTION_CORRECTION = HdStatusAnchor(
-        name = "getCorrectedResolution",
-        candidates = listOf(
-            "getCorrectedResolution",
-            "correctedResolution",
-        ),
-    )
+    val RESOLUTION_CORRECTION =
+        HdStatusAnchor(
+            name = "getCorrectedResolution",
+            candidates =
+                listOf(
+                    "getCorrectedResolution",
+                    "correctedResolution",
+                ),
+        )
 
     /** Field names on `ProcessVideoQuality`, newest first. */
     val VIDEO_LIMIT_MB = listOf("videoLimitMb", "videoLimitMB", "maxVideoSizeMb")
@@ -125,10 +142,11 @@ object HdStatusFields {
     val VIDEO_BITRATE_MODE = listOf("videoBitrateMode", "bitrateMode")
 
     /** Field names on `MediaDataVideoConfiguration`, newest first. */
-    val FORCE_SINGLE_TRANSCODING = listOf(
-        "forceSingleTranscoding",
-        "forceSingleTranscode",
-    )
+    val FORCE_SINGLE_TRANSCODING =
+        listOf(
+            "forceSingleTranscoding",
+            "forceSingleTranscode",
+        )
 
     /** Field names on `ProcessImageQuality`, newest first. */
     val IMAGE_MAX_KB = listOf("maxKb", "maxKB", "imageMaxKb")
@@ -158,7 +176,6 @@ object HdStatusFields {
  * intermediate values are gone, so there is one number per knob again.
  */
 object HdStatusLimits {
-
     /** Longest edge WhatsApp is allowed to keep. 4K-class, matching the original. */
     const val MAX_VIDEO_EDGE = 3840
 
@@ -194,10 +211,16 @@ object HdStatusLimits {
 /** The outcome of trying to resolve one HD Status target. */
 sealed interface HdStatusResolution<out T> {
     /** Resolved, optionally noting which candidate matched. */
-    data class Resolved<T>(val value: T, val matchedCandidate: String) : HdStatusResolution<T>
+    data class Resolved<T>(
+        val value: T,
+        val matchedCandidate: String,
+    ) : HdStatusResolution<T>
 
     /** Not resolved, with every candidate that was tried, for the diagnostic line. */
-    data class Missing(val anchor: HdStatusAnchor, val reason: String) : HdStatusResolution<Nothing>
+    data class Missing(
+        val anchor: HdStatusAnchor,
+        val reason: String,
+    ) : HdStatusResolution<Nothing>
 
     val isResolved: Boolean get() = this is Resolved
 
@@ -216,12 +239,13 @@ sealed interface HdStatusResolution<out T> {
 fun <T : Any> HdStatusAnchor.resolve(probe: (String) -> T?): HdStatusResolution<T> {
     val failures = ArrayList<String>(candidates.size)
     for (candidate in candidates) {
-        val hit = try {
-            probe(candidate)
-        } catch (t: Throwable) {
-            failures += "$candidate -> ${t.javaClass.simpleName}: ${t.message}"
-            null
-        }
+        val hit =
+            try {
+                probe(candidate)
+            } catch (t: Throwable) {
+                failures += "$candidate -> ${t.javaClass.simpleName}: ${t.message}"
+                null
+            }
         if (hit != null) return HdStatusResolution.Resolved(hit, candidate)
         failures += "$candidate -> no match"
     }
@@ -229,5 +253,7 @@ fun <T : Any> HdStatusAnchor.resolve(probe: (String) -> T?): HdStatusResolution<
 }
 
 /** Picks the first field name in [aliases] that [present] reports as existing. */
-fun resolveFieldName(aliases: List<String>, present: (String) -> Boolean): String? =
-    aliases.firstOrNull { present(it) }
+fun resolveFieldName(
+    aliases: List<String>,
+    present: (String) -> Boolean,
+): String? = aliases.firstOrNull { present(it) }

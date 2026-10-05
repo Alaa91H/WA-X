@@ -30,7 +30,6 @@ class HdStatusImageHook(
     private val targets: HdStatusTargets,
     private val log: (String) -> Unit,
 ) {
-
     /** True when the user asked for HD images. */
     var enabled: Boolean = false
         private set
@@ -88,7 +87,7 @@ class HdStatusImageHook(
 
         log(
             "image props: maxKb=${HdStatusLimits.MAX_IMAGE_KB} " +
-                "quality=${HdStatusLimits.MAX_IMAGE_QUALITY} edge=${HdStatusLimits.MAX_IMAGE_EDGE}"
+                "quality=${HdStatusLimits.MAX_IMAGE_QUALITY} edge=${HdStatusLimits.MAX_IMAGE_EDGE}",
         )
     }
 
@@ -114,20 +113,23 @@ class HdStatusImageHook(
         }
 
         val writer = HdStatusFieldWriter(limitsClass.simpleName, fields, log)
-        XposedBridge.hookAllConstructors(limitsClass, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val instance = param.thisObject ?: return
-                writer.withTarget(instance) {
-                    setInt(HdStatusFields.IMAGE_MAX_KB, HdStatusLimits.MAX_IMAGE_KB)
-                    setInt(HdStatusFields.IMAGE_QUALITY, HdStatusLimits.MAX_IMAGE_QUALITY)
-                    setInt(HdStatusFields.IMAGE_MAX_EDGE, HdStatusLimits.MAX_IMAGE_EDGE)
+        XposedBridge.hookAllConstructors(
+            limitsClass,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val instance = param.thisObject ?: return
+                    writer.withTarget(instance) {
+                        setInt(HdStatusFields.IMAGE_MAX_KB, HdStatusLimits.MAX_IMAGE_KB)
+                        setInt(HdStatusFields.IMAGE_QUALITY, HdStatusLimits.MAX_IMAGE_QUALITY)
+                        setInt(HdStatusFields.IMAGE_MAX_EDGE, HdStatusLimits.MAX_IMAGE_EDGE)
+                    }
+                    if (missingFields.isEmpty() && writer.hasLosses) {
+                        missingFields += writer.missingNames
+                        writer.summarise("image ${limitsClass.simpleName}")
+                    }
                 }
-                if (missingFields.isEmpty() && writer.hasLosses) {
-                    missingFields += writer.missingNames
-                    writer.summarise("image ${limitsClass.simpleName}")
-                }
-            }
-        })
+            },
+        )
 
         installed = true
         log("image: hooked ${limitsClass.name} constructors (${fields.size} fields)")
@@ -149,7 +151,7 @@ class HdStatusImageHook(
             RecordingCanvas::class.java,
             "throwIfCannotDraw",
             Bitmap::class.java,
-            XC_MethodReplacement.DO_NOTHING
+            XC_MethodReplacement.DO_NOTHING,
         )
         log("image: media preview guard installed")
     }

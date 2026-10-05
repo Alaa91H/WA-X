@@ -14,15 +14,17 @@ object WhatsAppContactPickerLauncher {
     const val EXTRA_CONTACT_MODE = "contact_mode"
 
     private val whatsappPackages = TargetPackageRegistry.packageNames.toList()
-    private val aboutActivityCandidates = listOf(
-        "com.whatsapp.settings.About",
-        "com.whatsapp.settings.ui.About"
-    )
-    private val settingsNotificationsCandidates = listOf(
-        "com.whatsapp.SettingsNotifications",
-        "com.whatsapp.settings.SettingsNotifications",
-        "com.whatsapp.settings.ui.SettingsNotifications"
-    )
+    private val aboutActivityCandidates =
+        listOf(
+            "com.whatsapp.settings.About",
+            "com.whatsapp.settings.ui.About",
+        )
+    private val settingsNotificationsCandidates =
+        listOf(
+            "com.whatsapp.SettingsNotifications",
+            "com.whatsapp.settings.SettingsNotifications",
+            "com.whatsapp.settings.ui.SettingsNotifications",
+        )
 
     /**
      * Activity-name suffixes accepted as the About screen when no declared candidate
@@ -75,13 +77,14 @@ object WhatsAppContactPickerLauncher {
         context: Context,
         packageName: String,
         key: String,
-        selectedJids: ArrayList<String>?
-    ): Intent = Intent().apply {
-        setClassName(packageName, resolveSettingsNotificationsClassName(context, packageName))
-        putExtra(EXTRA_CONTACT_MODE, true)
-        putExtra("key", key)
-        putStringArrayListExtra("contacts", selectedJids?.let(::ArrayList) ?: arrayListOf())
-    }
+        selectedJids: ArrayList<String>?,
+    ): Intent =
+        Intent().apply {
+            setClassName(packageName, resolveSettingsNotificationsClassName(context, packageName))
+            putExtra(EXTRA_CONTACT_MODE, true)
+            putExtra("key", key)
+            putStringArrayListExtra("contacts", selectedJids?.let(::ArrayList) ?: arrayListOf())
+        }
 
     @JvmStatic
     @Throws(Exception::class)
@@ -89,16 +92,20 @@ object WhatsAppContactPickerLauncher {
         context: Context,
         packageName: String,
         key: String,
-        selectedJids: ArrayList<String>?
-    ): Intent = Intent().apply {
-        setClassName(packageName, resolveAboutActivityClassName(context, packageName))
-        putExtra(EXTRA_PICKER_MODE, true)
-        putExtra("key", key)
-        putStringArrayListExtra("contacts", selectedJids?.let(::ArrayList) ?: arrayListOf())
-    }
+        selectedJids: ArrayList<String>?,
+    ): Intent =
+        Intent().apply {
+            setClassName(packageName, resolveAboutActivityClassName(context, packageName))
+            putExtra(EXTRA_PICKER_MODE, true)
+            putExtra("key", key)
+            putStringArrayListExtra("contacts", selectedJids?.let(::ArrayList) ?: arrayListOf())
+        }
 
     @Throws(Exception::class)
-    private fun resolveAboutActivityClassName(context: Context, packageName: String): String {
+    private fun resolveAboutActivityClassName(
+        context: Context,
+        packageName: String,
+    ): String {
         val packageManager = context.packageManager
         for (candidate in aboutActivityCandidates) {
             try {
@@ -117,7 +124,10 @@ object WhatsAppContactPickerLauncher {
     }
 
     @Throws(Exception::class)
-    private fun resolveSettingsNotificationsClassName(context: Context, packageName: String): String {
+    private fun resolveSettingsNotificationsClassName(
+        context: Context,
+        packageName: String,
+    ): String {
         val packageManager = context.packageManager
         for (candidate in settingsNotificationsCandidates) {
             try {

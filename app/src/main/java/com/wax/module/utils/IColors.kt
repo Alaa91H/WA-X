@@ -33,7 +33,10 @@ object IColors {
     }
 
     @JvmStatic
-    fun getFromIntColor(color: Int, colorMap: HashMap<String, String>): Int {
+    fun getFromIntColor(
+        color: Int,
+        colorMap: HashMap<String, String>,
+    ): Int {
         val stringColor = toString(color)
         var newColor = colorMap[stringColor]
         if (newColor != null && newColor.length == 9) {

@@ -101,4 +101,3 @@ object SupportedPackages {
     @JvmStatic
     fun displayName(packageName: String): String = TargetPackageRegistry.displayName(packageName)
 }
-

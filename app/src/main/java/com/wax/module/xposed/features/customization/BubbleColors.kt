@@ -1,5 +1,6 @@
 package com.wax.module.xposed.features.customization
 
+import android.content.SharedPreferences
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
@@ -11,13 +12,12 @@ import com.wax.module.xposed.core.devkit.Unobfuscator.loadBubbleDrawableMethod
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XC_MethodHook
-import android.content.SharedPreferences 
 import de.robv.android.xposed.XposedBridge
 
-
-class BubbleColors(loader: ClassLoader, preferences:SharedPreferences) :
-    Feature(loader, preferences) {
-
+class BubbleColors(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     override fun doHook() {
         val properties = Utils.getProperties(prefs, "custom_css", "custom_filters")
 
@@ -25,97 +25,121 @@ class BubbleColors(loader: ClassLoader, preferences:SharedPreferences) :
 
         if (!bubbleColor && properties.getProperty("bubble_colors") != "true") return
 
-        val bubbleLeftColor = if (bubbleColor) prefs.getInt(
-            "bubble_left",
-            0
-        ) else DesignUtils.checkSystemColor(
-            properties.getProperty(
-                "bubble_left",
-                "#00000000"
-            )
-        ).toColorInt()
-        val bubbleRightColor = if (bubbleColor) prefs.getInt(
-            "bubble_right",
-            0
-        ) else DesignUtils.checkSystemColor(
-            properties.getProperty(
-                "bubble_right",
-                "#00000000"
-            )
-        ).toColorInt()
+        val bubbleLeftColor =
+            if (bubbleColor) {
+                prefs.getInt(
+                    "bubble_left",
+                    0,
+                )
+            } else {
+                DesignUtils
+                    .checkSystemColor(
+                        properties.getProperty(
+                            "bubble_left",
+                            "#00000000",
+                        ),
+                    ).toColorInt()
+            }
+        val bubbleRightColor =
+            if (bubbleColor) {
+                prefs.getInt(
+                    "bubble_right",
+                    0,
+                )
+            } else {
+                DesignUtils
+                    .checkSystemColor(
+                        properties.getProperty(
+                            "bubble_right",
+                            "#00000000",
+                        ),
+                    ).toColorInt()
+            }
 
         val dateWrapper = loadBallonDateDrawable(classLoader)
 
-        XposedBridge.hookMethod(dateWrapper, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val drawable = param.result as? Drawable? ?: return
-                val position = param.args[0] as Int
-                if (position == 3) {
-                    if (bubbleRightColor == 0) return
-                    drawable.colorFilter = PorterDuffColorFilter(
-                        bubbleRightColor,
-                        PorterDuff.Mode.SRC_IN
-                    )
-                } else {
-                    if (bubbleLeftColor == 0) return
-                    drawable.colorFilter = PorterDuffColorFilter(
-                        bubbleLeftColor,
-                        PorterDuff.Mode.SRC_IN
-                    )
+        XposedBridge.hookMethod(
+            dateWrapper,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val drawable = param.result as? Drawable? ?: return
+                    val position = param.args[0] as Int
+                    if (position == 3) {
+                        if (bubbleRightColor == 0) return
+                        drawable.colorFilter =
+                            PorterDuffColorFilter(
+                                bubbleRightColor,
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                    } else {
+                        if (bubbleLeftColor == 0) return
+                        drawable.colorFilter =
+                            PorterDuffColorFilter(
+                                bubbleLeftColor,
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                    }
                 }
-            }
-        })
+            },
+        )
 
         val babblon = loadBallonBorderDrawable(classLoader)
-        XposedBridge.hookMethod(babblon, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val drawable = param.result as? Drawable? ?: return
-                val position = param.args[1] as Int
-                if (position == 3) {
-                    if (bubbleRightColor == 0) return
-                    drawable.colorFilter = PorterDuffColorFilter(
-                        bubbleRightColor,
-                        PorterDuff.Mode.SRC_IN
-                    )
-                } else {
-                    if (bubbleLeftColor == 0) return
-                    drawable.colorFilter = PorterDuffColorFilter(
-                        bubbleLeftColor,
-                        PorterDuff.Mode.SRC_IN
-                    )
+        XposedBridge.hookMethod(
+            babblon,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val drawable = param.result as? Drawable? ?: return
+                    val position = param.args[1] as Int
+                    if (position == 3) {
+                        if (bubbleRightColor == 0) return
+                        drawable.colorFilter =
+                            PorterDuffColorFilter(
+                                bubbleRightColor,
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                    } else {
+                        if (bubbleLeftColor == 0) return
+                        drawable.colorFilter =
+                            PorterDuffColorFilter(
+                                bubbleLeftColor,
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                    }
                 }
-            }
-        })
-
+            },
+        )
 
         val bubbleDrawableMethod = loadBubbleDrawableMethod(classLoader)
 
-        XposedBridge.hookMethod(bubbleDrawableMethod, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val position = param.args[0] as Int
-                val draw = param.result as Drawable
-                val right = position == 3
-                if (right) {
-                    if (bubbleRightColor == 0) return
-                    draw.colorFilter = PorterDuffColorFilter(
-                        bubbleRightColor,
-                        PorterDuff.Mode.SRC_IN
-                    )
-                } else {
-                    if (bubbleLeftColor == 0) return
-                    draw.colorFilter = PorterDuffColorFilter(
-                        bubbleLeftColor,
-                        PorterDuff.Mode.SRC_IN
-                    )
+        XposedBridge.hookMethod(
+            bubbleDrawableMethod,
+            object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val position = param.args[0] as Int
+                    val draw = param.result as Drawable
+                    val right = position == 3
+                    if (right) {
+                        if (bubbleRightColor == 0) return
+                        draw.colorFilter =
+                            PorterDuffColorFilter(
+                                bubbleRightColor,
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                    } else {
+                        if (bubbleLeftColor == 0) return
+                        draw.colorFilter =
+                            PorterDuffColorFilter(
+                                bubbleLeftColor,
+                                PorterDuff.Mode.SRC_IN,
+                            )
+                    }
                 }
-            }
-        })
+            },
+        )
     }
 
-    override fun getPluginName(): String {
-        return "Bubble Colors"
-    }
+    override fun getPluginName(): String = "Bubble Colors"
 }

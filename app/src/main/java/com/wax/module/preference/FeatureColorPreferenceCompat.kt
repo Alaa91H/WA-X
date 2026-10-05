@@ -10,9 +10,10 @@ import androidx.preference.PreferenceViewHolder
 import com.jaredrummler.android.colorpicker.ColorPreferenceCompat
 import com.wax.module.R
 
-class FeatureColorPreferenceCompat(context: Context, attrs: AttributeSet?) :
-    ColorPreferenceCompat(context, attrs) {
-
+class FeatureColorPreferenceCompat(
+    context: Context,
+    attrs: AttributeSet?,
+) : ColorPreferenceCompat(context, attrs) {
     init {
         setLayoutResource(R.layout.preference_feature_color)
         setIconSpaceReserved(true)

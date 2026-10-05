@@ -18,15 +18,13 @@ data class ResolverRecord(
     val resolverId: String,
     val target: String,
     val outcome: Resolution<*>,
-    val timestampMillis: Long
+    val timestampMillis: Long,
 ) {
-
     /** Whether this outcome permits installing a hook. */
     val isInstallable: Boolean get() = outcome.isInstallable
 
     /** One line suitable for a diagnostics list. */
-    fun toDisplayLine(): String =
-        "$resolverId -> ${outcome.confidence.name}: ${outcome.reason}"
+    fun toDisplayLine(): String = "$resolverId -> ${outcome.confidence.name}: ${outcome.reason}"
 }
 
 /**
@@ -38,11 +36,15 @@ data class ResolverRecord(
  * storage on every launch.
  */
 object ResolverRegistry {
-
     private val records = Collections.synchronizedList(ArrayList<ResolverRecord>())
 
     /** Records one outcome. */
-    fun record(resolverId: String, target: String, outcome: Resolution<*>, now: Long = System.currentTimeMillis()) {
+    fun record(
+        resolverId: String,
+        target: String,
+        outcome: Resolution<*>,
+        now: Long = System.currentTimeMillis(),
+    ) {
         records.add(ResolverRecord(resolverId, target, outcome, now))
     }
 
@@ -50,8 +52,7 @@ object ResolverRegistry {
     fun all(): List<ResolverRecord> = synchronized(records) { records.toList() }
 
     /** The latest outcome for [resolverId], or null when it never ran. */
-    fun latestFor(resolverId: String): ResolverRecord? =
-        synchronized(records) { records.lastOrNull { it.resolverId == resolverId } }
+    fun latestFor(resolverId: String): ResolverRecord? = synchronized(records) { records.lastOrNull { it.resolverId == resolverId } }
 
     /** Outcomes that must not be installed: ambiguous, absent or incompatible. */
     fun unusable(): List<ResolverRecord> = all().filter { !it.isInstallable }
@@ -75,7 +76,7 @@ object ResolverRegistry {
                 confidence = last.outcome.confidence,
                 reason = last.outcome.reason,
                 attempts = history.size,
-                installable = last.isInstallable
+                installable = last.isInstallable,
             )
         }
     }
@@ -93,9 +94,8 @@ data class ResolverSummary(
     val confidence: Confidence,
     val reason: String,
     val attempts: Int,
-    val installable: Boolean
+    val installable: Boolean,
 ) {
     /** One line suitable for a diagnostics list. */
-    fun toDisplayLine(): String =
-        "$resolverId [$confidence] $reason (x$attempts)"
+    fun toDisplayLine(): String = "$resolverId [$confidence] $reason (x$attempts)"
 }

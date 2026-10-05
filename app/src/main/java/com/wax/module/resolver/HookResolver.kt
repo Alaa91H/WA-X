@@ -12,7 +12,6 @@ package com.wax.module.resolver
  * @param T what this resolver produces
  */
 interface HookResolver<T : Any> {
-
     /** Stable identifier for this resolver. */
     val id: String
 

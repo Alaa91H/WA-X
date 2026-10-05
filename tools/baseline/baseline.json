@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-05T21:53:50Z",
+  "generatedAtUtc": "2026-10-05T23:47:12Z",
   "module": {
     "name": "WaEnhancer",
     "versionName": "1.0.0",
     "versionCode": 100
   },
   "git": {
-    "commit": "1dfd2f6f0a33",
+    "commit": "3dfdcec1241a",
     "branch": "master",
     "dirtyWorktree": true
   },
@@ -17,16 +17,16 @@
     "minSdk": 28
   },
   "source": {
-    "kotlinFilesMain": 248,
+    "kotlinFilesMain": 249,
     "kotlinFilesXposed": 0,
     "kotlinFilesFeatures": 0,
     "javaFilesRemaining": 3,
-    "testFiles": 44,
-    "testMethods": 799
+    "testFiles": 45,
+    "testMethods": 813
   },
   "testResults": {
-    "files": 92,
-    "tests": 1598,
+    "files": 47,
+    "tests": 813,
     "skipped": 0,
     "failures": 0,
     "errors": 0
@@ -36,7 +36,7 @@
     "names": ["DebugFeature", "MinorFixes", "ContactItemListener", "ConversationItemListener", "MenuStatusProvider", "ShowEditMessage", "AntiRevoke", "CustomToolbar", "CustomView", "SeenTick", "BubbleColors", "CallPrivacy", "ActivityController", "CustomThemeV2", "FloatingBottomBar", "ChatLimit", "SeparateGroup", "ShowOnline", "DndMode", "FreezeLastSeen", "TypingPrivacy", "HideChat", "HideSeen", "HideSeenView", "TagMessage", "HideTabs", "IGStatus", "MediaQuality", "NewChat", "Others", "PinnedLimit", "CustomTime", "ShareLimit", "StatusDownload", "ViewOnce", "CallType", "MediaPreview", "FilterGroups", "Tasker", "DeleteStatus", "DownloadViewOnce", "Channels", "DownloadProfile", "ChatFilters", "GroupAdmin", "Stickers", "CopyStatus", "CopySelectionMessage", "TextStatusComposer", "ToastViewer", "MenuHome", "AntiWa", "CustomPrivacy", "AudioTranscript", "GoogleTranslate", "ContactVerify", "LockedChatsEnhancer", "CallRecording", "BackupRestore", "JumpFirstMessage", "AboutContactPicker", "DefaultEmoji", "CaptureDevice", "ContextMenuActionProvider"]
   },
   "unobfuscator": {
-    "fileLines": 3796,
+    "fileLines": 3903,
     "loadResolvers": 191,
     "nonNullAssertions": 27,
     "throwStatements": 170,
@@ -70,8 +70,7 @@
     "business": ["2.26.32.xx", "2.26.34.xx", "2.26.35.xx", "2.26.36.xx", "2.26.37.xx", "2.26.38.xx", "2.26.39.xx"]
   },
   "apks": [
-    {"path": "app/build/outputs/apk/business/debug/WA-X-Business-1.0.0-dev+1DFD2F6F.apk", "flavor": "business", "buildType": "debug", "sizeBytes": 38315763, "sizeHuman": "36.54 MiB", "sha256": "bf317e493906434b8088ac956fe40537f0de382f268a835c24e7f82cc4260b7a"},
-    {"path": "app/build/outputs/apk/whatsapp/debug/WA-X-1.0.0-dev+1DFD2F6F.apk", "flavor": "whatsapp", "buildType": "debug", "sizeBytes": 38315783, "sizeHuman": "36.54 MiB", "sha256": "8d0bb4eb42acd3d6414a804467eb87bf584580fd3c414df506dfbf62324e8bb1"}
+    {"path": "app/build/outputs/apk/debug/WA-X-1.0.0-dev+3DFDCEC1.apk", "buildType": "debug", "sizeBytes": 38827439, "sizeHuman": "37.03 MiB", "sha256": "ec9b8d0411a4fa12d4c2ef9d7180da51d305b76d2780db9a812f38801f935c31"}
   ],
   "runtime": {
     "source": "none",

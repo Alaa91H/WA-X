@@ -16,7 +16,6 @@ class SettingsSnapshot internal constructor(
     /** The target this snapshot is bound to. */
     val scope: SettingsScope.Target,
 ) {
-
     /** The target application this snapshot belongs to. */
     val target = scope.app
 
@@ -27,10 +26,16 @@ class SettingsSnapshot internal constructor(
     fun string(key: String): String? = resolver.effectiveString(key, scope)
 
     /** The effective integer for [key], or [fallback]. */
-    fun int(key: String, fallback: Int = 0): Int = resolver.effectiveInt(key, scope, fallback)
+    fun int(
+        key: String,
+        fallback: Int = 0,
+    ): Int = resolver.effectiveInt(key, scope, fallback)
 
     /** The effective float for [key], or [fallback]. */
-    fun float(key: String, fallback: Float = 0f): Float = resolver.effectiveFloat(key, scope, fallback)
+    fun float(
+        key: String,
+        fallback: Float = 0f,
+    ): Float = resolver.effectiveFloat(key, scope, fallback)
 
     /** The effective string set for [key]. */
     fun stringSet(key: String): Set<String> = resolver.effectiveStringSet(key, scope)
@@ -52,8 +57,9 @@ class SettingsSnapshot internal constructor(
  * a single cached "current config" object that WhatsApp and WhatsApp Business both
  * read is how Business ends up applying WhatsApp's settings.
  */
-class SettingsSnapshotCache(private val resolver: EffectiveSettingsResolver) {
-
+class SettingsSnapshotCache(
+    private val resolver: EffectiveSettingsResolver,
+) {
     private val snapshots = HashMap<SettingsScope.Target, SettingsSnapshot>()
 
     /** The snapshot for [scope], creating it on first use. */

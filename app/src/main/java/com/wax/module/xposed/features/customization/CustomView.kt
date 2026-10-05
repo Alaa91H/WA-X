@@ -64,13 +64,15 @@ import java.security.MessageDigest
 import java.util.Objects
 import java.util.Properties
 import java.util.WeakHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.cos
 import kotlin.math.sin
 
-class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(loader, preferences) {
-
+class CustomView(
+    loader: ClassLoader,
+    preferences: SharedPreferences,
+) : Feature(loader, preferences) {
     private var cacheImages: DrawableCache? = null
     private val chacheDrawables = HashMap<String, Drawable>()
     private var properties: Properties? = null
@@ -88,9 +90,11 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         val folderTheme = prefs.getString("folder_theme", "") ?: ""
         val customCss = prefs.getString("custom_css", "") ?: ""
 
-        if ((TextUtils.isEmpty(filterItens) && TextUtils.isEmpty(folderTheme) && TextUtils.isEmpty(customCss))
-            || !prefs.getBoolean("custom_filters", true)
-        ) return
+        if ((TextUtils.isEmpty(filterItens) && TextUtils.isEmpty(folderTheme) && TextUtils.isEmpty(customCss)) ||
+            !prefs.getBoolean("custom_filters", true)
+        ) {
+            return
+        }
 
         properties = Utils.getProperties(prefs, "custom_css", "custom_filters")
 
@@ -105,15 +109,17 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
 
         var waVersion = ""
         try {
-            waVersion = Utils.application.packageManager?.getPackageInfo(
-                Utils.application.packageName ?: "", 0
-            )?.versionName ?: ""
+            waVersion = Utils.application.packageManager
+                ?.getPackageInfo(
+                    Utils.application.packageName ?: "",
+                    0,
+                )?.versionName ?: ""
         } catch (_: Exception) {
         }
 
         val hash = hashContent(cssContent + waVersion)
         val cacheDir = Utils.application.cacheDir
-        val cacheFile = File(cacheDir, "cv_rules_${hash}.cache")
+        val cacheFile = File(cacheDir, "cv_rules_$hash.cache")
 
         var loaded = false
         if (cacheFile.exists()) {
@@ -166,15 +172,14 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         registerHooks()
     }
 
-    private fun hashContent(content: String): String {
-        return try {
+    private fun hashContent(content: String): String =
+        try {
             val md = MessageDigest.getInstance("MD5")
             val h = md.digest(content.toByteArray(StandardCharsets.UTF_8))
             h.joinToString("") { "%02x".format(it) }
         } catch (_: Exception) {
             content.hashCode().toString()
         }
-    }
 
     private fun buildRuleMaps(sheet: StyleSheet) {
         for (selector in sheet) {
@@ -193,8 +198,10 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                         part.idName = item.idName.trim()
                         if (part.idName!!.contains("android_")) {
                             try {
-                                part.resolvedId = android.R.id::class.java
-                                    .getField(part.idName!!.substring(8)).getInt(null)
+                                part.resolvedId =
+                                    android.R.id::class.java
+                                        .getField(part.idName!!.substring(8))
+                                        .getInt(null)
                             } catch (_: NoSuchFieldException) {
                             } catch (_: IllegalAccessException) {
                             }
@@ -210,11 +217,12 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     parts.add(part)
                 }
 
-                val name: String? = if (parts[0].className != null && parts.size > 1) {
-                    parts[1].idName
-                } else {
-                    parts[0].idName
-                }
+                val name: String? =
+                    if (parts[0].className != null && parts.size > 1) {
+                        parts[1].idName
+                    } else {
+                        parts[0].idName
+                    }
                 if (name == null) continue
 
                 var id = 0
@@ -270,15 +278,18 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
 
     private fun registerHooks() {
         XposedHelpers.findAndHookMethod(
-            View::class.java, "onAttachedToWindow",
+            View::class.java,
+            "onAttachedToWindow",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     applyRulesForView(param.thisObject as View)
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
-            View::class.java, "onDetachedFromWindow",
+            View::class.java,
+            "onDetachedFromWindow",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val view = param.thisObject as View
@@ -287,10 +298,14 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     forcedBackgroundMap.remove(view)
                     forcedDrawableMap.remove(view)
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
-            View::class.java, "setFlags", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType,
+            View::class.java,
+            "setFlags",
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (param.args[1] as Int and 0x0000000C == 0) return
@@ -299,7 +314,8 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     val forced = forcedVisibilityMap[view] ?: return
                     param.args[0] = (param.args[0] as Int and 0x0000000C.inv()) or forced
                 }
-            })
+            },
+        )
     }
 
     private fun applyRulesForView(view: View) {
@@ -310,8 +326,9 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         for (item in leafList) {
             try {
                 val activityClass = resolveClass(item.targetActivityClassName)
-                if (activityClass != null && !activityClass.isInstance(ModuleRuntime.getCurrentActivity()))
+                if (activityClass != null && !activityClass.isInstance(ModuleRuntime.getCurrentActivity())) {
                     continue
+                }
                 val rootView = findSelectorRoot(view, item.selector) ?: continue
                 val resultViews = ArrayList<View>()
                 captureSelector(rootView, item.selector, 0, resultViews)
@@ -325,13 +342,17 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         }
     }
 
-    private fun applyRules(startView: View, rules: ArrayList<CachedRuleItem>?) {
+    private fun applyRules(
+        startView: View,
+        rules: ArrayList<CachedRuleItem>?,
+    ) {
         if (rules == null) return
         for (item in rules) {
             try {
                 val activityClass = resolveClass(item.targetActivityClassName)
-                if (activityClass != null && !activityClass.isInstance(ModuleRuntime.getCurrentActivity()))
+                if (activityClass != null && !activityClass.isInstance(ModuleRuntime.getCurrentActivity())) {
                     continue
+                }
                 val resultViews = ArrayList<View>()
                 captureSelector(startView, item.selector, 0, resultViews)
                 for (targetView in resultViews) {
@@ -344,7 +365,10 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         }
     }
 
-    private fun findSelectorRoot(leafView: View, selector: ArrayList<SelectorPart>): View? {
+    private fun findSelectorRoot(
+        leafView: View,
+        selector: ArrayList<SelectorPart>,
+    ): View? {
         for (part in selector) {
             if (part.idName == null) continue
             val rootId = part.resolvedId
@@ -358,7 +382,9 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
 
     private fun hookDrawableViews() {
         XposedHelpers.findAndHookMethod(
-            View::class.java, "setBackground", Drawable::class.java,
+            View::class.java,
+            "setBackground",
+            Drawable::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (forcedBackgroundMap.isEmpty()) return
@@ -367,10 +393,13 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     val forced = forcedBackgroundMap[view] ?: return
                     if (newDrawable !== forced) param.result = null
                 }
-            })
+            },
+        )
 
         XposedHelpers.findAndHookMethod(
-            ImageView::class.java, "setImageDrawable", Drawable::class.java,
+            ImageView::class.java,
+            "setImageDrawable",
+            Drawable::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     if (forcedDrawableMap.isEmpty()) return
@@ -379,10 +408,14 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     val forced = forcedDrawableMap[view] ?: return
                     if (newDrawable !== forced) param.result = null
                 }
-            })
+            },
+        )
     }
 
-    private fun setRuleInView(ruleItem: CachedRuleItem, startView: View) {
+    private fun setRuleInView(
+        ruleItem: CachedRuleItem,
+        startView: View,
+    ) {
         var view = startView
         var layoutChanged = false
         for (declaration in ruleItem.declarations) {
@@ -391,8 +424,12 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
             when (property) {
                 "parent" -> {
                     val value = terms[0].strValue.trim()
-                    val parent = if (value != "root") view.rootView.findViewById(Utils.getID(value, "id"))
-                    else view.rootView
+                    val parent =
+                        if (value != "root") {
+                            view.rootView.findViewById(Utils.getID(value, "id"))
+                        } else {
+                            view.rootView
+                        }
                     if (parent is ViewGroup) {
                         val oldParent = view.parent as View
                         if (oldParent.tag != "relative") {
@@ -447,11 +484,14 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                 "alpha", "opacity" -> view.alpha = terms[0].numValue
                 "background-image" -> {
                     if (terms[0].type != SerialTerm.URI) continue
-                    if (forcedBackgroundMap.containsKey(view) || forcedDrawableMap.containsKey(view))
+                    if (forcedBackgroundMap.containsKey(view) || forcedDrawableMap.containsKey(view)) {
                         continue
+                    }
                     cacheImages?.getDrawableAsync(terms[0].strValue, view.width, view.height) { draw ->
-                        if (draw != null && view.isAttachedToWindow &&
-                            !forcedBackgroundMap.containsKey(view) && !forcedDrawableMap.containsKey(view)
+                        if (draw != null &&
+                            view.isAttachedToWindow &&
+                            !forcedBackgroundMap.containsKey(view) &&
+                            !forcedDrawableMap.containsKey(view)
                         ) {
                             setHookedDrawable(view, draw)
                         }
@@ -471,16 +511,25 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                             val drawable = view.drawable
                             if (drawable !is BitmapDrawable) continue
                             val bitmap = drawable.bitmap
-                            val resized = Bitmap.createScaledBitmap(bitmap,
-                                getRealValue(widthTerm, view.width),
-                                getRealValue(heightTerm, view.height), false)
+                            val resized =
+                                Bitmap.createScaledBitmap(
+                                    bitmap,
+                                    getRealValue(widthTerm, view.width),
+                                    getRealValue(heightTerm, view.height),
+                                    false,
+                                )
                             setHookedDrawable(view, resized.toDrawable(view.context.resources))
                         } else {
                             val drawable = view.background
                             if (drawable !is BitmapDrawable) continue
                             val bitmap = drawable.bitmap
-                            val resized = Bitmap.createScaledBitmap(bitmap,
-                                getRealValue(widthTerm, 0), getRealValue(heightTerm, 0), false)
+                            val resized =
+                                Bitmap.createScaledBitmap(
+                                    bitmap,
+                                    getRealValue(widthTerm, 0),
+                                    getRealValue(heightTerm, 0),
+                                    false,
+                                )
                             setHookedDrawable(view, resized.toDrawable(view.context.resources))
                         }
                     } else {
@@ -490,29 +539,46 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                                 view.scaleType = ImageView.ScaleType.CENTER_CROP
                             } else {
                                 if (view.width < 1 || view.height < 1) {
-                                    view.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
-                                        override fun onLayoutChange(v: View, left: Int, top: Int, right: Int, bottom: Int,
-                                                                     oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
-                                            val w = right - left
-                                            val h = bottom - top
-                                            if (w < 1 || h < 1) return
-                                            v.removeOnLayoutChangeListener(this)
-                                            val bg = v.background
-                                            if (bg !is BitmapDrawable) return
-                                            val bmp = bg.bitmap
-                                            setHookedDrawable(v,
-                                                Bitmap.createScaledBitmap(bmp, w, h, true)
-                                                    .toDrawable(v.context.resources))
-                                        }
-                                    })
+                                    view.addOnLayoutChangeListener(
+                                        object : View.OnLayoutChangeListener {
+                                            override fun onLayoutChange(
+                                                v: View,
+                                                left: Int,
+                                                top: Int,
+                                                right: Int,
+                                                bottom: Int,
+                                                oldLeft: Int,
+                                                oldTop: Int,
+                                                oldRight: Int,
+                                                oldBottom: Int,
+                                            ) {
+                                                val w = right - left
+                                                val h = bottom - top
+                                                if (w < 1 || h < 1) return
+                                                v.removeOnLayoutChangeListener(this)
+                                                val bg = v.background
+                                                if (bg !is BitmapDrawable) return
+                                                val bmp = bg.bitmap
+                                                setHookedDrawable(
+                                                    v,
+                                                    Bitmap
+                                                        .createScaledBitmap(bmp, w, h, true)
+                                                        .toDrawable(v.context.resources),
+                                                )
+                                            }
+                                        },
+                                    )
                                     continue
                                 }
                                 val drawable = view.background
                                 if (drawable !is BitmapDrawable) continue
                                 val bitmap = drawable.bitmap
-                                setHookedDrawable(view,
-                                    Bitmap.createScaledBitmap(bitmap, view.width, view.height, true)
-                                        .toDrawable(view.context.resources))
+                                setHookedDrawable(
+                                    view,
+                                    Bitmap
+                                        .createScaledBitmap(bitmap, view.width, view.height, true)
+                                        .toDrawable(view.context.resources),
+                                )
                             }
                         }
                     }
@@ -645,25 +711,33 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                 "color-filter" -> {
                     val mode = terms[0].strValue.trim()
                     if (mode == "none") {
-                        if (view is ImageView) view.clearColorFilter()
-                        else view.background?.clearColorFilter()
+                        if (view is ImageView) {
+                            view.clearColorFilter()
+                        } else {
+                            view.background?.clearColorFilter()
+                        }
                     } else {
                         if (terms.size < 2 || terms[1].type != SerialTerm.COLOR) continue
                         try {
                             val pMode = PorterDuff.Mode.valueOf(mode)
                             @Suppress("DEPRECATION")
-                            if (view is ImageView)
+                            if (view is ImageView) {
                                 view.setColorFilter(terms[1].colorRgb, pMode)
-                            else
+                            } else {
                                 view.background?.setColorFilter(terms[1].colorRgb, pMode)
+                            }
                         } catch (_: IllegalArgumentException) {
                         }
                     }
                 }
                 "color-tint" -> {
                     if (terms[0].type == SerialTerm.COLOR) {
-                        val csl = if (terms.size == 1) ColorStateList.valueOf(terms[0].colorRgb)
-                        else getColorStateList(terms)
+                        val csl =
+                            if (terms.size == 1) {
+                                ColorStateList.valueOf(terms[0].colorRgb)
+                            } else {
+                                getColorStateList(terms)
+                            }
                         if (view is ImageView) {
                             view.imageTintList = csl
                         } else {
@@ -672,8 +746,11 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     } else {
                         val value = terms[0].strValue.trim()
                         if (value == "none") {
-                            if (view is ImageView) view.imageTintList = null
-                            else view.background?.setTintList(null)
+                            if (view is ImageView) {
+                                view.imageTintList = null
+                            } else {
+                                view.background?.setTintList(null)
+                            }
                         }
                     }
                 }
@@ -681,27 +758,34 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     if (view !is TextView) continue
                     val value = terms[0].strValue
                     val cur = view.typeface
-                    if (value == "bold" || value == "700" || value == "800" || value == "900")
+                    if (value == "bold" || value == "700" || value == "800" || value == "900") {
                         view.setTypeface(cur, Typeface.BOLD)
-                    else if (value == "normal" || value == "400")
+                    } else if (value == "normal" || value == "400") {
                         view.setTypeface(Typeface.create(cur, Typeface.NORMAL))
+                    }
                 }
                 "font-style" -> {
                     if (view !is TextView) continue
                     val value = terms[0].strValue
                     val cur = view.typeface
-                    if (value == "italic") view.setTypeface(cur, Typeface.ITALIC)
-                    else if (value == "normal") view.setTypeface(Typeface.create(cur, Typeface.NORMAL))
+                    if (value == "italic") {
+                        view.setTypeface(cur, Typeface.ITALIC)
+                    } else if (value == "normal") {
+                        view.setTypeface(Typeface.create(cur, Typeface.NORMAL))
+                    }
                 }
                 "text-decoration" -> {
                     if (view !is TextView) continue
                     val value = terms[0].strValue
-                    if (value.contains("underline"))
+                    if (value.contains("underline")) {
                         view.paintFlags = view.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-                    if (value.contains("line-through"))
+                    }
+                    if (value.contains("line-through")) {
                         view.paintFlags = view.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                    if (value.contains("none"))
+                    }
+                    if (value.contains("none")) {
                         view.paintFlags = view.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv() and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                    }
                 }
                 "text-transform" -> {
                     if (view !is TextView) continue
@@ -779,8 +863,10 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                             l = getExactValue(terms[3], view.width)
                         }
                     }
-                    if (params.leftMargin != l || params.topMargin != t ||
-                        params.rightMargin != r || params.bottomMargin != b
+                    if (params.leftMargin != l ||
+                        params.topMargin != t ||
+                        params.rightMargin != r ||
+                        params.bottomMargin != b
                     ) {
                         params.setMargins(l, t, r, b)
                         layoutChanged = true
@@ -849,26 +935,43 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                     }
                     view.setPadding(l, t, r, b)
                 }
-                "padding-left" -> view.setPadding(
-                    getExactValue(terms[0], view.width),
-                    view.paddingTop, view.paddingRight, view.paddingBottom)
-                "padding-top" -> view.setPadding(
-                    view.paddingLeft,
-                    getExactValue(terms[0], view.height),
-                    view.paddingRight, view.paddingBottom)
-                "padding-right" -> view.setPadding(
-                    view.paddingLeft, view.paddingTop,
-                    getExactValue(terms[0], view.width),
-                    view.paddingBottom)
-                "padding-bottom" -> view.setPadding(
-                    view.paddingLeft, view.paddingTop, view.paddingRight,
-                    getExactValue(terms[0], view.height))
+                "padding-left" ->
+                    view.setPadding(
+                        getExactValue(terms[0], view.width),
+                        view.paddingTop,
+                        view.paddingRight,
+                        view.paddingBottom,
+                    )
+                "padding-top" ->
+                    view.setPadding(
+                        view.paddingLeft,
+                        getExactValue(terms[0], view.height),
+                        view.paddingRight,
+                        view.paddingBottom,
+                    )
+                "padding-right" ->
+                    view.setPadding(
+                        view.paddingLeft,
+                        view.paddingTop,
+                        getExactValue(terms[0], view.width),
+                        view.paddingBottom,
+                    )
+                "padding-bottom" ->
+                    view.setPadding(
+                        view.paddingLeft,
+                        view.paddingTop,
+                        view.paddingRight,
+                        getExactValue(terms[0], view.height),
+                    )
             }
         }
         if (layoutChanged) view.requestLayout()
     }
 
-    private fun setHookedDrawable(view: View, draw: Drawable) {
+    private fun setHookedDrawable(
+        view: View,
+        draw: Drawable,
+    ) {
         if (view is ImageView) {
             forcedDrawableMap[view] = draw
             view.setImageDrawable(draw)
@@ -878,14 +981,22 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         }
     }
 
-    private fun setBackgroundModel(view: View, term: SerialTerm) {
+    private fun setBackgroundModel(
+        view: View,
+        term: SerialTerm,
+    ) {
         if (term.type == SerialTerm.LINEAR_GRADIENT) {
             try {
                 var gradientDrawable = chacheDrawables[term.strValue]
                 if (gradientDrawable == null) {
-                    gradientDrawable = GradientDrawableParser.parseGradient(
-                        term.gradientAngle, term.gradientColors, term.gradientPositions,
-                        view.width, view.height)
+                    gradientDrawable =
+                        GradientDrawableParser.parseGradient(
+                            term.gradientAngle,
+                            term.gradientColors,
+                            term.gradientPositions,
+                            view.width,
+                            view.height,
+                        )
                     chacheDrawables[term.strValue] = gradientDrawable
                 }
                 forcedBackgroundMap[view] = gradientDrawable
@@ -898,15 +1009,26 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
 
     override fun getPluginName(): String = "Custom View"
 
-    inner class DrawableCache(context: Context, maxSize: Int) {
-        private val drawableCache = object : LruCache<String, CachedDrawable>(maxSize) {
-            override fun sizeOf(key: String, value: CachedDrawable): Int = value.sizeBytes
-        }
+    inner class DrawableCache(
+        context: Context,
+        maxSize: Int,
+    ) {
+        private val drawableCache =
+            object : LruCache<String, CachedDrawable>(maxSize) {
+                override fun sizeOf(
+                    key: String,
+                    value: CachedDrawable,
+                ): Int = value.sizeBytes
+            }
         private val loadingDrawables = ConcurrentHashMap<String, Boolean>()
         private val pendingCallbacks = ConcurrentHashMap<String, CopyOnWriteArrayList<(Drawable?) -> Unit>>()
         private val context = context.applicationContext
 
-        fun getDrawable(filePath: String, width: Int, height: Int): Drawable? {
+        fun getDrawable(
+            filePath: String,
+            width: Int,
+            height: Int,
+        ): Drawable? {
             val file = if (filePath.startsWith("/")) File(filePath) else File(themeDir, filePath)
             val key = file.absolutePath
 
@@ -929,12 +1051,20 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
             return null
         }
 
-        fun getDrawableAsync(filePath: String, width: Int, height: Int, callback: (Drawable?) -> Unit) {
+        fun getDrawableAsync(
+            filePath: String,
+            width: Int,
+            height: Int,
+            callback: (Drawable?) -> Unit,
+        ) {
             val file = if (filePath.startsWith("/")) File(filePath) else File(themeDir, filePath)
             val key = file.absolutePath
-            val cachedSync = drawableCache.get(key)?.takeIf {
-                System.currentTimeMillis() - it.lastCheckTime < 2000
-            }?.drawable
+            val cachedSync =
+                drawableCache
+                    .get(key)
+                    ?.takeIf {
+                        System.currentTimeMillis() - it.lastCheckTime < 2000
+                    }?.drawable
             if (cachedSync != null) {
                 callback(cachedSync)
                 return
@@ -951,15 +1081,16 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                         val lastModified = file.lastModified()
 
                         val cached = loadDrawableFromCache(key, lastModified)
-                        drawable = if (cached != null) {
-                            cached
-                        } else {
-                            val loaded = loadDrawableFromFile(key, width, height)
-                            if (loaded is BitmapDrawable) {
-                                saveDrawableToCache(key, loaded, lastModified)
+                        drawable =
+                            if (cached != null) {
+                                cached
+                            } else {
+                                val loaded = loadDrawableFromFile(key, width, height)
+                                if (loaded is BitmapDrawable) {
+                                    saveDrawableToCache(key, loaded, lastModified)
+                                }
+                                loaded
                             }
-                            loaded
-                        }
 
                         if (drawable != null) {
                             val entry = CachedDrawable(drawable, lastModified)
@@ -978,19 +1109,24 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
             }
         }
 
-        private fun loadDrawableFromFile(filePath: String, reqWidth: Int, reqHeight: Int): Drawable? {
+        private fun loadDrawableFromFile(
+            filePath: String,
+            reqWidth: Int,
+            reqHeight: Int,
+        ): Drawable? {
             return try {
                 val file = File(filePath)
-                val bitmap = if (!file.canRead()) {
-                    val bridge = ModuleRuntime.getClientBridge() ?: return null
-                    bridge.openFile(filePath, false).use { parcelFile ->
-                        FileInputStream(parcelFile.fileDescriptor).use { input ->
-                            BitmapFactory.decodeStream(input)
+                val bitmap =
+                    if (!file.canRead()) {
+                        val bridge = ModuleRuntime.getClientBridge() ?: return null
+                        bridge.openFile(filePath, false).use { parcelFile ->
+                            FileInputStream(parcelFile.fileDescriptor).use { input ->
+                                BitmapFactory.decodeStream(input)
+                            }
                         }
-                    }
-                } else {
-                    BitmapFactory.decodeFile(file.absolutePath)
-                } ?: return null
+                    } else {
+                        BitmapFactory.decodeFile(file.absolutePath)
+                    } ?: return null
                 val newHeight = if (reqHeight < 1) bitmap.height else minOf(bitmap.height, reqHeight)
                 val newWidth = if (reqWidth < 1) bitmap.width else minOf(bitmap.width, reqWidth)
                 val resized =
@@ -1002,7 +1138,11 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
             }
         }
 
-        private fun saveDrawableToCache(key: String, drawable: BitmapDrawable, lastModified: Long) {
+        private fun saveDrawableToCache(
+            key: String,
+            drawable: BitmapDrawable,
+            lastModified: Long,
+        ) {
             val cacheDir = context.cacheDir
             val cacheLocation = File(cacheDir, "drawable_cache")
             if (!cacheLocation.exists()) cacheLocation.mkdirs()
@@ -1021,7 +1161,10 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
             }
         }
 
-        private fun loadDrawableFromCache(key: String, originalLastModified: Long): Drawable? {
+        private fun loadDrawableFromCache(
+            key: String,
+            originalLastModified: Long,
+        ): Drawable? {
             val cacheDir = context.cacheDir
             val cacheLocation = File(cacheDir, "drawable_cache")
             val cacheFile = File(cacheLocation, getCacheFileName(key))
@@ -1043,12 +1186,13 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
             }
         }
 
-        private fun getCacheFileName(input: String): String {
-            return Objects.hash(input).toString()
-        }
+        private fun getCacheFileName(input: String): String = Objects.hash(input).toString()
     }
 
-    private class CachedDrawable(val drawable: Drawable, val lastModified: Long) {
+    private class CachedDrawable(
+        val drawable: Drawable,
+        val lastModified: Long,
+    ) {
         val sizeBytes: Int = (drawable as? BitmapDrawable)?.bitmap?.allocationByteCount?.coerceAtLeast(1) ?: 1
         var lastCheckTime = System.currentTimeMillis()
     }
@@ -1092,13 +1236,18 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
     class CachedRuleItem(
         var selector: ArrayList<SelectorPart>,
         var declarations: ArrayList<SerialDeclaration>,
-        var targetActivityClassName: String?
+        var targetActivityClassName: String?,
     ) : Serializable
 
     class GradientDrawableParser {
         companion object {
-            fun parseGradient(angle: Float, colors: IntArray, positions: FloatArray,
-                              width: Int, height: Int): BitmapDrawable {
+            fun parseGradient(
+                angle: Float,
+                colors: IntArray,
+                positions: FloatArray,
+                width: Int,
+                height: Int,
+            ): BitmapDrawable {
                 val lg = createLinearGradient(angle, colors, positions, width, height)
                 val sd = ShapeDrawable(RectShape())
                 sd.intrinsicWidth = width
@@ -1110,8 +1259,13 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                 return bitmap.toDrawable(Utils.application.resources)
             }
 
-            private fun createLinearGradient(angle: Float, colors: IntArray, positions: FloatArray,
-                                             width: Int, height: Int): LinearGradient {
+            private fun createLinearGradient(
+                angle: Float,
+                colors: IntArray,
+                positions: FloatArray,
+                width: Int,
+                height: Int,
+            ): LinearGradient {
                 val radians = Math.toRadians(angle.toDouble())
                 val x0 = (0.5 * width + 0.5 * width * cos(radians - Math.PI / 2)).toFloat()
                 val y0 = (0.5 * height + 0.5 * height * sin(radians - Math.PI / 2)).toFloat()
@@ -1122,8 +1276,12 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         }
     }
 
-    private fun captureSelector(currentView: View, selector: ArrayList<SelectorPart>,
-                                position: Int, resultViews: ArrayList<View>) {
+    private fun captureSelector(
+        currentView: View,
+        selector: ArrayList<SelectorPart>,
+        position: Int,
+        resultViews: ArrayList<View>,
+    ) {
         if (selector.size == position) return
         val part = selector[position]
         if (part.className != null) {
@@ -1160,16 +1318,24 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
         }
     }
 
-    private fun checkAttribute(itemView: View, itemCount: IntArray, name: String): Boolean {
-        return if (name.startsWith("nth-child")) {
+    private fun checkAttribute(
+        itemView: View,
+        itemCount: IntArray,
+        name: String,
+    ): Boolean =
+        if (name.startsWith("nth-child")) {
             val index = name.substring(name.indexOf('(') + 1, name.indexOf(')')).toInt() - 1
             index != itemCount[0]++
         } else if (name.startsWith("contains")) {
             val contains = name.substring(name.indexOf('(') + 1, name.indexOf(')'))
-            if (itemView is TextView) !itemView.text.toString().contains(contains)
-            else !itemView.toString().contains(contains)
-        } else false
-    }
+            if (itemView is TextView) {
+                !itemView.text.toString().contains(contains)
+            } else {
+                !itemView.toString().contains(contains)
+            }
+        } else {
+            false
+        }
 
     private fun isWidgetString(view: String?): Boolean {
         if (view == null) return false
@@ -1195,24 +1361,31 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
                 intArrayOf(android.R.attr.state_enabled),
                 intArrayOf(android.R.attr.state_focused, android.R.attr.state_pressed),
                 intArrayOf(-android.R.attr.state_enabled),
-                intArrayOf()
+                intArrayOf(),
             ),
-            intArrayOf(pressed, def, pressed, disabled, def)
+            intArrayOf(pressed, def, pressed, disabled, def),
         )
     }
 
-    private fun getRealValue(pValue: SerialTerm, size: Int): Int {
-        val value = if (pValue.unitName == "px") {
-            Utils.dipToPixels(pValue.numValue)
-        } else if (pValue.percentage) {
-            size * pValue.numValue.toInt() / 100
-        } else {
-            pValue.numValue.toInt()
-        }
+    private fun getRealValue(
+        pValue: SerialTerm,
+        size: Int,
+    ): Int {
+        val value =
+            if (pValue.unitName == "px") {
+                Utils.dipToPixels(pValue.numValue)
+            } else if (pValue.percentage) {
+                size * pValue.numValue.toInt() / 100
+            } else {
+                pValue.numValue.toInt()
+            }
         return if (value > 0) value else 1
     }
 
-    private fun getExactValue(pValue: SerialTerm, size: Int): Int {
+    private fun getExactValue(
+        pValue: SerialTerm,
+        size: Int,
+    ): Int {
         if (pValue.unitName == "px") return Utils.dipToPixels(pValue.numValue)
         if (pValue.percentage) return size * pValue.numValue.toInt() / 100
         return pValue.numValue.toInt()
@@ -1229,20 +1402,27 @@ class CustomView(loader: ClassLoader, preferences:SharedPreferences) : Feature(l
 
     companion object {
         private var themeDir: File? = null
-        private fun changeDPI(activity: Activity, prefs:SharedPreferences, properties: Properties) {
-            val dpi = when {
-                prefs.getString("change_dpi", "0") != "0" -> prefs.getString("change_dpi", "0")
-                properties.getProperty("change_dpi") != null -> properties.getProperty("change_dpi")
-                else -> null
-            }?.toIntOrNull() ?: return
+
+        private fun changeDPI(
+            activity: Activity,
+            prefs: SharedPreferences,
+            properties: Properties,
+        ) {
+            val dpi =
+                when {
+                    prefs.getString("change_dpi", "0") != "0" -> prefs.getString("change_dpi", "0")
+                    properties.getProperty("change_dpi") != null -> properties.getProperty("change_dpi")
+                    else -> null
+                }?.toIntOrNull() ?: return
             if (dpi == 0) return
             val res = activity.resources
             val runningMetrics = res.displayMetrics
-            val newMetrics = if (runningMetrics != null) {
-                DisplayMetrics().also { it.setTo(runningMetrics) }
-            } else {
-                res.displayMetrics
-            }
+            val newMetrics =
+                if (runningMetrics != null) {
+                    DisplayMetrics().also { it.setTo(runningMetrics) }
+                } else {
+                    res.displayMetrics
+                }
             newMetrics.density = dpi / 160f
             newMetrics.densityDpi = dpi
             res.displayMetrics.setTo(newMetrics)

@@ -7,13 +7,18 @@ import java.util.WeakHashMap
 
 object ActivityStateRegistry {
     private val activityStates: MutableMap<Activity?, ModuleRuntime.ActivityChangeState.ChangeType?> =
-        Collections.synchronizedMap<Activity?, ModuleRuntime.ActivityChangeState.ChangeType?>(WeakHashMap<Activity?, ModuleRuntime.ActivityChangeState.ChangeType?>())
+        Collections.synchronizedMap<Activity?, ModuleRuntime.ActivityChangeState.ChangeType?>(
+            WeakHashMap<Activity?, ModuleRuntime.ActivityChangeState.ChangeType?>(),
+        )
 
     private val activityBySimpleName: MutableMap<String?, WeakReference<Activity?>?> =
         Collections.synchronizedMap<String?, WeakReference<Activity?>?>(HashMap<String?, WeakReference<Activity?>?>())
 
     @JvmStatic
-    fun updateState(activity: Activity?, type: ModuleRuntime.ActivityChangeState.ChangeType?) {
+    fun updateState(
+        activity: Activity?,
+        type: ModuleRuntime.ActivityChangeState.ChangeType?,
+    ) {
         if (activity == null) return
         activityStates[activity] = type
         activityBySimpleName[activity.javaClass.simpleName] = WeakReference<Activity?>(activity)
@@ -21,7 +26,9 @@ object ActivityStateRegistry {
 
     @JvmStatic
     fun cleanup() {
-        activityBySimpleName.entries.removeIf { entry: MutableMap.MutableEntry<String?, WeakReference<Activity?>?>? -> entry!!.value!!.get() == null }
+        activityBySimpleName.entries.removeIf { entry: MutableMap.MutableEntry<String?, WeakReference<Activity?>?>? ->
+            entry!!.value!!.get() ==
+                null
+        }
     }
-
 }
