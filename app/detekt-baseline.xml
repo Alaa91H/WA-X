@@ -1,0 +1,519 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:CallRecording.kt$CallRecording$deleteOutputFile &amp;&amp; outputFile != null &amp;&amp; outputFile.exists() &amp;&amp; !outputFile.delete()</ID>
+    <ID>ComplexCondition:CustomThemeV2.kt$CustomThemeV2$activity != null &amp;&amp; activity.javaClass.simpleName == "Conversation" &amp;&amp; ReflectionUtils.isCalledFromStrings("getValue") &amp;&amp; !ReflectionUtils.isCalledFromStrings("android.view")</ID>
+    <ID>ComplexCondition:CustomView.kt$CustomView$(TextUtils.isEmpty(filterItens) &amp;&amp; TextUtils.isEmpty(folderTheme) &amp;&amp; TextUtils.isEmpty(customCss)) || !prefs.getBoolean("custom_filters", true)</ID>
+    <ID>ComplexCondition:CustomView.kt$CustomView$draw != null &amp;&amp; view.isAttachedToWindow &amp;&amp; !forcedBackgroundMap.containsKey(view) &amp;&amp; !forcedDrawableMap.containsKey(view)</ID>
+    <ID>ComplexCondition:CustomView.kt$CustomView$params.leftMargin != l || params.topMargin != t || params.rightMargin != r || params.bottomMargin != b</ID>
+    <ID>ComplexCondition:CustomView.kt$CustomView$value == "bold" || value == "700" || value == "800" || value == "900"</ID>
+    <ID>ComplexCondition:FMessageWpp.kt$FMessageWpp.UserJid$str.contains("@g.us") || str.contains("@s.whatsapp.net") || str.contains( "@broadcast" ) || str.contains("@lid")</ID>
+    <ID>ComplexCondition:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$error == null &amp;&amp; result != null &amp;&amp; view != null &amp;&amp; bound[view] == request &amp;&amp; config(chat) == selection &amp;&amp; ConversationItemListener.isViewBoundToMessage( view, request.id )</ID>
+    <ID>ComplexCondition:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$view is TextView &amp;&amp; view !is EditText &amp;&amp; view.visibility == View.VISIBLE &amp;&amp; (view.text.toString() == original || renderedViews[view]?.original?.toString() == original)</ID>
+    <ID>ComplexCondition:GoogleTranslateSettings.kt$GoogleTranslateSettings$parts.size != 3 || parts[0] !in setOf("on", "off") || (parts[1] != "auto" &amp;&amp; parts[1] !in languages) || parts[2] !in languages</ID>
+    <ID>ComplexCondition:Others.kt$Others.&lt;no name provided&gt;$view != null &amp;&amp; (view.id == searchBarID || view.findViewById&lt;View&gt;(searchBarID) != null) &amp;&amp; filterChats != "2"</ID>
+    <ID>ComplexCondition:RecordingsFragment.kt$RecordingsFragment$name.endsWith(".wav") || name.endsWith(".mp3") || name.endsWith(".aac") || name.endsWith(".m4a")</ID>
+    <ID>ComplexCondition:TypingPrivacy.kt$TypingPrivacy.&lt;no name provided&gt;$(type == 1 &amp;&amp; customHideRecording) || (type == 0 &amp;&amp; customHideTyping)</ID>
+    <ID>ComplexCondition:Unobfuscator.kt$Unobfuscator$Modifier.isStatic(method.modifiers) &amp;&amp; method.parameterCount == 1 &amp;&amp; method.parameterTypes[0] == fMessage &amp;&amp; !method.returnType.isPrimitive</ID>
+    <ID>ComplexCondition:Unobfuscator.kt$Unobfuscator$Modifier.isStatic(method.modifiers) &amp;&amp; method.parameterCount &gt; 1 &amp;&amp; listOf(*method.parameterTypes).contains(statusPlaybackClass) &amp;&amp; method.declaringClass === statusPlaybackClass</ID>
+    <ID>ComplexCondition:Unobfuscator.kt$Unobfuscator$c == '\'' || c == ',' || c == ' ' || c == '(' || c == ')' || c == ':' || c == '{' || c == '}'</ID>
+    <ID>ComplexCondition:Unobfuscator.kt$Unobfuscator$invoke.isMethod &amp;&amp; Modifier.isStatic(invoke.modifiers) &amp;&amp; invoke.paramCount == 1 &amp;&amp; invoke.paramTypes[0].name == Context::class.java.name</ID>
+    <ID>ComplexCondition:Unobfuscator.kt$Unobfuscator$method.parameterCount == 1 &amp;&amp; (method.parameterTypes[0] == Int::class.java || method.parameterTypes[0] == Long::class.java) &amp;&amp; method.declaringClass == messageInfoClass &amp;&amp; method.returnType == Void.TYPE</ID>
+    <ID>ComplexCondition:UnobfuscatorCache.kt$UnobfuscatorCache$version != currentVersion || (savedUpdateTime != lastUpdateTime &amp;&amp; BuildConfig.RESET_ON_INSTALL) || versionName != savedVersionName || savedCacheSchemaVersion != CACHE_SCHEMA_VERSION</ID>
+    <ID>ComplexCondition:WppCore.kt$WppCore$str.contains("@g.us") || str.contains("@s.whatsapp.net") || str.contains("@broadcast") || str.contains("@lid")</ID>
+    <ID>CyclomaticComplexMethod:AboutContactPicker.kt$AboutContactPicker.PickerController$private fun applyFilters()</ID>
+    <ID>CyclomaticComplexMethod:AntiRevoke.kt$AntiRevoke$private fun bindRevokedMessageUI( fMessage: FMessageWpp, dateTextView: TextView?, antirevokeType: String, boundView: View? = null )</ID>
+    <ID>CyclomaticComplexMethod:AudioOpusConverter.kt$AudioOpusConverter$private fun transcode(extractor: MediaExtractor, decoder: MediaCodec, encoderHandle: Long)</ID>
+    <ID>CyclomaticComplexMethod:BasePreferenceFragment.kt$BasePreferenceFragment$@SuppressLint("ApplySharedPref") private fun updatePreferenceStates(key: String?)</ID>
+    <ID>CyclomaticComplexMethod:BasePreferenceFragment.kt$BasePreferenceFragment$private fun getPreferenceIcon(preference: Preference, fallback: Int): Int</ID>
+    <ID>CyclomaticComplexMethod:BasePreferenceFragment.kt$BasePreferenceFragment$private fun getSectionIcon(title: CharSequence?, fallback: Int): Int</ID>
+    <ID>CyclomaticComplexMethod:CDSharedPreferences.kt$CDSharedPreferences$private fun loadData()</ID>
+    <ID>CyclomaticComplexMethod:CDSharedPreferences.kt$CDSharedPreferences$private fun saveData(mapToSave: Map&lt;String, Any?&gt;): Boolean</ID>
+    <ID>CyclomaticComplexMethod:CallRecording.kt$CallRecording$@Synchronized private fun startRecording()</ID>
+    <ID>CyclomaticComplexMethod:CustomThemeV2.kt$CustomThemeV2$fun loadAndApplyColors()</ID>
+    <ID>CyclomaticComplexMethod:CustomView.kt$CustomView$override fun doHook()</ID>
+    <ID>CyclomaticComplexMethod:CustomView.kt$CustomView$private fun buildRuleMaps(sheet: StyleSheet)</ID>
+    <ID>CyclomaticComplexMethod:CustomView.kt$CustomView$private fun captureSelector(currentView: View, selector: ArrayList&lt;SelectorPart&gt;, position: Int, resultViews: ArrayList&lt;View&gt;)</ID>
+    <ID>CyclomaticComplexMethod:CustomView.kt$CustomView$private fun setRuleInView(ruleItem: CachedRuleItem, startView: View)</ID>
+    <ID>CyclomaticComplexMethod:DrawableColors.kt$DrawableColors$@JvmStatic fun replaceColor(drawable: Drawable?, colors: HashMap&lt;String, String&gt;)</ID>
+    <ID>CyclomaticComplexMethod:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$private fun bind(message: FMessageWpp, root: ViewGroup)</ID>
+    <ID>CyclomaticComplexMethod:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$private fun installInfoCard(activitySuffix: String, jidSuffix: String)</ID>
+    <ID>CyclomaticComplexMethod:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$private fun showSettings(activity: Activity, chat: String?, onSaved: () -&gt; Unit = {})</ID>
+    <ID>CyclomaticComplexMethod:IGStatusAdapter.kt$IGStatusAdapter$override fun getView(position: Int, convertView: View?, parent: ViewGroup): View</ID>
+    <ID>CyclomaticComplexMethod:MediaPreview.kt$MediaPreview$@SuppressLint("SetTextI18n") private fun createVideoControls(context: Context, videoView: VideoView): LinearLayout</ID>
+    <ID>CyclomaticComplexMethod:MessageStore.kt$MessageStore$@Synchronized private fun deleteStatusByMessageKeySync(messageKey: String?): Boolean</ID>
+    <ID>CyclomaticComplexMethod:Others.kt$Others$override fun doHook()</ID>
+    <ID>CyclomaticComplexMethod:ReflectionUtils.kt$ReflectionUtils$fun findIndexOfType(args: Array&lt;out Any?&gt;, type: Class&lt;*&gt;): Int</ID>
+    <ID>CyclomaticComplexMethod:ToastViewer.kt$ToastViewer$private fun checkDataBase( sql: SQLiteDatabase, id: Long, contactName: String?, rawJid: String?, toastViewedMessage: Boolean, toastViewedStatus: Boolean )</ID>
+    <ID>CyclomaticComplexMethod:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic fun loadBroadcastTagField(classLoader: ClassLoader): Field</ID>
+    <ID>CyclomaticComplexMethod:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic fun loadSenderPlayedMethod(classLoader: ClassLoader): Method</ID>
+    <ID>CyclomaticComplexMethod:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic private fun buildAllMapFields(clazz: Class&lt;*&gt;): HashMap&lt;String, Field&gt;</ID>
+    <ID>EmptyElseBlock:CallPrivacy.kt$CallPrivacy$if (customprivacy.optBoolean("BlockCall", false)) return true</ID>
+    <ID>EmptyFunctionBlock:AboutContactPicker.kt$AboutContactPicker.PickerController.&lt;no name provided&gt;${ }</ID>
+    <ID>EmptyFunctionBlock:AboutContactPicker.kt$AboutContactPicker.PickerController.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:AudioPlayerDialog.kt$AudioPlayerDialog.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:DebugFeature.kt$DebugFeature${ }</ID>
+    <ID>EmptyFunctionBlock:DelMessageDatabase.kt$DelMessageDatabase.Companion.&lt;no name provided&gt;${ }</ID>
+    <ID>EmptyFunctionBlock:GoogleTranslateChatUi.kt$GoogleTranslateChatUi.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:HideChat.kt$HideChat.HideView${ }</ID>
+    <ID>EmptyFunctionBlock:MediaPreview.kt$MediaPreview.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:WaCallback.kt$WaCallback${ }</ID>
+    <ID>ExplicitGarbageCollectionCall:UnobfuscatorCache.kt$UnobfuscatorCache$gc()</ID>
+    <ID>FunctionParameterNaming:HKDF.kt$HKDF$arr_b1: ByteArray</ID>
+    <ID>FunctionParameterNaming:HKDF.kt$HKDF$arr_b: ByteArray</ID>
+    <ID>FunctionParameterNaming:MessageStore.kt$MessageStore$message_key: String</ID>
+    <ID>FunctionParameterNaming:MessageStore.kt$MessageStore$row_id: Long</ID>
+    <ID>ImplicitDefaultLocale:Feature.kt$Feature$String.format("[%s] %s", getPluginName(), formatObject(obj))</ID>
+    <ID>ImplicitDefaultLocale:Feature.kt$Feature$String.format("[%s] Error:", getPluginName())</ID>
+    <ID>ImplicitDefaultLocale:Recording.kt$Recording$String.format("%.1f KB", size / 1024.0)</ID>
+    <ID>ImplicitDefaultLocale:Recording.kt$Recording$String.format("%.1f MB", size / (1024.0 * 1024.0))</ID>
+    <ID>ImplicitDefaultLocale:Recording.kt$Recording$String.format("%d:%02d", minutes, seconds)</ID>
+    <ID>ImplicitDefaultLocale:Recording.kt$Recording$String.format("%d:%02d:%02d", hours, minutes, seconds)</ID>
+    <ID>ImplicitDefaultLocale:SimpleColorPickerDialog.kt$SimpleColorPickerDialog$String.format("#%02X%02X%02X", red, green, blue)</ID>
+    <ID>InstanceOfCheckForException:MessageStore.kt$MessageStore$e is android.database.sqlite.SQLiteDatabaseLockedException</ID>
+    <ID>InstanceOfCheckForException:MessageStore.kt$MessageStore$e is android.database.sqlite.SQLiteTableLockedException</ID>
+    <ID>LargeClass:CustomView.kt$CustomView : Feature</ID>
+    <ID>LargeClass:MediaPreview.kt$MediaPreview : Feature</ID>
+    <ID>LargeClass:Unobfuscator.kt$Unobfuscator</ID>
+    <ID>LongMethod:CustomView.kt$CustomView$private fun setRuleInView(ruleItem: CachedRuleItem, startView: View)</ID>
+    <ID>LongMethod:FeatureCatalog.kt$FeatureCatalog$private fun buildFeatureCatalog(context: Context): List&lt;SearchableFeature&gt;</ID>
+    <ID>LongMethod:MediaPreview.kt$MediaPreview$@SuppressLint("SetTextI18n") private fun createVideoControls(context: Context, videoView: VideoView): LinearLayout</ID>
+    <ID>LongMethod:MessageStore.kt$MessageStore$@Synchronized private fun deleteStatusByMessageKeySync(messageKey: String?): Boolean</ID>
+    <ID>LongMethod:Others.kt$Others$override fun doHook()</ID>
+    <ID>LongParameterList:Channels.kt$Channels$( arrList: MutableList&lt;Any?&gt;, channels: Boolean, removechannelRec: Boolean, headerChannelItem: Class&lt;*&gt;, listChannelItem: Class&lt;*&gt;, removeChannelRecClass: Class&lt;*&gt; )</ID>
+    <ID>LongParameterList:DebugUtils.kt$DebugUtils$(className: String, methodName: String, printMethods: Boolean, printFields: Boolean, printArgs: Boolean, printTrace: Boolean)</ID>
+    <ID>LongParameterList:FailureReportParserTest.kt$FailureReportParserTest$( featureId: String = "AntiRevoke", code: FailureCode = FailureCode.RESOLVER_NOT_FOUND, resolver: String? = "loadReceiptMethod", message: String? = "resolver did not match", exceptionClass: String? = "java.lang.RuntimeException", frames: List&lt;String&gt; = listOf("com.wmods.wppenhacer.AntiRevoke.doHook", "com.wmods.wppenhacer.X.run"), timestampMillis: Long = 1_700_000_000_000L, threadName: String? = "WAE-HookInstaller" )</ID>
+    <ID>LongParameterList:FeatureCatalog.kt$FeatureCatalog$( catalog: MutableList&lt;SearchableFeature&gt;, context: Context, key: String, titleResource: Int, summaryResource: Int?, category: SearchableFeature.Category, fragment: SearchableFeature.FragmentType, parentKey: String?, vararg tags: String )</ID>
+    <ID>LongParameterList:FeatureFailureReport.kt$FeatureFailureReport.Companion$( featureId: String, throwable: Throwable, moduleVersion: String, whatsappVersion: String, packageName: String, resolver: String? = null, stage: String? = null, timestampMillis: Long = 0L, threadName: String? = null )</ID>
+    <ID>LongParameterList:FeatureFailureReportTest.kt$FeatureFailureReportTest$( featureId: String = "AntiRevoke", code: FailureCode = FailureCode.RESOLVER_NOT_FOUND, resolver: String? = "loadReceiptMethod", message: String? = "resolver did not match", exceptionClass: String? = "java.lang.RuntimeException", frames: List&lt;String&gt; = listOf("com.wmods.wppenhacer.xposed.features.general.AntiRevoke.doHook"), timestampMillis: Long = 1_700_000_000_000L )</ID>
+    <ID>LongParameterList:FeatureLoader.kt$FeatureLoader.Companion$( featureId: String, throwable: Throwable, whatsAppVersion: String, packageName: String, resolver: String? = null, stage: String? = null )</ID>
+    <ID>LongParameterList:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$( activity: Activity, chat: String, id: String, text: String, source: String, target: String )</ID>
+    <ID>LongParameterList:MediaPreview.kt$MediaPreview$( inputStream: InputStream, contentLength: Long, mediaKey: String, mimeType: String, progressBar: ProgressBar, progressText: TextView )</ID>
+    <ID>LongParameterList:MediaPreview.kt$MediaPreview$( url: String, mediaKey: String, mimeType: String, expectedSize: Long, isNewsletter: Boolean, context: Context, contentContainer: FrameLayout, loadingContainer: LinearLayout, progressBar: ProgressBar, progressText: TextView, executor: ExecutorService )</ID>
+    <ID>LongParameterList:SearchableFeature.kt$SearchableFeature$( val key: String, val title: String, val summary: String?, val category: Category, val fragmentType: FragmentType, val parentKey: String? = null, searchTags: List&lt;String&gt;? = null )</ID>
+    <ID>LongParameterList:ToastViewer.kt$ToastViewer$( sql: SQLiteDatabase, id: Long, contactName: String?, rawJid: String?, toastViewedMessage: Boolean, toastViewedStatus: Boolean )</ID>
+    <ID>LoopWithTooManyJumpStatements:AboutContactPicker.kt$AboutContactPicker.PickerController$for</ID>
+    <ID>LoopWithTooManyJumpStatements:CustomView.kt$CustomView$for</ID>
+    <ID>LoopWithTooManyJumpStatements:MediaPreview.kt$MediaPreview.&lt;no name provided&gt;$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReflectionUtils.kt$ReflectionUtils$for</ID>
+    <ID>LoopWithTooManyJumpStatements:Unobfuscator.kt$Unobfuscator$for</ID>
+    <ID>MaxLineLength:AboutContactPicker.kt$AboutContactPicker.ContactPickerDataProvider$"jid IS NOT NULL AND jid != '' AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) AND is_whatsapp_user = 1"</ID>
+    <ID>MaxLineLength:ActivityStateRegistry.kt$ActivityStateRegistry$Collections.synchronizedMap&lt;Activity?, WppCore.ActivityChangeState.ChangeType?&gt;(WeakHashMap&lt;Activity?, WppCore.ActivityChangeState.ChangeType?&gt;())</ID>
+    <ID>MaxLineLength:ActivityStateRegistry.kt$ActivityStateRegistry$activityBySimpleName.entries.removeIf { entry: MutableMap.MutableEntry&lt;String?, WeakReference&lt;Activity?&gt;?&gt;? -&gt; entry!!.value!!.get() == null }</ID>
+    <ID>MaxLineLength:AlertDialogWpp.kt$AlertDialogWpp.Companion$)</ID>
+    <ID>MaxLineLength:AudioOpusConverter.kt$AudioOpusConverter$inputSampleRate = if (fmt.containsKey(MediaFormat.KEY_SAMPLE_RATE)) fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE) else OPUS_SAMPLE_RATE</ID>
+    <ID>MaxLineLength:DebugUtils.kt$DebugUtils$fun</ID>
+    <ID>MaxLineLength:DeleteStatus.kt$DeleteStatus$val statusPlaybackActivityClass = Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "StatusPlaybackActivity")</ID>
+    <ID>MaxLineLength:FMessageWpp.kt$FMessageWpp.Companion$ReflectionUtils.findMethodUsingFilter(TYPE) { method -&gt; method.parameterCount == 0 &amp;&amp; method.returnType == UserJid.TYPE_USERJID }</ID>
+    <ID>MaxLineLength:FileReaderPreference.kt$FileReaderPreference$}</ID>
+    <ID>MaxLineLength:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$if (error == null &amp;&amp; result != null) result else "Translation unavailable. Check your connection or try another language."</ID>
+    <ID>MaxLineLength:IGStatusAdapter.kt$IGStatusAdapter.IGStatusViewHolder$val statusInfo = XposedHelpers.getObjectField(item, "A01").takeUnless { it is Number } ?: XposedHelpers.getObjectField(item, "A02")</ID>
+    <ID>MaxLineLength:MediaPreview.kt$MediaPreview.&lt;no name provided&gt;$resourceNames = listOf("control_frame_new","control_frame","control_frame_view","mms_control_frame_new","mms_control_frame")</ID>
+    <ID>MaxLineLength:Others.kt$Others$val statusPlaybackContactFragmentClass = Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "StatusPlaybackContactFragment")</ID>
+    <ID>MaxLineLength:RootDiagnostics.kt$RootDiagnostics$"chmod 600 ${cacheFile.absolutePath} ${walFile.absolutePath} ${shmFile.absolutePath} ${journalFile.absolutePath} 2&gt;/dev/null"</ID>
+    <ID>MaxLineLength:RootDiagnostics.kt$RootDiagnostics$"chown $uid:$uid ${cacheFile.absolutePath} ${walFile.absolutePath} ${shmFile.absolutePath} ${journalFile.absolutePath} 2&gt;/dev/null; "</ID>
+    <ID>MaxLineLength:StatusDownload.kt$StatusDownload$clazz = Unobfuscator.findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "ConsolidatedStatusComposerActivity")</ID>
+    <ID>MaxLineLength:Unobfuscator.kt$Unobfuscator$ReflectionUtils.findMethodUsingFilter(conversationClass) { m -&gt; m.parameterCount == 1 &amp;&amp; m.parameterTypes[0] == Menu::class.java }!!</ID>
+    <ID>MaxLineLength:Unobfuscator.kt$Unobfuscator$if</ID>
+    <ID>MaxLineLength:Unobfuscator.kt$Unobfuscator$if (m2.parameterCount != 1 || m2.parameterTypes[0] != Int::class.javaPrimitiveType || m2.returnType != Void.TYPE) continue</ID>
+    <ID>MaxLineLength:WallpaperView.kt$WallpaperView$var image = ThemePreference.rootDirectory.absolutePath + "/" + prefs.getString("folder_theme", "") + "/" + properties.getProperty("wallpaper_file")</ID>
+    <ID>MemberNameEqualsClassName:CustomView.kt$CustomView.DrawableCache$private val drawableCache = object : LruCache&lt;String, CachedDrawable&gt;(maxSize) { override fun sizeOf(key: String, value: CachedDrawable): Int = value.sizeBytes }</ID>
+    <ID>MemberNameEqualsClassName:FMessageWpp.kt$FMessageWpp.UserJid$@JvmField var userJid: Any? = null</ID>
+    <ID>NestedBlockDepth:AboutContactPicker.kt$AboutContactPicker.ContactPickerDataProvider$private fun loadFromWaDatabase( items: LinkedHashMap&lt;String, ContactPickerItem&gt;, database: SQLiteDatabase )</ID>
+    <ID>NestedBlockDepth:AudioOpusConverter.kt$AudioOpusConverter$private fun transcode(extractor: MediaExtractor, decoder: MediaCodec, encoderHandle: Long)</ID>
+    <ID>NestedBlockDepth:BasePreferenceFragment.kt$BasePreferenceFragment$private fun tryHighlightAgain(targetKey: String)</ID>
+    <ID>NestedBlockDepth:CallRecording.kt$CallRecording$private fun extractUserJid(callback: Any?)</ID>
+    <ID>NestedBlockDepth:CustomPrivacy.kt$CustomPrivacy$private fun savePreferences( number: String, itemsKeys: Array&lt;String&gt;, checkedItems: BooleanArray )</ID>
+    <ID>NestedBlockDepth:CustomThemeV2.kt$CustomThemeV2.Companion$@JvmStatic private fun processColors(color: String, mapColors: HashMap&lt;String, String&gt;)</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView$override fun doHook()</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView$private fun applyRules(startView: View, rules: ArrayList&lt;CachedRuleItem&gt;?)</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView$private fun applyRulesForView(view: View)</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView$private fun buildRuleMaps(sheet: StyleSheet)</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView$private fun captureSelector(currentView: View, selector: ArrayList&lt;SelectorPart&gt;, position: Int, resultViews: ArrayList&lt;View&gt;)</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView$private fun setRuleInView(ruleItem: CachedRuleItem, startView: View)</ID>
+    <ID>NestedBlockDepth:CustomView.kt$CustomView.DrawableCache$private fun loadDrawableFromFile(filePath: String, reqWidth: Int, reqHeight: Int): Drawable?</ID>
+    <ID>NestedBlockDepth:DrawableColors.kt$DrawableColors$@JvmStatic fun replaceColor(drawable: Drawable?, colors: HashMap&lt;String, String&gt;)</ID>
+    <ID>NestedBlockDepth:MediaPreview.kt$MediaPreview$@SuppressLint("SetTextI18n") @Throws(Exception::class) private fun downloadAndDecryptWithProgress( inputStream: InputStream, contentLength: Long, mediaKey: String, mimeType: String, progressBar: ProgressBar, progressText: TextView )</ID>
+    <ID>NestedBlockDepth:MediaPreview.kt$MediaPreview$@Throws(Exception::class) private fun decryptMediaFile( encryptedFile: File, destFile: File, mediaKey: String, mimeType: String )</ID>
+    <ID>NestedBlockDepth:MessageStore.kt$MessageStore$@Synchronized fun executeWritableSQL(sql: String, maxRetries: Int = 3, retryDelayMs: Long = 500L)</ID>
+    <ID>NestedBlockDepth:MessageStore.kt$MessageStore$@Synchronized private fun deleteStatusByMessageKeySync(messageKey: String?): Boolean</ID>
+    <ID>NestedBlockDepth:MessageStore.kt$MessageStore$fun getAudioListByMessageList(messageList: List&lt;String&gt;?): List&lt;String&gt;</ID>
+    <ID>NestedBlockDepth:MessageStore.kt$MessageStore$private fun refreshStatusRow(db: SQLiteDatabase, senderJidRowId: Long, chatRowId: Long)</ID>
+    <ID>NestedBlockDepth:SeparateGroup.kt$SeparateGroup.Companion$fun resolveUserJid(chat: Any): FMessageWpp.UserJid?</ID>
+    <ID>NestedBlockDepth:ThemePreference.kt$ThemePreference$private fun getZipFileName(uri: Uri): String</ID>
+    <ID>NestedBlockDepth:ToastViewer.kt$ToastViewer$private fun checkDataBase( sql: SQLiteDatabase, id: Long, contactName: String?, rawJid: String?, toastViewedMessage: Boolean, toastViewedStatus: Boolean )</ID>
+    <ID>NestedBlockDepth:UnobfuscatorCache.kt$UnobfuscatorCache$private fun initializeReverseResourceMap()</ID>
+    <ID>NestedBlockDepth:Utils.kt$Utils$fun copyFile(inputStream: InputStream, destFolder: String, name: String): String?</ID>
+    <ID>NestedBlockDepth:WppCore.kt$WppCore$@SuppressLint("DiscouragedPrivateApi") @JvmStatic fun getCurrentChatTitle(): String?</ID>
+    <ID>NestedBlockDepth:WppXposed.kt$WppXposed$private fun injectResources( clazz: Class&lt;*&gt;, modRes: XModuleResources?, resparam: InitPackageResourcesParam )</ID>
+    <ID>NewLineAtEndOfFile:ActivityController.kt$com.wmods.wppenhacer.xposed.features.others.ActivityController.kt</ID>
+    <ID>NewLineAtEndOfFile:ActivityStateRegistry.kt$com.wmods.wppenhacer.xposed.core.ActivityStateRegistry.kt</ID>
+    <ID>NewLineAtEndOfFile:AudioTranscript.kt$com.wmods.wppenhacer.xposed.features.others.AudioTranscript.kt</ID>
+    <ID>NewLineAtEndOfFile:BackupRestoreTest.kt$com.wmods.wppenhacer.xposed.features.others.BackupRestoreTest.kt</ID>
+    <ID>NewLineAtEndOfFile:BridgeAccessPolicy.kt$com.wmods.wppenhacer.xposed.bridge.BridgeAccessPolicy.kt</ID>
+    <ID>NewLineAtEndOfFile:BridgeAccessPolicyTest.kt$com.wmods.wppenhacer.xposed.bridge.BridgeAccessPolicyTest.kt</ID>
+    <ID>NewLineAtEndOfFile:CallPrivacy.kt$com.wmods.wppenhacer.xposed.features.privacy.CallPrivacy.kt</ID>
+    <ID>NewLineAtEndOfFile:Channels.kt$com.wmods.wppenhacer.xposed.features.others.Channels.kt</ID>
+    <ID>NewLineAtEndOfFile:ConfigBackupSchema.kt$com.wmods.wppenhacer.config.ConfigBackupSchema.kt</ID>
+    <ID>NewLineAtEndOfFile:ConfigBackupSchemaTest.kt$com.wmods.wppenhacer.config.ConfigBackupSchemaTest.kt</ID>
+    <ID>NewLineAtEndOfFile:ConfigValue.kt$com.wmods.wppenhacer.config.ConfigValue.kt</ID>
+    <ID>NewLineAtEndOfFile:ContactDataTest.kt$com.wmods.wppenhacer.model.ContactDataTest.kt</ID>
+    <ID>NewLineAtEndOfFile:FMessageWpp.kt$com.wmods.wppenhacer.xposed.core.components.FMessageWpp.kt</ID>
+    <ID>NewLineAtEndOfFile:FStatusWpp.kt$com.wmods.wppenhacer.xposed.core.components.FStatusWpp.kt</ID>
+    <ID>NewLineAtEndOfFile:FailureCode.kt$com.wmods.wppenhacer.diagnostics.FailureCode.kt</ID>
+    <ID>NewLineAtEndOfFile:FailureReportCodec.kt$com.wmods.wppenhacer.diagnostics.FailureReportCodec.kt</ID>
+    <ID>NewLineAtEndOfFile:FailureReportParser.kt$com.wmods.wppenhacer.diagnostics.FailureReportParser.kt</ID>
+    <ID>NewLineAtEndOfFile:FailureReportParserTest.kt$com.wmods.wppenhacer.diagnostics.FailureReportParserTest.kt</ID>
+    <ID>NewLineAtEndOfFile:FailureReportStore.kt$com.wmods.wppenhacer.diagnostics.FailureReportStore.kt</ID>
+    <ID>NewLineAtEndOfFile:Feature.kt$com.wmods.wppenhacer.xposed.core.Feature.kt</ID>
+    <ID>NewLineAtEndOfFile:FeatureFailureReport.kt$com.wmods.wppenhacer.diagnostics.FeatureFailureReport.kt</ID>
+    <ID>NewLineAtEndOfFile:FeatureFailureReportTest.kt$com.wmods.wppenhacer.diagnostics.FeatureFailureReportTest.kt</ID>
+    <ID>NewLineAtEndOfFile:FilterGroups.kt$com.wmods.wppenhacer.xposed.features.customization.FilterGroups.kt</ID>
+    <ID>NewLineAtEndOfFile:GroupAdmin.kt$com.wmods.wppenhacer.xposed.features.others.GroupAdmin.kt</ID>
+    <ID>NewLineAtEndOfFile:HKDFTest.kt$com.wmods.wppenhacer.xposed.utils.HKDFTest.kt</ID>
+    <ID>NewLineAtEndOfFile:HideChat.kt$com.wmods.wppenhacer.xposed.features.privacy.HideChat.kt</ID>
+    <ID>NewLineAtEndOfFile:HideSeenEntity.kt$com.wmods.wppenhacer.xposed.core.db.entity.HideSeenEntity.kt</ID>
+    <ID>NewLineAtEndOfFile:MessageDao.kt$com.wmods.wppenhacer.xposed.core.db.dao.MessageDao.kt</ID>
+    <ID>NewLineAtEndOfFile:MessageStore.kt$com.wmods.wppenhacer.xposed.core.db.MessageStore.kt</ID>
+    <ID>NewLineAtEndOfFile:PreferenceValueHooks.kt$com.wmods.wppenhacer.xposed.core.components.PreferenceValueHooks.kt</ID>
+    <ID>NewLineAtEndOfFile:PreferenceValueHooksTest.kt$com.wmods.wppenhacer.xposed.core.components.PreferenceValueHooksTest.kt</ID>
+    <ID>NewLineAtEndOfFile:ProtocolTreeNodeWpp.kt$com.wmods.wppenhacer.xposed.core.components.ProtocolTreeNodeWpp.kt</ID>
+    <ID>NewLineAtEndOfFile:ReportRedactor.kt$com.wmods.wppenhacer.diagnostics.ReportRedactor.kt</ID>
+    <ID>NewLineAtEndOfFile:ReportRedactorTest.kt$com.wmods.wppenhacer.diagnostics.ReportRedactorTest.kt</ID>
+    <ID>NewLineAtEndOfFile:SearchableFeatureTest.kt$com.wmods.wppenhacer.model.SearchableFeatureTest.kt</ID>
+    <ID>NewLineAtEndOfFile:ShareLimit.kt$com.wmods.wppenhacer.xposed.features.general.ShareLimit.kt</ID>
+    <ID>NewLineAtEndOfFile:SimulatedFeatureFailureTest.kt$com.wmods.wppenhacer.diagnostics.SimulatedFeatureFailureTest.kt</ID>
+    <ID>NewLineAtEndOfFile:StatusItemWpp.kt$com.wmods.wppenhacer.xposed.core.components.StatusItemWpp.kt</ID>
+    <ID>NewLineAtEndOfFile:TargetVersions.kt$com.wmods.wppenhacer.compat.TargetVersions.kt</ID>
+    <ID>NewLineAtEndOfFile:TargetVersionsTest.kt$com.wmods.wppenhacer.compat.TargetVersionsTest.kt</ID>
+    <ID>NewLineAtEndOfFile:TextStatusComposer.kt$com.wmods.wppenhacer.xposed.features.others.TextStatusComposer.kt</ID>
+    <ID>NewLineAtEndOfFile:TypingPrivacy.kt$com.wmods.wppenhacer.xposed.features.privacy.TypingPrivacy.kt</ID>
+    <ID>NewLineAtEndOfFile:UpdateOffer.kt$com.wmods.wppenhacer.compat.UpdateOffer.kt</ID>
+    <ID>NewLineAtEndOfFile:UpdateOfferTest.kt$com.wmods.wppenhacer.compat.UpdateOfferTest.kt</ID>
+    <ID>NewLineAtEndOfFile:UtilsExtensions.kt$com.wmods.wppenhacer.xposed.utils.UtilsExtensions.kt</ID>
+    <ID>NewLineAtEndOfFile:ViewOnce.kt$com.wmods.wppenhacer.xposed.features.privacy.ViewOnce.kt</ID>
+    <ID>NewLineAtEndOfFile:WaContactWpp.kt$com.wmods.wppenhacer.xposed.core.components.WaContactWpp.kt</ID>
+    <ID>NewLineAtEndOfFile:WhatsAppContactPickerLauncherTest.kt$com.wmods.wppenhacer.utils.WhatsAppContactPickerLauncherTest.kt</ID>
+    <ID>NewLineAtEndOfFile:WppXposed.kt$com.wmods.wppenhacer.WppXposed.kt</ID>
+    <ID>PrintStackTrace:AudioPlayerDialog.kt$AudioPlayerDialog$e</ID>
+    <ID>PrintStackTrace:TextEditorActivity.kt$TextEditorActivity$e</ID>
+    <ID>PrintStackTrace:UpdateChecker.kt$UpdateChecker$e</ID>
+    <ID>SerialVersionUIDInSerializableClass:ContactData.kt$ContactData : Serializable</ID>
+    <ID>SerialVersionUIDInSerializableClass:ContactPickerResult.kt$ContactPickerResult : Serializable</ID>
+    <ID>SerialVersionUIDInSerializableClass:CustomView.kt$CustomView$CachedRuleItem : Serializable</ID>
+    <ID>SerialVersionUIDInSerializableClass:CustomView.kt$CustomView$SelectorPart : Serializable</ID>
+    <ID>SerialVersionUIDInSerializableClass:CustomView.kt$CustomView$SerialDeclaration : Serializable</ID>
+    <ID>SerialVersionUIDInSerializableClass:CustomView.kt$CustomView$SerialTerm : Serializable</ID>
+    <ID>SpreadOperator:AntiRevoke.kt$AntiRevoke.&lt;no name provided&gt;$(*params)</ID>
+    <ID>SpreadOperator:CallPrivacy.kt$CallPrivacy.&lt;no name provided&gt;$(endCallMethod, mVoipManager, *params)</ID>
+    <ID>SpreadOperator:CallPrivacy.kt$CallPrivacy.&lt;no name provided&gt;$(rejectCallMethod, mVoipManager, *params)</ID>
+    <ID>SpreadOperator:ContactVerify.kt$ContactVerify$(*params)</ID>
+    <ID>SpreadOperator:ReflectionUtils.kt$ReflectionUtils$(instance, *actualArgs)</ID>
+    <ID>SpreadOperator:ReflectionUtils.kt$ReflectionUtils$(method.name, *method.parameterTypes)</ID>
+    <ID>SpreadOperator:SeenTick.kt$SeenTick$(*args)</ID>
+    <ID>SpreadOperator:SeparateGroup.kt$SeparateGroup.&lt;no name provided&gt;$(*params)</ID>
+    <ID>SpreadOperator:StateListDrawableCompact.kt$StateListDrawableCompact$( drawableClass, "getStateCount", *emptyArray&lt;Class&lt;*&gt;&gt;() )</ID>
+    <ID>SpreadOperator:Unobfuscator.kt$Unobfuscator$(*interfaces)</ID>
+    <ID>SpreadOperator:Unobfuscator.kt$Unobfuscator$(*method.parameterTypes)</ID>
+    <ID>SpreadOperator:UnobfuscatorCache.kt$UnobfuscatorCache$(cls, *paramTypes)</ID>
+    <ID>SpreadOperator:UnobfuscatorCache.kt$UnobfuscatorCache$(cls, value.getString("name"), *paramTypes)</ID>
+    <ID>SpreadOperator:WppCore.kt$WppCore$(getActionUser(), *newObject)</ID>
+    <ID>SwallowedException:FMessageWpp.kt$FMessageWpp$e: Exception</ID>
+    <ID>SwallowedException:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp.KeyValueWpp$e: Exception</ID>
+    <ID>SwallowedException:RootDiagnostics.kt$RootDiagnostics$e: Exception</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:ReflectionUtils.kt$ReflectionUtils$Throwable()</ID>
+    <ID>ThrowingExceptionsWithoutMessageOrCause:WppCore.kt$WppCore$Exception()</ID>
+    <ID>ThrowsCount:AudioOpusConverter.kt$AudioOpusConverter$@JvmStatic fun convert(filePath: String): File?</ID>
+    <ID>ThrowsCount:CallRecording.kt$CallRecording$private fun openOutputTarget( bridge: WaeIIFace?, preferredDir: File, fileName: String ): OutputTarget</ID>
+    <ID>ThrowsCount:FailureReportParser.kt$FailureReportParser.ReportReader$private fun build(fields: Map&lt;String, Any?&gt;): FeatureFailureReport</ID>
+    <ID>ThrowsCount:HKDF.kt$HKDF$fun deriveSecrets(inputKeyMaterial: ByteArray, salt: ByteArray, info: ByteArray?, outputLength: Int): ByteArray</ID>
+    <ID>ThrowsCount:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic fun loadBroadcastTagField(classLoader: ClassLoader): Field</ID>
+    <ID>ThrowsCount:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic fun loadGetEditMessageMethod(loader: ClassLoader): Method</ID>
+    <ID>ThrowsCount:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic fun loadSendPresenceMethod(loader: ClassLoader): Method</ID>
+    <ID>ThrowsCount:Unobfuscator.kt$Unobfuscator$@Throws(Exception::class) @JvmStatic fun loadViewOnceMethod(classLoader: ClassLoader): Array&lt;Method&gt;</ID>
+    <ID>ThrowsCount:UnobfuscatorCache.kt$UnobfuscatorCache$fun getMethods(loader: ClassLoader, functionCall: FunctionCall&lt;Array&lt;Method&gt;&gt;): Array&lt;Method&gt;</ID>
+    <ID>TooGenericExceptionCaught:AboutContactPicker.kt$AboutContactPicker.ContactPickerDataProvider$throwable: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AboutContactPicker.kt$AboutContactPicker.PickerController$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AboutContactPicker.kt$AboutContactPicker.PickerController$throwable: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AlertDialogWpp.kt$AlertDialogWpp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AlertDialogWpp.kt$AlertDialogWpp.Companion$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:AntiRevoke.kt$AntiRevoke$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AntiRevoke.kt$AntiRevoke.Companion$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:App.kt$App$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AudioOpusConverter.kt$AudioOpusConverter$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:BackupRestore.kt$BackupRestore.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BridgeClientKt.kt$BridgeClientKt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CDSharedPreferences.kt$CDSharedPreferences$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CallRecording.kt$CallRecording$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CallRecording.kt$CallRecording$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CallRecording.kt$CallRecording$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CallRecordingSettingsActivity.kt$CallRecordingSettingsActivity$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:CaptureDevice.kt$CaptureDevice.&lt;no name provided&gt;$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ContactPickerPreference.kt$ContactPickerPreference$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:ContactVerify.kt$ContactVerify$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ContextMenuActionProvider.kt$ContextMenuActionProvider.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ConversationItemListener.kt$ConversationItemListener.&lt;no name provided&gt;.&lt;no name provided&gt;$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CustomPrivacy.kt$CustomPrivacy$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CustomPrivacy.kt$CustomPrivacy.&lt;no name provided&gt;$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CustomView.kt$CustomView$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CustomView.kt$CustomView.DrawableCache$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CustomView.kt$CustomView.DrawableCache$throwable: Throwable</ID>
+    <ID>TooGenericExceptionCaught:DesignUtils.kt$DesignUtils$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DownloadProfile.kt$DownloadProfile.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DownloadViewOnce.kt$DownloadViewOnce.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FMessageWpp.kt$FMessageWpp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FMessageWpp.kt$FMessageWpp.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FMessageWpp.kt$FMessageWpp.UserJid$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FStatusWpp.kt$FStatusWpp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FStatusWpp.kt$FStatusWpp.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FStatusWpp.kt$FStatusWpp.FStatusKey$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FeatureLoader.kt$FeatureLoader.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FeatureLoader.kt$FeatureLoader.Companion$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:FeatureLoader.kt$FeatureLoader.Companion.&lt;no name provided&gt;$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:FileReaderPreference.kt$FileReaderPreference$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FileSelectPreference.kt$FileSelectPreference$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:FilterGroups.kt$FilterGroups$throwable: Throwable</ID>
+    <ID>TooGenericExceptionCaught:FloatingBottomBar.kt$FloatingBottomBar$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:GoogleTranslate.kt$GoogleTranslate$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GoogleTranslate.kt$GoogleTranslate.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GoogleTranslateChatUi.kt$GoogleTranslateChatUi$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:GroupAdmin.kt$GroupAdmin.&lt;no name provided&gt;$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:HomeFragment.kt$HomeFragment$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IGStatusAdapter.kt$IGStatusAdapter$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:IGStatusAdapter.kt$IGStatusAdapter.IGStatusViewHolder$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:JumpFirstMessage.kt$JumpFirstMessage$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:JumpFirstMessage.kt$JumpFirstMessage.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MediaPreview.kt$MediaPreview$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MediaPreview.kt$MediaPreview$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:MenuHome.kt$MenuHome$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MessageHistoryStore.kt$MessageHistoryStore$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:MessageStore.kt$MessageStore$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MinorFixes.kt$MinorFixes$error: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Others.kt$Others$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Others.kt$Others$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Others.kt$Others.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp.KeyValueWpp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp.KeyValueWpp.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProviderClientKt.kt$ProviderClientKt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:RecordingsFragment.kt$RecordingsFragment$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:RootDiagnostics.kt$RootDiagnostics$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SeenTick.kt$SeenTick$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SeenTick.kt$SeenTick$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:SeenTick.kt$SeenTick$ex: Exception</ID>
+    <ID>TooGenericExceptionCaught:ShowEditMessage.kt$ShowEditMessage.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ShowOnline.kt$ShowOnline.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:StateListDrawableCompact.kt$StateListDrawableCompact$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:StatusDownload.kt$StatusDownload$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:TextEditorActivity.kt$TextEditorActivity$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TextStatusComposer.kt$TextStatusComposer.&lt;no name provided&gt;$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ToastViewer.kt$ToastViewer$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:UnobfuscatorCache.kt$UnobfuscatorCache$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:UpdateChecker.kt$UpdateChecker$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Utils.kt$Utils$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:WaContactWpp.kt$WaContactWpp$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:WaContactWpp.kt$WaContactWpp.Companion$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:WallpaperView.kt$WallpaperView$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:WppCore.kt$WppCore$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:WppCore.kt$WppCore$exception: Exception</ID>
+    <ID>TooGenericExceptionThrown:AlertDialogWpp.kt$AlertDialogWpp$throw RuntimeException("Failed to create AlertDialogWpp")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception( "Failed to transcribe audio: ${response.code} - ${response.message}" )</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("API key not provided")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("Failed to check transcription status: ${response.code}")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("Failed to start transcription: ${response.code}")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("Failed to upload audio: ${response.code}")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("Groq API key not provided")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("Transcription error: $error")</ID>
+    <ID>TooGenericExceptionThrown:AudioTranscript.kt$AudioTranscript$throw Exception("Transcription failed")</ID>
+    <ID>TooGenericExceptionThrown:FMessageWpp.kt$FMessageWpp$throw RuntimeException("Object fMessage is not a FMessage Instance")</ID>
+    <ID>TooGenericExceptionThrown:FMessageWpp.kt$FMessageWpp$throw RuntimeException("Object fMessage is null")</ID>
+    <ID>TooGenericExceptionThrown:FStatusWpp.kt$FStatusWpp$throw RuntimeException("Object FStatus is null")</ID>
+    <ID>TooGenericExceptionThrown:FStatusWpp.kt$FStatusWpp$throw RuntimeException("Object is not a FStatus Instance")</ID>
+    <ID>TooGenericExceptionThrown:FeatureLoader.kt$FeatureLoader.Companion.&lt;no name provided&gt;$throw Exception(errorMsg)</ID>
+    <ID>TooGenericExceptionThrown:MediaPreview.kt$MediaPreview$throw Exception("Failed to download media")</ID>
+    <ID>TooGenericExceptionThrown:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp$throw RuntimeException("object is not a ProtocolTreeNode")</ID>
+    <ID>TooGenericExceptionThrown:ProtocolTreeNodeWpp.kt$ProtocolTreeNodeWpp.KeyValueWpp$throw RuntimeException("object is not a KeyValue")</ID>
+    <ID>TooGenericExceptionThrown:ReflectionUtils.kt$ReflectionUtils$throw RuntimeException("Class name is null")</ID>
+    <ID>TooGenericExceptionThrown:ReflectionUtils.kt$ReflectionUtils$throw RuntimeException("Constructor not found")</ID>
+    <ID>TooGenericExceptionThrown:ReflectionUtils.kt$ReflectionUtils$throw RuntimeException("Field not found")</ID>
+    <ID>TooGenericExceptionThrown:ReflectionUtils.kt$ReflectionUtils$throw RuntimeException("Method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("AntiRevokeConvChat field not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ArchiveHideView method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("BlueOnReplayMessageJob method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("BlueOnReplayWaJobManager method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("BroadcastTag class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("BroadcastTag field not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("BroadcastTag method support not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("BubbleDrawable method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("Class SensorEventListener not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ConversationsFragment A00 method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("CoreMessageStore class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("DialogView class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("DndMode method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("EnableCountTab method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("EnableCountTabBadgeWrapper method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("Fab method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("Filter dimen ID not found in ConversationsFragment")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ForwardTag method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ForwardTag method support not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("GetStatusUser ID not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("GetStatusUser method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("GetTab method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("GhostMode method not found parameter type")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("GhostMode method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("HideViewSendReadJob method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("HomeConversationFragmentMethod not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("IconTab method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("LoadDateWrapper method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("MaterialShapeDrawable class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("MenuManager class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("MenuStatus method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("Message class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("MessageKey class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("MessageKey field not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("NewMessage method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("Not Found StatusPlaybackViewClass")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("OnCallReceiver method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("OnChangeStatus method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("PinnedHashSet method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ProcessVideoQuality method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("Props method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("SendPresence method interface list empty")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("SendPresence method interface method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("SendPresence method not found 2")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("SendPresence method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("TabCount method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("TabFragment method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("TabList method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("TabName ID not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("TabName method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("UnknownStatusPlayback method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("UserJidConversationDelegate field not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ViewOnce method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("ViewOnceDownloadMenu method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw Exception("onDispatchMessage method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("AbsViewHolder class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ActionUser class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("Ballon Border method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("BlueOnReplayViewButton method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("BubbleRelativeLayout class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("CachedMessageStore class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("CallerMessageEdit method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ChatFilterView method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ChatLimitDelete class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ChatLimitDelete method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ChatLimitDelete2 method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("CheckCustomRom method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("CheckEmulator method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("CheckOnline method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("Class $className not found!")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ConversationsFragment height calculation method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ConversationsFragment update layout method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ConversationsManager class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("CopiedMessage method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("DateWrapper method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("Expiration class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("FMessage Timestamp method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("FieldExpireTime method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("FilterAdapter class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("FilterView class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("Filters class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ForwardAudioType method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("Fragment class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("FragmentView method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("GetEditMessage method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("GetInvokeField method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("GetViewConversation method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("GroupCheckAdmin class data not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("GroupCheckAdmin method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("HeaderChannelItem class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ImageViewContainer class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("JidFactory method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ListUpdateItems method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("LockedChats method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("MaterialAlertDialog not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("MeManager class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("MediaQualitySelection method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("MediaType field not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("MediaType: aux method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("MessageEdit method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("NewMessage method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("NewsletterDataItem class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("Notification invoked method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("OnInsertReceipt method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("OnMenuItemSelected method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("OnPlaybackFinished method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("OnTabItemAdd method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("OnUpdateStatusChanged method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("OriginFMessageField field not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("PinnedInChat method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ProcessImageQuality class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ReadReceiptMethod method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("RecreateFragment method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("RemoveChannelRec class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("RootDetector method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("RunNextStatus method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SeeMore constructor 1 not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SeeMore constructor 2 not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SendSticker method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SenderPlayed class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SenderPlayed method not found 2")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SenderPlayedBusiness method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("SetEditMessage method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("StartPrefsConfig constructor not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("StatusInfo class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("StatusListUpdates class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("StatusPlaybackReply method not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("TabFrame class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("VideoViewContainer class not found")</ID>
+    <ID>TooGenericExceptionThrown:Unobfuscator.kt$Unobfuscator$throw RuntimeException("ViewAddSearchBar method not found")</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Constructor is null")</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting HashMap $key: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting class $key: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting classes $methodName: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting field $methodName: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting fields $methodName: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting method $methodName: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting methods $methodName: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Error getting number $methodName: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("HashMap is null")</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw Exception("Number is null")</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw RuntimeException("Can't initialize UnobfuscatorCache: ${e.message}", e)</ID>
+    <ID>TooGenericExceptionThrown:UnobfuscatorCache.kt$UnobfuscatorCache$throw RuntimeException(e)</ID>
+    <ID>TooGenericExceptionThrown:WaContactWpp.kt$WaContactWpp$throw RuntimeException("instance cannot be null")</ID>
+    <ID>TooGenericExceptionThrown:WaContactWpp.kt$WaContactWpp$throw RuntimeException("object is not a WaContactWpp")</ID>
+    <ID>TooGenericExceptionThrown:WhatsAppContactPickerLauncher.kt$WhatsAppContactPickerLauncher$throw Exception("Class About not found")</ID>
+    <ID>TooGenericExceptionThrown:WhatsAppContactPickerLauncher.kt$WhatsAppContactPickerLauncher$throw Exception("Class SettingsNotifications not found")</ID>
+    <ID>TooGenericExceptionThrown:WppCore.kt$WppCore$throw Exception("Bridge client not initialized")</ID>
+    <ID>TooGenericExceptionThrown:WppCore.kt$WppCore$throw Exception("Failed connect to Bridge")</ID>
+    <ID>TooGenericExceptionThrown:WppCore.kt$WppCore$throw Exception()</ID>
+    <ID>TooGenericExceptionThrown:WppCore.kt$WppCore$throw Exception(context.getString(R.string.bridge_error))</ID>
+    <ID>TooManyFunctions:Unobfuscator.kt$Unobfuscator</ID>
+    <ID>TooManyFunctions:WppCore.kt$WppCore</ID>
+    <ID>UnusedParameter:AboutContactPicker.kt$AboutContactPicker.ContactPickerDataProvider$activity: Activity</ID>
+    <ID>UnusedParameter:AboutContactPicker.kt$AboutContactPicker.ContactPickerDataProvider$fallbackDisplayName: String? = null</ID>
+    <ID>UnusedParameter:CustomView.kt$CustomView.DrawableCache$height: Int</ID>
+    <ID>UnusedParameter:CustomView.kt$CustomView.DrawableCache$width: Int</ID>
+    <ID>UnusedParameter:WppCore.kt$WppCore$pref: SharedPreferences</ID>
+    <ID>UnusedPrivateMember:AboutContactPicker.kt$AboutContactPicker.ContactPickerDataProvider$private fun localPart(jid: String): String</ID>
+    <ID>UnusedPrivateMember:RecordingsFragment.kt$RecordingsFragment$private fun deleteSelectedRecordings()</ID>
+    <ID>UnusedPrivateMember:RecordingsFragment.kt$RecordingsFragment$private fun shareSelectedRecordings()</ID>
+    <ID>UnusedPrivateMember:RecordingsFragment.kt$RecordingsFragment$private fun showSortMenu()</ID>
+    <ID>UnusedPrivateProperty:AudioTranscript.kt$AudioTranscript.Companion$private const val TOAST_SHORT = 1</ID>
+    <ID>UnusedPrivateProperty:Others.kt$Others$private val hiddenHomeFilterViews = Collections.synchronizedMap(WeakHashMap&lt;View, Boolean&gt;())</ID>
+    <ID>UnusedPrivateProperty:RecordingsFragment.kt$RecordingsFragment$private var isGroupByContact = false</ID>
+    <ID>UseCheckOrError:MediaPreview.kt$MediaPreview$throw IllegalStateException("filePath is null")</ID>
+    <ID>UseRequire:MediaPreview.kt$MediaPreview$throw IllegalArgumentException("Encrypted file too small ($fileSize bytes)")</ID>
+    <ID>UseRequire:MediaPreview.kt$MediaPreview$throw IllegalArgumentException("Invalid media key.")</ID>
+    <ID>UtilityClassWithPublicConstructor:CustomView.kt$CustomView$GradientDrawableParser</ID>
+    <ID>UtilityClassWithPublicConstructor:FeatureLoader.kt$FeatureLoader</ID>
+    <ID>VariableNaming:AntiWa.kt$AntiWa$val FileConstructor = File::class.java.getConstructor(String::class.java)</ID>
+    <ID>VariableNaming:CustomView.kt$CustomView$val `val` = getExactValue(term, 0)</ID>
+    <ID>VariableNaming:WppXposed.kt$WppXposed$private var MODULE_PATH: String? = null</ID>
+    <ID>WildcardImport:GoogleTranslate.kt$import okhttp3.*</ID>
+    <ID>WildcardImport:GoogleTranslateChatUi.kt$import android.widget.*</ID>
+    <ID>WildcardImport:GoogleTranslateSettingsTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

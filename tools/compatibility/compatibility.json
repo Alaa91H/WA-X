@@ -1,0 +1,1140 @@
+{
+  "schemaVersion": 1,
+  "title": "WaEnhancer compatibility matrix",
+  "purpose": "Single source of truth for target compatibility decisions. Replaces relying on res/values/arrays.xml alone. The curated sections below (matrix, evidence) are hand maintained; the derived section is regenerated from the source tree by tools/compatibility/extract_features.py and must never be edited by hand.",
+  "statusVocabulary": {
+    "supported": "Every resolver this feature depends on was observed to resolve on this exact target, at runtime, with evidence recorded under evidence.",
+    "degraded": "The feature loads, but at least one required resolver failed and the feature fell back to a legacy or partial path.",
+    "unsupported": "A required resolver is known not to resolve on this target. The feature must not be enabled.",
+    "unknown": "No resolver evidence has been collected for this cell yet. This is the only status permitted without evidence."
+  },
+  "evidencePolicy": {
+    "rule": "A cell may only be marked supported when evidence.resolvers lists every resolver the feature depends on and each entry has a verifiedAt timestamp and a result of resolved.",
+    "enforcedBy": "tools/compatibility/validate_compatibility.py",
+    "collectedAtRuntimeBy": "T51+ diagnostics; until then no cell may claim supported"
+  },
+  "resolutionTiers": {
+    "none": {
+      "meaning": "The feature references no internal resolution layer (Unobfuscator, ReflectionUtils, WppCore). It is driven purely by preferences or its own UI.",
+      "structurallyIndependent": true,
+      "note": "Structurally independent features cannot break on a WhatsApp update through resolution. They are still listed so the inventory stays complete."
+    },
+    "indirect": {
+      "meaning": "The feature resolves hook targets through ReflectionUtils or WppCore but calls no Unobfuscator resolver directly.",
+      "structurallyIndependent": false
+    },
+    "dexkit": {
+      "meaning": "The feature calls one or more Unobfuscator DexKit resolvers directly and therefore needs resolver evidence.",
+      "structurallyIndependent": false
+    }
+  },
+  "module": {
+    "minSdk": 28,
+    "targetSdk": 34,
+    "compileSdk": 37,
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "sdkDimension": {
+      "note": "A feature that resolves a native or framework symbol may still be constrained by API level. Per-feature SDK constraints are recorded in matrix overrides using the sdk key and are enforced by the validator.",
+      "example": "\"matrix\": { \"CallRecording\": { \"sdk\": { \"below28\": \"unsupported\" } } }"
+    },
+    "abiDimension": {
+      "note": "Native-backed features (Opus audio conversion) are constrained by the packaged ABIs. Per-feature ABI constraints use the abi key."
+    }
+  },
+  "packages": {
+    "whatsapp": {
+      "packageName": "com.whatsapp",
+      "applicationId": "com.wmods.wppenhacer",
+      "declaredVersions": [
+        "2.26.32.xx",
+        "2.26.34.xx",
+        "2.26.35.xx",
+        "2.26.36.xx",
+        "2.26.37.xx",
+        "2.26.38.xx",
+        "2.26.39.xx",
+        "2.26.40.xx"
+      ],
+      "declaredVersionsSource": "app/src/main/res/values/arrays.xml:string-array/supported_versions_wpp",
+      "defaultStatus": "unknown",
+      "declaredStatusNote": "declaredVersions is what the runtime version gate in FeatureLoader enforces. It is a maintainer declaration, not resolver evidence. defaultStatus stays unknown until T51+ supplies evidence."
+    },
+    "business": {
+      "packageName": "com.whatsapp.w4b",
+      "applicationId": "com.wmods.wppenhacer.w4b",
+      "declaredVersions": [
+        "2.26.32.xx",
+        "2.26.34.xx",
+        "2.26.35.xx",
+        "2.26.36.xx",
+        "2.26.37.xx",
+        "2.26.38.xx",
+        "2.26.39.xx"
+      ],
+      "declaredVersionsSource": "app/src/main/res/values/arrays.xml:string-array/supported_versions_business",
+      "defaultStatus": "unknown",
+      "declaredStatusNote": "Business trails WhatsApp by design; 2.26.40.xx is intentionally absent."
+    }
+  },
+  "matrix": {},
+  "evidence": {},
+  "derived": {
+    "generator": "tools/compatibility/extract_features.py",
+    "regenerateWith": "python3 tools/compatibility/extract_features.py --out tools/compatibility/derived_facts.json",
+    "featureCount": 64,
+    "features": [
+      {
+        "id": "DebugFeature",
+        "category": "others",
+        "resolutionTier": "none",
+        "resolutionSources": [],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "MinorFixes",
+        "category": "others",
+        "resolutionTier": "none",
+        "resolutionSources": [],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "ContactItemListener",
+        "category": "listeners",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadAbsViewHolder",
+          "loadOnChangeStatus",
+          "loadViewHolderField1"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "ConversationItemListener",
+        "category": "listeners",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "MenuStatusProvider",
+        "category": "providers",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadMenuManagerClass",
+          "loadMenuStatusMethod",
+          "loadStatusPlaybackCurrentIndexField"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "ShowEditMessage",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadCallerMessageEditMethod",
+          "loadGetEditMessageMethod",
+          "loadMessageEditMethod"
+        ],
+        "preferenceKeys": [
+          "antieditmessages"
+        ]
+      },
+      {
+        "id": "AntiRevoke",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "UnobfuscatorCache",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadAntiRevokeFStatusMethod",
+          "loadAntiRevokeMessageMethod",
+          "loadStatusPlaybackViewClass",
+          "loadUnknownStatusPlaybackMethod"
+        ],
+        "preferenceKeys": [
+          "toastdeleted"
+        ]
+      },
+      {
+        "id": "CustomToolbar",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadExpirationClass",
+          "loadOnMenuItemSelected"
+        ],
+        "preferenceKeys": [
+          "showbiohome",
+          "shownamehome"
+        ]
+      },
+      {
+        "id": "CustomView",
+        "category": "customization",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "custom_filters"
+        ]
+      },
+      {
+        "id": "SeenTick",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadBlueOnReplayMessageJobMethod",
+          "loadBlueOnReplayViewButtonMethod",
+          "loadBlueOnReplayWaJobManagerMethod",
+          "loadOnCreatedMenuConversation",
+          "loadStatusPlaybackReplyContainer",
+          "loadUnknownStatusPlaybackMethod",
+          "loadViewOnceDownloadMenuMethod"
+        ],
+        "preferenceKeys": [
+          "blueonreply",
+          "hidestatusview"
+        ]
+      },
+      {
+        "id": "BubbleColors",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadBallonBorderDrawable",
+          "loadBallonDateDrawable",
+          "loadBubbleDrawableMethod"
+        ],
+        "preferenceKeys": [
+          "bubble_color"
+        ]
+      },
+      {
+        "id": "CallPrivacy",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadAntiRevokeOnCallReceivedMethod",
+          "loadVoipManager"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "ActivityController",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadLockedAuthCheckMethod"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "CustomThemeV2",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadFragmentViewMethod",
+          "loadTabFrameClass"
+        ],
+        "preferenceKeys": [
+          "changecolor",
+          "wallpaper"
+        ]
+      },
+      {
+        "id": "FloatingBottomBar",
+        "category": "customization",
+        "resolutionTier": "none",
+        "resolutionSources": [],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "floating_bottom_bar"
+        ]
+      },
+      {
+        "id": "ChatLimit",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadChatLimitDelete2Method",
+          "loadChatLimitDeleteMethod",
+          "loadEphemeralInsertdb",
+          "loadFmessageTimestampField",
+          "loadSeeMoreConstructor"
+        ],
+        "preferenceKeys": [
+          "antidisappearing",
+          "removeseemore",
+          "revokeallmessages"
+        ]
+      },
+      {
+        "id": "SeparateGroup",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "UnobfuscatorCache",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadAddMenuAndroidX",
+          "loadEnableCountTabBadgeItem",
+          "loadEnableCountTabBadgeWrapper",
+          "loadEnableCountTabEmptyBadgeClass",
+          "loadEnableCountTabMethod",
+          "loadFabMethod",
+          "loadFragmentClass",
+          "loadGetFiltersMethod",
+          "loadGetTabMethod",
+          "loadIconTabMethod",
+          "loadRecreateFragmentConstructor",
+          "loadTabCountMethod",
+          "loadTabFragmentMethod",
+          "loadTabListMethod",
+          "loadTabNameMethod"
+        ],
+        "preferenceKeys": [
+          "separategroups"
+        ]
+      },
+      {
+        "id": "ShowOnline",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "UnobfuscatorCache",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadSendPresenceMethod",
+          "loadStatusUserMethod",
+          "loadTcTokenMethod",
+          "loadViewHolder"
+        ],
+        "preferenceKeys": [
+          "dotonline",
+          "showonlinetext"
+        ]
+      },
+      {
+        "id": "DndMode",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadDndModeMethod"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "FreezeLastSeen",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadFreezeSeenMethod"
+        ],
+        "preferenceKeys": [
+          "freezelastseen",
+          "ghostmode"
+        ]
+      },
+      {
+        "id": "TypingPrivacy",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadGhostModeMethod"
+        ],
+        "preferenceKeys": [
+          "ghostmode_r",
+          "ghostmode_t"
+        ]
+      },
+      {
+        "id": "HideChat",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadArchiveChatClass"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "HideSeen",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadHideViewSendReadJob",
+          "loadOndispatchMessage",
+          "loadReadReceiptMethod",
+          "loadReceiptMessageInfoClass",
+          "loadReceiptMethod",
+          "loadSenderPlayedBusiness",
+          "loadSenderPlayedMethod"
+        ],
+        "preferenceKeys": [
+          "hideaudioseen",
+          "hideonceseen",
+          "hideread",
+          "hideread_group",
+          "hidereceipt",
+          "hidestatusview"
+        ]
+      },
+      {
+        "id": "HideSeenView",
+        "category": "customization",
+        "resolutionTier": "none",
+        "resolutionSources": [],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "hide_seen_view"
+        ]
+      },
+      {
+        "id": "TagMessage",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadForwardClassMethod",
+          "loadForwardTagMethod"
+        ],
+        "preferenceKeys": [
+          "broadcast_tag",
+          "hidetag"
+        ]
+      },
+      {
+        "id": "HideTabs",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadOnMenuItemSelected",
+          "loadOnTabItemAddMethod",
+          "loadTabFrameClass",
+          "loadTabListMethod"
+        ],
+        "preferenceKeys": [
+          "igstatus"
+        ]
+      },
+      {
+        "id": "IGStatus",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadFabMethod",
+          "loadGetInvokeField",
+          "loadGetViewConversationMethod",
+          "loadOnUpdateStatusChanged",
+          "loadStatusInfoClass",
+          "loadStatusListUpdatesClass"
+        ],
+        "preferenceKeys": [
+          "igstatus"
+        ]
+      },
+      {
+        "id": "MediaQuality",
+        "category": "media",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "UnobfuscatorCache",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadBottomBarConfigClass",
+          "loadMediaDataVideoConfigurationClass",
+          "loadMediaQualitySelectionMethod",
+          "loadMediaTranscoderStart",
+          "loadProcessImageQualityClass",
+          "loadProcessVideoQualityClass",
+          "loadVideoTranscoderStartMethod"
+        ],
+        "preferenceKeys": [
+          "imagequality",
+          "videoquality"
+        ]
+      },
+      {
+        "id": "NewChat",
+        "category": "general",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "buttonaction",
+          "newchat"
+        ]
+      },
+      {
+        "id": "Others",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadAbsViewHolder",
+          "loadAdVerifyMethod",
+          "loadAddOptionSearchBarMethod",
+          "loadChatFilterViewMethod",
+          "loadCheckOnlineMethod",
+          "loadConversationRowClass",
+          "loadConversationsHeightMethod",
+          "loadCopiedMessageMethod",
+          "loadFilterDimenId",
+          "loadForwardAudioTypeMethod",
+          "loadGetCurrentPageInHomeField",
+          "loadMediaTypeMethod",
+          "loadMySearchBarMethod",
+          "loadNextStatusRunMethod",
+          "loadOnChangeStatus",
+          "loadOnPlaybackFinished",
+          "loadOriginFMessageField",
+          "loadPlaybackSpeed",
+          "loadPropsBooleanMethod",
+          "loadPropsIntegerMethod",
+          "loadProximitySensorListenerClasses",
+          "loadStateChangeMethod",
+          "loadStatusDataClass",
+          "loadStatusProfileMethod",
+          "loadStatusStyleMethod",
+          "loadSwipeUpInGroupMethod",
+          "loadViewAddSearchBarMethod",
+          "loadViewHolderField1"
+        ],
+        "preferenceKeys": [
+          "always_online",
+          "animation_emojis",
+          "audio_transcription",
+          "autonext_status",
+          "call_info",
+          "custom_filters",
+          "disable_ads",
+          "disable_expiration",
+          "disable_profile_status",
+          "disable_sensor_proximity",
+          "disable_swipe_up_in_group",
+          "doubletap2like",
+          "filterseen",
+          "floatingmenu",
+          "igstatus",
+          "menuwicon",
+          "metaai",
+          "novaconfig",
+          "oldstatus",
+          "proximity_audios",
+          "showonline",
+          "stamp_copied_message"
+        ]
+      },
+      {
+        "id": "PinnedLimit",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadPinnedFilterMethod",
+          "loadPinnedHashSetMethod",
+          "loadPinnedInChatMethod",
+          "loadSetPinnedLimitMethod"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "CustomTime",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadTimeToSecondsMethod"
+        ],
+        "preferenceKeys": [
+          "ampm",
+          "segundos"
+        ]
+      },
+      {
+        "id": "ShareLimit",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadMultiSelectionLimitInfoClass"
+        ],
+        "preferenceKeys": [
+          "removeforwardlimit"
+        ]
+      },
+      {
+        "id": "StatusDownload",
+        "category": "media",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "downloadstatus"
+        ]
+      },
+      {
+        "id": "ViewOnce",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadViewOnceMethod"
+        ],
+        "preferenceKeys": [
+          "viewonce"
+        ]
+      },
+      {
+        "id": "CallType",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "UnobfuscatorCache",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadStartOutgoingCallMethod"
+        ],
+        "preferenceKeys": [
+          "calltype"
+        ]
+      },
+      {
+        "id": "MediaPreview",
+        "category": "media",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadLayoutClass"
+        ],
+        "preferenceKeys": [
+          "media_preview"
+        ]
+      },
+      {
+        "id": "FilterGroups",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "UnobfuscatorCache"
+        ],
+        "resolverDependencies": [
+          "loadGetFiltersMethod",
+          "loadOnConversationsListChangedMethod",
+          "loadTabFragmentMethod"
+        ],
+        "preferenceKeys": [
+          "filtergroups",
+          "separategroups"
+        ]
+      },
+      {
+        "id": "Tasker",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadReceiptMethod"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "DeleteStatus",
+        "category": "general",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "DownloadViewOnce",
+        "category": "media",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadViewOnceDownloadMenuMethod"
+        ],
+        "preferenceKeys": [
+          "downloadviewonce"
+        ]
+      },
+      {
+        "id": "Channels",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadHeaderChannelItemClass",
+          "loadListChannelItemClass",
+          "loadListUpdateItems",
+          "loadRemoveChannelRecClass"
+        ],
+        "preferenceKeys": [
+          "channels",
+          "removechannel_rec"
+        ]
+      },
+      {
+        "id": "DownloadProfile",
+        "category": "media",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "ChatFilters",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadFilterAdaperClass"
+        ],
+        "preferenceKeys": [
+          "separategroups"
+        ]
+      },
+      {
+        "id": "GroupAdmin",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadGroupCheckAdminMethod",
+          "loadJidFactory"
+        ],
+        "preferenceKeys": [
+          "admin_grp"
+        ]
+      },
+      {
+        "id": "Stickers",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadStickerColoredOutline"
+        ],
+        "preferenceKeys": [
+          "alertsticker",
+          "remove_sticker_white_outline"
+        ]
+      },
+      {
+        "id": "CopyStatus",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadBlueOnReplayStatusViewMethod",
+          "loadBlueOnReplayViewButtonMethod"
+        ],
+        "preferenceKeys": [
+          "copystatus"
+        ]
+      },
+      {
+        "id": "CopySelectionMessage",
+        "category": "others",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "copy_selection_message"
+        ]
+      },
+      {
+        "id": "TextStatusComposer",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadTextStatusComposerOnCreate",
+          "loadTextStatusData",
+          "loadTextStatusDataFStatus"
+        ],
+        "preferenceKeys": [
+          "statuscomposer"
+        ]
+      },
+      {
+        "id": "ToastViewer",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadOnInsertReceipt",
+          "loadSeenReceiptForStatus"
+        ],
+        "preferenceKeys": [
+          "toast_viewed_message",
+          "toast_viewed_status"
+        ]
+      },
+      {
+        "id": "MenuHome",
+        "category": "others",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "buttonaction",
+          "ghostmode",
+          "open_wae",
+          "restartbutton",
+          "show_dndmode",
+          "show_freezeLastSeen"
+        ]
+      },
+      {
+        "id": "AntiWa",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadCheckCustomRom",
+          "loadCheckEmulator",
+          "loadRootDetector"
+        ],
+        "preferenceKeys": [
+          "bootloader_spoofer"
+        ]
+      },
+      {
+        "id": "CustomPrivacy",
+        "category": "privacy",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "AudioTranscript",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadTranscribeMethod",
+          "loadTranscriptSegment"
+        ],
+        "preferenceKeys": []
+      },
+      {
+        "id": "GoogleTranslate",
+        "category": "others",
+        "resolutionTier": "none",
+        "resolutionSources": [],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "google_translate"
+        ]
+      },
+      {
+        "id": "ContactVerify",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadDialerProfilePictureLoader",
+          "loadGetProfilePhoto",
+          "loadProfilePhotoProtocolHelperClass"
+        ],
+        "preferenceKeys": [
+          "verify_blocked_contact"
+        ]
+      },
+      {
+        "id": "LockedChatsEnhancer",
+        "category": "privacy",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "ReflectionUtils"
+        ],
+        "resolverDependencies": [
+          "loadChatCacheClass",
+          "loadLoadedContactsMethod",
+          "loadLockedChatsMethod",
+          "loadNotificationMethod"
+        ],
+        "preferenceKeys": [
+          "lockedchats_enhancer"
+        ]
+      },
+      {
+        "id": "CallRecording",
+        "category": "media",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "call_recording_enable",
+          "call_recording_toast",
+          "call_recording_use_root"
+        ]
+      },
+      {
+        "id": "BackupRestore",
+        "category": "others",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": [
+          "force_restore_backup_feature"
+        ]
+      },
+      {
+        "id": "JumpFirstMessage",
+        "category": "others",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadOnCreatedMenuConversation"
+        ],
+        "preferenceKeys": [
+          "jump_first_message"
+        ]
+      },
+      {
+        "id": "AboutContactPicker",
+        "category": "general",
+        "resolutionTier": "indirect",
+        "resolutionSources": [
+          "WppCore"
+        ],
+        "resolverDependencies": [],
+        "preferenceKeys": []
+      },
+      {
+        "id": "DefaultEmoji",
+        "category": "customization",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadDrawSpanMethods",
+          "loadGetSizeSpanMethods"
+        ],
+        "preferenceKeys": [
+          "disable_defemojis",
+          "force_disable_emojis"
+        ]
+      },
+      {
+        "id": "CaptureDevice",
+        "category": "general",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator"
+        ],
+        "resolverDependencies": [
+          "loadSharedMessageProcessorHandlePlaintextMethod"
+        ],
+        "preferenceKeys": [
+          "capture_device"
+        ]
+      },
+      {
+        "id": "ContextMenuActionProvider",
+        "category": "providers",
+        "resolutionTier": "dexkit",
+        "resolutionSources": [
+          "Unobfuscator",
+          "WppCore"
+        ],
+        "resolverDependencies": [
+          "loadPopupWindowMessageClass"
+        ],
+        "preferenceKeys": []
+      }
+    ]
+  }
+}

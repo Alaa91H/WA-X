@@ -6,6 +6,7 @@ when any of them regress:
 
   * lint baseline entries must not increase (0% tolerance)
   * unit tests must not fail/error and fewer tests must not execute
+  * Unobfuscator `!!` assertions must not increase (T13 ratchet)
   * every APK listed in the baseline must exist and must not grow more
     than the allowed percentage (default +2%)
 
@@ -55,12 +56,61 @@ import json
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BASELINE_REL = "tools/baseline/baseline.json"
 
-LINT_ID_RE = re.compile(r'^\s*id="')
+LINT_ISSUE_RE = re.compile(r"<issue\b")
+
+
+def count_lint_entries(path):
+    """Count baselined lint issues.
+
+    The count is taken from the parsed XML rather than by matching ``id="`` lines,
+    because that line-oriented form is sensitive to how the file happens to be
+    serialised: a reformat that puts the attributes on the ``<issue`` line made this
+    check count zero, which turned the lint gate into a silent no-op that reported a
+    pass. Counting elements cannot be defeated by formatting.
+
+    Returns None when the file cannot be parsed, so the caller can fail loudly rather
+    than treat an unreadable baseline as an empty one.
+    """
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError:
+        # Fall back to the textual form only for a file that is not well formed XML.
+        text = path.read_text(encoding="utf-8", errors="replace")
+        return len(LINT_ISSUE_RE.findall(text)) or None
+    return len(root.findall("issue"))
+
+
+BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT_RE = re.compile(r"//[^\n]*")
+
+
+def count_non_null_assertions(path):
+    """Count `!!` operators, ignoring comments and string literals.
+
+    A plain text count is wrong in both directions: a doc comment that *describes* the
+    assertion under removal inflates the number and makes the ratchet measure prose
+    rather than code, and a `!!` inside a string would deflate it. Only real operators
+    should count.
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    # Protect string literals before removing comments, so a comment marker inside a
+    # string cannot be treated as the start of a comment.
+    literals: list[str] = []
+
+    def stash(match: re.Match) -> str:
+        literals.append(match.group(0))
+        return "\x00STR%d\x00" % (len(literals) - 1)
+
+    text = re.sub(r'"(?:\\.|[^"\\])*"', stash, text)
+    text = BLOCK_COMMENT_RE.sub(" ", text)
+    text = LINE_COMMENT_RE.sub(" ", text)
+    return text.count("!!")
 TESTSUITE_RE = re.compile(r"<testsuite\b[^>]*>", re.DOTALL)
 ZERO_SHA_RE = re.compile(r"^0+$")
 
@@ -87,6 +137,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--before-sha", default=None, metavar="SHA")
     parser.add_argument("--max-apk-growth", type=float, default=2.0, metavar="PCT")
     parser.add_argument("--lint-file", default="app/lint-baseline.xml")
+    parser.add_argument(
+        "--unobfuscator",
+        default="app/src/main/java/com/wmods/wppenhacer/xposed/core/devkit/Unobfuscator.kt",
+        help="file the `!!` ratchet is measured against",
+    )
     parser.add_argument("--test-results", default="app/build/test-results")
     parser.add_argument("--apk-root", default="app/build/outputs/apk")
     return parser.parse_args()
@@ -197,6 +252,17 @@ def human_size(num_bytes: int) -> str:
 
 
 def main() -> int:
+    # Counting mode, used by generate_baseline.sh so that the recorded figure and the
+    # enforced figure come from one implementation rather than two that can drift.
+    if "--print-non-null-assertions" in sys.argv:
+        target = sys.argv[sys.argv.index("--print-non-null-assertions") + 1]
+        path = Path(target)
+        if not path.is_file():
+            print("error: not found: %s" % path, file=sys.stderr)
+            return 2
+        print(count_non_null_assertions(path))
+        return 0
+
     args = parse_args()
     checks: list[tuple[bool, str, str]] = []
     notices: list[str] = []
@@ -241,11 +307,10 @@ def main() -> int:
     if not lint_path.is_file():
         print("error: lint baseline not found: %s" % lint_path, file=sys.stderr)
         return 2
-    current_lint = sum(
-        1
-        for line in lint_path.read_text(encoding="utf-8", errors="replace").splitlines()
-        if LINT_ID_RE.match(line)
-    )
+    current_lint = count_lint_entries(lint_path)
+    if current_lint is None:
+        print("error: could not read lint baseline: %s" % lint_path, file=sys.stderr)
+        return 2
     if current_lint > base_lint:
         checks.append(
             (
@@ -257,6 +322,42 @@ def main() -> int:
         )
     else:
         checks.append((True, "lint baseline entries", "%d (baseline %d)" % (current_lint, base_lint)))
+
+    # --- Unobfuscator non-null assertions -------------------------------
+    # T13's "no new `!!`" criterion. The count is a ratchet: it may fall freely but never
+    # rise, so progress cannot be undone by a later change that reintroduces assertions.
+    unobfuscator_path = resolve(args.unobfuscator)
+    if not unobfuscator_path.is_file():
+        print("error: Unobfuscator not found: %s" % unobfuscator_path, file=sys.stderr)
+        return 2
+    base_bangs = (baseline.get("unobfuscator") or {}).get("nonNullAssertions")
+    if not isinstance(base_bangs, int):
+        base_bangs = None
+        notices.append(
+            "baseline from %s has no unobfuscator.nonNullAssertions; the `!!` "
+            "ratchet is disabled for this run" % source
+        )
+    else:
+        text = unobfuscator_path.read_text(encoding="utf-8", errors="replace")
+        current_bangs = count_non_null_assertions(unobfuscator_path)
+        if current_bangs > base_bangs:
+            checks.append(
+                (
+                    False,
+                    "Unobfuscator `!!` assertions",
+                    "%d > baseline %d (+%d) - resolve instead of asserting"
+                    % (current_bangs, base_bangs, current_bangs - base_bangs),
+                )
+            )
+        else:
+            checks.append(
+                (
+                    True,
+                    "Unobfuscator `!!` assertions",
+                    "%d (baseline %d, %+d)"
+                    % (current_bangs, base_bangs, current_bangs - base_bangs),
+                )
+            )
 
     # --- unit tests ------------------------------------------------------
     results_dir = resolve(args.test_results)

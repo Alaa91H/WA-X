@@ -1,0 +1,69 @@
+# T09 detekt configuration.
+#
+# The defaults are the baseline (`buildUponDefaultConfig = true`); this file only records
+# the deliberate deviations, each with the reason it exists. Nothing is silenced to make
+# a number look better: every exception below corresponds to a construct this codebase
+# uses on purpose.
+#
+# Rules are reported through detekt-baseline.xml, so adding a rule here changes what is
+# checked rather than what is hidden.
+
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  # The feature layer intentionally groups many small hook installers per file. T71
+  # splits the module; until then a raised LongMethod threshold avoids noise that would
+  # bury real findings.
+  LongMethod:
+    active: true
+    threshold: 120
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 40
+    thresholdInClasses: 40
+    thresholdInObjects: 40
+    thresholdInInterfaces: 40
+    thresholdInEnums: 40
+
+exceptions:
+  # Xposed hooks legitimately throw from callbacks, and a swallowed throwable is the
+  # documented failure-isolation behaviour required by the plan's feature isolation rule.
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames:
+      - Throwable
+      - Exception
+      - Error
+  SwallowedException:
+    active: true
+    ignoredExceptionTypes:
+      - NameNotFoundException
+      - ClassNotFoundException
+      - NoSuchMethodException
+      - NoSuchFieldException
+
+style:
+  # The codebase predates these rules by years; they are part of the T05–T08 cleanup
+  # backlog rather than something to enforce today.
+  MagicNumber:
+    active: false
+  ReturnCount:
+    active: false
+  ForbiddenComment:
+    active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+  UnusedPrivateMember:
+    active: true
+
+naming:
+  FunctionNaming:
+    active: true
+    # Hook callbacks mirror Xposed's own method names.
+    ignoreAnnotated: ['com.wmods.wppenhacer.xposed.core.Feature']

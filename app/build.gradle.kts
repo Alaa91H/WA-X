@@ -7,12 +7,18 @@ import kotlin.time.Duration.Companion.milliseconds
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kspPlugin)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.spotless)
 }
 
-val gitHash: String = providers.exec {
-    commandLine("git", "rev-parse", "HEAD")
-    isIgnoreExitValue = true
-}.standardOutput.asText.map { it.trim().uppercase(Locale.getDefault()).take(8) }.getOrElse("UNKNOWN")
+val gitHash: String =
+    providers
+        .exec {
+            commandLine("git", "rev-parse", "HEAD")
+            isIgnoreExitValue = true
+        }.standardOutput.asText
+        .map { it.trim().uppercase(Locale.getDefault()).take(8) }
+        .getOrElse("UNKNOWN")
 
 val baseVersionName = providers.gradleProperty("waeVersionName").get()
 val baseVersionCode = providers.gradleProperty("waeVersionCode").get().toInt()
@@ -73,7 +79,6 @@ android {
         }
 
         buildConfigField("Boolean", "RESET_ON_INSTALL", "true")
-
     }
 
     packaging {
@@ -108,7 +113,7 @@ android {
                 if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else signingConfigs["debug"]
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
 
@@ -120,7 +125,7 @@ android {
                 if (signingConfigs["config"].storeFile != null) signingConfigs["config"] else null
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -135,21 +140,64 @@ android {
         resValues = true
     }
 
-
     lint {
         disable += "SelectedPhotoAccess"
         warning += "MissingTranslation"
         baseline = file("lint-baseline.xml")
     }
 
+    // T09: static analysis. The baseline records the debt that already exists so the
+    // check is useful immediately; unlike the lint gate this one starts in report mode
+    // and is tightened as the debt is paid down.
+    detekt {
+        buildUponDefaultConfig = true
+        allRules = false
+        ignoreFailures = true
+        baseline = file("detekt-baseline.xml")
+        config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    }
+
+    // T09: formatting. Scoped to the files this plan created rather than the whole
+    // repository, because reformatting 171 pre-existing files in one change would bury
+    // the real diff. Widen the target as each area is touched.
+    spotless {
+        kotlin {
+            target(
+                "src/main/java/com/wmods/wppenhacer/compat/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/config/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/diagnostics/**/*.kt",
+                // T76-T160: platform engines and every feature package they serve.
+                "src/main/java/com/wmods/wppenhacer/platform/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/privacy/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/history/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/scheduler/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/automation/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/intelligence/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/media/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/theme/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/notifications/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/storage/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/multipackage/**/*.kt",
+                "src/main/java/com/wmods/wppenhacer/xposed/bridge/BridgeAccessPolicy.kt",
+                "src/main/java/com/wmods/wppenhacer/xposed/core/components/PreferenceValueHooks.kt",
+                "src/test/**/*.kt",
+            )
+            ktlint("1.5.0")
+        }
+        kotlinGradle {
+            target("*.kts")
+            ktlint("1.5.0")
+        }
+    }
 }
 
 androidComponents {
     onVariants { variant ->
-        val appName = when (variant.flavorName) {
-            "business" -> "WaEnhancer-Business"
-            else -> "WaEnhancer"
-        }
+        val appName =
+            when (variant.flavorName) {
+                "business" -> "WaEnhancer-Business"
+                else -> "WaEnhancer"
+            }
         variant.outputs.forEach { output ->
             output.outputFileName.set(output.versionName.map { "$appName-$it.apk" })
         }
@@ -195,7 +243,6 @@ dependencies {
     implementation(libs.remote.preferences)
 }
 
-
 configurations.all {
     exclude("androidx.appcompat", "appcompat")
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
@@ -212,7 +259,6 @@ interface InjectedExecOps {
     @get:Inject val execOps: ExecOperations
 }
 
-
 afterEvaluate {
     listOf("installWhatsappDebug", "installBusinessDebug").forEach { taskName ->
         tasks.findByName(taskName)?.doLast {
@@ -226,7 +272,7 @@ afterEvaluate {
                             "shell",
                             "am",
                             "force-stop",
-                            project.properties["debug_package_name"]?.toString()
+                            project.properties["debug_package_name"]?.toString(),
                         )
                     }
                     delay(3000.milliseconds)
@@ -237,7 +283,7 @@ afterEvaluate {
                             "am",
                             "start",
                             "-n",
-                            "$(cmd package resolve-activity --brief ${project.properties["debug_package_name"]} | tail -n 1)"
+                            "$(cmd package resolve-activity --brief ${project.properties["debug_package_name"]} | tail -n 1)",
                         )
                     }
                 }

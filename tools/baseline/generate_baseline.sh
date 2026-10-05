@@ -187,12 +187,21 @@ FEATURE_COUNT="$(printf '%s\n' "$FEATURES_RAW" | awk 'NF' | wc -l | tr -d ' ')"
 
 UNOBF_LINES="$(count_lines "$UNOBFUSCATOR")"
 UNOBF_LOAD_FUNCS="$(grep_count 'fun load' "$UNOBFUSCATOR")"
-UNOBF_BANGS="$(grep -o '!!' "$UNOBFUSCATOR" 2>/dev/null | wc -l | tr -d ' ' || true)"
+# Counted by check_baseline.py so the recorded figure and the enforced figure come from
+# one implementation. A plain `grep -o '!!'` also matches comments and string literals,
+# which both inflates the number and would let prose about the assertions change the
+# ratchet. T13 is what this measures.
+UNOBF_BANGS="$(python3 tools/baseline/check_baseline.py --print-non-null-assertions "$UNOBFUSCATOR" 2>/dev/null || echo null)"
 UNOBF_THROWS="$(grep_count 'throw ' "$UNOBFUSCATOR")"
 
 # ------------------------------------------------------------ lint baseline ---
 
-LINT_TOTAL="$(grep_count '^ *id="' "$LINT_BASELINE")"  # one id attribute per issue; ignores the <issues> root tag
+# Counted by element name rather than by matching `id="` lines: the line-oriented form
+# is sensitive to how the baseline happens to be serialised. A reformat that moves the
+# attributes onto the <issue line made this report 0, which then propagated a false
+# "no lint issues" into baseline.json and let check_baseline.py pass a growing baseline.
+LINT_TOTAL="$(grep -c '<issue[ >]' "$LINT_BASELINE" 2>/dev/null || true)"
+LINT_TOTAL="${LINT_TOTAL//[^0-9]/}"
 LINT_IDS_JSON="$(grep -o 'id="[^"]*"' "$LINT_BASELINE" 2>/dev/null \
     | sed 's/id="//; s/"$//' | sort | uniq -c | awk '{print $1, $2}' \
     | awk 'BEGIN{first=1; printf "{"} {if (!first) printf ","; first=0; printf "\n    \"%s\": %s", $2, $1} END{if (!first) printf "\n  "; printf "}"}' \

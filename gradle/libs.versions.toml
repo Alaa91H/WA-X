@@ -16,6 +16,8 @@ nav = "2.9.6"
 kotlin = "2.4.10"
 markwon = "4.6.2"
 remotePreferences = "0.8"
+detekt = "1.23.8"
+spotless = "7.2.1"
 
 [libraries]
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
@@ -52,3 +54,6 @@ remote-preferences = { module = "com.crossbowffs.remotepreferences:remoteprefere
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspPlugin = { id = "com.google.devtools.ksp", version = "2.3.10" }
+# T09: static analysis and formatting, both pinned so a build never silently changes rules.
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
