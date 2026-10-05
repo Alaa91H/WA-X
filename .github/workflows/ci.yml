@@ -1,17 +1,41 @@
-# WaEnhancer Android CI - one workflow, tag-driven releases.
+# =============================================================================
+# WaEnhancer — Android CI (single source of truth for building and releasing)
+# =============================================================================
+#
+# This is the ONLY workflow in the repository. It owns the whole pipeline:
+# build, unit tests, Android lint, formatting, static analysis, compatibility
+# matrix validation, baseline regression gate, APK signing, signature and
+# manifest verification, and GitHub Release publishing.
 #
 # Event matrix
-#   pull_request      : build, unit tests, Android lint and the baseline regression gate.
-#   push (master)     : the same checks plus signed debug APK artifacts for testing.
-#   push (tag v*)     : release-signed APKs, signature verification and GitHub Release.
-#   workflow_dispatch : manual run; also starts the release build for a tag created by CI,
-#                       because tags pushed with GITHUB_TOKEN do not trigger new runs.
+#   pull_request      Verify only. Builds, tests, lints and signs debug APKs,
+#                     but uploads nothing and publishes nothing.
+#   push to master    The same verification, then publishes the signed debug
+#                     APKs as a CI artifact for manual testing. No Release.
+#   push of tag v*    The release path: release-signed APKs, signature and
+#                     manifest verification, then a GitHub Release.
+#   workflow_dispatch Same as a master push, or the release path when dispatched
+#                     on an existing tag.
 #
-# Release guarantees enforced by this file
-#   * waeVersionName must match the tag without the leading "v".
-#   * Only tag builds use the release keystore; every other build uses the debug key.
+# Release contract (enforced, not documented-only)
+#   * The tag, the configured version and the version baked into the APK are
+#     all the same string. Any mismatch fails the run.
+#     gradle.properties -> waeVersionName == <tag> without the leading "v"
+#     APK versionName   == waeVersionName
+#     APK versionCode   == waeVersionCode
+#   * Only a tag build is signed with the release keystore. Every other build
+#     is signed with the debug key, so a release key never signs an unreleased
+#     artifact and a debug-signed APK never reaches a Release.
 #   * A GitHub Release is created only from a tag, never from a branch push.
-#   * Release assets are exactly two deterministic .apk files and nothing else.
+#   * Release assets are exactly two .apk files and nothing else. The staging
+#     directory is rejected if it holds any other file type.
+#   * Release notes come from changelog.txt, which must be present and must
+#     name the released version.
+#
+# Actions are pinned to commit SHAs so the pipeline cannot be changed from a
+# pull request or by a compromised tag.
+# =============================================================================
+
 name: Android CI
 
 on:
@@ -25,57 +49,84 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# Superseded runs on a branch are pointless, so they are cancelled. A release
+# run must never be cancelled halfway through.
 concurrency:
-  group: waenhancer-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: android-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 permissions:
   contents: read
 
 env:
-  JAVA_VERSION: "17"
+  JAVA_VERSION: '17'
+  GRADLE_ARGS: --no-daemon --stacktrace
+  # Explicit APK growth budget for the regression gate. The 1.7.0 platform and
+  # resolver work grew the debug APK by ~3.0%. The budget is a reviewed number,
+  # not a default: lower it as the baseline is paid down, and raise it only with
+  # a reason recorded in the pull request.
+  MAX_APK_GROWTH_PCT: '4.0'
 
 jobs:
   build:
-    name: Build, test, lint & sign
+    name: Verify, test and build
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 60
     permissions:
       contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_code: ${{ steps.version.outputs.version_code }}
+      tag: ${{ steps.version.outputs.tag }}
+      release: ${{ steps.version.outputs.is_tag }}
+      artifact_name: ${{ steps.version.outputs.artifact_name }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
+          # The baseline gate and the compatibility validator both need history.
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: gradle
 
-      - name: Resolve and validate version
+      # The single point where the tag, the configured version and the release
+      # decision are derived. Every later step reads these outputs instead of
+      # re-deriving them, so the pipeline cannot disagree with itself.
+      - name: Resolve version and validate the tag
         id: version
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
-          VERSION_CODE="$(sed -n 's/^waeVersionCode=//p' gradle.properties | tail -n 1 | tr -d '\r')"
-          EXPECTED_TAG="v$VERSION"
 
-          if [[ -z "$VERSION" || -z "$VERSION_CODE" ]]; then
-            echo "::error::waeVersionName/waeVersionCode are missing from gradle.properties"
-            exit 1
-          fi
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Invalid semantic version: $VERSION"
+          property() {
+            local value
+            value="$(sed -n "s/^$1=//p" gradle.properties | tail -n 1 | tr -d '\r')"
+            if [[ -z "$value" ]]; then
+              echo "::error::$1 is missing from gradle.properties"
+              exit 1
+            fi
+            echo "$value"
+          }
+
+          VERSION="$(property waeVersionName)"
+          VERSION_CODE="$(property waeVersionCode)"
+          TAG="v$VERSION"
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::waeVersionName is not a release version: $VERSION"
             exit 1
           fi
           if [[ ! "$VERSION_CODE" =~ ^[0-9]+$ ]]; then
-            echo "::error::Invalid Android version code: $VERSION_CODE"
+            echo "::error::waeVersionCode is not an integer: $VERSION_CODE"
             exit 1
           fi
 
@@ -83,24 +134,46 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             IS_TAG=true
             EVENT_TAG="${GITHUB_REF#refs/tags/}"
-            if [[ "$EVENT_TAG" != "$EXPECTED_TAG" ]]; then
-              echo "::error::Tag $EVENT_TAG does not match configured version $EXPECTED_TAG"
+            if [[ "$EVENT_TAG" != "$TAG" ]]; then
+              echo "::error::Tag $EVENT_TAG does not match the configured version $TAG"
+              exit 1
+            fi
+            if gh release view "$EVENT_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "::error::Release $EVENT_TAG already exists; bump the version instead of reusing it"
               exit 1
             fi
           fi
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "tag=$EXPECTED_TAG" >> "$GITHUB_OUTPUT"
-          echo "is_tag=$IS_TAG" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION (code $VERSION_CODE); release tag: $EXPECTED_TAG; tag run: $IS_TAG"
+          SHA8="${GITHUB_SHA:0:8}"
+          if [[ "$IS_TAG" == "true" ]]; then
+            ARTIFACT="apk-$VERSION-$SHA8"
+          else
+            ARTIFACT="apk-$VERSION-ci-$SHA8"
+          fi
 
-      - name: Grant Gradle wrapper permission
+          {
+            echo "version=$VERSION"
+            echo "version_code=$VERSION_CODE"
+            echo "tag=$TAG"
+            echo "is_tag=$IS_TAG"
+            echo "artifact_name=$ARTIFACT"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "### Version resolution" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | \`$VERSION\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version code | \`$VERSION_CODE\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Release tag | \`$TAG\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Mode | $(if [[ "$IS_TAG" == true ]]; then echo 'release'; else echo 'verification only'; fi) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit | \`${GITHUB_SHA:0:8}\` |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Make the Gradle wrapper executable
         run: chmod +x gradlew
 
-      - name: Build debug variants and run unit tests
+      - name: Assemble debug APKs and run the unit tests
         run: |
-          ./gradlew --no-daemon --stacktrace \
+          ./gradlew $GRADLE_ARGS \
             assembleWhatsappDebug \
             assembleBusinessDebug \
             testWhatsappDebugUnitTest \
@@ -108,29 +181,50 @@ jobs:
 
       - name: Run Android lint
         run: |
-          ./gradlew --no-daemon --stacktrace --continue \
+          ./gradlew $GRADLE_ARGS --continue \
             lintWhatsappDebug \
             lintBusinessDebug
 
-      # The reference baseline comes from the base revision (pull-request base branch,
-      # pre-push commit or HEAD^), never from the change's own copy, so a change cannot
-      # raise the limits it is checked against by editing baseline.json.
-      - name: Enforce baseline regression gates
+      # The reference baseline is taken from the base revision (pull-request base
+      # branch, pre-push commit or HEAD^), never from this change's own copy, so a
+      # change cannot raise the limits it is measured against by editing
+      # baseline.json in the same commit.
+      - name: Enforce the baseline regression gate
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           BEFORE_SHA: ${{ github.event.before }}
-        shell: bash
+          MAX_APK_GROWTH_PCT: ${{ env.MAX_APK_GROWTH_PCT }}
         run: |
-          set -euo pipefail
           python3 tools/baseline/check_baseline.py \
             --event-name "$EVENT_NAME" \
             --base-ref "$BASE_REF" \
             --pr-base-sha "$PR_BASE_SHA" \
-            --before-sha "$BEFORE_SHA"
+            --before-sha "$BEFORE_SHA" \
+            --max-apk-growth "$MAX_APK_GROWTH_PCT"
 
-      - name: Configure release signing
+      # Formatting is a gate. detekt runs against its own baseline in report mode
+      # so it surfaces debt without blocking, and is tightened as the baseline
+      # shrinks.
+      - name: Check formatting and static analysis
+        run: |
+          ./gradlew $GRADLE_ARGS \
+            spotlessCheck \
+            detekt
+
+      # The compatibility matrix must stay in sync with the source tree, must
+      # cover every registered feature, and must not claim `supported` without
+      # recorded resolver evidence. docs/COMPATIBILITY.md is generated, so a
+      # stale render fails too.
+      - name: Validate the compatibility matrix
+        run: |
+          set -euo pipefail
+          python3 tools/compatibility/test_validator.py
+          python3 tools/compatibility/validate_compatibility.py
+          python3 tools/compatibility/sync_generated.py --check
+
+      - name: Import the release keystore
         if: steps.version.outputs.is_tag == 'true'
         env:
           KEY_STORE: ${{ secrets.KEY_STORE }}
@@ -140,6 +234,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           for name in KEY_STORE KEY_STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [[ -z "${!name:-}" ]]; then
               echo "::error::Missing required signing secret: $name"
@@ -153,7 +248,20 @@ jobs:
           printf '%s\n' "androidStoreFile=key.jks" >> gradle.properties
           printf '%s' "$KEY_STORE" | base64 --decode > key.jks
 
-      - name: Prepare signed APKs
+          # key.jks is read back here so a truncated or mistyped secret fails
+          # now, in the build job, instead of halfway through a release.
+          if ! keytool -list -keystore key.jks \
+              -storepass "$KEY_STORE_PASSWORD" \
+              -alias "$KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::The release keystore could not be opened with the configured alias"
+            exit 1
+          fi
+
+      # One staging directory, deterministic names, and nothing that is not an
+      # APK may enter it. Tag runs assemble the release variants with the release
+      # key; every other run keeps the debug-signed APKs, which are built and
+      # signed but never published.
+      - name: Build and stage the APKs
         if: github.event_name != 'pull_request'
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -163,123 +271,214 @@ jobs:
         run: |
           set -euo pipefail
 
-          mkdir -p signed-apks
+          mkdir -p dist
 
           if [[ "$IS_TAG" == "true" ]]; then
-            # Release build: signed with the real release keystore configured above.
-            ./gradlew --no-daemon --stacktrace clean \
+            ./gradlew $GRADLE_ARGS clean \
               assembleWhatsappRelease \
               assembleBusinessRelease \
               -PreleaseTag="$RELEASE_TAG"
-
-            mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/release -maxdepth 1 -type f -name '*.apk' | sort)
-            mapfile -t WB_APKS < <(find app/build/outputs/apk/business/release -maxdepth 1 -type f -name '*.apk' | sort)
+            SOURCE_VARIANT=release
             WA_NAME="WaEnhancer-$VERSION.apk"
             WB_NAME="WaEnhancer-Business-$VERSION.apk"
           else
-            # Normal build: keep the debug-signed APKs as CI artifacts for testing.
-            mapfile -t WA_APKS < <(find app/build/outputs/apk/whatsapp/debug -maxdepth 1 -type f -name '*.apk' | sort)
-            mapfile -t WB_APKS < <(find app/build/outputs/apk/business/debug -maxdepth 1 -type f -name '*.apk' | sort)
+            SOURCE_VARIANT=debug
             SHA8="${GITHUB_SHA:0:8}"
             WA_NAME="WaEnhancer-$VERSION-ci-$SHA8.apk"
             WB_NAME="WaEnhancer-Business-$VERSION-ci-$SHA8.apk"
           fi
 
-          if [[ "${#WA_APKS[@]}" -ne 1 || "${#WB_APKS[@]}" -ne 1 ]]; then
-            echo "::error::Expected exactly one APK for each flavor"
-            printf 'WhatsApp APKs: %s\n' "${WA_APKS[*]:-none}"
-            printf 'Business APKs: %s\n' "${WB_APKS[*]:-none}"
+          for flavor in whatsapp business; do
+            mapfile -t found < <(
+              find "app/build/outputs/apk/$flavor/$SOURCE_VARIANT" -maxdepth 1 -type f -name '*.apk' | sort
+            )
+            if [[ "${#found[@]}" -ne 1 ]]; then
+              echo "::error::Expected exactly one $SOURCE_VARIANT APK for the $flavor flavor, found ${#found[@]}"
+              printf '%s\n' "${found[@]:-none}"
+              exit 1
+            fi
+          done
+
+          cp "app/build/outputs/apk/whatsapp/$SOURCE_VARIANT"/*.apk "dist/$WA_NAME"
+          cp "app/build/outputs/apk/business/$SOURCE_VARIANT"/*.apk "dist/$WB_NAME"
+
+          # The staging directory is the release payload. Anything else in it,
+          # including mapping files, reports or logs, would end up published.
+          if find dist -maxdepth 1 -type f ! -name '*.apk' -print -quit | grep -q .; then
+            echo "::error::The staging directory contains a file that is not an APK"
+            find dist -maxdepth 1 -type f -print
+            exit 1
+          fi
+          if [[ "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -ne 2 ]]; then
+            echo "::error::Expected exactly two staged APKs"
+            find dist -maxdepth 1 -type f -print
             exit 1
           fi
 
-          cp "${WA_APKS[0]}" "signed-apks/$WA_NAME"
-          cp "${WB_APKS[0]}" "signed-apks/$WB_NAME"
+          ls -l dist
 
-          if find signed-apks -maxdepth 1 -type f ! -name '*.apk' -print -quit | grep -q .; then
-            echo "::error::Signed APK staging contains a non-APK file"
-            exit 1
-          fi
-
-      - name: Verify APK signatures
+      - name: Verify the APK signatures
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
+
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           if [[ -z "$APKSIGNER" ]]; then
             echo "::error::apksigner was not found"
             exit 1
           fi
-          for apk in signed-apks/*.apk; do
-            "$APKSIGNER" verify --verbose "$apk"
+
+          {
+            echo "### APK signature verification"
+            echo
+            for apk in dist/*.apk; do
+              echo "**$(basename "$apk")**"
+              echo
+              echo '```'
+              "$APKSIGNER" verify --verbose --print-certs "$apk"
+              echo '```'
+              echo
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # The published version is checked against the tag here, inside the APK,
+      # so a stale or mismatched artifact can never be released.
+      - name: Verify the version baked into the APKs
+        if: github.event_name != 'pull_request'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          IS_TAG: ${{ steps.version.outputs.is_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          AAPT2="$(find "$ANDROID_HOME/build-tools" -type f -name aapt2 | sort -V | tail -n 1)"
+          if [[ -z "$AAPT2" ]]; then
+            echo "::error::aapt2 was not found"
+            exit 1
+          fi
+
+          for apk in dist/*.apk; do
+            BADGING="$("$AAPT2" dump badging "$apk")"
+            MANIFEST_VERSION="$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n 1)"
+            MANIFEST_CODE="$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$BADGING" | head -n 1)"
+
+            if [[ -z "$MANIFEST_VERSION" || -z "$MANIFEST_CODE" ]]; then
+              echo "::error::Could not read the version from $apk"
+              exit 1
+            fi
+            if [[ "$MANIFEST_CODE" != "$VERSION_CODE" ]]; then
+              echo "::error::$apk has versionCode $MANIFEST_CODE, expected $VERSION_CODE"
+              exit 1
+            fi
+            if [[ "$IS_TAG" == "true" && "$MANIFEST_VERSION" != "$VERSION" ]]; then
+              echo "::error::$apk has versionName $MANIFEST_VERSION, expected $VERSION"
+              exit 1
+            fi
+            echo "$(basename "$apk"): versionName=$MANIFEST_VERSION versionCode=$MANIFEST_CODE"
           done
 
-      - name: Upload signed APK build artifacts
+      - name: Upload the APK artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: signed-apks-${{ steps.version.outputs.version }}-${{ github.sha }}
-          path: signed-apks/*.apk
+          name: ${{ steps.version.outputs.artifact_name }}
+          path: dist/*.apk
           if-no-files-found: error
+          # APKs are already compressed; re-deflating them only wastes minutes.
           compression-level: 0
           retention-days: 14
 
   release:
-    name: Publish GitHub Release
+    name: Publish the GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
-      actions: read
       contents: write
+      # Supplementary supply-chain provenance for the published binaries. It is
+      # recorded after the release exists, and it is never allowed to block or
+      # undo a release that already succeeded.
+      id-token: write
+      attestations: write
 
     steps:
-      - name: Checkout release metadata
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Checkout the release metadata
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
 
-      - name: Resolve version
+      - name: Re-resolve the version from the tag
         id: version
         shell: bash
         run: |
           set -euo pipefail
+
           VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
           TAG="v$VERSION"
           if [[ "$GITHUB_REF_NAME" != "$TAG" ]]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match configured version $TAG"
+            echo "::error::Tag $GITHUB_REF_NAME does not match the configured version $TAG"
             exit 1
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Download signed APK artifact
+          {
+            echo "version=$VERSION"
+            echo "tag=$TAG"
+            echo "wa_name=WaEnhancer-$VERSION.apk"
+            echo "wb_name=WaEnhancer-Business-$VERSION.apk"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download the signed APKs from this run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: dist
+
+      - name: Validate the release payload
         env:
-          GH_TOKEN: ${{ github.token }}
-          ARTIFACT_NAME: signed-apks-${{ steps.version.outputs.version }}-${{ github.sha }}
+          VERSION: ${{ steps.version.outputs.version }}
+          WA_NAME: ${{ steps.version.outputs.wa_name }}
+          WB_NAME: ${{ steps.version.outputs.wb_name }}
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p signed-apks
-          gh run download "$GITHUB_RUN_ID" \
-            --repo "$GITHUB_REPOSITORY" \
-            --name "$ARTIFACT_NAME" \
-            --dir signed-apks
 
-          mapfile -t APKS < <(find signed-apks -maxdepth 1 -type f -name '*.apk' | sort)
-          if [[ "${#APKS[@]}" -ne 2 ]]; then
-            echo "::error::Expected exactly two APK files in the signed artifact"
-            find signed-apks -maxdepth 1 -type f -print
+          if find dist -type f ! -name '*.apk' -print -quit | grep -q .; then
+            echo "::error::The release payload contains a file that is not an APK"
+            find dist -type f -print
             exit 1
           fi
-          if find signed-apks -maxdepth 1 -type f ! -name '*.apk' -print -quit | grep -q .; then
-            echo "::error::Release staging contains a non-APK file"
+          if find dist -mindepth 2 -type f -print -quit | grep -q .; then
+            echo "::error::The release payload contains a nested directory"
+            find dist -mindepth 2 -print
             exit 1
           fi
 
-      - name: Publish GitHub Release
+          mapfile -t apks < <(find dist -maxdepth 1 -type f -name '*.apk' | sort)
+          if [[ "${#apks[@]}" -ne 2 ]]; then
+            echo "::error::Expected exactly two APKs for the release, found ${#apks[@]}"
+            printf '%s\n' "${apks[@]:-none}"
+            exit 1
+          fi
+
+          for expected in "$WA_NAME" "$WB_NAME"; do
+            if [[ ! -f "dist/$expected" ]]; then
+              echo "::error::Missing expected release asset: $expected"
+              ls -1 dist
+              exit 1
+            fi
+          done
+
+          if ! grep -qF "WaEnhancer $VERSION" changelog.txt; then
+            echo "::error::changelog.txt does not announce WaEnhancer $VERSION"
+            exit 1
+          fi
+
+      - name: Publish the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
@@ -287,108 +486,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ ! -f changelog.txt ]]; then
-            echo "::error::changelog.txt is required as the release notes"
-            exit 1
-          fi
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "::error::Release $TAG already exists"
-            exit 1
-          fi
 
-          gh release create "$TAG" signed-apks/*.apk \
+          gh release create "$TAG" dist/*.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "WaEnhancer $VERSION" \
             --notes-file changelog.txt \
-            --verify-tag
+            --verify-tag \
+            --latest
 
-  create-tag:
-    name: Create requested release tag
-    if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/master' &&
-      startsWith(github.event.head_commit.message, 'release: v')
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      actions: write
-      contents: write
+          echo "### Release published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tag: \`$TAG\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Assets: $(ls -1 dist | tr '\n' ' ')" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Record build provenance for the published APKs
+        continue-on-error: true
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
-          fetch-depth: 0
-
-      - name: Validate release signing availability
-        env:
-          KEY_STORE: ${{ secrets.KEY_STORE }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          for name in KEY_STORE KEY_STORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
-            if [[ -z "${!name:-}" ]]; then
-              echo "::error::Cannot create a release tag: missing signing secret $name"
-              exit 1
-            fi
-          done
-
-      - name: Validate request and push tag
-        env:
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
-          TAG="v$VERSION"
-          FIRST_LINE="${COMMIT_MESSAGE%%$'\n'*}"
-
-          if [[ "$FIRST_LINE" != "release: $TAG" ]]; then
-            echo "::error::Release commit must be exactly: release: $TAG"
-            exit 1
-          fi
-
-          REMOTE_MASTER_SHA="$(git ls-remote origin refs/heads/master | awk '{print $1}')"
-          if [[ "$REMOTE_MASTER_SHA" != "$GITHUB_SHA" ]]; then
-            echo "::error::Refusing to tag a superseded master commit"
-            exit 1
-          fi
-
-          git fetch --tags --force
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
-            if [[ "$EXISTING_SHA" != "$GITHUB_SHA" ]]; then
-              echo "::error::$TAG already points to $EXISTING_SHA"
-              exit 1
-            fi
-            echo "$TAG already exists on this commit"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" "$GITHUB_SHA" -m "WaEnhancer $TAG"
-          git push origin "$TAG"
-
-      - name: Dispatch release workflow for tag
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION="$(sed -n 's/^waeVersionName=//p' gradle.properties | tail -n 1 | tr -d '\r')"
-          TAG="v$VERSION"
-
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; nothing to dispatch"
-            exit 0
-          fi
-
-          gh workflow run ci.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref "$TAG"
+          subject-path: dist/*.apk
