@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>Style Facebook (1 ligne)</item>
+        <item>Style Facebook (tableau)</item>
+        <item>Statut vertical (sans aperçu)</item>
+        <item>Statut vertical (cercle)</item>
+        <item>Statut vertical (carré)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>Par défaut</item>
+        <item>Fondu d\'entrée</item>
+        <item>Fondu de sortie</item>
+        <item>Agrandir</item>
+        <item>Glisser vers le haut</item>
+        <item>Glisser de droite à gauche</item>
+        <item>Rotation</item>
+        <item>Rebond</item>
+        <item>Rétrécir</item>
+        <item>Retourner</item>
+        <item>Sortie hyperspace</item>
+    </string-array>
+</resources>

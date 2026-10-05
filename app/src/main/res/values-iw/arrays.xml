@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>סגנון פייסבוק (שורה אחת)</item>
+        <item>סגנון פייסבוק (טבלה)</item>
+        <item>סטטוס אנכי (ללא תצוגה מקדימה)</item>
+        <item>סטטוס אנכי (עיגול)</item>
+        <item>סטטוס אנכי (ריבוע)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>ברירת מחדל</item>
+        <item>הופעה</item>
+        <item>היעלמות</item>
+        <item>הגדלה</item>
+        <item>החלקה למעלה</item>
+        <item>החלקה מימין לשמאל</item>
+        <item>סיבוב</item>
+        <item>קפיצה</item>
+        <item>הקטנה</item>
+        <item>היפוך</item>
+        <item>יציאת היפרספייס</item>
+    </string-array>
+</resources>

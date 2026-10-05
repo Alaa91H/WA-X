@@ -19,7 +19,7 @@
     <string name="segundosnahora">Segundos no horário</string>
     <string name="segundosnahora_sum">Mostre os segundos ao lado da hora</string>
     <string name="textonahora">Texto no horário</string>
-    <string name="viewonce">Desativar visualização única</string>
+    <string name="viewonce">Visualização única ilimitada</string>
     <string name="viewonce_sum">Quando ativo, permite ver mensagens de visualização única quantas vezes quiser.</string>
     <string name="antirevokestatus">Anti deletar status</string>
     <string name="antirevokestatus_sum">Quando ativo, os status não serão apagados para você.</string>
@@ -27,7 +27,7 @@
     <string name="hidereceipt_sum">Quando ativo, não aparecerá para ninguém que você recebeu as mensagens\n(CUIDADO: Pode causar atraso no recebimento de mensagens)</string>
     <string name="ampm">Horário no formato 12 horas</string>
     <string name="statusdowload">Baixar e compartilhar status</string>
-    <string name="statusdowload_sum">Mostre duas opções para compartilhar e baixar status</string>
+    <string name="statusdowload_sum">Mostra dois botões para compartilhar e baixar o status</string>
     <string name="videoquality">Enviar vídeos com a qualidade HD</string>
     <string name="videoquality_sum">Envie vídeos em qualidade HD</string>
     <string name="colors_customization">Alterar cores</string>
@@ -67,7 +67,7 @@
     <string name="blueonreply_sum">Envia a marca azul ao responder à mensagem\n(OBSERVAÇÃO: Deve ter \"Ocultar visualização de mensagens\" ativo)</string>
     <string name="hide_archived_chat">Ocultar conversas arquivadas</string>
     <string name="hide_archived_chat_sum">Para acessar clique 5 vezes ou segure o no nome \"WhatsApp\" na tela inicial</string>
-    <string name="hide_once_view_seen">Ocultar visualização única de mídia</string>
+    <string name="hide_once_view_seen">Ocultar marca de visualização única</string>
     <string name="hide_once_view_seen_sum">Oculte a marca azul da visualização única de mídia</string>
     <string name="call_blocker">Bloquear chamadas</string>
     <string name="call_blocker_sum">Bloqueie chamadas do WhatsApp com base no tipo de privacidade</string>
@@ -171,6 +171,12 @@
     <string name="phone_call">Chamada telefônica</string>
     <string name="whatsapp_call">Chamada do Whatsapp</string>
     <string name="home_screen">Tela inicial</string>
+    <string name="floating_bottom_bar">Barra inferior flutuante</string>
+    <string name="floating_bottom_bar_sum">Ativa uma barra de navegação inferior flutuante no estilo iOS</string>
+    <string name="floating_bottom_bar_radius">Raio dos cantos da barra inferior</string>
+    <string name="floating_bottom_bar_radius_sum">Ajusta o raio das bordas da barra inferior flutuante</string>
+    <string name="disable_swipe_up_in_group">Desativar o gesto de deslizar para cima em grupos</string>
+    <string name="disable_swipe_up_in_group_sum">Desativa o gesto de deslizar para cima em conversas de grupo</string>
     <string name="selection_of_call_type">Ativar seleção do tipo de chamada</string>
     <string name="selection_of_call_type_sum">Exibe a opção de selecionar se deseja uma chamada via telefone ou WhatsApp</string>
     <string name="yes">Sim</string>
@@ -238,13 +244,17 @@
     <string name="filter_items_by_id_sum">Filtrar itens por nome de ID</string>
     <string name="custom_theme_css">Tema personalizado CSS</string>
     <string name="custom_theme_css_sum">Personalize seu WhatsApp usando código CSS</string>
-    <string name="antidisappearing">Anti deletar mensagens temporárias</string>
+    <string name="antidisappearing">Impedir desaparecimento de mensagens temporárias</string>
     <string name="antidisappearing_sum">Quando ativo, as mensagens temporárias não irão desaparecer para você.</string>
     <string name="title_audio">Áudio</string>
     <string name="android_version">Versão do sistema (API)</string>
     <string name="message_removed_on">Mensagem apagada em %s</string>
+    <string name="force_disable_emojis">Forçar desativação de emojis</string>
+    <string name="force_disable_emojis_sum">Bloqueia os recursos de emojis do WhatsApp, deixando-os invisíveis (use os emojis do teclado).</string>
+    <string name="force_disable_emojis_alert_title">Forçar desativação de emojis</string>
+    <string name="force_disable_emojis_alert_msg">Este recurso deixará os emojis invisíveis no seletor. Para enviar emojis, use os do teclado do seu dispositivo.</string>
     <string name="disable_default_emojis">Desativar emojis padrão</string>
-    <string name="theme_mode"> Tema escuro Wa Enhancer</string>
+    <string name="theme_mode">Tema escuro do Wa Enhancer</string>
     <string name="theme_mode_sum">Selecione um modo de tema no Wa Enhancer</string>
     <string name="wae_color_mode">Modo de cores WAE</string>
     <string name="wae_color_preset">Cor predefinida</string>
@@ -271,6 +281,8 @@
     <string name="call_type_buttons_ended">Não atendida</string>
     <string name="enable_tasker_automation">Ativar automação de tarefas</string>
     <string name="enable_tasker_automation_sum">Permite automatizar mensagens e notificações através de comandos pelo Tasker</string>
+    <string name="tasker_auth_token">Token de autenticação do Tasker</string>
+    <string name="tasker_auth_token_sum">Token obrigatório. Use o mesmo valor do extra \"token\" nos intents MESSAGE_SENT do Tasker.</string>
     <string name="disable_auto_status">Desativar pulo automático dos status</string>
     <string name="disable_auto_status_sum">Impede que o status atual avance automaticamente para o próximo</string>
     <string name="toast_on_viewed_status">Mostrar toast de visualização de status</string>
@@ -294,7 +306,7 @@
     <string name="reset_settings">Redefinir configurações</string>
     <string name="configs_reset">Configurações redefinidas</string>
     <string name="hide_locked_chats">Ocultar conversas bloqueadas</string>
-    <string name="hide_locked_chats_sum">Oculte as conversas arquivadas e visualize-as segurando o título do WhatsApp na tela inicial</string>
+    <string name="hide_locked_chats_sum">Oculte as conversas bloqueadas; visualize-as mantendo pressionado o título do WhatsApp na tela inicial</string>
     <string name="msg_text_status_not_downloadable">Texto do status não pode ser baixado!</string>
     <string name="failed_save_directory">Não é possível salvar os arquivos nesta pasta, selecione outro local.</string>
     <string name="unable_to_read_this_file">Não foi possível ler este arquivo</string>
@@ -306,7 +318,7 @@
     <string name="viewed_your_message">%s visualizou sua mensagem</string>
     <string name="old_statuses">Status antigo</string>
     <string name="old_statuses_sum">Mude para a guia de status antiga verticalmente e sem canais (OBSERVAÇÃO: Pode causar lag na interface)</string>
-    <string name="force_english">Forçar inglês Wa Enhancer</string>
+    <string name="force_english">Forçar inglês no Wa Enhancer</string>
     <string name="select_status_type">Selecione o tipo de status</string>
     <string name="open_camera">Abrir câmera</string>
     <string name="edit_text">Editar texto</string>
@@ -384,7 +396,7 @@
     <string name="grant_manage_storage">Permitir acesso a todos os arquivos</string>
     <string name="grant_media_read">Permitir acesso a fotos e vídeos</string>
     <string name="grant_reading_of_contacts">Permitir acesso aos contatos</string>
-    <string name="local_download">Local de download das mídias</string>
+    <string name="local_download">Download local</string>
     <string name="show_menu_buttons_as_icons">Mostrar botões na tela inicial</string>
     <string name="show_menu_buttons_as_icons_sum">Mostre os botões ativados no Wa Enhancer na barra superior da tela inicial do WhatsApp</string>
     <string name="starting_cache">Iniciando hook cache no WhatsApp. Isso pode demorar um pouco.</string>
@@ -406,7 +418,7 @@
     <string name="transcription_provider_sum">Escolha o serviço de IA para transcrição de áudio</string>
     <string name="assemblyai">Ativar AssemblyAI</string>
     <string name="assemblyai_sum">Substitui a transcrição padrão do WhatsApp por AssemblyAI</string>
-    <string name="assemblyai_key">AssemblyAI API Key</string>
+    <string name="assemblyai_key">Chave de API do AssemblyAI</string>
     <string name="assemblyai_key_sum">Chave de acesso à API do AssemblyAI (Obtenha-o em assemblyai.com)</string>
     <string name="groq_api_key">Chave API da Groq</string>
     <string name="groq_api_key_sum">Chave de acesso Groq API (Obtenha-o em console.groq.com)</string>
@@ -452,6 +464,10 @@
     <string name="disable_status_in_the_profile_photo">Desativar status na foto do perfil</string>
     <string name="disable_status_in_the_profile_photo_sum">Quando ativo, o círculo que aparece na foto de perfil de cada contato quando há um novo status é desativado.</string>
     <string name="download_not_available">O download não está disponível ou a mídia não foi totalmente baixada</string>
+    <string name="checking_if_contact_added">Verificando se o contato adicionou você...</string>
+    <string name="show_contact_added_status">Mostrar status de contato adicionado na conversa</string>
+    <string name="show_contact_added_status_sum">Esta opção verifica se o contato adicionou você ou se tem foto de perfil pública.</string>
+    <string name="contact_added">O contato adicionou você ou tem foto de perfil pública.</string>
     <string name="disable_whatsapp_expiration">Desativar expiração do WhatsApp</string>
     <string name="disable_whatsapp_expiration_sum">Desativa a versão expirada do WhatsApp, (Nota: Desativar manualmente para atualizar o WhatsApp na Play Store ou marcar a Play Store no LSposed)</string>
     <string name="disable_ads">Bloquear anúncios</string>
@@ -473,7 +489,6 @@
     <string name="recording_mode_exclude">Gravar todos, exceto selecionados</string>
     <string name="recording_included_contacts">Contatos Incluídos</string>
     <string name="recording_excluded_contacts">Contatos excluidos</string>
-    <!-- Search Feature Strings -->
     <string name="search_features_title">Pesquisar funções</string>
     <string name="search_features_hint">Digite para pesquisar...</string>
     <string name="search_no_results">Nada encontrado</string>
@@ -512,4 +527,27 @@
     <string name="remove_sticker_white_outline_sum">Remova a borda branca ao criar figurinhas</string>
     <string name="remove_sticker_white_outline">Remover contorno das figurinhas</string>
     <string name="stickers">Figurinhas</string>
+    <string name="alert_module_notfound">Módulo WaEnhancer não encontrado; provavelmente o HMA o está ocultando. Remova o WhatsApp da lista do HMA e tente novamente.</string>
+    <string name="diag_title">Diagnóstico de root</string>
+    <string name="diag_summary">Verifica problemas de sepolicy e bloqueios do Hide My App List que afetam o WhatsApp.</string>
+    <string name="diag_button">Analisar dispositivo</string>
+    <string name="diag_dialog_title">Log de diagnóstico</string>
+    <string name="diag_root_granted">Acesso root concedido.</string>
+    <string name="diag_root_denied">Acesso root negado. O diagnóstico exige acesso root.</string>
+    <string name="diag_close">Fechar</string>
+    <string name="diag_sepolicy_checking">Verificando o log de sepolicy...</string>
+    <string name="diag_sepolicy_not_found">Log detalhado do LSPosed não encontrado ou vazio.</string>
+    <string name="diag_sepolicy_no_issues">Nenhum problema de sepolicy encontrado no log.</string>
+    <string name="diag_sepolicy_found">Problema de sepolicy encontrado:</string>
+    <string name="diag_sepolicy_broken">Sepolicy corrompida detectada. A solução de root e o patch do kernel precisam ser da mesma versão. Se o erro persistir, mude para outro provedor de root compatível com seu dispositivo.</string>
+    <string name="diag_hma_checking">Verificando o status do Hide My App List...</string>
+    <string name="diag_hma_not_active">O Hide My App List não está ativo.</string>
+    <string name="diag_hma_zygisk_active">O Hide My App List (Zygisk) está ativo.</string>
+    <string name="diag_hma_lsposed_active">O Hide My App List (LSPosed) está ativo.</string>
+    <string name="diag_hma_not_found">Configuração do Hide My App List não encontrada.</string>
+    <string name="diag_hma_invalid">A configuração do Hide My App List é inválida.</string>
+    <string name="diag_hma_no_blocks">Nenhum bloqueio do Hide My App List detectado para o WhatsApp.</string>
+    <string name="diag_hma_blocked">O Hide My App List está ocultando o WaEnhancer de:</string>
+    <string name="diag_hma_disable">Desative o bloqueio para WhatsApp/Business no Hide My App List para que o WaEnhancer funcione corretamente.</string>
+    <string name="diag_copied">Linha copiada para a área de transferência</string>
 </resources>

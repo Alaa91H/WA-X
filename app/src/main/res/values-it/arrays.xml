@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>Stile Facebook (1 riga)</item>
+        <item>Stile Facebook (tabella)</item>
+        <item>Stato verticale (senza anteprima)</item>
+        <item>Stato verticale (cerchio)</item>
+        <item>Stato verticale (quadrato)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>Predefinito</item>
+        <item>Dissolvenza in entrata</item>
+        <item>Dissolvenza in uscita</item>
+        <item>Ingrandisci</item>
+        <item>Scorri verso l\'alto</item>
+        <item>Scorri da destra a sinistra</item>
+        <item>Ruota</item>
+        <item>Rimbalza</item>
+        <item>Riduci</item>
+        <item>Capovolgi</item>
+        <item>Uscita hyperspace</item>
+    </string-array>
+</resources>

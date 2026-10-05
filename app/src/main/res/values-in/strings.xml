@@ -24,11 +24,10 @@
     <string name="antirevokestatus">Anti Hapus Status</string>
     <string name="antirevokestatus_sum">Status tidak akan dihapus untuk Anda</string>
     <string name="hidereceipt">Sembunyikan Centang Dua</string>
-    <string name="hidereceipt_sum">Orang lain tidak akan mengetahui bahwa pesan mereka telah terkirim kepada Anda.
-(PERHATIAN: Dapat menyebabkan keterlambatan dalam menerima pesan)</string>
+    <string name="hidereceipt_sum">Orang lain tidak akan mengetahui bahwa pesan mereka telah terkirim kepada Anda.\n(PERHATIAN: Dapat menyebabkan keterlambatan dalam menerima pesan)</string>
     <string name="ampm">Waktu dalam format 12 jam</string>
     <string name="statusdowload">Unduh dan Bagikan Status</string>
-    <string name="statusdowload_sum">Tampilkan tombol untuk mengunduh dan bagikan status</string>
+    <string name="statusdowload_sum">Menampilkan dua tombol untuk membagikan dan mengunduh status</string>
     <string name="videoquality">Video Kualitas HD</string>
     <string name="videoquality_sum">Kirim video dalam kualitas HD</string>
     <string name="colors_customization">Ubah Warna WhatsApp Anda</string>
@@ -48,8 +47,7 @@
     <string name="menuwicon">Ikon Menu</string>
     <string name="menuwicon_sum">Tambahkan ikon pada opsi menu di aplikasi WhatsApp</string>
     <string name="freezelastseen">Bekukan \"terakhir dilihat dan online\"</string>
-    <string name="freezelastseen_sum">Waktu \"terakhir dilihat dan online\" Anda akan dibekukan
-(PERHATIAN: Anda tidak dapat melihat pembaruan kehadiran apa pun dari orang lain seperti: mengetik, merekam, terakhir dilihat dan online)</string>
+    <string name="freezelastseen_sum">Waktu \"terakhir dilihat dan online\" Anda akan dibekukan\n(PERHATIAN: Anda tidak dapat melihat pembaruan kehadiran apa pun dari orang lain seperti: mengetik, merekam, terakhir dilihat dan online)</string>
     <string name="removeforwardlimit_sum">Hapus batas penerusan pesan untuk 5 obrolan (normal) dan 1 obrolan (berkali-kali)\n(CATATAN: Gunakan dengan hati-hati, Anda mungkin bisa diblokir karena spam)</string>
     <string name="removeforwardlimit">Hapus Batas \"Diteruskan\"</string>
     <string name="showname">Tampilkan Nama</string>
@@ -66,17 +64,16 @@
     <string name="separate_groups">Grup Terpisah</string>
     <string name="separate_groups_sum">Pisahkan obrolan Anda berdasarkan: Chat, Grup, Status, Komunitas, Panggilan</string>
     <string name="blueonreply">Centang Biru Setelah Membalas</string>
-    <string name="blueonreply_sum">Kontak hanya akan melihat tanda centang biru setelah Anda membalas pesan.
-(CATATAN: Harus mengaktifkan \"Sembunyikan centang biru\")</string>
+    <string name="blueonreply_sum">Kontak hanya akan melihat tanda centang biru setelah Anda membalas pesan.\n(CATATAN: Harus mengaktifkan \"Sembunyikan centang biru\")</string>
     <string name="hide_archived_chat">Sembunyikan Obrolan yang Diarsipkan</string>
     <string name="hide_archived_chat_sum">Sembunyikan obrolan yang diarsipkan, untuk mengakses klik 5 kali atau tahan pada judul \"WhatsApp\" di header Layar Beranda</string>
-    <string name="hide_once_view_seen">Sembunyikan Sekali Lihat</string>
+    <string name="hide_once_view_seen">Sembunyikan Tanda Sekali Lihat</string>
     <string name="hide_once_view_seen_sum">Orang lain tidak akan mengetahui bahwa Anda telah membaca pesan media \"sekali lihat\"</string>
     <string name="call_blocker">Blokir Panggilan</string>
     <string name="call_blocker_sum">Blokir panggilan WhatsApp berdasarkan jenis privasi</string>
     <string name="show_online_dot_in_conversation_list">Tampilkan Titik Online</string>
     <string name="show_online_dot_in_conversation_list_sum">Tampilkan titik online berwarna hijau di layar beranda\n(CATATAN: Harus mengaktifkan \"Terakhir dilihat dan online\" untuk semua orang di menu setelan privasi WhatsApp)</string>
-    <string name="show_dnd_button">Tampilkan Tombol DND</string>
+    <string name="show_dnd_button">Tampilkan Tombol Jangan Ganggu</string>
     <string name="show_dnd_button_sum">Tampilkan tombol mode DND di toolbar layar beranda</string>
     <string name="dev4mod">Dev4Mod (Penyumbang)</string>
     <string name="disable_pinned_limit">Nonaktifkan Batas Pesan yang Disematkan</string>
@@ -94,7 +91,7 @@
     <string name="capture_device_title">Tampilkan Perangkat Pengirim</string>
     <string name="capture_device_sum">Tampilkan indikator apakah pesan dikirim dari ponsel atau perangkat tertaut</string>
     <string name="dnd_message">Saat mode Pesawat (Offline) diaktifkan, Anda tidak akan dapat mengirim atau menerima pesan</string>
-    <string name="dnd_mode_title">Mode Pesawat (Offline)</string>
+    <string name="dnd_mode_title">Mode Jangan Ganggu</string>
     <string name="activate">Aktifkan</string>
     <string name="cancel">Batal</string>
     <string name="edited_history">Riwayat pesan yang diedit</string>
@@ -124,22 +121,26 @@
     <string name="tools">Alat</string>
     <string name="title_home">Ringkasan</string>
     <string name="privacy">Privasi</string>
-    <string name="module_enabled">Module diaktifkan</string>
+    <string name="module_enabled">Modul diaktifkan</string>
     <string name="version_s">Versi %s</string>
-    <string name="module_disabled">Module dinonaktifkan</string>
+    <string name="module_disabled">Modul dinonaktifkan</string>
     <string name="whatsapp_in_background">WhatsApp berjalan dilatar belakang</string>
     <string name="whatsapp_is_not_running_or_has_not_been_activated_in_lsposed">WhatsApp tidak berjalan atau belum diaktifkan di LSPosed</string>
     <string name="business_is_not_running_or_has_not_been_activated_in_lsposed">WhatsApp Bisnis tidak berjalan atau belum diaktifkan di LSPosed</string>
-    <string name="restart_wpp">WhatsApp harus dimulai ulang agar perubahan di Wa Enhancer dapat diterapkan.
-
-Apakah Anda ingin mulai ulang WhatsApp?</string>
-    <string name="version_s_not_listed">Versi %s tidak terdaftar dalam versi yang didukung!
-Harap gunakan versi WhatsApp yang didukung!</string>
+    <string name="restart_wpp">WhatsApp harus dimulai ulang agar perubahan di Wa Enhancer dapat diterapkan.\n\nApakah Anda ingin mulai ulang WhatsApp?</string>
+    <string name="version_s_not_listed">Versi %s tidak terdaftar dalam versi yang didukung!\nHarap gunakan versi WhatsApp yang didukung!</string>
     <string name="media">Media</string>
     <string name="show_button_to_send_blue_tick">Tampilkan Tombol Centang Biru</string>
     <string name="show_button_to_send_blue_tick_sum">Tampilkan tombol centang biru (dibaca/dilihat untuk pesan dan status)</string>
     <string name="send_blue_tick">Tandai dilihat/dibaca</string>
     <string name="business_in_background">WhatsApp Bisnis berjalan dilatar belakang</string>
+    <string name="whatsapp_packages_title">Status paket WhatsApp</string>
+    <string name="whatsapp_app_label">WhatsApp</string>
+    <string name="whatsapp_business_package">WhatsApp Business</string>
+    <string name="app_not_installed">Tidak terpasang</string>
+    <string name="app_version_s_supported">Versi %1$s · didukung</string>
+    <string name="app_version_s_unsupported">Versi %1$s · tidak didukung</string>
+    <string name="app_installed_version_unknown">Terpasang · versi tidak tersedia</string>
     <string name="sending_read_blue_tick">Mengirim centang biru (dilihat/dibaca)</string>
     <string name="enable_facebook_style_for_status">Aktifkan Gaya Status Facebook</string>
     <string name="enable_facebook_style_for_status_sum">Ubah gaya status asli menjadi gaya status Facebook</string>
@@ -170,6 +171,12 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="phone_call">Panggilan Telepon</string>
     <string name="whatsapp_call">Panggilan WhatsApp</string>
     <string name="home_screen">Layar Beranda</string>
+    <string name="floating_bottom_bar">Bilah Bawah Mengambang</string>
+    <string name="floating_bottom_bar_sum">Aktifkan bilah navigasi bawah mengambang bergaya iOS</string>
+    <string name="floating_bottom_bar_radius">Radius Sudut Bilah Bawah</string>
+    <string name="floating_bottom_bar_radius_sum">Sesuaikan radius sudut bilah bawah mengambang</string>
+    <string name="disable_swipe_up_in_group">Nonaktifkan gestur usap ke atas di grup</string>
+    <string name="disable_swipe_up_in_group_sum">Menonaktifkan gestur usap ke atas di obrolan grup</string>
     <string name="selection_of_call_type">Pemilihan Jenis Panggilan</string>
     <string name="selection_of_call_type_sum">Tampilkan opsi untuk memilih panggilan melalui telepon atau WhatsApp</string>
     <string name="yes">Ya</string>
@@ -227,22 +234,25 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="toolbar_transparency">Transparansi Toolbar</string>
     <string name="navigation_transparency">Transparansi Navigasi</string>
     <string name="show_online_last_seen_in_conversation_list">Tampilkan \"terakhir dilihat dan online\"</string>
-    <string name="show_online_last_seen_in_conversation_list_sum">Tampilkan \"terakhir dilihat dan online\" di layar beranda
-(CATATAN: Harus mengaktifkan \"Terakhir dilihat dan online\" untuk semua orang di menu setelan privasi WhatsApp)</string>
+    <string name="show_online_last_seen_in_conversation_list_sum">Tampilkan \"terakhir dilihat dan online\" di layar beranda\n(CATATAN: Harus mengaktifkan \"Terakhir dilihat dan online\" untuk semua orang di menu setelan privasi WhatsApp)</string>
     <string name="toast_online">%s online</string>
     <string name="show_toast_on_contact_online">Notifikasi Kontak Online</string>
     <string name="show_toast_on_contact_online_sum">Tampilkan notifikasi mengambang ketika kontak sedang online</string>
-    <string name="new_context_menu_ui">Menu UI Konteks Baru</string>
+    <string name="new_context_menu_ui">UI Menu Konteks Baru</string>
     <string name="new_context_menu_ui_sum">Aktifkan menu konteks pesan baru bergaya iOS</string>
     <string name="filter_items_by_id">Filter Item Berdasarkan ID</string>
     <string name="filter_items_by_id_sum">Filter item berdasarkan nama ID</string>
     <string name="custom_theme_css">Tema Khusus CSS</string>
     <string name="custom_theme_css_sum">Sesuaikan WhatsApp Anda menggunakan gaya CSS</string>
-    <string name="antidisappearing">Anti Hapus Pesan Sementara</string>
+    <string name="antidisappearing">Cegah Pesan Sementara Hilang</string>
     <string name="antidisappearing_sum">Pesan sementara tidak akan dihapus untuk Anda</string>
     <string name="title_audio">Audio</string>
     <string name="android_version">Android SDK</string>
     <string name="message_removed_on">Pesan ini dihapus pada %s</string>
+    <string name="force_disable_emojis">Paksa Nonaktifkan Emoji</string>
+    <string name="force_disable_emojis_sum">Memblokir aset emoji WhatsApp sehingga emoji tidak terlihat (gunakan emoji papan ketik sebagai gantinya).</string>
+    <string name="force_disable_emojis_alert_title">Paksa Nonaktifkan Emoji</string>
+    <string name="force_disable_emojis_alert_msg">Fitur ini akan membuat emoji tidak terlihat di pemilih emoji. Untuk mengirim emoji, gunakan emoji dari papan ketik perangkat Anda.</string>
     <string name="disable_default_emojis">Nonaktifkan Emoji Bawaan</string>
     <string name="theme_mode">Tema Gelap Wa Enhancer</string>
     <string name="theme_mode_sum">Pilih tema Wa Enhancer</string>
@@ -252,9 +262,9 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="wae_color_mode_auto_monet">Otomatis (Monet)</string>
     <string name="color_preset_green">Hijau</string>
     <string name="color_preset_blue">Biru</string>
-    <string name="color_preset_cyan">Cyan</string>
+    <string name="color_preset_cyan">Sian</string>
     <string name="color_preset_purple">Ungu</string>
-    <string name="color_preset_orange">Orange</string>
+    <string name="color_preset_orange">Oranye</string>
     <string name="color_preset_red">Merah</string>
     <string name="color_preset_pink">Merah Muda</string>
     <string name="disable_default_emojis_sum">Nonaktifkan emoji bawaan WhatsApp dan gunakan emoji sistem</string>
@@ -271,6 +281,8 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="call_type_buttons_ended">Tak terjawab</string>
     <string name="enable_tasker_automation">Otomatisasi Tasker</string>
     <string name="enable_tasker_automation_sum">Aktifkan untuk menerima dan mengirim pesan di Tasker</string>
+    <string name="tasker_auth_token">Token autentikasi Tasker</string>
+    <string name="tasker_auth_token_sum">Token wajib. Gunakan nilai yang sama seperti pada extra \"token\" di intent MESSAGE_SENT Tasker.</string>
     <string name="disable_auto_status">Nonaktifkan Otomatis Lewati Status</string>
     <string name="disable_auto_status_sum">Mencegah perpindahan secara otomatis dari status saat ini ke status berikutnya</string>
     <string name="toast_on_viewed_status">Notifikasi Status Dilihat</string>
@@ -294,7 +306,7 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="reset_settings">Atur Ulang Konfigurasi</string>
     <string name="configs_reset">Konfigurasi disetel ulang</string>
     <string name="hide_locked_chats">Sembunyikan Obrolan Dikunci</string>
-    <string name="hide_locked_chats_sum">Sembunyikan obrolan yang dikunci, untuk mengakses klik dan tahan pada judul \"WhatsApp\" di header Layar Beranda</string>
+    <string name="hide_locked_chats_sum">Sembunyikan obrolan terkunci; akses dengan menekan lama judul \"WhatsApp\" di layar beranda</string>
     <string name="msg_text_status_not_downloadable">Status teks tidak dapat diunduh!</string>
     <string name="failed_save_directory">Tidak dapat menyimpan file di folder ini, pilih direktori lain</string>
     <string name="unable_to_read_this_file">Tidak dapat membaca file ini</string>
@@ -305,9 +317,8 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="viewed_your_status">%s melihat status Anda</string>
     <string name="viewed_your_message">%s membaca pesan Anda</string>
     <string name="old_statuses">Status Lama</string>
-    <string name="old_statuses_sum">Ubah ke halaman status lama secara vertikal dan tanpa saluran
-(CATATAN: Dapat menyebabkan kelambatan pada antarmuka)</string>
-    <string name="force_english">Paksa Wa Enhancer Bahasa Inggris</string>
+    <string name="old_statuses_sum">Ubah ke halaman status lama secara vertikal dan tanpa saluran\n(CATATAN: Dapat menyebabkan kelambatan pada antarmuka)</string>
+    <string name="force_english">Paksa Bahasa Inggris di Wa Enhancer</string>
     <string name="select_status_type">Pilih jenis status</string>
     <string name="open_camera">Buka Kamera</string>
     <string name="edit_text">Edit Teks</string>
@@ -385,13 +396,13 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="grant_manage_storage">Kelola penyimpanan</string>
     <string name="grant_media_read">Akses media</string>
     <string name="grant_reading_of_contacts">Akses kontak</string>
-    <string name="local_download">Lokasi Unduhan</string>
+    <string name="local_download">Unduhan Lokal</string>
     <string name="show_menu_buttons_as_icons">Tombol Menu Ikon</string>
     <string name="show_menu_buttons_as_icons_sum">Tampilkan tombol menu di layar beranda sebagai ikon untuk memudahkan akses ke tombol tersebut</string>
     <string name="starting_cache">Muat ulang cache di WhatsApp. Ini mungkin memerlukan waktu cukup lama.</string>
     <string name="bridge_error">Bridge Gagal: Aktifkan Kerangka Sistem di LSPosed dan reboot perangkat</string>
     <string name="disable_battery_optimization">Nonaktifkan Pengoptimalan Baterai</string>
-    <string name="bootloader_spoofer">Bootloader Spoofer</string>
+    <string name="bootloader_spoofer">Pemalsu bootloader</string>
     <string name="bootloader_spoofer_sum">Gunakan ini jika Anda telah diblokir dan menerima pesan WhatsApp tidak resmi</string>
     <string name="not_available">tidak tersedia</string>
     <string name="select_all">Pilih semua</string>
@@ -453,9 +464,12 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="disable_status_in_the_profile_photo">Nonaktifkan Status di Foto Profil</string>
     <string name="disable_status_in_the_profile_photo_sum">Nonaktifkan lingkaran di foto profil setiap kontak saat ada status baru</string>
     <string name="download_not_available">Unduhan tidak tersedia atau media belum sepenuhnya diunduh</string>
+    <string name="checking_if_contact_added">Memeriksa apakah kontak menambahkan Anda...</string>
+    <string name="show_contact_added_status">Tampilkan Status Kontak Ditambahkan di Obrolan</string>
+    <string name="show_contact_added_status_sum">Opsi ini memeriksa apakah kontak telah menambahkan Anda atau memiliki foto profil publik.</string>
+    <string name="contact_added">Kontak telah menambahkan Anda atau memiliki foto profil publik.</string>
     <string name="disable_whatsapp_expiration">Nonaktifkan Kadaluarsa WhatsApp</string>
-    <string name="disable_whatsapp_expiration_sum">Nonaktifkan kadaluarsa versi WhatsApp
-(CATATAN: Nonaktifkan pembaruan otomatis untuk WhatsApp di Play Store atau tandai Play Store di LSposed)</string>
+    <string name="disable_whatsapp_expiration_sum">Nonaktifkan kadaluarsa versi WhatsApp\n(CATATAN: Nonaktifkan pembaruan otomatis untuk WhatsApp di Play Store atau tandai Play Store di LSposed)</string>
     <string name="disable_ads">Nonaktifkan Iklan</string>
     <string name="disable_ads_sum">Blokir iklan agar tidak muncul di WhatsApp</string>
     <string name="lockedchats_enhancer">Obrolan Terkunci yang Ditingkatkan</string>
@@ -475,7 +489,6 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="recording_mode_exclude">Rekam Semua Kecuali yang Dipilih</string>
     <string name="recording_included_contacts">Kontak yang disertakan</string>
     <string name="recording_excluded_contacts">Kontak yang dikecualikan</string>
-    <!-- Search Feature Strings -->
     <string name="search_features_title">Fitur Pencarian</string>
     <string name="search_features_hint">Cari fitur apa saja...</string>
     <string name="search_no_results">Tidak ada fitur yang ditemukan</string>
@@ -514,4 +527,27 @@ Harap gunakan versi WhatsApp yang didukung!</string>
     <string name="remove_sticker_white_outline_sum">Hapus garis tepi putih saat membuat stiker</string>
     <string name="remove_sticker_white_outline">Hapus garis tepi putih stiker</string>
     <string name="stickers">Stiker</string>
+    <string name="alert_module_notfound">Modul WaEnhancer tidak ditemukan; kemungkinan HMA menyembunyikannya. Hapus WhatsApp dari daftar HMA lalu coba lagi.</string>
+    <string name="diag_title">Diagnostik Root</string>
+    <string name="diag_summary">Periksa masalah sepolicy dan pemblokiran Hide My App List yang memengaruhi WhatsApp.</string>
+    <string name="diag_button">Analisis Perangkat</string>
+    <string name="diag_dialog_title">Log Diagnostik</string>
+    <string name="diag_root_granted">Akses root diberikan.</string>
+    <string name="diag_root_denied">Akses root ditolak. Diagnostik memerlukan akses root.</string>
+    <string name="diag_close">Tutup</string>
+    <string name="diag_sepolicy_checking">Memeriksa log sepolicy...</string>
+    <string name="diag_sepolicy_not_found">Log verbose LSPosed tidak ditemukan atau kosong.</string>
+    <string name="diag_sepolicy_no_issues">Tidak ada masalah sepolicy yang ditemukan di log.</string>
+    <string name="diag_sepolicy_found">Masalah sepolicy ditemukan:</string>
+    <string name="diag_sepolicy_broken">Sepolicy rusak terdeteksi. Solusi root dan patch kernel harus versi yang sama. Jika error berlanjut, beralihlah ke penyedia root lain yang kompatibel dengan perangkat Anda.</string>
+    <string name="diag_hma_checking">Memeriksa status Hide My App List...</string>
+    <string name="diag_hma_not_active">Hide My App List tidak aktif.</string>
+    <string name="diag_hma_zygisk_active">Hide My App List (Zygisk) aktif.</string>
+    <string name="diag_hma_lsposed_active">Hide My App List (LSPosed) aktif.</string>
+    <string name="diag_hma_not_found">Konfigurasi Hide My App List tidak ditemukan.</string>
+    <string name="diag_hma_invalid">Konfigurasi Hide My App List tidak valid.</string>
+    <string name="diag_hma_no_blocks">Tidak ada pemblokiran Hide My App List yang terdeteksi untuk WhatsApp.</string>
+    <string name="diag_hma_blocked">Hide My App List menyembunyikan WaEnhancer dari:</string>
+    <string name="diag_hma_disable">Nonaktifkan pemblokiran untuk WhatsApp/Business di Hide My App List agar WaEnhancer berfungsi dengan benar.</string>
+    <string name="diag_copied">Baris disalin ke papan klip</string>
 </resources>

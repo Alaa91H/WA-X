@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>Facebook tarzı (1 satır)</item>
+        <item>Facebook tarzı (tablo)</item>
+        <item>Dikey durum (önizlemesiz)</item>
+        <item>Dikey durum (daire)</item>
+        <item>Dikey durum (kare)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>Varsayılan</item>
+        <item>Belirme</item>
+        <item>Kaybolma</item>
+        <item>Büyütme</item>
+        <item>Yukarı kaydırma</item>
+        <item>Sağdan sola kaydırma</item>
+        <item>Döndürme</item>
+        <item>Zıplama</item>
+        <item>Küçültme</item>
+        <item>Ters çevirme</item>
+        <item>Hyperspace çıkışı</item>
+    </string-array>
+</resources>

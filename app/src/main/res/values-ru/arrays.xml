@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>Стиль Facebook (1 строка)</item>
+        <item>Стиль Facebook (таблица)</item>
+        <item>Статусы вертикально (без превью)</item>
+        <item>Статусы вертикально (круг)</item>
+        <item>Статусы вертикально (квадрат)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>По умолчанию</item>
+        <item>Появление</item>
+        <item>Исчезновение</item>
+        <item>Увеличение</item>
+        <item>Сдвиг вверх</item>
+        <item>Сдвиг справа налево</item>
+        <item>Вращение</item>
+        <item>Отскок</item>
+        <item>Уменьшение</item>
+        <item>Переворот</item>
+        <item>Гиперпространство</item>
+    </string-array>
+</resources>

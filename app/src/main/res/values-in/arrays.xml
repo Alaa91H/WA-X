@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>Gaya Facebook (1 baris)</item>
+        <item>Gaya Facebook (Tabel)</item>
+        <item>Status Vertikal (Tanpa Pratinjau)</item>
+        <item>Status Vertikal (Lingkaran)</item>
+        <item>Status Vertikal (Kotak)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>Default</item>
+        <item>Muncul</item>
+        <item>Menghilang</item>
+        <item>Perbesar</item>
+        <item>Geser ke atas</item>
+        <item>Geser kanan ke kiri</item>
+        <item>Putar</item>
+        <item>Pantul</item>
+        <item>Perkecil</item>
+        <item>Balik</item>
+        <item>Keluar hyperspace</item>
+    </string-array>
+</resources>

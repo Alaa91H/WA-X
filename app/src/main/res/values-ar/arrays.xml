@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="status_style_entries">
+        <item>@string/disabled</item>
+        <item>نمط فيسبوك (صف واحد)</item>
+        <item>نمط فيسبوك (جدول)</item>
+        <item>حالات عمودية (بدون معاينة)</item>
+        <item>حالات عمودية (دائرة)</item>
+        <item>حالات عمودية (مربع)</item>
+    </string-array>
+    <string-array name="animations_names">
+        <item>افتراضي</item>
+        <item>ظهور تدريجي</item>
+        <item>تلاشٍ تدريجي</item>
+        <item>تكبير</item>
+        <item>انزلاق لأعلى</item>
+        <item>انزلاق من اليمين إلى اليسار</item>
+        <item>دوران</item>
+        <item>ارتداد</item>
+        <item>تصغير</item>
+        <item>انقلاب</item>
+        <item>انتقال سريع (Hyperspace)</item>
+    </string-array>
+</resources>
