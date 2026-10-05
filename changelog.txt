@@ -1,28 +1,190 @@
-WaEnhancer 1.6.2
-Release date: 2026-10-04
+WaEnhancer 1.7.0
+Release date: 2026-10-05
+
+A reliability and capability release. This version reworks how the module
+discovers, installs and reports the state of every hook it needs, and lays the
+foundation for the 3.0 feature set. When a hook cannot be resolved, the module
+now explains why instead of crashing, and no single broken feature can take the
+rest of them down with it.
 
 HIGHLIGHTS
-- Added support for WhatsApp 2.26.40.x and extended WhatsApp Business support to 2.26.39.x.
-- Version detection now falls back to built-in supported-version lists when the resource arrays cannot be read, and logs the resolved list for diagnostics.
-- Consolidated all build and release automation into a single hardened CI workflow.
-- Added an automated baseline report and a merge-blocking regression gate for lint, unit tests, and APK size.
+- Typed hook resolution with explicit confidence scoring, cache invalidation and
+  fallback chains replaces null-and-assert resolution in the hook path.
+- A structured, sanitised diagnostics report can be copied and shared from the
+  crash screen; phone numbers, JIDs and message payloads are redacted first.
+- Safe Mode: after repeated failed starts the module loads only diagnostics,
+  compatibility, settings and recovery, instead of retrying every feature.
+- A per-feature kill switch with five states (enabled, manually disabled,
+  temporarily disabled, automatically disabled, incompatible) and a strike
+  counter.
+- A compatibility canary fingerprints the installed WhatsApp build (package,
+  version name, version code, APK hash) and defers only the affected features
+  when it changes.
+- Every cloud-backed feature (translation, transcription, summarisation) is off
+  by default and requires explicit, per-service consent that states what data
+  would leave the device.
+- Sixteen new packages added: platform, resolver, automation, history,
+  scheduler, intelligence, media, theme, notifications, storage, multipackage,
+  privacy, compat, config and diagnostics.
+
+NEW — PLATFORM AND RUNTIME SAFETY
+- Feature metadata contract: 64 registered features now declare their
+  identifier, category, preference keys, startup policy, required and optional
+  resolvers, permissions, supported target versions and diagnostics metadata.
+  Registration is rejected if a feature declares no keys, no resolvers or no
+  tests.
+- Feature registry rejects duplicate identifiers and is idempotent for identical
+  re-registration.
+- Compatibility summary renders a compact card and a long report, counting each
+  shared resolver once instead of once per feature.
+- Resolver diagnostics and a plain-language explanation layer: "this feature
+  stopped working because WhatsApp changed an internal name".
+- Key/value storage abstraction and a total, never-throwing JSON reader and
+  writer, so every new engine is unit-testable without a device.
+- Bridge access policy consolidated into a single authority. Binder requests are
+  checked permissively, tunnel calls are checked narrowly and re-validated on
+  every path operation.
+
+NEW — RESOLVER REWRITE
+- Resolution results are now values, not nulls: Resolved, NotFound, Ambiguous
+  and Incompatible. An ambiguous resolution carries no value, so it can no
+  longer be forced into one with an assertion.
+- Confidence is explicit (Exact, Likely, Ambiguous, None) against one centrally
+  adjustable minimum.
+- The resolver cache key includes the WhatsApp version, version code, APK hash
+  and resolver schema, and never the module version, so a module upgrade cannot
+  serve results resolved against a different build. A failed hash is recorded as
+  a distinct key and is never reused.
+- A single fallback chain expresses primary, then fallback, then disable in one
+  place, and reports which path a feature actually took.
+- Feature installation catches Throwable, including Error, so one failing
+  feature cannot stop the others from loading.
+- Non-null assertions in the resolution path reduced from 60 to 27, enforced by
+  a ratchet that may fall but never rise again.
+
+NEW — USER-FACING CAPABILITIES
+- Message rules with conditions on sender, chat type, keyword, regular
+  expression, battery and connectivity; priority ordering; conflict detection;
+  per-chat rate limits; a global emergency disable; a dry-run simulator; and an
+  audit log that never records message values.
+- Tasker 2.0 API with hashed, expiring tokens and an audit trail.
+- Local message memory: edit history, deleted-message timeline, per-message
+  notes, bookmark collections and a capability-aware long-press menu that only
+  offers an action when it applies, such as extracting a detected OTP.
+- Scheduled, recurring and undoable sending with retry, de-duplication,
+  timezone-safe recurrence and a queue that survives a restart.
+- Reply templates with an allowlist of variables.
+- Per-chat translation with language profiles, a preview of what an outgoing
+  message will actually be sent as, voice-note transcription with timestamped
+  searchable transcripts, and summaries built only from messages the user
+  selected.
+- Media toolkit: catalog, download manager with retry and cancel, image and
+  video quality presets, an exact-hash duplicate finder, status archiving and a
+  cleanup preview that must be confirmed before anything is deleted.
+- Theme engine with importable and exportable .waetheme packages, a theme
+  gallery, typography and shape controls, and an accessibility mode covering high
+  contrast, large text, larger touch targets, reduced motion and a simplified
+  layout.
+- Per-chat notification profiles with four privacy levels, quiet hours, inline
+  notification actions, local OTP extraction, call rules that can mute or reject
+  unknown callers by schedule or contact, and a recording library.
+- Storage dashboard with per-category sizes, smart cleanup rules, a duplicate
+  file finder, a password-encrypted private vault (PBKDF2-HMAC-SHA256 at 210,000
+  iterations with AES-256-GCM, per-blob salt and nonce, key never stored) and
+  Backup 3.0 with cross-version restore planning.
+- Package profiles and multi-account support: enable or disable the module per
+  target package, share or separate settings per package, bind each account to a
+  different privacy profile, and migrate existing single-account settings
+  automatically and idempotently.
+
+FIXES
+- FeatureLoader: a feature that fails to load no longer aborts the remaining
+  features. Failures are recorded as structured reports and persisted to a
+  bounded store (feature-failures.json, 50 entries, atomic full rewrite).
+- ScopeHook.getPackageNameFromPackageSettings never returned a package name, so
+  the bridge security check it fed was never satisfied. The method now returns
+  the real value.
+- HookBinder and HookProvider routed every request through three divergent
+  copies of the access check. All three now call BridgeAccessPolicy.
+- Backup and restore: importing a partial or corrupt settings file wiped every
+  preference before applying what it could parse. Import is now typed and
+  all-or-nothing, and an unknown value type aborts the whole restore.
+- UpdateChecker and HomeFragment each had their own copy of the version and
+  update-offer logic, so the startup gate and the settings screen could disagree
+  about whether the installed WhatsApp was supported. Both now use compat.
+- Supported-version detection falls back to the built-in list when the resource
+  arrays cannot be read, instead of reporting a false incompatibility, and logs
+  the list it resolved for diagnostics.
+- Version matching with an xx wildcard no longer accepts a null or blank target
+  version; it fails closed.
+- The crash report share button now shares only the redacted trace.
+- SharedPreferencesWrapper: the ordered preference transform chain was extracted
+  into PreferenceValueHooks so the fold and ordering rule is testable without
+  installing a hook.
+- WhatsAppContactPickerLauncher: contact and group results are resolved through
+  a single path, so an empty result set is no longer confused with a cancelled
+  picker.
+- Locale cleanup: values-id was deleted because values-in is a strict superset
+  with better translations and minSdk 28 always resolves to values-in.
+- Toolchain: Gradle and Kotlin daemon JVMs now force the en-US locale, fixing
+  local builds on non-English systems where Room code generation emitted
+  localised digits.
 
 COMPATIBILITY
-- WhatsApp: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, 2.26.38.x, 2.26.39.x, and 2.26.40.x.
-- WhatsApp Business: 2.26.32.x, 2.26.34.x, 2.26.35.x, 2.26.36.x, 2.26.37.x, 2.26.38.x, and 2.26.39.x.
-- The module keeps starting when the supported-version resources fail to load instead of reporting a false incompatibility.
+- WhatsApp: 2.26.32.xx, 2.26.34.xx, 2.26.35.xx, 2.26.36.xx, 2.26.37.xx,
+  2.26.38.xx, 2.26.39.xx, 2.26.40.xx.
+- WhatsApp Business: 2.26.32.xx, 2.26.34.xx, 2.26.35.xx, 2.26.36.xx,
+  2.26.37.xx, 2.26.38.xx, 2.26.39.xx.
+- 64 registered features: 47 resolve through dexkit, 12 through indirect
+  references, and 5 cannot break through resolution at all (DebugFeature,
+  FloatingBottomBar, GoogleTranslate, HideSeenView, MinorFixes).
+- Resolution evidence is recorded per resolver, per feature and per target
+  build. A feature is never reported as supported without evidence; the validator
+  refuses an unsupported claim and the full inventory is generated into
+  docs/COMPATIBILITY.md.
+- minSdk 28, targetSdk 34, compileSdk 37, ABIs arm64-v8a and armeabi-v7a.
 
-BUILD & RELEASE
-- One workflow now owns the pipeline: build, unit tests, Android lint, baseline regression gate, APK preparation, signature verification, tag validation, and GitHub Release publishing.
-- Normal runs build and sign debug APKs, keep them as CI artifacts for testing, and never publish a GitHub Release.
-- Only version tags use the release keystore; release APKs are never signed with the debug key.
-- The configured version must match the release tag in the form v<version>.
-- Release assets are exactly two deterministic .apk files:
-  - WaEnhancer-<version>.apk
-  - WaEnhancer-Business-<version>.apk
-- The regression gate compares each change against the baseline of the base revision, so a change cannot bypass the limits it is checked against by editing its own baseline.json.
+TESTS AND QUALITY GATES
+- 720 test methods per flavor, 1440 executions, 0 failures and 0 errors across
+  38 test files and 80 JUnit result files.
+- The baseline regression gate compares every change against the baseline of the
+  base revision, so a change cannot raise the limits it is measured against by
+  editing its own baseline.json in the same commit. It fails on new lint
+  baseline entries, on a lower executed-test count, on a rise in non-null
+  assertions in the resolution path, and on APK growth beyond the reviewed
+  budget.
+- Formatting is now a gate: spotlessCheck with ktlint covers the platform and
+  feature packages, the shared bridge policy, the preference value hooks, the
+  whole test tree and the Gradle scripts.
+- detekt runs with a recorded baseline in report mode so existing debt is visible
+  without blocking, and is tightened as the baseline shrinks.
+- A lint counting bug that silently reported success is fixed: lint entries are
+  now counted from the parsed XML instead of from line formatting, so the gate
+  cannot be defeated by a reformat.
+- The compatibility validator has its own test suite, 13 mutation tests included.
+- The lint baseline shrank from 419 to 313 recorded issues.
 
-DEVELOPER NOTES
-- Gradle and Kotlin daemon JVMs now force the en-US locale, fixing local builds on non-English systems where Room code generation emitted localized digits.
-- Shell scripts are checked out with LF line endings on every platform.
-- The baseline generator records executed, skipped, failed, and errored unit tests from the JUnit XML output.
+BUILD AND RELEASE
+- One workflow, .github/workflows/ci.yml, is the single source of truth for
+  building and releasing. All previous workflow files are removed.
+- A normal run (pull request or push to master) builds both flavors, runs the
+  full verification suite, signs the debug APKs and uploads them as a CI
+  artifact for manual testing. It never creates a Release.
+- Only a version tag publishes. The tag, the configured version and the version
+  baked into the APK are checked against each other and must be identical, and a
+  tag whose release already exists fails instead of overwriting it.
+- Only tag runs import the release keystore, and the keystore is opened and the
+  alias verified before the build starts. Every other build uses the debug key,
+  so the release key never signs an unreleased artifact.
+- Release assets are exactly two files, both .apk, and the staging directory is
+  rejected if it contains anything else:
+  - WaEnhancer-1.7.0.apk
+  - WaEnhancer-Business-1.7.0.apk
+- Every artifact is verified with apksigner before it is staged, and the version
+  name and version code are read back out of each APK.
+- Actions are pinned to commit SHAs, so the pipeline cannot be changed from a
+  pull request or by a compromised tag. Branch runs are cancelled when
+  superseded; release runs never are.
+- Release runs record build provenance for the published APKs after the Release
+  exists, as supplementary metadata that can never block or undo a release.
+- Gradle build caching is enabled to shorten CI runs.
