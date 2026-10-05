@@ -163,16 +163,12 @@ public class ScopeHook {
     private static boolean isAllowedSettingsBridgeCaller(Context context) {
         int callingUid = Binder.getCallingUid();
         String[] packages = context.getPackageManager().getPackagesForUid(callingUid);
-        if (packages == null) return false;
-
-        for (String caller : packages) {
-            if (FeatureLoader.PACKAGE_WPP.equals(caller)
-                    || FeatureLoader.PACKAGE_BUSINESS.equals(caller)
-                    || BuildConfig.APPLICATION_ID.equals(caller)) {
-                return true;
-            }
-        }
-        return false;
+        return BridgeAccessPolicy.INSTANCE.isAllowedBinderRequester(
+                packages,
+                false,
+                false,
+                BuildConfig.APPLICATION_ID
+        );
     }
 
     private static void unhook() {
@@ -183,11 +179,9 @@ public class ScopeHook {
         }
     }
 
-    private static String getPackageNameFromPackageSettings(Object packageSettings) {
-        String packageSettingsString = packageSettings.toString();
-        int startIndex = packageSettingsString.lastIndexOf(' ') + 1;
-        int endIndex = packageSettingsString.lastIndexOf('/');
-        return packageSettingsString.substring(startIndex, endIndex);
+    static String getPackageNameFromPackageSettings(Object packageSettings) {
+        return BridgeAccessPolicy.INSTANCE.packageNameFromPackageSettings(
+                packageSettings == null ? null : packageSettings.toString());
     }
 
 }

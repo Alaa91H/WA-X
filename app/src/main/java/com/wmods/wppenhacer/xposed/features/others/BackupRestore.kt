@@ -22,6 +22,29 @@ class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
         return "BackupRestore"
     }
 
+    companion object {
+        /** Menu item id used to detect and tag the injected entry. */
+        const val MENU_ITEM_ID: Int = 10001
+
+        /** Intent action understood by WhatsApp's restore-from-backup activity. */
+        const val ACTION_RESTORE_ONE_TIME_SETUP: String = "action_show_restore_one_time_setup"
+
+        private val SIMPLE_NAME_TOKENS = listOf("drive", "google")
+
+        /**
+         * Whether [simpleName] identifies the Google Drive backup activity.
+         *
+         * The activity's simple class name has moved between releases, so it is matched
+         * on containing both tokens rather than on an exact name.
+         */
+        @JvmStatic
+        fun isGoogleDriveActivity(simpleName: String?): Boolean {
+            if (simpleName.isNullOrEmpty()) return false
+            val lower = simpleName.lowercase(Locale.ROOT)
+            return SIMPLE_NAME_TOKENS.all { lower.contains(it) }
+        }
+    }
+
     override fun doHook() {
         if (!prefs.getBoolean("force_restore_backup_feature", false)) return
 
@@ -37,12 +60,10 @@ class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
             object : XC_MethodHook() {
 
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val name =
-                        param.thisObject.javaClass.simpleName.lowercase(Locale.getDefault())
-                    if (!(name.contains("drive") && name.contains("google"))) return
+                    if (!isGoogleDriveActivity(param.thisObject.javaClass.simpleName)) return
                     val menu = param.args[0] as Menu
-                    if (menu.findItem(10001) != null) return
-                    val menuItem = menu.add(0, 10001, 0, R.string.force_restore_backup_experimental)
+                    if (menu.findItem(MENU_ITEM_ID) != null) return
+                    val menuItem = menu.add(0, MENU_ITEM_ID, 0, R.string.force_restore_backup_experimental)
                     val activity = param.thisObject as Activity
                     menuItem.setOnMenuItemClickListener {
                         AlertDialogWpp(activity)
@@ -53,8 +74,8 @@ class BackupRestore(loader: ClassLoader, preferences:SharedPreferences) :
                             ) { _,_ ->
                                 try {
                                     val intent = Intent(activity, restoreFromBackupClass)
-                                    intent.action = "action_show_restore_one_time_setup"
-                                    activity.startActivityForResult(intent, 10001)
+                                    intent.action = ACTION_RESTORE_ONE_TIME_SETUP
+                                    activity.startActivityForResult(intent, MENU_ITEM_ID)
                                 } catch (e: Exception) {
                                     XposedBridge.log(e)
                                     Utils.showToast(

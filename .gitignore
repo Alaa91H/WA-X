@@ -1,7 +1,20 @@
 *.iml
 .gradle
+.kotlin
 /local.properties
 /.idea/
+# T07: a small, reviewed set of .idea files expresses project intent and is shared on
+# purpose: the project name, the Gradle and compiler settings, the inspection profile,
+# and the VCS mappings (the last is required for the opus/libopusenc/ogg submodules to be
+# seen as separate VCS roots). Everything else under .idea is IDE-local state and is
+# ignored. Negations must come after the /.idea/ rule to have any effect.
+/!.idea/.gitignore
+/!.idea/.name
+/!.idea/AndroidProjectSystem.xml
+/!.idea/compiler.xml
+/!.idea/gradle.xml
+/!.idea/inspectionProfiles/
+/!.idea/vcs.xml
 .DS_Store
 /build
 /captures
@@ -11,3 +24,8 @@ local.properties
 key.jks
 key_base64.txt
 /app/.project
+hs_err_pid*.log
+replay_pid*.log
+# Local tool state and build logs: machine specific, never part of the project.
+build_run.log
+/.freebuff/

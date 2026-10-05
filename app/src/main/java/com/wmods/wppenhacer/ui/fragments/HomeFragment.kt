@@ -27,6 +27,11 @@ import com.wmods.wppenhacer.R
 import com.wmods.wppenhacer.adapter.LogLineAdapter
 import com.wmods.wppenhacer.databinding.DialogDiagnosticsLogBinding
 import com.wmods.wppenhacer.databinding.FragmentHomeBinding
+import com.wmods.wppenhacer.compat.TargetVersions
+import com.wmods.wppenhacer.compat.UpdateOffer
+import com.wmods.wppenhacer.config.BackupEntry
+import com.wmods.wppenhacer.config.ConfigBackupSchema
+import com.wmods.wppenhacer.config.ConfigValue
 import com.wmods.wppenhacer.ui.fragments.base.BaseFragment
 import com.wmods.wppenhacer.utils.FilePicker
 import com.wmods.wppenhacer.utils.RootDiagnostics
@@ -240,18 +245,45 @@ class HomeFragment : BaseFragment() {
         val entries = prefs.all
         val jsonObject = JSONObject()
         for ((key, value) in entries) {
-            val type = JSONObject()
+            // The type vocabulary is owned by ConfigBackupSchema so that the name written
+            // here is exactly the name its parser accepts.
+            val typeName = ConfigBackupSchema.typeNameOf(value) ?: continue
             var keyValue: Any? = value
-            if (keyValue is HashSet<*>) {
+            if (keyValue is Set<*>) {
                 keyValue = JSONArray(ArrayList(keyValue))
             }
-            if (keyValue != null) {
-                type.put("type", keyValue.javaClass.simpleName)
-                type.put("value", keyValue)
-                jsonObject.put(key, type)
-            }
+            val type = JSONObject()
+            type.put(ConfigBackupSchema.FIELD_TYPE, typeName)
+            type.put(ConfigBackupSchema.FIELD_VALUE, keyValue)
+            jsonObject.put(key, type)
         }
         return jsonObject
+    }
+
+    /**
+     * Reads a backup document into flat entries without touching preferences.
+     *
+     * @return the entries, or null when any single entry cannot be represented, which is
+     *   the caller's signal to abort before anything is removed
+     */
+    private fun readBackupEntries(jsonObject: JSONObject): List<BackupEntry>? {
+        val entries = ArrayList<BackupEntry>()
+        val keys = jsonObject.keys()
+        while (keys.hasNext()) {
+            val keyName = keys.next()
+            var value = jsonObject.get(keyName)
+            var typeName: String? = value.javaClass.simpleName
+            var rawValue: Any? = value
+            if (value is JSONObject) {
+                typeName = value.optString(ConfigBackupSchema.FIELD_TYPE)
+                rawValue = value.opt(ConfigBackupSchema.FIELD_VALUE)
+                if (rawValue is JSONArray) {
+                    rawValue = (0 until rawValue.length()).map { rawValue.getString(it) }
+                }
+            }
+            entries.add(BackupEntry(keyName, typeName, rawValue))
+        }
+        return entries
     }
 
     private fun saveConfigs(context: Context) {
@@ -287,37 +319,25 @@ class HomeFragment : BaseFragment() {
                         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
                         val jsonObject = JSONObject(data)
 
+                        // Decode the whole document before touching preferences. The old
+                        // order removed every existing key first and only then applied the
+                        // file, so a partial or unrecognised document silently wiped the
+                        // user's settings. Restoring is now all or nothing.
+                        val entries = readBackupEntries(jsonObject)
+                            ?: throw JSONException("Unsupported configuration entry type")
+                        val decoded = ConfigBackupSchema.decodeAll(entries)
+                            ?: throw JSONException("Unsupported configuration entry type")
+
                         prefs.edit {
                             prefs.all.keys.forEach { key -> remove(key) }
-
-                            val keys = jsonObject.keys()
-                            while (keys.hasNext()) {
-                                val keyName = keys.next()
-                                var value = jsonObject.get(keyName)
-                                var type = value.javaClass.simpleName
-                                if (value is JSONObject) {
-                                    type = value.getString("type")
-                                    value = value.get("value")
-                                }
-
-                                when (type) {
-                                    "JSONArray" -> {
-                                        val jsonArray = value as JSONArray
-                                        val hashSet = HashSet<String>()
-                                        for (i in 0 until jsonArray.length()) {
-                                            hashSet.add(jsonArray.getString(i))
-                                        }
-                                        putStringSet(keyName, hashSet)
-                                    }
-
-                                    "String" -> putString(keyName, value as String)
-                                    "Boolean", "boolean" -> putBoolean(keyName, value as Boolean)
-                                    "Integer", "int" -> putInt(keyName, value as Int)
-                                    "Long", "long" -> putLong(keyName, (value as Number).toLong())
-                                    "Double", "double", "Float", "float" -> putFloat(
-                                        keyName,
-                                        (value as Number).toFloat()
-                                    )
+                            decoded.forEach { (key, value) ->
+                                when (value) {
+                                    is ConfigValue.Text -> putString(key, value.value)
+                                    is ConfigValue.Flag -> putBoolean(key, value.value)
+                                    is ConfigValue.Whole -> putInt(key, value.value)
+                                    is ConfigValue.Wide -> putLong(key, value.value)
+                                    is ConfigValue.Decimal -> putFloat(key, value.value)
+                                    is ConfigValue.Texts -> putStringSet(key, value.value)
                                 }
                             }
                         }
@@ -435,7 +455,7 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun isSupportedVersion(version: String?, supportedVersions: List<String>): Boolean {
-        return version != null && supportedVersions.any { version.startsWith(it.replace(".xx", "")) }
+        return TargetVersions.isSupported(version, supportedVersions)
     }
 
     private fun disableBusiness() {
@@ -494,8 +514,8 @@ class HomeFragment : BaseFragment() {
                         return@use
                     }
 
-                    val releaseVersion = tagName.removePrefix("v").trim()
-                    val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-dev").substringBefore("+").trim()
+                    val releaseVersion = UpdateOffer.normaliseTag(tagName)
+                    val currentVersion = UpdateOffer.normaliseModuleVersion(BuildConfig.VERSION_NAME)
                     val isNewVersion = releaseVersion.isNotEmpty() && releaseVersion != currentVersion
 
                     updateCardState(success = true, isUpToDate = !isNewVersion, newVersion = tagName)

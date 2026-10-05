@@ -16,7 +16,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
-import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.crossbowffs.remotepreferences.RemotePreferences
@@ -26,6 +25,11 @@ import com.wmods.wppenhacer.R
 import com.wmods.wppenhacer.UpdateChecker
 import com.wmods.wppenhacer.WppXposed
 import com.wmods.wppenhacer.activities.CrashReportActivity
+import com.wmods.wppenhacer.compat.TargetVersions
+import com.wmods.wppenhacer.diagnostics.FailureReportCodec
+import com.wmods.wppenhacer.diagnostics.FailureReportStore
+import com.wmods.wppenhacer.diagnostics.FeatureFailureReport
+import com.wmods.wppenhacer.diagnostics.ReportRedactor
 import com.wmods.wppenhacer.xposed.core.components.AlertDialogWpp
 import com.wmods.wppenhacer.xposed.core.components.FMessageWpp
 import com.wmods.wppenhacer.xposed.core.components.FStatusWpp
@@ -146,7 +150,48 @@ class FeatureLoader {
             "2.26.39.xx"
         )
 
-        private val list = Collections.synchronizedList(ArrayList<ErrorItem>())
+        private val failureReports =
+            Collections.synchronizedList(ArrayList<FeatureFailureReport>())
+
+        @Volatile
+        private var reportStore: FailureReportStore? = null
+
+        /** Records a structured failure report and returns it. */
+        private fun recordFailure(
+            featureId: String,
+            throwable: Throwable,
+            whatsAppVersion: String,
+            packageName: String,
+            resolver: String? = null,
+            stage: String? = null
+        ): FeatureFailureReport {
+            val report = FeatureFailureReport.fromThrowable(
+                featureId = featureId,
+                throwable = throwable,
+                moduleVersion = BuildConfig.VERSION_NAME,
+                whatsappVersion = whatsAppVersion,
+                packageName = packageName,
+                resolver = resolver,
+                stage = stage,
+                timestampMillis = System.currentTimeMillis(),
+                threadName = Thread.currentThread().name
+            )
+            failureReports.add(report)
+            XposedBridge.log("FeatureFailure ${report.toSummaryLine()}")
+            runCatching { reportStore?.append(report) }
+            return report
+        }
+
+        /** The failure reports collected so far this session, newest last. */
+        @JvmStatic
+        fun getFailureReports(): List<FeatureFailureReport> =
+            synchronized(failureReports) { failureReports.toList() }
+
+        /** Attaches persistence once an application context exists. */
+        private fun attachStore(application: Application) {
+            if (reportStore != null) return
+            reportStore = runCatching { FailureReportStore(application) }.getOrNull()
+        }
         private var supportedVersions: List<String> = emptyList()
         private var currentVersion: String? = null
         private var crashHandlerInstalled = false
@@ -184,6 +229,7 @@ class FeatureLoader {
                         XposedBridge.log(packageInfo.versionName)
                         currentVersion = packageInfo.versionName
                         installCrashHandler(application, packageInfo.versionName.orEmpty())
+                        attachStore(application)
 
                         supportedVersions =
                             resolveSupportedVersions(application)
@@ -201,9 +247,10 @@ class FeatureLoader {
                             SharedPreferencesWrapper.hookInit(application.classLoader)
                             ReflectionUtils.initCache(application)
 
-                            val isSupported = supportedVersions.any { s ->
-                                packageInfo.versionName?.startsWith(s.replace(".xx", "")) ?: false
-                            }
+                            val isSupported = TargetVersions.isSupported(
+                                packageInfo.versionName,
+                                supportedVersions
+                            )
 
                             if (!isSupported) {
                                 disableExpirationVersion(application.classLoader)
@@ -225,20 +272,13 @@ class FeatureLoader {
 
                         } catch (e: Throwable) {
                             XposedBridge.log(e)
-                            val error = ErrorItem().apply {
-                                pluginName = "MainFeatures[Critical]"
-                                whatsAppVersion = packageInfo.versionName
-                                moduleVersion = BuildConfig.VERSION_NAME
-                                message = e.message
-                                errorDetail = e.stackTrace
-                                    .filter { s ->
-                                        !s.className.startsWith("android") && !s.className.startsWith(
-                                            "com.android"
-                                        )
-                                    }
-                                    .joinToString(prefix = "[", postfix = "]")
-                            }
-                            list.add(error)
+                            recordFailure(
+                                featureId = "MainFeatures[Critical]",
+                                throwable = e,
+                                whatsAppVersion = packageInfo.versionName.orEmpty(),
+                                packageName = application.packageName,
+                                stage = "startup"
+                            )
                         }
                     }
                 })
@@ -248,11 +288,14 @@ class FeatureLoader {
                 object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         if (param.thisObject.javaClass.simpleName != "HomeActivity") return
-                        val errors = synchronized(list) { list.toList() }
+                        val errors = getFailureReports()
                         if (errors.isNotEmpty()) {
                             val activity = param.thisObject as Activity
+                            // Redacted by construction, so this text is safe to show and to
+                            // copy out of the dialog.
+                            val shareableText = FailureReportCodec.renderText(errors)
                             val msg =
-                                errors.joinToString("\n") { "${it.pluginName} - ${it.message}" }
+                                errors.joinToString("\n") { it.toSummaryLine() }
 
                             AlertDialogWpp(activity)
                                 .setTitle(activity.getString(R.string.error_detected))
@@ -268,7 +311,8 @@ class FeatureLoader {
                                         mApp?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     val clip = ClipData.newPlainText(
                                         "text",
-                                        errors.joinToString("\n") { it.toString() })
+                                        shareableText
+                                    )
                                     clipboard.setPrimaryClip(clip)
                                     Toast.makeText(
                                         mApp,
@@ -311,7 +355,6 @@ class FeatureLoader {
 
             val fromResources = try {
                 application.resources.getStringArray(resIdArray)
-                    ?.filter { it.isNotBlank() }
                     ?.toList()
                     .orEmpty()
             } catch (e: Throwable) {
@@ -319,14 +362,16 @@ class FeatureLoader {
                 emptyList()
             }
 
-            if (fromResources.isNotEmpty()) return fromResources
-
             val fallback = if (application.packageName == PACKAGE_WPP)
                 FALLBACK_SUPPORTED_VERSIONS_WPP
             else
                 FALLBACK_SUPPORTED_VERSIONS_BUSINESS
-            XposedBridge.log("Using built-in supported versions list: ${fallback.joinToString(", ")}")
-            return fallback
+
+            val resolved = TargetVersions.resolve(fromResources, fallback)
+            if (TargetVersions.normalise(fromResources).isEmpty()) {
+                XposedBridge.log("Using built-in supported versions list: ${resolved.joinToString(", ")}")
+            }
+            return resolved
         }
 
         private fun initializeModuleContext() {
@@ -355,7 +400,12 @@ class FeatureLoader {
                         previousHandler?.uncaughtException(thread, throwable)
                         return@setDefaultUncaughtExceptionHandler
                     }
-                    val crashInfo = buildCrashInfo(application, whatsAppVersion)
+                    val crashInfo = buildCrashInfo(application, whatsAppVersion) + buildFailureHistory()
+                    // The raw stack trace is not passed on: an exception message raised
+                    // while handling a chat can carry a JID or message text, and the
+                    // crash screen offers a share button. Only the redacted form leaves
+                    // here.
+                    val redactedTrace = buildRedactedTrace(throwable)
                     val intent = Intent().apply {
                         component = ComponentName(
                             BuildConfig.APPLICATION_ID,
@@ -364,10 +414,7 @@ class FeatureLoader {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         putExtra(CrashReportActivity.EXTRA_CRASH_INFO, crashInfo)
-                        putExtra(
-                            CrashReportActivity.EXTRA_CRASH_TRACE,
-                            Log.getStackTraceString(throwable)
-                        )
+                        putExtra(CrashReportActivity.EXTRA_CRASH_TRACE, redactedTrace)
                     }
                     application.startActivity(intent)
                 } catch (e: Throwable) {
@@ -395,6 +442,37 @@ class FeatureLoader {
                 "${application.getString(R.string.crash_android_version)}: $androidVersion",
                 "${application.getString(R.string.device_model)}: $deviceModel"
             ).joinToString("\n")
+        }
+
+        /**
+         * Builds the shareable stack trace for the crash screen.
+         *
+         * Every component is passed through [ReportRedactor], because this text is what
+         * the user copies out of the dialog and sends to whoever is helping them.
+         */
+        private fun buildRedactedTrace(throwable: Throwable): String = buildString {
+            append(ReportRedactor.redactAndBound(throwable.javaClass.name))
+            val message = ReportRedactor.redactAndBound(throwable.message)
+            if (message.isNotEmpty()) {
+                append(": ")
+                append(message)
+            }
+            ReportRedactor.summariseStackTrace(throwable).forEach { frame ->
+                append("\n  at ")
+                append(frame)
+            }
+        }
+
+        /**
+         * Appends the structured feature failure history to the crash information.
+         *
+         * This is what turns a bare crash into something actionable: the reports say
+         * which features had already failed, and on which resolver, before the crash.
+         */
+        private fun buildFailureHistory(): String {
+            val reports = getFailureReports()
+            if (reports.isEmpty()) return ""
+            return "\n\n" + FailureReportCodec.renderText(reports)
         }
 
 
@@ -646,20 +724,13 @@ class FeatureLoader {
                         plugin.doHook()
                     } catch (e: Throwable) {
                         XposedBridge.log(e)
-                        val error = ErrorItem().apply {
-                            pluginName = clazz.simpleName
-                            whatsAppVersion = versionWpp
-                            moduleVersion = BuildConfig.VERSION_NAME
-                            message = e.message
-                            errorDetail = e.stackTrace
-                                .filter { s ->
-                                    !s.className.startsWith("android") && !s.className.startsWith(
-                                        "com.android"
-                                    )
-                                }
-                                .joinToString(prefix = "[", postfix = "]")
-                        }
-                        list.add(error)
+                        recordFailure(
+                            featureId = clazz.simpleName,
+                            throwable = e,
+                            whatsAppVersion = versionWpp,
+                            packageName = FeatureLoader.moduleContext.packageName,
+                            stage = "hook"
+                        )
                     }
                     val duration = System.currentTimeMillis() - startTime
                     times.add("* Loaded Plugin ${clazz.simpleName} in ${duration}ms")
@@ -673,24 +744,6 @@ class FeatureLoader {
                 val loadedTimes = synchronized(times) { times.toList() }
                 loadedTimes.forEach { XposedBridge.log(it) }
             }
-        }
-    }
-
-    private class ErrorItem {
-        var pluginName: String? = null
-        var whatsAppVersion: String? = null
-        var errorDetail: String? = null
-        var moduleVersion: String? = null
-        var message: String? = null
-
-        override fun toString(): String {
-            return """
-                pluginName='$pluginName'
-                moduleVersion='$moduleVersion'
-                whatsAppVersion='$whatsAppVersion'
-                Message=$message
-                error='$errorDetail'
-            """.trimIndent()
         }
     }
 }

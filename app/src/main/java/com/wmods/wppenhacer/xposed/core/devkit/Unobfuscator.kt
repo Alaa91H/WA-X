@@ -53,6 +53,31 @@ object Unobfuscator {
         System.loadLibrary("dexkit")
     }
 
+    /**
+     * Replaces a `!!` on a DexKit class lookup with a failure that names the resolver.
+     *
+     * A bare `!!` here surfaced as a null-cast NullPointerException with no indication of
+     * which resolver broke, which is precisely the failure mode T15 has to explain to a
+     * user. The control flow is unchanged — a missing class still throws — but the message
+     * now names both the resolver and what it was looking for.
+     *
+     * This is a step towards the typed [com.wmods.wppenhacer.resolver.Resolution] results
+     * rather than the end state: the caller still receives a thrown exception, so the
+     * migration to typed results stays incremental.
+     */
+    private fun requireClass(resolver: String, hint: String, found: Class<*>?): Class<*> =
+        found ?: throw Exception("$resolver: no class matched [$hint] on this WhatsApp build")
+
+    /**
+     * The method counterpart of [requireClass].
+     *
+     * Separate from [requireClass] so the message says which of the two failed: a missing
+     * method and a missing class send the user to different places when a WhatsApp update
+     * renames internals.
+     */
+    private fun requireMethod(resolver: String, hint: String, found: Method?): Method =
+        found ?: throw Exception("$resolver: no method matched [$hint] on this WhatsApp build")
+
     @JvmStatic
     fun initWithPath(path: String): Boolean {
         return try {
@@ -1801,7 +1826,7 @@ object Unobfuscator {
                 matcher {
                     paramTypes(fMessageClass, String::class.java, Boolean::class.javaPrimitiveType)
                     modifiers(Modifier.PUBLIC or Modifier.FINAL)
-                    returnType(Boolean::class.javaPrimitiveType!!)
+                    returnType(java.lang.Boolean.TYPE)
                 }
             }.singleOrNull() ?: throw RuntimeException("ActionUser class not found")
             result.declaredClass!!.getInstance(loader)
@@ -1945,18 +1970,26 @@ object Unobfuscator {
             )
             if (results.isEmpty()) throw RuntimeException("ForwardAudioType method not found")
             if (results.size > 1) {
-                findFirstMethodUsingStrings(
-                    classLoader,
-                    StringMatchType.Contains,
+                requireMethod(
+                    "loadForwardAudioTypeMethod",
                     "forwardable",
-                    "FMessageFactory/newFMessageForForward/thumbnail"
-                )!!
+                    findFirstMethodUsingStrings(
+                        classLoader,
+                        StringMatchType.Contains,
+                        "forwardable",
+                        "FMessageFactory/newFMessageForForward/thumbnail"
+                    )
+                )
             } else {
-                findFirstMethodUsingStrings(
-                    classLoader,
-                    StringMatchType.Contains,
-                    "Non-forwardable message("
-                )!!
+                requireMethod(
+                    "loadForwardAudioTypeMethod",
+                    "Non-forwardable message(",
+                    findFirstMethodUsingStrings(
+                        classLoader,
+                        StringMatchType.Contains,
+                        "Non-forwardable message("
+                    )
+                )
             }
         }
     }
@@ -2252,11 +2285,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadTranscribeMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "transcribe: starting transcription"
-            )!!
+            requireMethod(
+                "loadTranscribeMethod",
+                "transcribe: starting transcription",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "transcribe: starting transcription"
+                )
+            )
         }
     }
 
@@ -2264,11 +2301,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadCheckSupportLanguage(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "Unsupported language"
-            )!!
+            requireMethod(
+                "loadCheckSupportLanguage",
+                "Unsupported language",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "Unsupported language"
+                )
+            )
         }
     }
 
@@ -2276,11 +2317,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadTranscriptSegment(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "TranscriptionSegment("
-            )!!
+            requireClass(
+                "loadTranscriptSegment",
+                "TranscriptionSegment(",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "TranscriptionSegment("
+                )
+            )
         }
     }
 
@@ -2288,11 +2333,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadStateChangeMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "presencestatemanager/startTransitionToUnavailable/new-state"
-            )!!
+            requireMethod(
+                "loadStateChangeMethod",
+                "presencestatemanager/startTransitionToUnavailable/new-state",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "presencestatemanager/startTransitionToUnavailable/new-state"
+                )
+            )
         }
     }
 
@@ -2351,14 +2400,14 @@ object Unobfuscator {
             var methodData = bridge.findMethod {
                 matcher {
                     addUsingString("enable_media_quality_tool")
-                    returnType(Boolean::class.javaPrimitiveType!!)
+                    returnType(java.lang.Boolean.TYPE)
                 }
             }
             if (methodData.isEmpty()) {
                 methodData = bridge.findMethod {
                     matcher {
                         addUsingString("show_media_quality_toggle")
-                        returnType(Boolean::class.javaPrimitiveType!!)
+                        returnType(java.lang.Boolean.TYPE)
                     }
                 }
             }
@@ -2407,11 +2456,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadTcTokenMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "GET_RECEIVED_TOKEN_AND_TIMESTAMP_BY_JID"
-            )!!
+            requireMethod(
+                "loadTcTokenMethod",
+                "GET_RECEIVED_TOKEN_AND_TIMESTAMP_BY_JID",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "GET_RECEIVED_TOKEN_AND_TIMESTAMP_BY_JID"
+                )
+            )
         }
     }
 
@@ -2491,11 +2544,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadWaContactClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "problematic contact:"
-            )!!
+            requireClass(
+                "loadWaContactClass",
+                "problematic contact:",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "problematic contact:"
+                )
+            )
         }
     }
 
@@ -2537,11 +2594,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadAddMenuAndroidX(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "Maximum number of items supported by"
-            )!!
+            requireMethod(
+                "loadAddMenuAndroidX",
+                "Maximum number of items supported by",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "Maximum number of items supported by"
+                )
+            )
         }
     }
 
@@ -2549,11 +2610,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadConvertLidToJid(loader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(loader) {
-            findFirstMethodUsingStrings(
-                loader,
-                StringMatchType.Contains,
-                "WaJidMapRepository/getPhoneJidByAccountUserJid"
-            )!!
+            requireMethod(
+                "loadConvertLidToJid",
+                "WaJidMapRepository/getPhoneJidByAccountUserJid",
+                findFirstMethodUsingStrings(
+                    loader,
+                    StringMatchType.Contains,
+                    "WaJidMapRepository/getPhoneJidByAccountUserJid"
+                )
+            )
         }
     }
 
@@ -2561,11 +2626,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadConvertJidToLid(loader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(loader) {
-            findFirstMethodUsingStrings(
-                loader,
-                StringMatchType.Contains,
-                "WaJidMapRepository/getAccountUserJidByPhoneJid"
-            )!!
+            requireMethod(
+                "loadConvertJidToLid",
+                "WaJidMapRepository/getAccountUserJidByPhoneJid",
+                findFirstMethodUsingStrings(
+                    loader,
+                    StringMatchType.Contains,
+                    "WaJidMapRepository/getAccountUserJidByPhoneJid"
+                )
+            )
         }
     }
 
@@ -2726,11 +2795,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadGetProfilePhotoMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "contactPhotosBitmapManager/getphotostream/"
-            )!!
+            requireMethod(
+                "loadGetProfilePhotoMethod",
+                "contactPhotosBitmapManager/getphotostream/",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "contactPhotosBitmapManager/getphotostream/"
+                )
+            )
         }
     }
 
@@ -2739,7 +2812,11 @@ object Unobfuscator {
     @JvmStatic
     fun loadChatCacheClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(classLoader, StringMatchType.StartsWith, "Chatscache/")!!
+            requireClass(
+                "loadChatCacheClass",
+                "Chatscache/",
+                findFirstClassUsingStrings(classLoader, StringMatchType.StartsWith, "Chatscache/")
+            )
         }
     }
 
@@ -2761,11 +2838,15 @@ object Unobfuscator {
 
     fun loadVideoTranscoderStartMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "VideoTranscoder/transcodeVideoNew/"
-            )!!
+            requireMethod(
+                "loadVideoTranscoderStartMethod",
+                "VideoTranscoder/transcodeVideoNew/",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "VideoTranscoder/transcodeVideoNew/"
+                )
+            )
         }
     }
 
@@ -2813,7 +2894,11 @@ object Unobfuscator {
     @JvmStatic
     fun loadWaContactDataClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(classLoader, StringMatchType.EndsWith, "WaContactData")!!
+            requireClass(
+                "loadWaContactDataClass",
+                "WaContactData",
+                findFirstClassUsingStrings(classLoader, StringMatchType.EndsWith, "WaContactData")
+            )
         }
     }
 
@@ -2856,11 +2941,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadGetWaContactMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "ContactManager/getContactFromCacheOrDbByJid"
-            )!!
+            requireMethod(
+                "loadGetWaContactMethod",
+                "ContactManager/getContactFromCacheOrDbByJid",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "ContactManager/getContactFromCacheOrDbByJid"
+                )
+            )
         }
     }
 
@@ -2967,11 +3056,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadMediaDataVideoConfigurationClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "MediaDataVideoConfiguration("
-            )!!
+            requireClass(
+                "loadMediaDataVideoConfigurationClass",
+                "MediaDataVideoConfiguration(",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "MediaDataVideoConfiguration("
+                )
+            )
         }
     }
 
@@ -2982,7 +3075,7 @@ object Unobfuscator {
             val method = bridge.findMethod {
                 matcher {
                     addUsingNumber(8522)
-                    returnType(Int::class.javaPrimitiveType!!)
+                    returnType(java.lang.Integer.TYPE)
                 }
             }.singleOrNull() ?: throw NoSuchMethodException("StatusStyle method not found")
             method.getMethodInstance(classLoader)
@@ -3007,11 +3100,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadGetProfilePhoto(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "ProfilePhotoManager/sendGetProfilePhoto"
-            )!!
+            requireClass(
+                "loadGetProfilePhoto",
+                "ProfilePhotoManager/sendGetProfilePhoto",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "ProfilePhotoManager/sendGetProfilePhoto"
+                )
+            )
         }
     }
 
@@ -3019,11 +3116,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadDialerProfilePictureLoader(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "DialerProfilePictureLoader/syncFetchProfilePhoto/onPhotoReceived"
-            )!!
+            requireClass(
+                "loadDialerProfilePictureLoader",
+                "DialerProfilePictureLoader/syncFetchProfilePhoto/onPhotoReceived",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "DialerProfilePictureLoader/syncFetchProfilePhoto/onPhotoReceived"
+                )
+            )
         }
     }
 
@@ -3031,7 +3132,11 @@ object Unobfuscator {
     @JvmStatic
     fun loadBottomBarConfigClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(classLoader, StringMatchType.Contains, "BottomBarConfig(")!!
+            requireClass(
+                "loadBottomBarConfigClass",
+                "BottomBarConfig(",
+                findFirstClassUsingStrings(classLoader, StringMatchType.Contains, "BottomBarConfig(")
+            )
         }
     }
 
@@ -3063,7 +3168,11 @@ object Unobfuscator {
     @JvmStatic
     fun loadFStatusClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(classLoader, StringMatchType.Contains, "FStatus state")!!
+            requireClass(
+                "loadFStatusClass",
+                "FStatus state",
+                findFirstClassUsingStrings(classLoader, StringMatchType.Contains, "FStatus state")
+            )
         }
     }
 
@@ -3088,11 +3197,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadGetStatusByKey(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "StatusStore/GET_STATUS_BY_KEY"
-            )!!
+            requireMethod(
+                "loadGetStatusByKey",
+                "StatusStore/GET_STATUS_BY_KEY",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "StatusStore/GET_STATUS_BY_KEY"
+                )
+            )
         }
     }
 
@@ -3100,11 +3213,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadFStatusToFMessage(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "mapFStatusToFMessageForForwarding"
-            )!!
+            requireMethod(
+                "loadFStatusToFMessage",
+                "mapFStatusToFMessageForForwarding",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "mapFStatusToFMessageForForwarding"
+                )
+            )
         }
     }
 
@@ -3135,11 +3252,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadProtocolTreeNodeClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "ProtocolTreeNode/getAttributeJid"
-            )!!
+            requireClass(
+                "loadProtocolTreeNodeClass",
+                "ProtocolTreeNode/getAttributeJid",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "ProtocolTreeNode/getAttributeJid"
+                )
+            )
         }
     }
 
@@ -3147,7 +3268,11 @@ object Unobfuscator {
     @JvmStatic
     fun loadKeyValueClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(classLoader, StringMatchType.Contains, "KeyValue{key=")!!
+            requireClass(
+                "loadKeyValueClass",
+                "KeyValue{key=",
+                findFirstClassUsingStrings(classLoader, StringMatchType.Contains, "KeyValue{key=")
+            )
         }
     }
 
@@ -3155,12 +3280,16 @@ object Unobfuscator {
     @JvmStatic
     fun loadLockedAuthCheckMethod(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
+            requireMethod(
+                "loadLockedAuthCheckMethod",
                 "privacy_fingerprint_enabled",
-                "app_lock_auth_needed"
-            )!!
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "privacy_fingerprint_enabled",
+                    "app_lock_auth_needed"
+                )
+            )
         }
     }
 
@@ -3182,11 +3311,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadFMediaStatusClass(classLoader: ClassLoader): Class<*> {
         return UnobfuscatorCache.getInstance().getClass(classLoader) {
-            findFirstClassUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "FStatusMedia/mediaDataV2"
-            )!!
+            requireClass(
+                "loadFMediaStatusClass",
+                "FStatusMedia/mediaDataV2",
+                findFirstClassUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "FStatusMedia/mediaDataV2"
+                )
+            )
         }
     }
 
@@ -3202,7 +3335,7 @@ object Unobfuscator {
             val methodData = waContactData.findMethod {
                 matcher {
                     usingNumbers(-4, 0)
-                    returnType(Long::class.javaPrimitiveType!!)
+                    returnType(java.lang.Long.TYPE)
                 }
             }.firstOrNull() ?: throw NoSuchFieldException("Number Method not found!")
 
@@ -3220,11 +3353,15 @@ object Unobfuscator {
     @JvmStatic
     fun loadSeenReceiptForStatus(classLoader: ClassLoader): Method {
         return UnobfuscatorCache.getInstance().getMethod(classLoader) {
-            findFirstMethodUsingStrings(
-                classLoader,
-                StringMatchType.Contains,
-                "StatusReceiptStore/insertOrUpdateSeenReceiptForStatus"
-            )!!
+            requireMethod(
+                "loadSeenReceiptForStatus",
+                "StatusReceiptStore/insertOrUpdateSeenReceiptForStatus",
+                findFirstMethodUsingStrings(
+                    classLoader,
+                    StringMatchType.Contains,
+                    "StatusReceiptStore/insertOrUpdateSeenReceiptForStatus"
+                )
+            )
         }
     }
 

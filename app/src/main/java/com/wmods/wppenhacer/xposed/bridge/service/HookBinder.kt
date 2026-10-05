@@ -5,44 +5,30 @@ import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import com.wmods.wppenhacer.App
+import com.wmods.wppenhacer.xposed.bridge.BridgeAccessPolicy
 import com.wmods.wppenhacer.xposed.bridge.WaeIIFace
-import com.wmods.wppenhacer.xposed.core.FeatureLoader
 import java.io.File
 import java.io.FileNotFoundException
 
 object HookBinder : WaeIIFace.Stub() {
 
-    private val allowedCallerPackages = setOf(
-        FeatureLoader.PACKAGE_WPP,
-        FeatureLoader.PACKAGE_BUSINESS
-    )
-
     private fun enforceAllowedCaller() {
         val callingUid = Binder.getCallingUid()
-        if (callingUid == Process.myUid()) return
-
-        val packages = App.instance.packageManager.getPackagesForUid(callingUid).orEmpty()
-        if (packages.none { it in allowedCallerPackages }) {
+        val packages = App.instance.packageManager.getPackagesForUid(callingUid)
+        val allowed = BridgeAccessPolicy.isAllowedTunnelCaller(
+            packages = packages,
+            isSelfUid = callingUid == Process.myUid()
+        )
+        if (!allowed) {
             throw SecurityException("Unauthorized WaEnhancer bridge caller uid=$callingUid")
         }
     }
 
-    private fun sharedStorageRoots(): List<File> {
-        val roots = linkedSetOf(Environment.getExternalStorageDirectory().canonicalFile)
-        val androidDataMarker = File.separator + "Android" + File.separator + "data" + File.separator
-
-        App.instance.getExternalFilesDirs(null)
-            .filterNotNull()
-            .forEach { appExternalDir ->
-                val canonicalPath = appExternalDir.canonicalFile.path
-                val markerIndex = canonicalPath.indexOf(androidDataMarker)
-                if (markerIndex > 0) {
-                    roots.add(File(canonicalPath.substring(0, markerIndex)).canonicalFile)
-                }
-            }
-
-        return roots.toList()
-    }
+    private fun sharedStorageRoots(): List<File> =
+        BridgeAccessPolicy.sharedStorageRoots(
+            externalStorageDir = Environment.getExternalStorageDirectory(),
+            externalFilesDirs = App.instance.getExternalFilesDirs(null).toList()
+        )
 
     private fun resolveAllowedPath(path: String): File {
         enforceAllowedCaller()
@@ -50,7 +36,7 @@ object HookBinder : WaeIIFace.Stub() {
         val target = File(path).canonicalFile
         val targetPath = target.path
         val isSharedStorage = sharedStorageRoots().any { root ->
-            targetPath == root.path || targetPath.startsWith(root.path + File.separator)
+            BridgeAccessPolicy.isUnderRoot(targetPath, root.path)
         }
 
         if (!isSharedStorage) {

@@ -22,6 +22,33 @@ object WhatsAppContactPickerLauncher {
         "com.whatsapp.settings.ui.SettingsNotifications"
     )
 
+    /**
+     * Activity-name suffixes accepted as the About screen when no declared candidate
+     * resolves.
+     *
+     * Order is irrelevant because this is a membership test, but the set itself is part
+     * of the contract: WhatsApp has moved this class between releases, so the fallbacks
+     * are deliberately broader than the preferred candidates above.
+     */
+    private val aboutActivitySuffixes = listOf(".settings.About", ".settings.ui.About", ".About")
+
+    /** Suffix accepted as the notification-settings screen when no candidate resolves. */
+    private const val SETTINGS_NOTIFICATIONS_SUFFIX = "SettingsNotifications"
+
+    /** Returns true when [activityName] looks like the About screen. */
+    @JvmStatic
+    fun isAboutActivity(activityName: String?): Boolean {
+        if (activityName.isNullOrEmpty()) return false
+        return aboutActivitySuffixes.any { activityName.endsWith(it) }
+    }
+
+    /** Returns true when [activityName] looks like the notification-settings screen. */
+    @JvmStatic
+    fun isSettingsNotificationsActivity(activityName: String?): Boolean {
+        if (activityName.isNullOrEmpty()) return false
+        return activityName.endsWith(SETTINGS_NOTIFICATIONS_SUFFIX)
+    }
+
     @JvmStatic
     fun getInstalledWhatsAppPackages(context: Context): ArrayList<String> {
         val installedPackages = arrayListOf<String>()
@@ -81,10 +108,8 @@ object WhatsAppContactPickerLauncher {
 
         val packageInfo: PackageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
         packageInfo.activities?.forEach { activityInfo ->
-            val name = activityInfo.name ?: return@forEach
-            if (name.endsWith(".settings.About") || name.endsWith(".settings.ui.About") || name.endsWith(".About")) {
-                return name
-            }
+            val name = activityInfo.name
+            if (isAboutActivity(name)) return name
         }
         throw Exception("Class About not found")
     }
@@ -103,7 +128,7 @@ object WhatsAppContactPickerLauncher {
         val packageInfo: PackageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
         packageInfo.activities?.forEach { activityInfo ->
             val name = activityInfo.name
-            if (name != null && name.endsWith("SettingsNotifications")) return name
+            if (isSettingsNotificationsActivity(name)) return name
         }
         throw Exception("Class SettingsNotifications not found")
     }

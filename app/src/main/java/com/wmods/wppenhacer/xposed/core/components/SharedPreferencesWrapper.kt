@@ -69,7 +69,12 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
     }
 
     companion object {
-        private val prefHook = CopyOnWriteArraySet<SPrefHook>()
+        /**
+         * Registered hooks, stored already adapted to the chain contract so that the
+         * per-read fold allocates nothing. Preference reads are frequent enough that
+         * wrapping on every call would be a measurable cost.
+         */
+        private val prefHook = CopyOnWriteArraySet<PreferenceValueHooks.Transform>()
 
         @Throws(Exception::class)
         fun hookInit(classLoader: ClassLoader) {
@@ -173,16 +178,11 @@ class SharedPreferencesWrapper(private val mPreferences: SharedPreferences) : Sh
         }
 
         fun addHook(hook: SPrefHook?) {
-            prefHook.add(hook!!)
+            if (hook == null) return
+            prefHook.add(PreferenceValueHooks.Transform { key, value -> hook.hookValue(key, value) })
         }
 
-        private fun applyHook(key: String?, value: Any?): Any? {
-            if (prefHook.isEmpty()) return value
-            var value = value
-            for (hook in prefHook) {
-                value = hook.hookValue(key, value)
-            }
-            return value
-        }
+        private fun applyHook(key: String?, value: Any?): Any? =
+            PreferenceValueHooks.applyAll(prefHook, key, value)
     }
 }

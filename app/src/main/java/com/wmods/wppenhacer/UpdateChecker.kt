@@ -1,6 +1,7 @@
 package com.wmods.wppenhacer
 
 import android.app.Activity
+import com.wmods.wppenhacer.compat.UpdateOffer
 import com.wmods.wppenhacer.xposed.core.WppCore
 import com.wmods.wppenhacer.xposed.core.components.AlertDialogWpp
 import com.wmods.wppenhacer.xposed.utils.Utils
@@ -17,6 +18,8 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
     companion object {
         private const val LATEST_RELEASE_API = "https://api.github.com/repos/Alaa91H/WaEnhancer/releases/latest"
         private const val TELEGRAM_UPDATE_URL = "https://t.me/waenhancer"
+
+        private val DEFAULT_CHANGELOG = UpdateOffer.DEFAULT_CHANGELOG
 
         private val httpClient: OkHttpClient by lazy {
             OkHttpClient.Builder()
@@ -46,18 +49,20 @@ class UpdateChecker(private val mActivity: Activity) : Runnable {
 
                 if (tagName.isBlank()) return
 
-                releaseVersion = tagName.removePrefix("v").trim()
-                changelog = release.optString("body", "No changelog available.").trim()
+                releaseVersion = UpdateOffer.normaliseTag(tagName)
+                changelog = release.optString("body", DEFAULT_CHANGELOG).trim()
                 publishedAt = release.optString("published_at", "")
             }
 
             if (releaseVersion.isBlank()) return
 
-            val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-dev").substringBefore("+").trim()
-            val isNewVersion = releaseVersion != currentVersion
-            val isIgnored = WppCore.getPrivString("ignored_version", "") == releaseVersion
-
-            if (isNewVersion && !isIgnored) {
+            val currentVersion = UpdateOffer.normaliseModuleVersion(BuildConfig.VERSION_NAME)
+            if (UpdateOffer.shouldOffer(
+                    releaseVersion = releaseVersion,
+                    currentVersion = currentVersion,
+                    ignoredVersion = WppCore.getPrivString("ignored_version", "")
+                )
+            ) {
                 mActivity.runOnUiThread {
                     showUpdateDialog(releaseVersion, changelog, publishedAt)
                 }
