@@ -537,4 +537,25 @@
     <string name="developer_warning_summary">此版本包含仍在开发中的更改，稳定性可能较低。</string>
     <string name="system_info">系统信息</string>
     <string name="edit">编辑</string>
+
+    <!-- Google Translate -->
+    <string name="gt_name">Google 翻译</string>
+    <string name="gt_use_global_settings">使用全局设置</string>
+    <string name="gt_auto_translate">自动翻译收到的消息</string>
+    <string name="gt_from_format">源语言：%1$s</string>
+    <string name="gt_to_format">目标语言：%1$s</string>
+    <string name="gt_privacy_notice">翻译会将消息文本发送给 Google。原始消息仍会显示。</string>
+    <string name="gt_global_title">Google 翻译 · 全局</string>
+    <string name="gt_message_too_long">此消息过长，无法翻译。</string>
+    <string name="gt_close">关闭</string>
+    <string name="gt_translating">正在翻译…</string>
+    <string name="gt_translator">翻译器</string>
+    <string name="gt_unavailable">翻译不可用。请检查网络连接或尝试其他语言。</string>
+    <string name="gt_detect_language">检测语言</string>
+    <string name="gt_automatic_off">自动翻译已关闭</string>
+    <string name="gt_global_default_format">全局默认值 · %1$s</string>
+    <string name="gt_search_languages">搜索语言</string>
+    <string name="gt_translate_from">源语言</string>
+    <string name="gt_translate_to">目标语言</string>
+    <string name="gt_translate_action">翻译</string>
 </resources>

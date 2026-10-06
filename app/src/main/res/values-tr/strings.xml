@@ -537,4 +537,25 @@
     <string name="developer_warning_summary">Bu derleme geliştirme aşamasındaki değişiklikleri içerir ve daha az kararlı olabilir.</string>
     <string name="system_info">Sistem bilgileri</string>
     <string name="edit">Düzenle</string>
+
+    <!-- Google Translate -->
+    <string name="gt_name">Google Translate</string>
+    <string name="gt_use_global_settings">Genel ayarları kullan</string>
+    <string name="gt_auto_translate">Gelen iletileri otomatik çevir</string>
+    <string name="gt_from_format">Kaynak: %1$s</string>
+    <string name="gt_to_format">Hedef: %1$s</string>
+    <string name="gt_privacy_notice">Çeviri için ileti metni Google hizmetine gönderilir. Özgün iletiler görünür kalır.</string>
+    <string name="gt_global_title">Google Translate · Genel</string>
+    <string name="gt_message_too_long">Bu ileti çevirmek için çok uzun.</string>
+    <string name="gt_close">Kapat</string>
+    <string name="gt_translating">Çevriliyor…</string>
+    <string name="gt_translator">Çevirmen</string>
+    <string name="gt_unavailable">Çeviri kullanılamıyor. Bağlantınızı kontrol edin veya başka bir dil deneyin.</string>
+    <string name="gt_detect_language">Dili algıla</string>
+    <string name="gt_automatic_off">Otomatik çeviri kapalı</string>
+    <string name="gt_global_default_format">Genel varsayılan · %1$s</string>
+    <string name="gt_search_languages">Dillerde ara</string>
+    <string name="gt_translate_from">Kaynak dil</string>
+    <string name="gt_translate_to">Hedef dil</string>
+    <string name="gt_translate_action">Çevir</string>
 </resources>
