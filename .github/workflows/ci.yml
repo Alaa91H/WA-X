@@ -75,7 +75,7 @@ permissions:
   contents: read
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   GRADLE_ARGS: --no-daemon --stacktrace
   # Explicit APK growth budget for the regression gate. The 1.7.0 platform and
   # resolver work grew the debug APK by ~3.0%. The budget is a reviewed number,
@@ -107,9 +107,12 @@ jobs:
 
       - name: Set up JDK
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: temurin
+          distribution: jetbrains
+          java-package: jdk
           cache: gradle
 
       # The single point where the tag, the configured version and the release
