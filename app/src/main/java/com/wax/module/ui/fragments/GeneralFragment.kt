@@ -1,14 +1,30 @@
 package com.wax.module.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import com.wax.module.R
 import com.wax.module.ui.fragments.base.BaseFragment
 import com.wax.module.ui.fragments.base.BasePreferenceFragment
+import com.wax.module.ui.targets.TargetSettingsActivity
 
 class GeneralFragment : BaseFragment() {
+    override fun onResume() {
+        super.onResume()
+        val child = childFragmentManager.findFragmentById(R.id.frag_container) as? PreferenceFragmentCompat
+        val row = child?.findPreference<Preference>("per_target_settings")
+        if (row != null && row.onPreferenceClickListener == null) {
+            row.setOnPreferenceClickListener {
+                startActivity(Intent(requireContext(), TargetSettingsActivity::class.java))
+                true
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

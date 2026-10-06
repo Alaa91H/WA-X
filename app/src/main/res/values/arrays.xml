@@ -41,9 +41,10 @@
             WhatsApp are rejected by the installer. LSPosed shows this entry as
             "System Framework" and stores it as `system`; the legacy name `android`
             is the one it expects here and it performs the swap itself.
-          * `com.android.providers.settings` is required by the settings-provider
-            bridge used by ScopeHook. It is infrastructure, not a WhatsApp feature
-            target.
+          * `com.android.providers.settings` hosts the SettingsProvider bridge
+            fallback used when the direct BridgeService path is unavailable. It must
+            be in scope so ScopeHook can intercept the `Settings.System` binder
+            request and return the module binder to the hooked WhatsApp process.
           * The module's own package is absent on purpose. LSPosed adds a legacy
             module to its own scope automatically, because a legacy module reads its
             preferences from its own process through world-readable files. Declaring

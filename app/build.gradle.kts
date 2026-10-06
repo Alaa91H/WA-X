@@ -8,6 +8,7 @@ import kotlin.time.Duration.Companion.milliseconds
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kspPlugin)
+    alias(libs.plugins.compose)
     alias(libs.plugins.detekt)
     alias(libs.plugins.spotless)
 }
@@ -127,6 +128,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
+        // Compose and view binding coexist: the Compose screens are new surfaces, and
+        // converting a preference-fragment screen to Compose while it still has to keep
+        // working is not a change worth making in the same commit as the foundation.
+        compose = true
         viewBinding = true
         buildConfig = true
         aidl = true
@@ -201,6 +206,17 @@ kotlin {
 }
 
 dependencies {
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
     testImplementation("junit:junit:4.13.2")
     implementation(libs.colorpicker)
     implementation(files("libs/dexkit-android.aar"))
@@ -280,6 +296,21 @@ afterEvaluate {
                     }
                 }
             }
+        }
+    }
+}
+
+// The Android Gradle plugin asks the Compose plugin for `compose-group-mapping` at the
+// plugin version it detects, and for this combination that is a version that was never
+// published, so the release variant failed to resolve it while debug built fine. The
+// mapping only matters when publishing a Compose Multiplatform library, which this is
+// not, so it is redirected to the published version matching our Kotlin. Scoped to that
+// one configuration so nothing else in the build can be affected by it.
+configurations.matching { it.name.contains("composeMappingProducer") }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name == "compose-group-mapping") {
+            useVersion(libs.versions.kotlin.get())
+            because("the requested version was never published, and the mapping is unused for an app")
         }
     }
 }

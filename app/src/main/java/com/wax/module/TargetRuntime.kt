@@ -7,6 +7,7 @@ import com.wax.module.settings.SettingsScope
 import com.wax.module.settings.SettingsSnapshot
 import com.wax.module.settings.SettingsSnapshotCache
 import com.wax.module.settings.SettingsStore
+import com.wax.module.settings.TargetSettingsBridge
 import de.robv.android.xposed.XposedBridge
 import java.util.concurrent.atomic.AtomicReference
 
@@ -63,11 +64,15 @@ object TargetRuntime {
         target: TargetApp,
         store: SettingsStore = InMemorySettingsStore(),
         defaults: Map<String, Any?> = emptyMap(),
+        preferences: android.content.SharedPreferences? = null,
     ) {
         current.set(target)
         this.store = store
         this.resolver = EffectiveSettingsResolver(store, defaults)
         this.snapshots = SettingsSnapshotCache(this.resolver)
+        // The preference object is wrapped here rather than at first use so that every
+        // read a feature makes from this point on resolves against this target.
+        preferences?.let { TargetSettingsBridge.install(it, target) }
         logger("attached to ${target.displayName} (${target.packageName})")
     }
 

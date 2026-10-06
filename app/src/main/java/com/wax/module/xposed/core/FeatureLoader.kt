@@ -23,6 +23,7 @@ import com.wax.module.BuildConfig
 import com.wax.module.ModuleApplication
 import com.wax.module.ModuleEntryPoint
 import com.wax.module.R
+import com.wax.module.TargetRuntime
 import com.wax.module.UpdateChecker
 import com.wax.module.activities.CrashReportActivity
 import com.wax.module.compat.TargetVersions
@@ -31,6 +32,7 @@ import com.wax.module.diagnostics.FailureReportStore
 import com.wax.module.diagnostics.FeatureFailureReport
 import com.wax.module.diagnostics.ReportRedactor
 import com.wax.module.platform.SupportedPackages
+import com.wax.module.settings.TargetSettingsBridge
 import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.core.components.FMessageWpp
 import com.wax.module.xposed.core.components.FStatusWpp
@@ -223,7 +225,11 @@ class FeatureLoader {
                     override fun beforeHookedMethod(param: MethodHookParam) {
                         mApp = param.args[0] as Application
                         val application = mApp!!
-                        val pref = getPreferences(application)
+                        // Wrapped for this process's target before anything reads it, so
+                        // every feature below sees this target's overrides rather than the
+                        // Global value. The target comes from the process package name, which
+                        // is the only place a single APK can tell the two builds apart.
+                        val pref = TargetSettingsBridge.install(getPreferences(application), TargetRuntime.target)
                         Feature.isDebug = pref.getBoolean("enablelogs", false)
                         Utils.xprefs = pref
 

@@ -1,0 +1,15 @@
+root = true
+
+[*.{kt,kts}]
+# Compose names composable functions in PascalCase. That is the convention the Compose
+# compiler follows and the one every Compose codebase uses, and it conflicts with the
+# function-naming rule. ktlint provides a setting for exactly this case, so the rule is
+# taught the exception instead of being suppressed per finding or worked around by
+# renaming functions into something nobody would write.
+#
+# Nothing else is set here on purpose. Stating `max_line_length` or `indent_size` was
+# tried and it changed how ktlint wraps existing code, which turned a two-file Compose
+# change into a 160-line reformat of unrelated files. A configuration file that silently
+# restates the defaults is not free; this one only says the thing that is actually
+# different.
+ktlint_function_naming_ignore_when_annotated_with = Composable

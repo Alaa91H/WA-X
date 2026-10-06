@@ -181,5 +181,10 @@
                 <action android:name="android.support.customtabs.action.CustomTabsService"/>
             </intent-filter>
         </receiver>
+        <activity
+            android:name=".ui.targets.TargetSettingsActivity"
+            android:exported="false"
+            android:label="@string/per_target_settings" />
+
     </application>
 </manifest>
