@@ -123,15 +123,21 @@ sealed interface Resolution<out T> {
             describe: (T) -> String,
         ): Resolution<T> =
             when (candidates.size) {
-                0 -> NotFound(searched = listOf(how))
-                1 ->
+                0 -> {
+                    NotFound(searched = listOf(how))
+                }
+
+                1 -> {
                     if (exact) {
                         Resolved(candidates[0], Confidence.EXACT, how)
                     } else {
                         Resolved(candidates[0], Confidence.LIKELY, how)
                     }
+                }
 
-                else -> Ambiguous(candidates.map(describe))
+                else -> {
+                    Ambiguous(candidates.map(describe))
+                }
             }
 
         /** Lifts a nullable legacy result into a typed one, preserving current behaviour. */

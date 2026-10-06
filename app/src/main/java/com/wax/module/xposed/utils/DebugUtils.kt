@@ -100,6 +100,7 @@ object DebugUtils {
                 }
                 sb.append("]")
             }
+
             is Map<*, *> -> {
                 val keys = value.keys
                 sb.append("Map[")
@@ -112,12 +113,14 @@ object DebugUtils {
                 }
                 sb.append("]")
             }
+
             is ByteArray -> {
                 try {
                     sb.append(String(value, StandardCharsets.UTF_8))
                 } catch (_: Exception) {
                 }
             }
+
             else -> {
                 sb.append(value)
             }

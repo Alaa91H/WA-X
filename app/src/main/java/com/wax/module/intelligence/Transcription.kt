@@ -308,8 +308,13 @@ class TranscriptionCoordinator(
                         return outcome
                     }
 
-                    is TranscriptionOutcome.Failed -> Unit
-                    is TranscriptionOutcome.Unavailable -> Unit
+                    is TranscriptionOutcome.Failed -> {
+                        Unit
+                    }
+
+                    is TranscriptionOutcome.Unavailable -> {
+                        Unit
+                    }
                 }
             }
         }
@@ -323,8 +328,13 @@ class TranscriptionCoordinator(
                     return outcome
                 }
 
-                is TranscriptionOutcome.Failed -> Unit
-                is TranscriptionOutcome.Unavailable -> Unit
+                is TranscriptionOutcome.Failed -> {
+                    Unit
+                }
+
+                is TranscriptionOutcome.Unavailable -> {
+                    Unit
+                }
             }
         }
 

@@ -191,10 +191,22 @@ class TextEditorActivity : BaseActivity() {
                     e.printStackTrace()
                 }
             }
-            R.id.menuitem_exit -> finish()
-            R.id.menuitem_clear -> updateWebViewContent("")
-            R.id.menuitem_import_image -> mGetContent.launch("image/*")
-            R.id.menuitem_export -> mExportFile.launch("$folderName.zip")
+
+            R.id.menuitem_exit -> {
+                finish()
+            }
+
+            R.id.menuitem_clear -> {
+                updateWebViewContent("")
+            }
+
+            R.id.menuitem_import_image -> {
+                mGetContent.launch("image/*")
+            }
+
+            R.id.menuitem_export -> {
+                mExportFile.launch("$folderName.zip")
+            }
         }
         return super.onOptionsItemSelected(item)
     }

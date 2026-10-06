@@ -43,7 +43,8 @@ class TargetScopedPreferences(
         val prefix = SettingsKeys.TARGET_PREFIX + target.code + "."
         val all = delegate.all ?: emptyMap()
         val rebuilt = HashMap<String, Any?>()
-        all.asSequence()
+        all
+            .asSequence()
             .filter { (physicalKey, value) ->
                 physicalKey != null &&
                     value != null &&
@@ -87,37 +88,49 @@ class TargetScopedPreferences(
         // leave target overrides as strings after a scope copy, so recover those values
         // rather than handing a String to a Boolean/Int hook or silently ignoring it.
         return when (current) {
-            is Boolean ->
+            is Boolean -> {
                 when (value) {
                     is Boolean -> value
                     is String -> value.toBooleanStrictOrNull() ?: current
                     else -> current
                 }
+            }
 
-            is Int ->
+            is Int -> {
                 when (value) {
                     is Number -> value.toInt()
                     is String -> value.toIntOrNull() ?: current
                     else -> current
                 }
+            }
 
-            is Long ->
+            is Long -> {
                 when (value) {
                     is Number -> value.toLong()
                     is String -> value.toLongOrNull() ?: current
                     else -> current
                 }
+            }
 
-            is Float ->
+            is Float -> {
                 when (value) {
                     is Number -> value.toFloat()
                     is String -> value.toFloatOrNull() ?: current
                     else -> current
                 }
+            }
 
-            is String -> value as? String ?: current
-            is Set<*> -> value as? Set<*> ?: current
-            else -> if (current::class.java.isInstance(value)) value else current
+            is String -> {
+                value as? String ?: current
+            }
+
+            is Set<*> -> {
+                value as? Set<*> ?: current
+            }
+
+            else -> {
+                if (current::class.java.isInstance(value)) value else current
+            }
         }
     }
 
@@ -133,18 +146,32 @@ class TargetScopedPreferences(
         // The XML contract is authoritative for WA X settings. It also repairs values
         // written by older builds with the wrong SharedPreferences type.
         return when (declaredKind) {
-            SettingKeyRegistry.Kind.BOOLEAN -> store.readBoolean(scope, key)
-            SettingKeyRegistry.Kind.INT -> store.readInt(scope, key)
-            SettingKeyRegistry.Kind.FLOAT -> store.readFloat(scope, key)
-            SettingKeyRegistry.Kind.SET ->
+            SettingKeyRegistry.Kind.BOOLEAN -> {
+                store.readBoolean(scope, key)
+            }
+
+            SettingKeyRegistry.Kind.INT -> {
+                store.readInt(scope, key)
+            }
+
+            SettingKeyRegistry.Kind.FLOAT -> {
+                store.readFloat(scope, key)
+            }
+
+            SettingKeyRegistry.Kind.SET -> {
                 store.readStringSet(scope, key)
-                    ?: store.readString(scope, key)
+                    ?: store
+                        .readString(scope, key)
                         ?.split(LEGACY_SET_SEPARATOR)
                         ?.filter { it.isNotEmpty() }
                         ?.toSet()
+            }
 
-            SettingKeyRegistry.Kind.TEXT -> store.readString(scope, key)
-            null ->
+            SettingKeyRegistry.Kind.TEXT -> {
+                store.readString(scope, key)
+            }
+
+            null -> {
                 when (store.typeOf(physicalKey) ?: ValueType.of(raw)) {
                     ValueType.Flag -> store.readBoolean(scope, key)
                     ValueType.Whole -> store.readInt(scope, key)
@@ -152,6 +179,7 @@ class TargetScopedPreferences(
                     ValueType.Set -> store.readStringSet(scope, key)
                     ValueType.Text -> raw.toString()
                 }
+            }
         }
     }
 

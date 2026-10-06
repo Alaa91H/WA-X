@@ -221,16 +221,25 @@ class CrossVersionRestorePlanner(
             entries =
                 document.keys().sorted().map { key ->
                     when {
-                        knownKeys.contains(key) -> RestoreKeyPlan(key, RestoreKeyClass.COMPATIBLE)
-                        migrations.containsKey(key) ->
+                        knownKeys.contains(key) -> {
+                            RestoreKeyPlan(key, RestoreKeyClass.COMPATIBLE)
+                        }
+
+                        migrations.containsKey(key) -> {
                             RestoreKeyPlan(
                                 key,
                                 RestoreKeyClass.MIGRATED,
                                 "renamed to ${migrations[key]}",
                             )
+                        }
 
-                        deprecatedKeys.contains(key) -> RestoreKeyPlan(key, RestoreKeyClass.DEPRECATED)
-                        else -> RestoreKeyPlan(key, RestoreKeyClass.REJECTED, "unknown to this version")
+                        deprecatedKeys.contains(key) -> {
+                            RestoreKeyPlan(key, RestoreKeyClass.DEPRECATED)
+                        }
+
+                        else -> {
+                            RestoreKeyPlan(key, RestoreKeyClass.REJECTED, "unknown to this version")
+                        }
                     }
                 },
             backupSchemaVersion = document.schemaVersion,

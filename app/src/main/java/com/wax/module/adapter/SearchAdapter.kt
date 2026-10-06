@@ -134,10 +134,15 @@ class SearchAdapter(
                 SearchableFeature.Category.GENERAL_HOMESCREEN,
                 SearchableFeature.Category.GENERAL_CONVERSATION,
                 -> "#4CAF50".toColorInt()
+
                 SearchableFeature.Category.PRIVACY -> "#2196F3".toColorInt()
+
                 SearchableFeature.Category.MEDIA -> "#FF9800".toColorInt()
+
                 SearchableFeature.Category.CUSTOMIZATION -> "#9C27B0".toColorInt()
+
                 SearchableFeature.Category.RECORDINGS -> "#F44336".toColorInt()
+
                 SearchableFeature.Category.HOME_ACTIONS -> "#607D8B".toColorInt()
             }
     }

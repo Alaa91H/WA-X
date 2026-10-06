@@ -327,23 +327,33 @@ class TranslationCoordinator(
             profiles.profileFor(chatId)
                 ?: return TranslationDecision(false, null, "no language profile for this chat")
         return when (profile.mode) {
-            TranslationMode.OFF -> TranslationDecision(false, profile.targetLanguage, "translation is off for this chat")
-            TranslationMode.ON_DEMAND ->
+            TranslationMode.OFF -> {
+                TranslationDecision(false, profile.targetLanguage, "translation is off for this chat")
+            }
+
+            TranslationMode.ON_DEMAND -> {
                 TranslationDecision(false, profile.targetLanguage, "on-demand: waiting for the user to ask")
+            }
 
-            TranslationMode.ALWAYS_CHAT ->
+            TranslationMode.ALWAYS_CHAT -> {
                 TranslationDecision(true, profile.targetLanguage, "chat is configured to always translate")
+            }
 
-            TranslationMode.ALWAYS_DETECTED ->
+            TranslationMode.ALWAYS_DETECTED -> {
                 when {
-                    detectedLanguage == null ->
+                    detectedLanguage == null -> {
                         TranslationDecision(false, profile.targetLanguage, "language could not be detected")
+                    }
 
-                    detectedLanguage.equals(profile.targetLanguage, ignoreCase = true) ->
+                    detectedLanguage.equals(profile.targetLanguage, ignoreCase = true) -> {
                         TranslationDecision(false, profile.targetLanguage, "message is already in the target language")
+                    }
 
-                    else -> TranslationDecision(true, profile.targetLanguage, "detected $detectedLanguage")
+                    else -> {
+                        TranslationDecision(true, profile.targetLanguage, "detected $detectedLanguage")
+                    }
                 }
+            }
         }
     }
 
@@ -382,8 +392,14 @@ class TranslationCoordinator(
                     return outcome
                 }
 
-                is TranslationOutcome.Failed -> Unit // Fall through to cloud providers.
-                is TranslationOutcome.Unavailable -> Unit
+                is TranslationOutcome.Failed -> {
+                    Unit
+                }
+
+                // Fall through to cloud providers.
+                is TranslationOutcome.Unavailable -> {
+                    Unit
+                }
             }
         }
 
@@ -401,8 +417,13 @@ class TranslationCoordinator(
                     return outcome
                 }
 
-                is TranslationOutcome.Failed -> Unit
-                is TranslationOutcome.Unavailable -> Unit
+                is TranslationOutcome.Failed -> {
+                    Unit
+                }
+
+                is TranslationOutcome.Unavailable -> {
+                    Unit
+                }
             }
         }
 

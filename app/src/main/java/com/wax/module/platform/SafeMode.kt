@@ -159,19 +159,24 @@ class SafeModeController(
 
             val triggered =
                 when {
-                    guard.isCrashLooping() ->
+                    guard.isCrashLooping() -> {
                         SafeModeReason.REPEATED_STARTUP_CRASHES to
                             "${guard.consecutiveFailedStarts()} consecutive starts without completing initialisation"
+                    }
 
-                    criticalResolverFailures > 0 ->
+                    criticalResolverFailures > 0 -> {
                         SafeModeReason.CRITICAL_RESOLVER_FAILURE to
                             "$criticalResolverFailures critical resolver(s) failed"
+                    }
 
-                    compatibilityConfidence == Confidence.NONE || compatibilityConfidence == Confidence.AMBIGUOUS ->
+                    compatibilityConfidence == Confidence.NONE || compatibilityConfidence == Confidence.AMBIGUOUS -> {
                         SafeModeReason.LOW_COMPATIBILITY_CONFIDENCE to
                             "compatibility confidence is ${compatibilityConfidence.name}"
+                    }
 
-                    else -> return@synchronized null
+                    else -> {
+                        return@synchronized null
+                    }
                 }
 
             enter(triggered.first, triggered.second)

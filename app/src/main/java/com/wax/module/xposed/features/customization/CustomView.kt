@@ -444,6 +444,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "background-color" -> {
                     if (terms.size != 2) continue
                     val color = terms[0].colorRgb
@@ -457,31 +458,40 @@ class CustomView(
                         view.postInvalidate()
                     }
                 }
+
                 "display" -> {
                     when (terms[0].strValue) {
                         "none" -> {
                             forcedVisibilityMap[view] = View.GONE
                             view.visibility = View.GONE
                         }
+
                         "block" -> {
                             forcedVisibilityMap[view] = View.VISIBLE
                             view.visibility = View.VISIBLE
                         }
+
                         "invisible" -> {
                             forcedVisibilityMap[view] = View.INVISIBLE
                             view.visibility = View.INVISIBLE
                         }
                     }
                 }
+
                 "font-size" -> {
                     if (view !is TextView) continue
                     view.textSize = getRealValue(terms[0], 0).toFloat()
                 }
+
                 "color" -> {
                     if (view !is TextView) continue
                     view.setTextColor(terms[0].colorRgb)
                 }
-                "alpha", "opacity" -> view.alpha = terms[0].numValue
+
+                "alpha", "opacity" -> {
+                    view.alpha = terms[0].numValue
+                }
+
                 "background-image" -> {
                     if (terms[0].type != SerialTerm.URI) continue
                     if (forcedBackgroundMap.containsKey(view) || forcedDrawableMap.containsKey(view)) {
@@ -497,6 +507,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "background-size" -> {
                     if (terms[0].type == SerialTerm.LENGTH) {
                         val widthTerm = terms[0]
@@ -583,6 +594,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "background" -> {
                     val t0 = terms[0]
                     if (t0.type == SerialTerm.COLOR) {
@@ -604,6 +616,7 @@ class CustomView(
                         setBackgroundModel(view, t0)
                     }
                 }
+
                 "foreground" -> {
                     val t0 = terms[0]
                     if (t0.type == SerialTerm.COLOR) {
@@ -622,6 +635,7 @@ class CustomView(
                         view.foreground = null
                     }
                 }
+
                 "width" -> {
                     val width = getRealValue(terms[0], 0)
                     if (view.layoutParams.width != width) {
@@ -629,6 +643,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "height" -> {
                     val height = getRealValue(terms[0], 0)
                     if (view.layoutParams.height != height) {
@@ -636,6 +651,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "left" -> {
                     when (val lp = view.layoutParams) {
                         is RelativeLayout.LayoutParams -> {
@@ -645,6 +661,7 @@ class CustomView(
                                 layoutChanged = true
                             }
                         }
+
                         is ViewGroup.MarginLayoutParams -> {
                             val left = getRealValue(terms[0], 0)
                             if (lp.leftMargin != left) {
@@ -654,6 +671,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "right" -> {
                     when (val lp = view.layoutParams) {
                         is RelativeLayout.LayoutParams -> {
@@ -663,6 +681,7 @@ class CustomView(
                                 layoutChanged = true
                             }
                         }
+
                         is ViewGroup.MarginLayoutParams -> {
                             val right = getRealValue(terms[0], 0)
                             if (lp.rightMargin != right) {
@@ -672,6 +691,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "top" -> {
                     when (val lp = view.layoutParams) {
                         is RelativeLayout.LayoutParams -> {
@@ -681,6 +701,7 @@ class CustomView(
                                 layoutChanged = true
                             }
                         }
+
                         is ViewGroup.MarginLayoutParams -> {
                             val top = getRealValue(terms[0], 0)
                             if (lp.topMargin != top) {
@@ -690,6 +711,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "bottom" -> {
                     when (val lp = view.layoutParams) {
                         is RelativeLayout.LayoutParams -> {
@@ -699,6 +721,7 @@ class CustomView(
                                 layoutChanged = true
                             }
                         }
+
                         is ViewGroup.MarginLayoutParams -> {
                             val bottom = getRealValue(terms[0], 0)
                             if (lp.bottomMargin != bottom) {
@@ -708,6 +731,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "color-filter" -> {
                     val mode = terms[0].strValue.trim()
                     if (mode == "none") {
@@ -730,6 +754,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "color-tint" -> {
                     if (terms[0].type == SerialTerm.COLOR) {
                         val csl =
@@ -754,6 +779,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "font-weight" -> {
                     if (view !is TextView) continue
                     val value = terms[0].strValue
@@ -764,6 +790,7 @@ class CustomView(
                         view.setTypeface(Typeface.create(cur, Typeface.NORMAL))
                     }
                 }
+
                 "font-style" -> {
                     if (view !is TextView) continue
                     val value = terms[0].strValue
@@ -774,6 +801,7 @@ class CustomView(
                         view.setTypeface(Typeface.create(cur, Typeface.NORMAL))
                     }
                 }
+
                 "text-decoration" -> {
                     if (view !is TextView) continue
                     val value = terms[0].strValue
@@ -787,17 +815,25 @@ class CustomView(
                         view.paintFlags = view.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv() and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                     }
                 }
+
                 "text-transform" -> {
                     if (view !is TextView) continue
                     when (terms[0].strValue) {
-                        "uppercase" -> view.isAllCaps = true
+                        "uppercase" -> {
+                            view.isAllCaps = true
+                        }
+
                         "lowercase" -> {
                             view.isAllCaps = false
                             view.text = view.text.toString().lowercase()
                         }
-                        "none" -> view.isAllCaps = false
+
+                        "none" -> {
+                            view.isAllCaps = false
+                        }
                     }
                 }
+
                 "text-align" -> {
                     if (view !is TextView) continue
                     when (terms[0].strValue) {
@@ -806,6 +842,7 @@ class CustomView(
                         "left", "start" -> view.gravity = Gravity.START or Gravity.CENTER_VERTICAL
                     }
                 }
+
                 "box-shadow" -> {
                     for (term in terms) {
                         if (term.type == SerialTerm.LENGTH) {
@@ -815,6 +852,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "transform" -> {
                     for (term in terms) {
                         if (term.type != SerialTerm.FUNCTION) continue
@@ -836,6 +874,7 @@ class CustomView(
                         }
                     }
                 }
+
                 "margin" -> {
                     val params = view.layoutParams
                     if (params !is ViewGroup.MarginLayoutParams) continue
@@ -850,12 +889,14 @@ class CustomView(
                             r = l
                             b = l
                         }
+
                         2 -> {
                             t = getExactValue(terms[0], view.height)
                             b = t
                             l = getExactValue(terms[1], view.width)
                             r = l
                         }
+
                         4 -> {
                             t = getExactValue(terms[0], view.height)
                             r = getExactValue(terms[1], view.width)
@@ -872,6 +913,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "margin-left" -> {
                     val p = view.layoutParams
                     if (p !is ViewGroup.MarginLayoutParams) continue
@@ -881,6 +923,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "margin-top" -> {
                     val p = view.layoutParams
                     if (p !is ViewGroup.MarginLayoutParams) continue
@@ -890,6 +933,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "margin-right" -> {
                     val p = view.layoutParams
                     if (p !is ViewGroup.MarginLayoutParams) continue
@@ -899,6 +943,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "margin-bottom" -> {
                     val p = view.layoutParams
                     if (p !is ViewGroup.MarginLayoutParams) continue
@@ -908,6 +953,7 @@ class CustomView(
                         layoutChanged = true
                     }
                 }
+
                 "padding" -> {
                     var l = view.paddingLeft
                     var t = view.paddingTop
@@ -920,12 +966,14 @@ class CustomView(
                             r = l
                             b = l
                         }
+
                         2 -> {
                             t = getExactValue(terms[0], view.height)
                             b = t
                             l = getExactValue(terms[1], view.width)
                             r = l
                         }
+
                         4 -> {
                             t = getExactValue(terms[0], view.height)
                             r = getExactValue(terms[1], view.width)
@@ -935,34 +983,42 @@ class CustomView(
                     }
                     view.setPadding(l, t, r, b)
                 }
-                "padding-left" ->
+
+                "padding-left" -> {
                     view.setPadding(
                         getExactValue(terms[0], view.width),
                         view.paddingTop,
                         view.paddingRight,
                         view.paddingBottom,
                     )
-                "padding-top" ->
+                }
+
+                "padding-top" -> {
                     view.setPadding(
                         view.paddingLeft,
                         getExactValue(terms[0], view.height),
                         view.paddingRight,
                         view.paddingBottom,
                     )
-                "padding-right" ->
+                }
+
+                "padding-right" -> {
                     view.setPadding(
                         view.paddingLeft,
                         view.paddingTop,
                         getExactValue(terms[0], view.width),
                         view.paddingBottom,
                     )
-                "padding-bottom" ->
+                }
+
+                "padding-bottom" -> {
                     view.setPadding(
                         view.paddingLeft,
                         view.paddingTop,
                         view.paddingRight,
                         getExactValue(terms[0], view.height),
                     )
+                }
             }
         }
         if (layoutChanged) view.requestLayout()
@@ -1443,6 +1499,7 @@ class CustomView(
                         st.gradientPositions[i] = stops[i].length.value / 100f
                     }
                 }
+
                 is TermFunction -> {
                     st.type = SerialTerm.FUNCTION
                     st.strValue = term.functionName
@@ -1450,24 +1507,29 @@ class CustomView(
                     st.args = ArrayList()
                     for (v in values) st.args!!.add(toSerialTerm(v))
                 }
+
                 is TermColor -> {
                     st.type = SerialTerm.COLOR
                     st.colorRgb = term.value.rgb
                 }
+
                 is TermLength -> {
                     st.type = SerialTerm.LENGTH
                     st.numValue = term.value
                     st.percentage = term.isPercentage
                     st.unitName = term.unit?.toString()
                 }
+
                 is TermFloatValue -> {
                     st.type = SerialTerm.FLOAT_VAL
                     st.numValue = term.value
                 }
+
                 is TermURI -> {
                     st.type = SerialTerm.URI
                     st.strValue = term.value
                 }
+
                 else -> {
                     st.type = SerialTerm.STRING
                     st.strValue = term.toString()

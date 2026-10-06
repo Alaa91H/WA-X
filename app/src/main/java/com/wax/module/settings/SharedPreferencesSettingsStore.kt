@@ -85,16 +85,28 @@ class SharedPreferencesSettingsStore(
         type: ValueType,
     ) {
         when (type) {
-            ValueType.Flag -> editor.putBoolean(physicalKey, value.toBooleanStrictOrNull() ?: false)
-            ValueType.Whole -> editor.putInt(physicalKey, value.toIntOrNull() ?: 0)
-            ValueType.Real -> editor.putFloat(physicalKey, value.toFloatOrNull() ?: 0f)
-            ValueType.Set ->
+            ValueType.Flag -> {
+                editor.putBoolean(physicalKey, value.toBooleanStrictOrNull() ?: false)
+            }
+
+            ValueType.Whole -> {
+                editor.putInt(physicalKey, value.toIntOrNull() ?: 0)
+            }
+
+            ValueType.Real -> {
+                editor.putFloat(physicalKey, value.toFloatOrNull() ?: 0f)
+            }
+
+            ValueType.Set -> {
                 editor.putStringSet(
                     physicalKey,
                     value.split(SEP).filter { it.isNotEmpty() }.toSet(),
                 )
+            }
 
-            ValueType.Text -> editor.putString(physicalKey, value)
+            ValueType.Text -> {
+                editor.putString(physicalKey, value)
+            }
         }
     }
 
@@ -105,7 +117,9 @@ class SharedPreferencesSettingsStore(
         val (raw, type) = readRaw(scope, key)
         return when (type) {
             null -> null
+
             ValueType.Text, ValueType.Flag -> raw
+
             // A set read as a string is a type confusion in the caller, not a value: the
             // honest answer is null so the caller's own default applies.
             else -> null
@@ -125,7 +139,9 @@ class SharedPreferencesSettingsStore(
         val (raw, type) = readRaw(scope, key)
         return when (type) {
             ValueType.Flag -> raw?.toBooleanStrictOrNull()
+
             null -> null
+
             // A preference stored as the string "true" by an older build still means on.
             else -> raw?.toBooleanStrictOrNull()
         }
@@ -193,8 +209,9 @@ class SharedPreferencesSettingsStore(
     override fun clearScope(scope: SettingsScope) {
         val doomed =
             when (scope) {
-                is SettingsScope.Global ->
+                is SettingsScope.Global -> {
                     mirror.keys.filterNot { SettingsKeys.isOverrideKey(it) }
+                }
 
                 is SettingsScope.Target -> {
                     val prefix = scope.physicalPrefix()

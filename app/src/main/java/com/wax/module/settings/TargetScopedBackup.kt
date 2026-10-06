@@ -112,8 +112,11 @@ object TargetScopedBackup {
                 val text =
                     when (value) {
                         is JsonValue.Str -> value.value
+
                         is JsonValue.Num -> value.value.toString()
+
                         is JsonValue.Flag -> value.value.toString()
+
                         // A null or nested value has no meaning for a preference and is a
                         // sign the file is not a settings backup.
                         else -> return RestoreResult.Rejected(

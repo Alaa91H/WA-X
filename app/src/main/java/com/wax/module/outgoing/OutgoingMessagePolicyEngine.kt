@@ -158,12 +158,21 @@ data class OutgoingPolicyDecision(
     val mediaDisappearanceRule: String
         get() =
             when {
-                viewOnce.applyViewOnce && autoDelete.schedule ->
+                viewOnce.applyViewOnce && autoDelete.schedule -> {
                     "View Once governs after the recipient opens it; the timed revoke still applies while it is unopened."
+                }
 
-                viewOnce.applyViewOnce -> "View Once governs."
-                autoDelete.schedule -> "Timed delete for everyone governs."
-                else -> "Neither policy applies."
+                viewOnce.applyViewOnce -> {
+                    "View Once governs."
+                }
+
+                autoDelete.schedule -> {
+                    "Timed delete for everyone governs."
+                }
+
+                else -> {
+                    "Neither policy applies."
+                }
             }
 
     /** One line for the audit log. */

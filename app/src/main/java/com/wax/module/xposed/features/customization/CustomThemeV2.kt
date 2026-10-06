@@ -54,9 +54,11 @@ class CustomThemeV2(
                     7 -> {
                         "#ff" + color.substring(1)
                     }
+
                     9 -> {
                         "#ff" + color.substring(3)
                     }
+
                     else -> {
                         return
                     }

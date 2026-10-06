@@ -51,16 +51,23 @@ data class CompatibilitySummary(
             when {
                 // A critical failure is decisive: no amount of working optional paths makes the
                 // features that depend on it usable.
-                criticalTotal > 0 && criticalFailures > 0 -> CompatibilityStatus.INCOMPATIBLE
+                criticalTotal > 0 && criticalFailures > 0 -> {
+                    CompatibilityStatus.INCOMPATIBLE
+                }
 
                 // Zero verified critical resolvers is not "supported"; it means nothing was
                 // verified, which the user deserves to know.
-                criticalTotal == 0 -> CompatibilityStatus.DEGRADED
-
-                optionalFailures > 0 || fallbacksActive > 0 || disabledFeatures > 0 ->
+                criticalTotal == 0 -> {
                     CompatibilityStatus.DEGRADED
+                }
 
-                else -> CompatibilityStatus.SUPPORTED
+                optionalFailures > 0 || fallbacksActive > 0 || disabledFeatures > 0 -> {
+                    CompatibilityStatus.DEGRADED
+                }
+
+                else -> {
+                    CompatibilityStatus.SUPPORTED
+                }
             }
 
     /** Optional resolvers that did not resolve on the primary path. */

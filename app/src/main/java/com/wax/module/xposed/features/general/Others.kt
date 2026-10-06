@@ -897,7 +897,7 @@ class Others(
     }
 
     private fun hookSearchbar(filterChats: String?) {
-        if (filterChats.isNullOrEmpty())return
+        if (filterChats.isNullOrEmpty()) return
         val searchbar = Unobfuscator.loadViewAddSearchBarMethod(classLoader)
         val searchBarID = Utils.getID("my_search_bar", "id")
 

@@ -77,12 +77,17 @@ class MediaSourcePolicyStore(
             launchPickerDirectly = mode == MediaSourceMode.ANDROID_PHOTO_PICKER,
             explanation =
                 when (mode) {
-                    MediaSourceMode.WHATSAPP_GALLERY ->
+                    MediaSourceMode.WHATSAPP_GALLERY -> {
                         "Attachments open in WhatsApp's gallery, which needs access to your whole media library."
-                    MediaSourceMode.ANDROID_PHOTO_PICKER ->
+                    }
+
+                    MediaSourceMode.ANDROID_PHOTO_PICKER -> {
                         "Attachments open the system picker, which shares only the items you choose."
-                    MediaSourceMode.ASK_EVERY_TIME ->
+                    }
+
+                    MediaSourceMode.ASK_EVERY_TIME -> {
                         "You choose between the gallery and the system picker for each attachment."
+                    }
                 },
         )
     }

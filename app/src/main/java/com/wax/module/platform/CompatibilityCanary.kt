@@ -112,15 +112,20 @@ class CompatibilityCanary {
                 // A missing required resolver is decisive: no amount of caution makes the
                 // feature runnable here, and pretending otherwise would install a hook on a
                 // target that does not exist.
-                required.any { it == ResolverPosture.MISSING } -> blocked.add(feature.id)
+                required.any { it == ResolverPosture.MISSING } -> {
+                    blocked.add(feature.id)
+                }
 
                 // On an unverified build, a required resolver that only works through a
                 // fallback means the feature's assumptions are already wrong; it waits for
                 // human verification rather than loading on a path nobody has tested.
-                newBuildDetected && required.any { it == ResolverPosture.FALLBACK } ->
+                newBuildDetected && required.any { it == ResolverPosture.FALLBACK } -> {
                     deferred.add(feature.id)
+                }
 
-                else -> enabled.add(feature.id)
+                else -> {
+                    enabled.add(feature.id)
+                }
             }
         }
 

@@ -118,21 +118,32 @@ object ResolverDiagnostics {
 
     private fun explanationFor(outcome: FeatureOutcome): String =
         when (outcome.health) {
-            FeatureHealth.HEALTHY -> "working normally"
-            FeatureHealth.FALLBACK ->
+            FeatureHealth.HEALTHY -> {
+                "working normally"
+            }
+
+            FeatureHealth.FALLBACK -> {
                 "working through a compatibility path because the normal one is unavailable " +
                     "on this WhatsApp version"
-            FeatureHealth.DEGRADED -> outcome.reason
-            FeatureHealth.INCOMPATIBLE ->
+            }
+
+            FeatureHealth.DEGRADED -> {
+                outcome.reason
+            }
+
+            FeatureHealth.INCOMPATIBLE -> {
                 UserExplanation.forCode(
                     com.wax.module.diagnostics.FailureCode.INCOMPATIBLE,
                     outcome.reason,
                 )
-            else ->
+            }
+
+            else -> {
                 UserExplanation.forCode(
                     outcome.code ?: com.wax.module.diagnostics.FailureCode.UNEXPECTED,
                     outcome.reason,
                 )
+            }
         }
 
     private fun healthFor(
@@ -148,10 +159,16 @@ object ResolverDiagnostics {
 
     private fun codeFor(confidence: Confidence): com.wax.module.diagnostics.FailureCode =
         when (confidence) {
-            Confidence.AMBIGUOUS ->
+            Confidence.AMBIGUOUS -> {
                 com.wax.module.diagnostics.FailureCode.RESOLVER_AMBIGUOUS
-            Confidence.NONE ->
+            }
+
+            Confidence.NONE -> {
                 com.wax.module.diagnostics.FailureCode.RESOLVER_NOT_FOUND
-            else -> com.wax.module.diagnostics.FailureCode.UNEXPECTED
+            }
+
+            else -> {
+                com.wax.module.diagnostics.FailureCode.UNEXPECTED
+            }
         }
 }

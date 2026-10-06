@@ -615,8 +615,13 @@ class CallRecording(
                     isNumberInList(cleanPhone, whitelist)
                 }
 
-                1 -> true
-                else -> true
+                1 -> {
+                    true
+                }
+
+                else -> {
+                    true
+                }
             }
         } catch (e: Exception) {
             logDebug("WA X: shouldRecord check error: ${e.message}")

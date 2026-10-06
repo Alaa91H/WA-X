@@ -61,14 +61,19 @@ data class Recurrence(
         val after = Instant.ofEpochMilli(afterMillis).atZone(zone)
         val next =
             when (kind) {
-                RecurrenceKind.DAILY -> after.plusDays(1)
-                RecurrenceKind.WEEKDAYS ->
+                RecurrenceKind.DAILY -> {
+                    after.plusDays(1)
+                }
+
+                RecurrenceKind.WEEKDAYS -> {
                     generateSequence(after.plusDays(1)) { it.plusDays(1) }
                         .first { it.dayOfWeek != DayOfWeek.SATURDAY && it.dayOfWeek != DayOfWeek.SUNDAY }
+                }
 
-                RecurrenceKind.WEEKLY ->
+                RecurrenceKind.WEEKLY -> {
                     generateSequence(after.plusDays(1)) { it.plusDays(1) }
                         .first { it.dayOfWeek in daysOfWeek }
+                }
 
                 RecurrenceKind.MONTHLY -> {
                     val target = after.plusMonths(1)
@@ -76,7 +81,9 @@ data class Recurrence(
                     target.withDayOfMonth(day)
                 }
 
-                RecurrenceKind.CUSTOM -> after.plus(intervalMillis!!, ChronoUnit.MILLIS)
+                RecurrenceKind.CUSTOM -> {
+                    after.plus(intervalMillis!!, ChronoUnit.MILLIS)
+                }
             }
         return next.toInstant().toEpochMilli()
     }

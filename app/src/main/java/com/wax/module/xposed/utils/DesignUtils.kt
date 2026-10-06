@@ -92,6 +92,7 @@ object DesignUtils {
                 shapeDrawable.paint.color = color
                 shapeDrawable
             }
+
             "selector_bg" -> {
                 val border = Utils.dipToPixels(18.0f).toFloat()
                 val selectorBg =
@@ -101,6 +102,7 @@ object DesignUtils {
                 selectorBg.paint.color = color
                 selectorBg
             }
+
             "rc_dotline_dialog" -> {
                 val border = Utils.dipToPixels(16.0f).toFloat()
                 val shapeDrawable =
@@ -110,6 +112,7 @@ object DesignUtils {
                 shapeDrawable.paint.color = color
                 shapeDrawable
             }
+
             "stroke_border" -> {
                 val radius = Utils.dipToPixels(18.0f).toFloat()
                 val outerRadii = floatArrayOf(radius, radius, radius, radius, radius, radius, radius, radius)
@@ -123,7 +126,10 @@ object DesignUtils {
                 val inset = Utils.dipToPixels(2)
                 InsetDrawable(shapeDrawable, inset, inset, inset, inset)
             }
-            else -> ColorDrawable(Color.BLACK)
+
+            else -> {
+                ColorDrawable(Color.BLACK)
+            }
         }
 
     @JvmStatic

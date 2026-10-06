@@ -124,10 +124,22 @@ abstract class BasePreferenceFragment :
                     preference.layoutResource = R.layout.preference_feature_switch
                     preference.widgetLayoutResource = R.layout.preference_widget_material3_switch
                 }
-                is FloatSeekBarPreference -> preference.layoutResource = R.layout.preference_feature_seekbar
-                is SeekBarPreference -> preference.layoutResource = R.layout.preference_feature_standard_seekbar
-                is ColorPreferenceCompat -> preference.layoutResource = R.layout.preference_feature_color
-                else -> preference.layoutResource = R.layout.preference_feature_list
+
+                is FloatSeekBarPreference -> {
+                    preference.layoutResource = R.layout.preference_feature_seekbar
+                }
+
+                is SeekBarPreference -> {
+                    preference.layoutResource = R.layout.preference_feature_standard_seekbar
+                }
+
+                is ColorPreferenceCompat -> {
+                    preference.layoutResource = R.layout.preference_feature_color
+                }
+
+                else -> {
+                    preference.layoutResource = R.layout.preference_feature_list
+                }
             }
         }
     }
@@ -138,22 +150,41 @@ abstract class BasePreferenceFragment :
     ): Int {
         val value = normalize(title)
         return when {
-            value.contains("privacy") || value.contains("privacidade") -> R.drawable.ic_privacy
+            value.contains("privacy") || value.contains("privacidade") -> {
+                R.drawable.ic_privacy
+            }
+
             value.contains("media") ||
                 value.contains("midia") ||
                 value.contains("video") ||
                 value.contains("image") ||
                 value.contains("download") ||
-                value.contains("audio") -> R.drawable.ic_media
-            value.contains("call") || value.contains("chamada") || value.contains("gravacao") -> R.drawable.ic_recording
-            value.contains("status") || value.contains("home") || value.contains("inicio") -> R.drawable.ic_home_black_24dp
-            value.contains("custom") || value.contains("personal") || value.contains("personalizacao") ->
+                value.contains("audio") -> {
+                R.drawable.ic_media
+            }
+
+            value.contains("call") || value.contains("chamada") || value.contains("gravacao") -> {
+                R.drawable.ic_recording
+            }
+
+            value.contains("status") || value.contains("home") || value.contains("inicio") -> {
+                R.drawable.ic_home_black_24dp
+            }
+
+            value.contains("custom") || value.contains("personal") || value.contains("personalizacao") -> {
                 R.drawable.ic_dashboard_black_24dp
+            }
+
             value.contains("conversation") ||
                 value.contains("conversa") ||
                 value.contains("general") ||
-                value.contains("geral") -> R.drawable.ic_general
-            else -> fallback
+                value.contains("geral") -> {
+                R.drawable.ic_general
+            }
+
+            else -> {
+                fallback
+            }
         }
     }
 
@@ -168,23 +199,39 @@ abstract class BasePreferenceFragment :
                 value.contains("archive") ||
                 value.contains("ghost") ||
                 value.contains("freeze") ||
-                value.contains("read") -> R.drawable.ic_privacy
-            value.contains("record") || value.contains("grav") -> R.drawable.ic_recording
+                value.contains("read") -> {
+                R.drawable.ic_privacy
+            }
+
+            value.contains("record") || value.contains("grav") -> {
+                R.drawable.ic_recording
+            }
+
             value.contains("media") ||
                 value.contains("video") ||
                 value.contains("image") ||
                 value.contains("audio") ||
                 value.contains("download") ||
-                value.contains("transcription") -> R.drawable.ic_media
+                value.contains("transcription") -> {
+                R.drawable.ic_media
+            }
+
             value.contains("color") ||
                 value.contains("theme") ||
                 value.contains("wallpaper") ||
                 value.contains("bubble") ||
                 value.contains("css") ||
-                value.contains("animation") ->
+                value.contains("animation") -> {
                 R.drawable.ic_dashboard_black_24dp
-            value.contains("status") || value.contains("home") || value.contains("inicio") -> R.drawable.ic_home_black_24dp
-            else -> fallback
+            }
+
+            value.contains("status") || value.contains("home") || value.contains("inicio") -> {
+                R.drawable.ic_home_black_24dp
+            }
+
+            else -> {
+                fallback
+            }
         }
     }
 
@@ -359,10 +406,12 @@ abstract class BasePreferenceFragment :
                     callBlockContacts.isEnabled = true
                     callWhiteContacts.isEnabled = false
                 }
+
                 4 -> {
                     callWhiteContacts.isEnabled = true
                     callBlockContacts.isEnabled = false
                 }
+
                 else -> {
                     callWhiteContacts.isEnabled = false
                     callBlockContacts.isEnabled = false

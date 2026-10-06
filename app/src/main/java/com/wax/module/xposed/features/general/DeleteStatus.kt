@@ -1,8 +1,8 @@
 package com.wax.module.xposed.features.general
 
 import android.content.SharedPreferences
-import android.view.Menu
 import android.os.Build
+import android.view.Menu
 import android.view.MenuItem
 import com.wax.module.R
 import com.wax.module.xposed.core.Feature

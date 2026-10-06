@@ -131,14 +131,38 @@ object FailureReportParser {
 
         private fun readEscape(): Char =
             when (val char = next()) {
-                '"' -> '"'
-                '\\' -> '\\'
-                '/' -> '/'
-                'n' -> '\n'
-                'r' -> '\r'
-                't' -> '\t'
-                'b' -> '\b'
-                'f' -> '\u000C'
+                '"' -> {
+                    '"'
+                }
+
+                '\\' -> {
+                    '\\'
+                }
+
+                '/' -> {
+                    '/'
+                }
+
+                'n' -> {
+                    '\n'
+                }
+
+                'r' -> {
+                    '\r'
+                }
+
+                't' -> {
+                    '\t'
+                }
+
+                'b' -> {
+                    '\b'
+                }
+
+                'f' -> {
+                    '\u000C'
+                }
+
                 'u' -> {
                     if (index + 4 > text.length) throw ParseException("truncated unicode escape")
                     val hex = text.substring(index, index + 4)
@@ -146,7 +170,9 @@ object FailureReportParser {
                     hex.toIntOrNull(16)?.toChar() ?: throw ParseException("bad unicode escape")
                 }
 
-                else -> throw ParseException("bad escape")
+                else -> {
+                    throw ParseException("bad escape")
+                }
             }
 
         private fun readStringArray(): List<String> {

@@ -34,13 +34,17 @@ object DrawableColors {
         colors: HashMap<String, String>,
     ) {
         when (drawable) {
-            null -> return
+            null -> {
+                return
+            }
+
             is StateListDrawable -> {
                 val count = StateListDrawableCompact.getStateCount(drawable)
                 for (index in 0 until count) {
                     StateListDrawableCompact.getStateDrawable(drawable, index)?.let { replaceColor(it, colors) }
                 }
             }
+
             is GradientDrawable -> {
                 drawable.colors?.let { gradientColors ->
                     for (index in gradientColors.indices) {
@@ -51,22 +55,29 @@ object DrawableColors {
                     drawable.colors = gradientColors
                 }
             }
-            is DrawableWrapper -> replaceColor(drawable.drawable, colors)
+
+            is DrawableWrapper -> {
+                replaceColor(drawable.drawable, colors)
+            }
+
             is NinePatchDrawable -> {
                 val color = getNinePatchDrawableColor(drawable)
                 val newColor = IColors.getFromIntColor(color, colors)
                 if (color != newColor) drawable.setTintList(ColorStateList.valueOf(newColor))
             }
+
             is ColorDrawable -> {
                 val color = getColorDrawableColor(drawable)
                 val newColor = IColors.getFromIntColor(color, colors)
                 if (newColor != color) drawable.color = newColor
             }
+
             is ShapeDrawable -> {
                 val color = getShapeDrawableColor(drawable)
                 val newColor = IColors.getFromIntColor(color, colors)
                 if (color != newColor) drawable.paint.color = newColor
             }
+
             is LevelListDrawable -> {
                 val count = XposedHelpers.callMethod(drawable, "getNumberOfLevels") as Int
                 for (index in 0 until count) {
@@ -74,11 +85,13 @@ object DrawableColors {
                     if (child != null) replaceColor(child, colors)
                 }
             }
+
             is TransitionDrawable -> {
                 for (index in 0 until drawable.numberOfLayers) {
                     drawable.getDrawable(index)?.let { replaceColor(it, colors) }
                 }
             }
+
             is LayerDrawable -> {
                 val state = drawable.constantState!!
                 val children = XposedHelpers.getObjectField(state, "mChildren") as Array<*>
@@ -89,12 +102,16 @@ object DrawableColors {
                     }
                 }
             }
+
             is DrawableContainer -> {
                 val state = drawable.constantState ?: return
                 val children = XposedHelpers.getObjectField(state, "mDrawables") as? Array<*> ?: return
                 children.filterIsInstance<Drawable>().forEach { replaceColor(it, colors) }
             }
-            else -> replaceMaterialShapeDrawable(drawable, colors)
+
+            else -> {
+                replaceMaterialShapeDrawable(drawable, colors)
+            }
         }
     }
 

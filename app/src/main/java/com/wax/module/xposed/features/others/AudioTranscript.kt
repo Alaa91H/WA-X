@@ -280,7 +280,10 @@ class AudioTranscript(
             status = checkResult.getString(JSON_STATUS)
 
             when (status) {
-                STATUS_COMPLETED -> return checkResult
+                STATUS_COMPLETED -> {
+                    return checkResult
+                }
+
                 STATUS_ERROR -> {
                     val error = checkResult.optString(JSON_ERROR, "Unknown error")
                     throw Exception("Transcription error: $error")

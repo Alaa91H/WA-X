@@ -179,15 +179,14 @@ class HdStatusFieldWriter(
     private fun selectField(
         aliases: List<String>,
         requiredType: Class<*>?,
-    ): Field? {
-        return aliases
+    ): Field? =
+        aliases
             .asSequence()
             .mapNotNull(fields::get)
             .firstOrNull { field ->
                 field.isAccessible = true
                 requiredType == null || field.type == requiredType
             }
-    }
 
     private fun recordMissing(
         aliases: List<String>,

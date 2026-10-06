@@ -411,10 +411,13 @@ object StatusAudioStudio {
                 preparation.toPlan(StatusAudioPlanKind.TRIM, listOf(segment))
             }
 
-            StatusAudioOverflowAction.AUTO_SPLIT -> split(options, preparation)
+            StatusAudioOverflowAction.AUTO_SPLIT -> {
+                split(options, preparation)
+            }
 
-            StatusAudioOverflowAction.CANCEL ->
+            StatusAudioOverflowAction.CANCEL -> {
                 reject(StatusAudioProblems.CANCELLED, preparation.warnings, preparation.stripped, limit)
+            }
         }
     }
 

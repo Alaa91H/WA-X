@@ -10,7 +10,7 @@ package com.wax.module.settings
  *
  * 122 settings, of which 89 are toggles.
  *
- * 21 settings are excluded on purpose: the module's own appearance and diagnostics,
+ * 20 settings are excluded on purpose: the module's own appearance and diagnostics,
  * and anything holding a credential or a file path.
  */
 object SettingKeyRegistry {

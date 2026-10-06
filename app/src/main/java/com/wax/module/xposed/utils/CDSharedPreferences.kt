@@ -43,19 +43,30 @@ class CDSharedPreferences(
 
                             if (key != null) {
                                 when (tagName) {
-                                    "string" -> preferencesMap[key] = parser.nextText()
-                                    "boolean" ->
+                                    "string" -> {
+                                        preferencesMap[key] = parser.nextText()
+                                    }
+
+                                    "boolean" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toBoolean() ?: false
-                                    "int" ->
+                                    }
+
+                                    "int" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toIntOrNull() ?: 0
-                                    "long" ->
+                                    }
+
+                                    "long" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toLongOrNull() ?: 0L
-                                    "float" ->
+                                    }
+
+                                    "float" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toFloatOrNull() ?: 0f
+                                    }
+
                                     "set" -> {
                                         val values = linkedSetOf<String>()
                                         var nestedEvent = parser.next()

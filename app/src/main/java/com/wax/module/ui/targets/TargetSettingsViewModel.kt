@@ -115,20 +115,25 @@ class TargetSettingsViewModel(
         if (scope !is SettingsScope.Target) return
         val global = SettingsScope.Global
         when (entry.kind) {
-            SettingKeyRegistry.Kind.BOOLEAN ->
+            SettingKeyRegistry.Kind.BOOLEAN -> {
                 store.writeBoolean(scope, entry.key, resolver.effectiveBoolean(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.INT ->
+            SettingKeyRegistry.Kind.INT -> {
                 store.writeInt(scope, entry.key, resolver.effectiveInt(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.FLOAT ->
+            SettingKeyRegistry.Kind.FLOAT -> {
                 store.writeFloat(scope, entry.key, resolver.effectiveFloat(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.SET ->
+            SettingKeyRegistry.Kind.SET -> {
                 store.writeStringSet(scope, entry.key, resolver.effectiveStringSet(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.TEXT ->
+            SettingKeyRegistry.Kind.TEXT -> {
                 store.writeString(scope, entry.key, resolver.effectiveString(entry.key, global))
+            }
         }
         notifyRuntime(scope)
         reload()
@@ -200,20 +205,25 @@ class TargetSettingsViewModel(
     ) {
         val global = SettingsScope.Global
         when (entry.kind) {
-            SettingKeyRegistry.Kind.BOOLEAN ->
+            SettingKeyRegistry.Kind.BOOLEAN -> {
                 store.readBoolean(global, entry.key)?.let { store.writeBoolean(target, entry.key, it) }
+            }
 
-            SettingKeyRegistry.Kind.INT ->
+            SettingKeyRegistry.Kind.INT -> {
                 store.readInt(global, entry.key)?.let { store.writeInt(target, entry.key, it) }
+            }
 
-            SettingKeyRegistry.Kind.FLOAT ->
+            SettingKeyRegistry.Kind.FLOAT -> {
                 store.readFloat(global, entry.key)?.let { store.writeFloat(target, entry.key, it) }
+            }
 
-            SettingKeyRegistry.Kind.SET ->
+            SettingKeyRegistry.Kind.SET -> {
                 store.readStringSet(global, entry.key)?.let { store.writeStringSet(target, entry.key, it) }
+            }
 
-            SettingKeyRegistry.Kind.TEXT ->
+            SettingKeyRegistry.Kind.TEXT -> {
                 store.readString(global, entry.key)?.let { store.writeString(target, entry.key, it) }
+            }
         }
     }
 

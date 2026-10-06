@@ -234,7 +234,9 @@ class MessageRevocationQueue(
             // No acknowledgement, no message, no deletion job: a revocation against a message
             // that was never sent would at best do nothing and at worst address a later one.
             is SendOutcome.Failed, SendOutcome.CancelledBeforeSend -> EnqueueResult.NotRequired(decision.block)
+
             is SendOutcome.SentWithoutIdentity -> EnqueueResult.IdentityUnavailable
+
             is SendOutcome.Sent -> enqueue(request, decision, outcome.messageId, outcome.acknowledgedAt)
         }
 
@@ -346,25 +348,33 @@ class MessageRevocationQueue(
         if (job.isTerminal) return job
         val updated =
             when (result) {
-                RevocationAttemptResult.DeletedForEveryone ->
+                RevocationAttemptResult.DeletedForEveryone -> {
                     job.copy(state = RevocationState.DELETED_FOR_EVERYONE, lastAttemptAt = at, failureReason = null)
+                }
 
-                RevocationAttemptResult.AlreadyDeleted ->
+                RevocationAttemptResult.AlreadyDeleted -> {
                     job.copy(state = RevocationState.ALREADY_DELETED, lastAttemptAt = at, failureReason = null)
+                }
 
-                RevocationAttemptResult.IdentityUnavailable ->
+                RevocationAttemptResult.IdentityUnavailable -> {
                     job.copy(state = RevocationState.IDENTITY_UNAVAILABLE, lastAttemptAt = at)
+                }
 
-                RevocationAttemptResult.TargetUnavailable ->
+                RevocationAttemptResult.TargetUnavailable -> {
                     job.copy(state = RevocationState.TARGET_UNAVAILABLE, lastAttemptAt = at)
+                }
 
-                RevocationAttemptResult.UnsupportedVersion ->
+                RevocationAttemptResult.UnsupportedVersion -> {
                     job.copy(state = RevocationState.UNSUPPORTED_VERSION, lastAttemptAt = at)
+                }
 
-                RevocationAttemptResult.Unknown ->
+                RevocationAttemptResult.Unknown -> {
                     job.copy(state = RevocationState.UNKNOWN_RESULT, lastAttemptAt = at)
+                }
 
-                is RevocationAttemptResult.Failed -> retryOrFail(job, result.reason, at)
+                is RevocationAttemptResult.Failed -> {
+                    retryOrFail(job, result.reason, at)
+                }
             }
         write(updated)
         return updated

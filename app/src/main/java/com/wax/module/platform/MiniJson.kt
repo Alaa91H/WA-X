@@ -80,10 +80,21 @@ object MiniJson {
                 append(']')
             }
 
-            is JsonValue.Str -> appendQuoted(value.value)
-            is JsonValue.Flag -> append(if (value.value) "true" else "false")
-            is JsonValue.Num -> appendNumber(value.value)
-            JsonValue.Null -> append("null")
+            is JsonValue.Str -> {
+                appendQuoted(value.value)
+            }
+
+            is JsonValue.Flag -> {
+                append(if (value.value) "true" else "false")
+            }
+
+            is JsonValue.Num -> {
+                appendNumber(value.value)
+            }
+
+            JsonValue.Null -> {
+                append("null")
+            }
         }
     }
 
@@ -112,14 +123,35 @@ object MiniJson {
         append('"')
         for (char in value) {
             when (char) {
-                '"' -> append("\\\"")
-                '\\' -> append("\\\\")
-                '\n' -> append("\\n")
-                '\r' -> append("\\r")
-                '\t' -> append("\\t")
-                '\b' -> append("\\b")
-                '\u000C' -> append("\\f")
-                else ->
+                '"' -> {
+                    append("\\\"")
+                }
+
+                '\\' -> {
+                    append("\\\\")
+                }
+
+                '\n' -> {
+                    append("\\n")
+                }
+
+                '\r' -> {
+                    append("\\r")
+                }
+
+                '\t' -> {
+                    append("\\t")
+                }
+
+                '\b' -> {
+                    append("\\b")
+                }
+
+                '\u000C' -> {
+                    append("\\f")
+                }
+
+                else -> {
                     if (char < ' ') {
                         append("\\u")
                         append(HEX[(char.code shr 12) and 0xF])
@@ -129,6 +161,7 @@ object MiniJson {
                     } else {
                         append(char)
                     }
+                }
             }
         }
         append('"')
@@ -219,14 +252,38 @@ object MiniJson {
 
         private fun readEscape(): Char =
             when (next()) {
-                '"' -> '"'
-                '\\' -> '\\'
-                '/' -> '/'
-                'n' -> '\n'
-                'r' -> '\r'
-                't' -> '\t'
-                'b' -> '\b'
-                'f' -> '\u000C'
+                '"' -> {
+                    '"'
+                }
+
+                '\\' -> {
+                    '\\'
+                }
+
+                '/' -> {
+                    '/'
+                }
+
+                'n' -> {
+                    '\n'
+                }
+
+                'r' -> {
+                    '\r'
+                }
+
+                't' -> {
+                    '\t'
+                }
+
+                'b' -> {
+                    '\b'
+                }
+
+                'f' -> {
+                    '\u000C'
+                }
+
                 'u' -> {
                     if (index + 4 > text.length) throw Malformed("truncated unicode escape")
                     val hex = text.substring(index, index + 4)
@@ -234,7 +291,9 @@ object MiniJson {
                     hex.toIntOrNull(16)?.toChar() ?: throw Malformed("bad unicode escape")
                 }
 
-                else -> throw Malformed("bad escape")
+                else -> {
+                    throw Malformed("bad escape")
+                }
             }
 
         private fun readNumber(): JsonValue.Num {

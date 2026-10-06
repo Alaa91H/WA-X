@@ -60,15 +60,33 @@ object ConfigBackupSchema {
     ): ConfigValue? {
         if (typeName == null) return null
         return when (typeName) {
-            TYPE_STRING_SET -> decodeStringSet(raw)
-            TYPE_STRING -> (raw as? CharSequence)?.let { ConfigValue.Text(it.toString()) }
-            TYPE_BOOLEAN, "boolean" -> (raw as? Boolean)?.let { ConfigValue.Flag(it) }
-            TYPE_INTEGER, "int" -> (raw as? Number)?.let { ConfigValue.Whole(it.toInt()) }
-            TYPE_LONG, "long" -> (raw as? Number)?.let { ConfigValue.Wide(it.toLong()) }
-            TYPE_FLOAT, "float", TYPE_DOUBLE, "double" ->
-                (raw as? Number)?.let { ConfigValue.Decimal(it.toFloat()) }
+            TYPE_STRING_SET -> {
+                decodeStringSet(raw)
+            }
 
-            else -> null
+            TYPE_STRING -> {
+                (raw as? CharSequence)?.let { ConfigValue.Text(it.toString()) }
+            }
+
+            TYPE_BOOLEAN, "boolean" -> {
+                (raw as? Boolean)?.let { ConfigValue.Flag(it) }
+            }
+
+            TYPE_INTEGER, "int" -> {
+                (raw as? Number)?.let { ConfigValue.Whole(it.toInt()) }
+            }
+
+            TYPE_LONG, "long" -> {
+                (raw as? Number)?.let { ConfigValue.Wide(it.toLong()) }
+            }
+
+            TYPE_FLOAT, "float", TYPE_DOUBLE, "double" -> {
+                (raw as? Number)?.let { ConfigValue.Decimal(it.toFloat()) }
+            }
+
+            else -> {
+                null
+            }
         }
     }
 

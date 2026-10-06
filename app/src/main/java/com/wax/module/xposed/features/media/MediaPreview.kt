@@ -105,14 +105,14 @@ class MediaPreview(
             "onAttachedToWindow",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    if (!layoutClass.isInstance(param.thisObject))return
+                    if (!layoutClass.isInstance(param.thisObject)) return
                     val view = param.thisObject as View
                     view.postDelayed(
                         {
                             var resourceNames = listOf("invisible_press_surface", "video_control_frame_view")
                             for (rn in resourceNames) {
                                 val viewGroup = view.findViewById<View>(Utils.getID(rn, "id")) ?: continue
-                                if (!viewGroup.isVisible)continue
+                                if (!viewGroup.isVisible) continue
                                 logDebug("Found Surface: $viewGroup")
                                 handlePressSurface(view, viewGroup)
                                 return@postDelayed
@@ -127,7 +127,7 @@ class MediaPreview(
                                 )
                             for (rn in resourceNames) {
                                 val viewGroup = view.findViewById<View>(Utils.getID(rn, "id")) ?: continue
-                                if (!viewGroup.isVisible)continue
+                                if (!viewGroup.isVisible) continue
                                 logDebug("Found ControlFrame: $viewGroup")
                                 handleMediaControlFrame(view, viewGroup)
                                 return@postDelayed

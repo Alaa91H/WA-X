@@ -78,7 +78,9 @@ fun View.setTouchClickAndLongClickListener(
                 true
             }
 
-            else -> true
+            else -> {
+                true
+            }
         }
     }
 }

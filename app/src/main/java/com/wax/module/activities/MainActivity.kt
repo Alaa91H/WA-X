@@ -58,27 +58,35 @@ class MainActivity : BaseActivity() {
                         binding.viewPager.setCurrentItem(0, true)
                         true
                     }
+
                     R.id.navigation_chat -> {
                         binding.viewPager.setCurrentItem(1, true)
                         true
                     }
+
                     R.id.navigation_privacy -> {
                         binding.viewPager.setCurrentItem(2, true)
                         true
                     }
+
                     R.id.navigation_media -> {
                         binding.viewPager.setCurrentItem(3, true)
                         true
                     }
+
                     R.id.navigation_colors -> {
                         binding.viewPager.setCurrentItem(4, true)
                         true
                     }
+
                     R.id.navigation_recordings -> {
                         binding.viewPager.setCurrentItem(5, true)
                         true
                     }
-                    else -> false
+
+                    else -> {
+                        false
+                    }
                 }
             },
         )
@@ -213,6 +221,7 @@ class MainActivity : BaseActivity() {
                 startActivity(Intent(this, SearchActivity::class.java), options.toBundle())
                 return true
             }
+
             R.id.menu_about -> {
                 val options =
                     ActivityOptionsCompat.makeCustomAnimation(
@@ -223,6 +232,7 @@ class MainActivity : BaseActivity() {
                 startActivity(Intent(this, AboutActivity::class.java), options.toBundle())
                 return true
             }
+
             R.id.batteryoptimization -> {
                 if (batteryPermissionHelper.isBatterySaverPermissionAvailable(this, true)) {
                     batteryPermissionHelper.getPermission(this, true, true)
@@ -251,7 +261,10 @@ class MainActivity : BaseActivity() {
         ) {
             val pageWidth = page.width
             when {
-                position < -1 -> page.alpha = 0f
+                position < -1 -> {
+                    page.alpha = 0f
+                }
+
                 position <= 0 -> {
                     page.alpha = 1f
                     page.translationX = 0f
@@ -259,6 +272,7 @@ class MainActivity : BaseActivity() {
                     page.scaleX = 1f
                     page.scaleY = 1f
                 }
+
                 position <= 1 -> {
                     page.alpha = 1 - position
                     page.translationX = pageWidth * -position
@@ -267,7 +281,10 @@ class MainActivity : BaseActivity() {
                     page.scaleX = scaleFactor
                     page.scaleY = scaleFactor
                 }
-                else -> page.alpha = 0f
+
+                else -> {
+                    page.alpha = 0f
+                }
             }
         }
 
