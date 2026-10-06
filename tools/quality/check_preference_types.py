@@ -20,7 +20,9 @@ METHOD_KIND = {
     "getStringSet": "SET",
 }
 
-ACCESS_RE = re.compile(r"\\.(getBoolean|getString|getInt|getFloat|getStringSet)\\(\\s*[\\\"]([^\\\"]+)[\\\"]")
+ACCESS_RE = re.compile(
+    r"""\.(getBoolean|getString|getInt|getFloat|getStringSet)\(\s*["']([^"']+)["']"""
+)
 
 def attr(node, name):
     return node.get(ANDROID + name) or node.get(APP + name)
