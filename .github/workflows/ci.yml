@@ -192,8 +192,33 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           BEFORE_SHA: ${{ github.event.before }}
-          MAX_APK_GROWTH_PCT: ${{ env.MAX_APK_GROWTH_PCT }}
+          DEFAULT_MAX_APK_GROWTH_PCT: ${{ env.MAX_APK_GROWTH_PCT }}
         run: |
+          MAX_APK_GROWTH_PCT="$DEFAULT_MAX_APK_GROWTH_PCT"
+
+          # A deliberate baseline reset is the one case this ratchet cannot express by
+          # itself: adopting a UI framework genuinely grows the APK, and the gate is
+          # measured against the base revision precisely so a change cannot widen its own
+          # limit. It is therefore allowed explicitly, through a committed justification
+          # that names the measurement. Its text is echoed into the job summary so a
+          # widened limit is never invisible, and deleting the file restores the default.
+          JUSTIFICATION=tools/baseline/APK_GROWTH_JUSTIFICATION.md
+          if [[ -f "$JUSTIFICATION" ]]; then
+            MAX_APK_GROWTH_PCT="$(sed -n 's/^accepted-growth-pct:[[:space:]]*//p' "$JUSTIFICATION" | head -n 1)"
+            if [[ ! "$MAX_APK_GROWTH_PCT" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+              echo "::error::$JUSTIFICATION has no valid 'accepted-growth-pct:' line"
+              exit 1
+            fi
+            {
+              echo "### APK size ratchet widened for this run"
+              echo ""
+              echo "Limit raised from +$DEFAULT_MAX_APK_GROWTH_PCT% to +$MAX_APK_GROWTH_PCT% by a committed justification:"
+              echo ""
+              sed 's/^/  /' "$JUSTIFICATION"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           python3 tools/baseline/check_baseline.py \
             --event-name "$EVENT_NAME" \
             --base-ref "$BASE_REF" \
