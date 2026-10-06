@@ -1,6 +1,7 @@
 package com.wax.module.views
 
 import android.content.Context
+import androidx.core.view.isNotEmpty
 import android.database.DataSetObserver
 import android.graphics.Rect
 import android.os.SystemClock
@@ -267,7 +268,7 @@ open class HorizontalListView
         }
 
         private fun positionItems(dx: Int) {
-            if (childCount > 0) {
+            if (isNotEmpty()) {
                 mDisplayOffset += dx
                 var left = mDisplayOffset
                 for (index in 0 until childCount) {
