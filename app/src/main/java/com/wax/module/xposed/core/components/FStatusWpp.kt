@@ -58,9 +58,9 @@ class FStatusWpp(
     }
 
     init {
-        if (fstatus == null) throw RuntimeException("Object FStatus is null")
+        if (fstatus == null) error("Object FStatus is null")
         if (!type.isInstance(fstatus)) {
-            throw RuntimeException("Object is not a FStatus Instance")
+            error("Object is not a FStatus Instance")
         }
     }
 
