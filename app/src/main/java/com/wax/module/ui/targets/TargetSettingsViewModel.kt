@@ -57,7 +57,12 @@ class TargetSettingsViewModel(
         _state.value =
             _state.value.copy(
                 rows = rows,
-                overrideCount = store.keysWithOverrides(scope).size,
+                overrideCount =
+                    if (scope is SettingsScope.Target) {
+                        overrideable.count { entry -> resolver.isOverridden(entry.key, scope) }
+                    } else {
+                        0
+                    },
                 totalSettingCount = SettingKeyRegistry.entries.size,
             )
     }
@@ -180,9 +185,36 @@ class TargetSettingsViewModel(
     fun copyGlobalToTarget() {
         val scope = _state.value.scope
         if (scope !is SettingsScope.Target) return
-        store.copyScope(SettingsScope.Global, scope)
+
+        store.clearScope(scope)
+        for (entry in SettingKeyRegistry.entries) {
+            copyStoredGlobalValue(entry, scope)
+        }
         notifyRuntime(scope)
         reload()
+    }
+
+    private fun copyStoredGlobalValue(
+        entry: SettingKeyRegistry.Entry,
+        target: SettingsScope.Target,
+    ) {
+        val global = SettingsScope.Global
+        when (entry.kind) {
+            SettingKeyRegistry.Kind.BOOLEAN ->
+                store.readBoolean(global, entry.key)?.let { store.writeBoolean(target, entry.key, it) }
+
+            SettingKeyRegistry.Kind.INT ->
+                store.readInt(global, entry.key)?.let { store.writeInt(target, entry.key, it) }
+
+            SettingKeyRegistry.Kind.FLOAT ->
+                store.readFloat(global, entry.key)?.let { store.writeFloat(target, entry.key, it) }
+
+            SettingKeyRegistry.Kind.SET ->
+                store.readStringSet(global, entry.key)?.let { store.writeStringSet(target, entry.key, it) }
+
+            SettingKeyRegistry.Kind.TEXT ->
+                store.readString(global, entry.key)?.let { store.writeString(target, entry.key, it) }
+        }
     }
 
     /** Removes every override on every target. */

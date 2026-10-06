@@ -49,6 +49,7 @@ class TargetScopedPreferences(
             // Decoded through the store so a set or a flag comes back as the type the
             // writer used, not as the string the raw value happens to look like.
             val key = physicalKey.removePrefix(prefix)
+            if (SettingKeyRegistry.find(key) == null) continue
             rebuilt[key] = decode(store, physicalKey, key, value)
         }
         overrides = rebuilt

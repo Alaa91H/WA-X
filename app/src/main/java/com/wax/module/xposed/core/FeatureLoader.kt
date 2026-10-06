@@ -670,6 +670,7 @@ class FeatureLoader {
                         context: Context,
                         intent: Intent,
                     ) {
+                        TargetSettingsBridge.reload()
                         ModuleRuntime.setPrivBoolean("need_restart", true)
                     }
                 }

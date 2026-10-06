@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import com.wax.module.platform.TargetApp
 import com.wax.module.xposed.core.components.SharedPreferencesWrapper
 import com.wax.module.xposed.utils.Utils
+import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.XposedBridge
 
 /**
@@ -53,7 +54,11 @@ object TargetSettingsBridge {
     fun reload() {
         val prefs = Utils.xprefs
         if (prefs is TargetScopedPreferences) {
-            prefs.refresh(SharedPreferencesSettingsStore(prefs.rawDelegate))
+            val raw = prefs.rawDelegate
+            if (raw is XSharedPreferences) {
+                raw.reload()
+            }
+            prefs.refresh(SharedPreferencesSettingsStore(raw))
         }
     }
 }

@@ -133,25 +133,25 @@ class TargetScopedPreferencesTest {
     @Test
     fun `an int override is returned as an int`() {
         val store = SharedPreferencesSettingsStore(prefs)
-        prefs.put("seek", 5)
+        prefs.put("floating_bottom_bar_radius", 5)
         store.reload()
-        store.writeInt(SettingsScope.Target(wa), "seek", 9)
-        assertEquals(9, scoped(wa).getInt("seek", 5))
+        store.writeInt(SettingsScope.Target(wa), "floating_bottom_bar_radius", 9)
+        assertEquals(9, scoped(wa).getInt("floating_bottom_bar_radius", 5))
     }
 
     @Test
     fun `a set override is returned as a set`() {
         val store = SharedPreferencesSettingsStore(prefs)
-        store.writeStringSet(SettingsScope.Target(wa), "multi", setOf("x", "y"))
-        assertEquals(setOf("x", "y"), scoped(wa).getStringSet("multi", null)?.toSet())
+        store.writeStringSet(SettingsScope.Target(wa), "hidetabs", setOf("1", "2"))
+        assertEquals(setOf("1", "2"), scoped(wa).getStringSet("hidetabs", null)?.toSet())
     }
 
     @Test
     fun `a set is not handed to a boolean read`() {
         val store = SharedPreferencesSettingsStore(prefs)
-        store.writeStringSet(SettingsScope.Target(wa), "mixed", setOf("x"))
+        store.writeStringSet(SettingsScope.Target(wa), "hidetabs", setOf("1"))
         // Falls through to the caller's own default rather than coercing.
-        assertFalse(scoped(wa).getBoolean("mixed", false))
+        assertFalse(scoped(wa).getBoolean("hidetabs", false))
     }
 
     @Test
@@ -171,10 +171,14 @@ class TargetScopedPreferencesTest {
     }
 
     @Test
-    fun `contains is true for an overridden key`() {
+    fun `unknown target keys are never exposed as WA X overrides`() {
         SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "only_here", true)
-        assertTrue(scoped(wa).contains("only_here"))
-        assertFalse(scoped(business).contains("only_here"))
+
+        val target = scoped(wa)
+
+        assertFalse(target.contains("only_here"))
+        assertFalse(target.getBoolean("only_here", false))
+        assertEquals("original", target.overrideForHook("only_here", "original"))
     }
 
     @Test
@@ -194,6 +198,16 @@ class TargetScopedPreferencesTest {
         val target = scoped(wa)
 
         assertEquals(setOf("1", "2"), target.getStringSet("hidetabs", null)?.toSet())
+    }
+
+    @Test
+    fun `excluded module-only keys cannot become target runtime overrides`() {
+        prefs.put("waxtarget.whatsapp.thememode", "light")
+
+        val target = scoped(wa)
+
+        assertEquals("dark", target.getString("thememode", "dark"))
+        assertEquals("current", target.overrideForHook("thememode", "current"))
     }
 
     // --- writes ------------------------------------------------------------------
@@ -222,20 +236,20 @@ class TargetScopedPreferencesTest {
         val global = SettingsScope.Global
         val target = SettingsScope.Target(wa)
 
-        store.writeBoolean(global, "copied_flag", true)
-        store.writeInt(global, "copied_int", 7)
-        store.writeFloat(global, "copied_float", 1.5f)
-        store.writeString(global, "copied_text", "value")
-        store.writeStringSet(global, "copied_set", setOf("a", "b"))
+        store.writeBoolean(global, "showonline", true)
+        store.writeInt(global, "floating_bottom_bar_radius", 7)
+        store.writeFloat(global, "voicenote_speed", 1.5f)
+        store.writeString(global, "status_style", "2")
+        store.writeStringSet(global, "hidetabs", setOf("1", "2"))
 
         store.copyScope(global, target)
 
         val scoped = scoped(wa)
-        assertTrue(scoped.getBoolean("copied_flag", false))
-        assertEquals(7, scoped.getInt("copied_int", 0))
-        assertEquals(1.5f, scoped.getFloat("copied_float", 0f))
-        assertEquals("value", scoped.getString("copied_text", null))
-        assertEquals(setOf("a", "b"), scoped.getStringSet("copied_set", null)?.toSet())
+        assertTrue(scoped.getBoolean("showonline", false))
+        assertEquals(7, scoped.getInt("floating_bottom_bar_radius", 0))
+        assertEquals(1.5f, scoped.getFloat("voicenote_speed", 0f))
+        assertEquals("2", scoped.getString("status_style", null))
+        assertEquals(setOf("1", "2"), scoped.getStringSet("hidetabs", null)?.toSet())
     }
 
     @Test
@@ -255,14 +269,14 @@ class TargetScopedPreferencesTest {
     @Test
     fun `clearing global leaves target overrides intact`() {
         val store = SharedPreferencesSettingsStore(prefs)
-        store.writeBoolean(SettingsScope.Global, "global_only", true)
-        store.writeBoolean(SettingsScope.Target(wa), "wa_only", true)
+        store.writeBoolean(SettingsScope.Global, "filterseen", true)
+        store.writeBoolean(SettingsScope.Target(wa), "showonline", true)
 
         store.clearScope(SettingsScope.Global)
 
-        assertNull(store.readBoolean(SettingsScope.Global, "global_only"))
-        assertEquals(true, store.readBoolean(SettingsScope.Target(wa), "wa_only"))
-        assertTrue(scoped(wa).getBoolean("wa_only", false))
+        assertNull(store.readBoolean(SettingsScope.Global, "filterseen"))
+        assertEquals(true, store.readBoolean(SettingsScope.Target(wa), "showonline"))
+        assertTrue(scoped(wa).getBoolean("showonline", false))
     }
 
     // --- no target ----------------------------------------------------------------
