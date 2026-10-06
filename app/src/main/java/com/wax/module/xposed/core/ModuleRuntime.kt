@@ -75,10 +75,7 @@ object ModuleRuntime {
 
     @JvmStatic
     @Throws(Exception::class)
-    fun initialize(
-        loader: ClassLoader,
-        pref: SharedPreferences,
-    ) {
+    fun initialize(loader: ClassLoader) {
         _privPrefs = Utils.application.getSharedPreferences("WaGlobal", Context.MODE_PRIVATE)
 
         // init UserJID
@@ -280,7 +277,11 @@ object ModuleRuntime {
             client = baseClient
             runBlocking {
                 val canLoad = baseClient.connect()
-                if (!canLoad) throw Exception()
+                if (!canLoad) {
+                    throw IllegalStateException(
+                        "Bridge client ${baseClient.javaClass.simpleName} refused the connection",
+                    )
+                }
                 true
             }
         } catch (_: Exception) {
