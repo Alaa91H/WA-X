@@ -19,8 +19,8 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.io.IOException
 import java.io.File
+import java.io.IOException
 
 class AudioTranscript(
     classLoader: ClassLoader,

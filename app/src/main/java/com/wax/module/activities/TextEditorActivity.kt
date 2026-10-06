@@ -19,8 +19,8 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.lifecycleScope
 import androidx.core.content.edit
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.wax.module.R
 import com.wax.module.activities.base.BaseActivity

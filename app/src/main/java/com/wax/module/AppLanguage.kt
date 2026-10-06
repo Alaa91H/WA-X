@@ -1,8 +1,8 @@
 package com.wax.module
 
 import android.content.Context
-import androidx.core.content.edit
 import android.content.res.Configuration
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import java.util.Locale
 

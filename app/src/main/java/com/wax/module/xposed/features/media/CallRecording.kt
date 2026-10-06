@@ -574,8 +574,9 @@ class CallRecording(
     }
 
     private fun fallbackRecordingDirectory(): File {
-        val externalDir = FeatureLoader.mApp?.getExternalFilesDir(null)
-            ?: throw IOException("Could not resolve app external files directory")
+        val externalDir =
+            FeatureLoader.mApp?.getExternalFilesDir(null)
+                ?: throw IOException("Could not resolve app external files directory")
         val fallbackDir = File(externalDir, "Recordings")
         if (!fallbackDir.exists() && !fallbackDir.mkdirs()) {
             throw IOException("Could not create fallback recording directory: ${fallbackDir.absolutePath}")

@@ -95,7 +95,9 @@ class MainActivity : BaseActivity() {
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    binding.navView.menu.getItem(position).isChecked = true
+                    binding.navView.menu
+                        .getItem(position)
+                        .isChecked = true
 
                     val scrollKey = pendingScrollToPreference
                     if (pendingScrollToFragment == position && scrollKey != null) {

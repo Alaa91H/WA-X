@@ -1,7 +1,6 @@
 package com.wax.module.views
 
 import android.content.Context
-import androidx.core.view.isNotEmpty
 import android.database.DataSetObserver
 import android.graphics.Rect
 import android.os.SystemClock
@@ -13,6 +12,7 @@ import android.view.ViewParent
 import android.widget.AdapterView
 import android.widget.ListAdapter
 import android.widget.Scroller
+import androidx.core.view.isNotEmpty
 import java.util.LinkedList
 import java.util.Queue
 
