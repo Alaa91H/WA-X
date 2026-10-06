@@ -8,6 +8,7 @@ import android.util.AttributeSet
 import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
+import com.wax.module.R
 import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RealPathUtil
 import com.wax.module.xposed.utils.Utils
