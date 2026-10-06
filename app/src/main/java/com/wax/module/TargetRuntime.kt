@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicReference
  * snapshot is keyed by it.
  */
 object TargetRuntime {
-
     private val current = AtomicReference<TargetApp?>(null)
 
     @Volatile
