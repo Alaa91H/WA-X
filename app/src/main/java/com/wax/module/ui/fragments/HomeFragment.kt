@@ -407,7 +407,7 @@ class HomeFragment : BaseFragment() {
         }
         checkWpp(activity)
         binding.deviceName.text = Build.MANUFACTURER
-        binding.sdk.text = Build.VERSION.SDK_INT.toString()
+        binding.sdk.text = String.format(Locale.getDefault(), "%d", Build.VERSION.SDK_INT)
         binding.modelName.text = Build.DEVICE
         if (ModuleApplication.isOriginalPackage) {
             binding.listWpp.text = activity.resources.getStringArray(R.array.supported_versions_wpp).contentToString()

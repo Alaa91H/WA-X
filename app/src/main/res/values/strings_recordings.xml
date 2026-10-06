@@ -1,7 +1,7 @@
 <resources>
     <!-- Recordings Manager strings -->
     <string name="recordings_manager">Recordings</string>
-    <string name="no_recordings_found">No recordings found</string>
+    <string name="no_recordings_found">No recordings found</string>\n    <string name="recording_details_format" translatable="false">%1$s • %2$s</string>
     <string name="delete_confirmation">Are you sure you want to delete this recording?</string>
     <string name="delete_multiple_confirmation">Are you sure you want to delete %d recordings?</string>
     <string name="share_recording">Share Recording</string>
