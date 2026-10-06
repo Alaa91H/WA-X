@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List, WA X\'ı şunlardan gizliyor:</string>
     <string name="diag_hma_disable">WA X\'ın düzgün çalışması için Hide My App List\'te WhatsApp/Business engellemesini kapatın.</string>
     <string name="diag_copied">Satır panoya kopyalandı</string>
+
+    <!-- Per-app settings -->
+    <string name="per_target_settings">Uygulamaya özel ayarlar</string>
+    <string name="scope_global">Genel</string>
+    <string name="scope_global_explainer">Bunlar varsayılan değerlerdir. Kendine ait bir değer atanmamış her hedef uygulama bunları kullanır.</string>
+    <string name="scope_target_explainer">Bu uygulamada %2$d ayarın %1$d tanesi özelleştirilmiş. “Geneli kullan” olarak bırakılan ayarlar genel değeri kullanır.</string>
+    <string name="search_settings">Ayarları ara</string>
+    <string name="no_settings_match">Bu aramayla eşleşen ayar yok.</string>
+    <string name="tri_state_inherit">Geneli kullan</string>
+    <string name="tri_state_enabled">Açık</string>
+    <string name="tri_state_disabled">Kapalı</string>
+    <string name="default_value">Her uygulama için varsayılan</string>
+    <string name="follows_global">Genel ayarı kullanıyor</string>
+    <string name="pinned_to">Sabitlenen değer: %1$s</string>
+    <string name="pin_global">Sabitle</string>
+    <string name="follow_global">Geneli kullan</string>
+    <string name="copy_global_to_target">Tüm genel değerleri bu uygulamaya kopyala</string>
+    <string name="reset_this_target">Bu uygulamayı sıfırla</string>
+    <string name="reset_all_targets">Tüm uygulamaları sıfırla</string>
+    <string name="edit_on_original_screen">Bu ayarı %1$s ekranında düzenleyin.</string>
+    <string name="open_per_target_settings">WhatsApp ve WhatsApp Business uygulamalarını ayrı ayrı yapılandır</string>
+    <string name="open_per_target_settings_summary">WhatsApp ve WhatsApp Business için ayrı ayarlar belirleyin veya bir ayarın genel varsayılanı kullanmasına izin verin.</string>
+    <string name="reload">Yeniden yükle</string>
 </resources>
