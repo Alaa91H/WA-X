@@ -1,192 +1,101 @@
-| **English** | [Português(Brasil)](README.pt-BR.md)
+# WA X — Project Guide
 
-# WA X
 <div align="center">
-  <p><strong>WA X is an Xposed module that enhances your WhatsApp experience.</strong></p>
-  <p><strong>Warning:</strong> This module is intended for educational purposes only, you may have problems with your WhatsApp account, risk of banning! Use it at your own risk.</p>
-  <p>Please note that this project is currently in development, so bugs and crashes may occur. If you encounter any issues report them in our group or create an <a href="https://github.com/Alaa91H/WA-X/issues">issue</a> here.</p>
+  <img src="assets/wa-x-logo.png" alt="WA X logo" width="160" />
+  <p><strong>Advanced WhatsApp Xposed Module</strong></p>
 </div>
 
----
+## Project identity
 
-## Legal Disclaimer & Project Scope
+WA X is an independent, open-source Android Xposed module and a **fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer)**.
 
-To avoid any misunderstanding regarding the nature, goals, and scope of this project, we explicitly state that:
+The upstream project and its contributors remain credited for inherited work. This fork is currently developed and maintained by **[Alaa](https://github.com/Alaa91H)**. Maintaining the fork does not imply authorship of upstream code.
 
-*   **Zero Proprietary Code:** This repository **DOES NOT** contain, host, or distribute any source code belonging to WhatsApp Inc., Meta Platforms, Inc., or any of their affiliates.
-*   **No APK Distribution:** We **DO NOT** distribute, host, or provide links to modified WhatsApp binary files (APKs). The APKs generated in the GitHub Actions tab are strictly the Xposed module itself, not a messaging application.
-*   **No Piracy or Bypasses:** WA X **DOES NOT** bypass premium accounts or subscriptions, does not unlock paid features illegally, and does not facilitate any form of piracy.
-*   **Security and Integrity:** This project **DOES NOT** provide tools to break, bypass, or weaken the encryption, security, or server infrastructure of WhatsApp.
-*   **User Responsibility:** This is an educational research project. The use of this tool is entirely at the end user's own risk. We are not responsible for any account bans or violations of third-party Terms of Service that the user may commit when using modifications on their own device.
+```text
+Project: WA X
+Repository: Alaa91H/WA-X
+Module applicationId: com.wax.module
+Targets: com.whatsapp, com.whatsapp.w4b
+Distribution model: one WA X module APK
+```
 
-All modifications are made dynamically in the memory of the user's own device through the Xposed framework, without tampering with the original application package.
+## Runtime model
 
----
+WA X hooks selected behavior inside the installed WhatsApp/WhatsApp Business process through Xposed. It does not rebuild or redistribute WhatsApp itself.
 
-## Main Features
-<details closed>
-  <summary>Privacy</summary>
+The project currently uses the legacy Xposed API. The scope includes both WhatsApp packages and the System Framework because the current bridge/package-visibility implementation still needs it. That system scope should only be removed after the bridge is redesigned and verified.
 
-- `Hide Forwarded Tag`
-- `Remove Forward Limit`
-- `Disable Pinned Chats Limit`
-- `Freeze Last Seen`
-- `Hide Status View`
-- `Hide Blue Ticks`
-- `Hide View Once and Audio Seen`
-- `Hide Delivered`
-- `Hide Typing`
-- `Hide Recording Audio`
-- `Disable View Once`
-- `Send Blue Ticks upon Reply`
-- `Delete for everyone on all messages`
-- `Show Edited Message History`
-- `Remove See More Button`
-- `Anti Revoke Status`
-- `Anti Revoke Message`
-- `Anti Disappearing Messages`
-- `Custom Privacy per Contact`
-- `Ghost Mode`
-- `Always Online`
-- `Call Recording`
-- `Call Privacy & Blocking`
-- `Call Information`
-- `Call Contact Whitelist/Blocklist`
-- `Global Search`
-- `Recover Deleted Messages`
-</details>
+Settings use a target-aware model so one module APK can retain separate effective configuration for WhatsApp and WhatsApp Business.
 
-<details closed>
-  <summary>Home Screen</summary>
+## Feature areas
 
-- `Show Name`
-- `Show Bio`
-- `Show DND Button`
-- `Separate Groups`
-- `Hide Archived Chats`
-- `Show Online Dot in Conversation List`
-- `Remove Channel Recommendations`
-- `Hide Tabs on Home`
-- `Enable IGStatus on Home Screen`
-- `Filter Chats`
-- `Wallpaper in Home Screen`
-- `Show Chat Broadcast Icon`
-- `List Animations`
-- `Disable Channels`
-</details>  
+The current source includes privacy, messaging, media/status, calls, customization, automation, storage and diagnostics functionality. Examples include anti-revoke behavior, privacy controls, edited-message handling, status/media tools, media-quality controls, call controls, themes/custom CSS, Tasker integration and backup/restore helpers.
 
-<details closed>
-  <summary>General</summary>
+Many hooks depend on internal WhatsApp code. Availability therefore changes with target versions.
 
-- `Time in 12-Hour Format`
-- `Seconds on Timestamp`
-- `Buttons Stroke`
-- `Menu Icons`
-- `Outlined Icons`
-- `New Settings Style`
-- `Theme Mode Selection`
-- `Lite Mode`
-- `Force English`
-- `Bootloader Spoofer`
-- `Tasker Automation`
-- `Show Toast on Contact Online`
-- `Toast on Message Delete`
-- `Toast on Viewed Message`
-- `Google Translate Integration`
-- `Double Click to React`
-- `Custom Reaction Emoji`
-- `Disable Auto Status`
-- `Enable Copy Status`
-- `Toast on Viewed Status`
-</details>
+## Compatibility policy
 
-<details closed>
-  <summary>Media</summary>
+Read [COMPATIBILITY.md](COMPATIBILITY.md) before treating a feature/version pair as supported.
 
-- `Download Status`
-- `Download View Once`
-- `HD Quality Videos`
-- `HD Quality Images`
-- `Send videos in 60FPS`
-- `Send videos in original resolution`
-- `Increased Video Size Limit`
-- `Disable Audio Sensor (Proximity)`
-- `Audio Transcription`
-- `Voice Note Speed Control`
-- `Send Audio as Voice/Audio Note`
-- `Enable Media Preview`
-- `Custom Download Location`
-- `Force Restore Cloud Backup`
+The compatibility model separates:
 
-</details>
+- **declared target versions** — versions accepted by the maintenance/runtime gate;
+- **resolver evidence** — observed proof that required hook targets resolve;
+- **feature state** — `supported`, `degraded`, `unsupported` or `unknown`.
 
-<details closed>
-  <summary>Customization</summary>
-
-- `Colors Customization`
-   - `Primary Color`
-   - `Secondary Color`
-   - `Background Color`
-- `Bubble Colors Customization`
-   - `Left Bubble Color`
-   - `Right Bubble Color`
-- `Wallpaper & Transparency Settings`
-- `Hide Tabs`
-- `Custom Filters and Theme`
-- `Custom CSS Themes`
-- `Custom DPI`
-- `Theme Manager`
-- `Animation Emojis`
-- `New Context Menu UI`
-- `Show Admin Group Icon`
-- `Menu with Icons`
-- `Status Style Customization`
-- `Old Statuses UI`
-- `Custom Colors for Text Status`
-</details>
-
-<details closed>
-  <summary>Others</summary>
-
-- `Selection of Call Type`
-- `Confirmation to Send Sticker`
-- `Disable Default Emojis`
-- `Stamp Copied Messages`
-</details>
+A declared version is not a blanket support guarantee. `unknown` means the project does not yet have enough evidence to make a stronger claim.
 
 ## Installation
-1. Ensure that your device is rooted.
-2. Install the Xposed Framework (recommend [this](https://github.com/JingMatrix/LSPosed) LPosed) on
-   your device.
-3. Download the WA X from the [Actions](https://github.com/Alaa91H/WA-X/actions) section.
-4. Install the WA X APK.
-5. Enable the WA X module in the Xposed Installer app.
 
-## Support
-If you encounter any issues or have questions about WA X, please [Visit Telegram](https://t.me/Alaa91h).
+1. Install a compatible Xposed environment such as LSPosed.
+2. Download the WA X module APK from [GitHub Releases](https://github.com/Alaa91H/WA-X/releases) for stable versions.
+3. Install WA X and enable it in the Xposed/LSPosed manager.
+4. Scope the target package(s):
+   - `com.whatsapp`
+   - `com.whatsapp.w4b`
+5. Scope **System Framework** for the current legacy bridge implementation.
+6. Restart the target app after enabling the module or changing hook-sensitive settings.
 
-## License & Copyright Warning
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** - see the [LICENSE](LICENSE) file for details.
+WA X is not a modified WhatsApp APK.
 
-**Important Notice for Forks and Derivative Works:**
-This is a strong copyleft open-source license. Any derivative works, forks, or software compiled together with this codebase (including via Git submodules) **must** also be open-source and distributed under the exact same GPL-3.0 license terms. Attempting to use this code to create proprietary, closed-source, or commercialized modifications without releasing the full source code is a direct violation of copyright and the GPL-3.0 terms.
+## Release channels
 
-## Thanks
+| Channel | Purpose | Location |
+|---|---|---|
+| Stable | Versioned builds that are also GitHub Releases | [GitHub Releases](https://github.com/Alaa91H/WA-X/releases) / [Updates & Releases](https://t.me/WAXposed/4) |
+| Beta Testing | Successful builds without a GitHub Release | [Beta Testing](https://t.me/WAXposed/18) |
+| Community | Questions, discussion and project community | [@WAXposed](https://t.me/WAXposed) |
 
-* Bootloader Spoofer (Thanks to [chiteroman](https://github.com/chiteroman))
-* LSPosed Framework Core Patch (thanks to the [LSPosed](https://github.com/LSPosed) team)
-* Bridge Client and Server (Thanks to [rhunk](https://github.com/rhunk/))
+## Safety and limitations
 
----
+WA X does not promise permanent compatibility, server-side bypasses or “anti-ban” protection. WhatsApp may change client internals or server behavior at any time.
 
-**Note**: Please use WA X responsibly and in compliance with the terms and conditions of the apps you are modifying. Misuse of this tool may lead to legal consequences.
+Keep backups of important data. If a target version is not resolver-verified, waiting for evidence is safer than assuming old hooks remain valid.
 
-## Star History
+WA X does not provide tools to break WhatsApp encryption, compromise accounts, bypass paid services or weaken server security.
 
-<a href="https://www.star-history.com/?repos=Dev4Mod%2FWA X&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Dev4Mod/WA X&type=date&theme=dark&legend=top-left&sealed_token=b1vTkmTYcAchBg96D5ulWNcOZFMvWeja0ogdKKalbAhLtvENQuovfDbpmDQZtMgFuxyeRseQRD6nPsU9tgT5vGKWbU_1OHCsXyFPoRSDwMChEZVMCkQ14dI5m6rSPZ-iMzp_4VSp_7J5CLtEOUKP_1b2e7vbNLGh98-LMTBjsY8w3-YgoaZSDzwxzS4u" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Dev4Mod/WA X&type=date&legend=top-left&sealed_token=b1vTkmTYcAchBg96D5ulWNcOZFMvWeja0ogdKKalbAhLtvENQuovfDbpmDQZtMgFuxyeRseQRD6nPsU9tgT5vGKWbU_1OHCsXyFPoRSDwMChEZVMCkQ14dI5m6rSPZ-iMzp_4VSp_7J5CLtEOUKP_1b2e7vbNLGh98-LMTBjsY8w3-YgoaZSDzwxzS4u" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Dev4Mod/WA X&type=date&legend=top-left&sealed_token=b1vTkmTYcAchBg96D5ulWNcOZFMvWeja0ogdKKalbAhLtvENQuovfDbpmDQZtMgFuxyeRseQRD6nPsU9tgT5vGKWbU_1OHCsXyFPoRSDwMChEZVMCkQ14dI5m6rSPZ-iMzp_4VSp_7J5CLtEOUKP_1b2e7vbNLGh98-LMTBjsY8w3-YgoaZSDzwxzS4u" />
- </picture>
-</a>
+## Developer, contact and support
+
+- **Developer / current maintainer:** [Alaa](https://github.com/Alaa91H)
+- **Repository:** [github.com/Alaa91H/WA-X](https://github.com/Alaa91H/WA-X)
+- **Developer Telegram:** [@Alaa91h](https://t.me/Alaa91h)
+- **WA X Community:** [@WAXposed](https://t.me/WAXposed)
+- **Email:** [alahus2591@gmail.com](mailto:alahus2591@gmail.com)
+- **Bugs:** [GitHub Issues](https://github.com/Alaa91H/WA-X/issues)
+- **Voluntary development support:** [Ko-fi](https://ko-fi.com/alaa91h)
+
+Support is voluntary and does not purchase access to features. The open-source project does not maintain a paid feature layer.
+
+## Provenance and license
+
+See [PROJECT_PROVENANCE.md](PROJECT_PROVENANCE.md) for the detailed attribution policy.
+
+This repository preserves its origin in **Dev4Mod/WaEnhancer** and the history of previous contributors. WA X branding and current maintenance do not rewrite that history.
+
+The repository is licensed under **GNU GPL-3.0**. See [../LICENSE](../LICENSE). GPL-3.0 permits commercial use when the applicable license obligations are followed.
+
+## Disclaimer
+
+**WA X is an independent open-source project and is not affiliated with, endorsed by, sponsored by, or officially associated with WhatsApp or Meta.**
+
+Use the module responsibly and understand that third-party terms and compatibility can change independently of this project.
