@@ -41,8 +41,7 @@ object UpdateOffer {
     }
 
     /** Returns true only for a syntactically comparable semantic version. */
-    fun isValidVersion(version: String?): Boolean =
-        parseSemanticVersion(normaliseTag(version)) != null
+    fun isValidVersion(version: String?): Boolean = parseSemanticVersion(normaliseTag(version)) != null
 
     /**
      * Compares a release version with the installed version.
