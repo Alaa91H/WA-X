@@ -1,5 +1,7 @@
 # WA X — Support & Contact
 
+WA X is a fork and continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), currently developed and maintained by [Alaa](https://github.com/Alaa91H). Upstream authors and contributors retain attribution for inherited work.
+
 ## Community
 
 The primary community is:
