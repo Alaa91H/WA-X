@@ -58,7 +58,11 @@ style:
   MaxLineLength:
     active: true
     maxLineLength: 140
-  UnusedPrivateMember:
+  UnusedPrivateClass:
+    active: true
+  UnusedPrivateFunction:
+    active: true
+  UnusedPrivateProperty:
     active: true
 
 naming:
