@@ -1,19 +1,12 @@
 package com.wax.module.preference
 
-import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -50,52 +43,15 @@ class FileReaderPreference
             init(context)
         }
 
-        @RequiresApi(Build.VERSION_CODES.R)
-        private fun showAlertPermission() {
-            MaterialAlertDialogBuilder(context).apply {
-                setTitle(R.string.storage_permission)
-                setMessage(R.string.permission_storage)
-                setPositiveButton(R.string.allow) { _, _ ->
-                    val intent =
-                        Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                    context.startActivity(intent)
-                }
-                setNegativeButton(R.string.deny) { dialog, _ -> dialog.dismiss() }
-                show()
-            }
-        }
-
         override fun onPreferenceClick(preference: Preference): Boolean {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-                showAlertPermission()
-                return true
-            }
-
-            // Android 13 split the media permission, so the permission to ask for is a
-            // function of the platform version rather than one constant.
-            val readPermission =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    Manifest.permission.READ_MEDIA_IMAGES
-                } else {
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                }
-
-            if (!hasPermission(readPermission)) {
-                (context as? Activity)?.requestPermissions(arrayOf(readPermission), 1)
-                return true
-            }
-
+            // This preference uses Android's document picker. The returned URI carries
+            // temporary read access, so READ_MEDIA_* and MANAGE_EXTERNAL_STORAGE are not
+            // required just to choose and parse an XML file.
             FilePicker.setOnFilePickedListener(this)
             FilePicker.setOnUriPickedListener(this)
             FilePicker.fileCapture.launch(xmlMimeType)
             return true
         }
-
-        private fun hasPermission(permission: String): Boolean =
-            ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
         override fun onFilePicked(file: File) {
             if (!file.canRead()) {
