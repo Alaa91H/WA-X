@@ -1086,7 +1086,7 @@ class CustomView(
             height: Int,
         ): Drawable? {
             val file = if (filePath.startsWith("/")) File(filePath) else File(themeDir, filePath)
-            val key = file.absolutePath
+            val key = "${file.absolutePath}@${width}:${height}"
 
             val cachedDrawable = drawableCache.get(key)
 
@@ -1114,7 +1114,7 @@ class CustomView(
             callback: (Drawable?) -> Unit,
         ) {
             val file = if (filePath.startsWith("/")) File(filePath) else File(themeDir, filePath)
-            val key = file.absolutePath
+            val key = "${file.absolutePath}@${width}:${height}"
             val cachedSync =
                 drawableCache
                     .get(key)
@@ -1141,7 +1141,7 @@ class CustomView(
                             if (cached != null) {
                                 cached
                             } else {
-                                val loaded = loadDrawableFromFile(key, width, height)
+                                val loaded = loadDrawableFromFile(file.absolutePath, width, height)
                                 if (loaded is BitmapDrawable) {
                                     saveDrawableToCache(key, loaded, lastModified)
                                 }
@@ -1259,10 +1259,15 @@ class CustomView(
         var className: String? = null
         var typeSelector: String? = null
         var pseudoClass: String? = null
+
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     class SerialTerm : Serializable {
         companion object {
+            private const val serialVersionUID: Long = 1L
             const val COLOR: Byte = 1
             const val LENGTH: Byte = 2
             const val URI: Byte = 3
@@ -1287,17 +1292,24 @@ class CustomView(
     class SerialDeclaration : Serializable {
         var property: String = ""
         var terms: ArrayList<SerialTerm> = ArrayList()
+
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     class CachedRuleItem(
         var selector: ArrayList<SelectorPart>,
         var declarations: ArrayList<SerialDeclaration>,
         var targetActivityClassName: String?,
-    ) : Serializable
-
-    class GradientDrawableParser {
+    ) : Serializable {
         companion object {
-            fun parseGradient(
+            private const val serialVersionUID: Long = 1L
+        }
+    }
+
+    object GradientDrawableParser {
+        fun parseGradient(
                 angle: Float,
                 colors: IntArray,
                 positions: FloatArray,
@@ -1315,7 +1327,7 @@ class CustomView(
                 return bitmap.toDrawable(Utils.application.resources)
             }
 
-            private fun createLinearGradient(
+        private fun createLinearGradient(
                 angle: Float,
                 colors: IntArray,
                 positions: FloatArray,
@@ -1327,8 +1339,7 @@ class CustomView(
                 val y0 = (0.5 * height + 0.5 * height * sin(radians - Math.PI / 2)).toFloat()
                 val x1 = (0.5 * width + 0.5 * width * cos(radians + Math.PI / 2)).toFloat()
                 val y1 = (0.5 * height + 0.5 * height * sin(radians + Math.PI / 2)).toFloat()
-                return LinearGradient(x0, y0, x1, y1, colors, positions, Shader.TileMode.CLAMP)
-            }
+            return LinearGradient(x0, y0, x1, y1, colors, positions, Shader.TileMode.CLAMP)
         }
     }
 

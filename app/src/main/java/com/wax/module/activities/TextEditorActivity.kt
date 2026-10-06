@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.WebChromeClient
@@ -110,7 +111,7 @@ class TextEditorActivity : BaseActivity() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("TextEditorActivity", "Text editor operation failed", e)
             }
         }
     }
@@ -155,7 +156,7 @@ class TextEditorActivity : BaseActivity() {
                     cssCode.createNewFile()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("TextEditorActivity", "Text editor operation failed", e)
             }
         }
     }
@@ -189,7 +190,7 @@ class TextEditorActivity : BaseActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Log.e("TextEditorActivity", "Text editor operation failed", e)
                 }
             }
 

@@ -1,6 +1,7 @@
 package com.wax.module.xposed.utils
 
 import android.content.SharedPreferences
+import android.util.Log
 import android.util.Xml
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
@@ -85,7 +86,7 @@ class CDSharedPreferences(
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("CDSharedPreferences", "Failed to load preference XML", e)
             }
         }
     }
@@ -175,7 +176,7 @@ class CDSharedPreferences(
                 true
             } catch (e: Exception) {
                 tempFile.delete()
-                e.printStackTrace()
+                Log.e("CDSharedPreferences", "Failed to persist preference XML", e)
                 false
             }
         }
