@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">Kapalı</string>
     <string name="tri_state_enabled">Açık</string>
     <string name="tri_state_inherit">Genel</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Özel KeyBox'ı etkinleştir</string>
+    <string name="enable_custom_keybox_sum">Bootloader sahtelemesi için özel bir keybox.xml dosyası kullanın.</string>
+    <string name="use_custom_keybox_file">Özel keybox.xml dosyası kullan</string>
+    <string name="no_file_selected">Dosya seçilmedi</string>
 </resources>
