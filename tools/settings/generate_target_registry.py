@@ -218,12 +218,53 @@ def main() -> int:
             current = io.open(OUT, "r", encoding="utf-8").read()
         except OSError:
             current = ""
-        if current != rendered:
+
+        # Spotless/ktlint is allowed to reflow long Entry(...) calls after generation.
+        # Compare the generated registry semantically rather than byte-for-byte so the
+        # generator gate and formatting gate do not fight each other.
+        entry_pattern = re.compile(
+            r'Entry\(\s*"([^"]+)",\s*Kind\.([A-Z]+),\s*"([^"]*)",\s*"([^"]*)",\s*'
+            r'(?:com\.wax\.module\.R\.string\.([A-Za-z0-9_]+)|0),\s*\)',
+            re.DOTALL,
+        )
+        actual = {
+            match.group(1): (
+                match.group(2),
+                match.group(3),
+                match.group(4),
+                match.group(5),
+            )
+            for match in entry_pattern.finditer(current)
+        }
+        expected = {
+            key: (
+                value["kind"],
+                value["category"],
+                value["screen"],
+                value["title"],
+            )
+            for key, value in offered.items()
+        }
+
+        if actual != expected:
+            missing = sorted(set(expected) - set(actual))
+            extra = sorted(set(actual) - set(expected))
+            changed = sorted(
+                key for key in set(expected) & set(actual) if expected[key] != actual[key]
+            )
+            print("SettingKeyRegistry.kt is stale.", file=sys.stderr)
+            if missing:
+                print("  missing: " + ", ".join(missing), file=sys.stderr)
+            if extra:
+                print("  extra: " + ", ".join(extra), file=sys.stderr)
+            if changed:
+                print("  changed metadata/type: " + ", ".join(changed), file=sys.stderr)
             print(
-                "SettingKeyRegistry.kt is stale. Run: python tools/settings/generate_target_registry.py",
+                "Run: python tools/settings/generate_target_registry.py && ./gradlew :app:spotlessApply",
                 file=sys.stderr,
             )
             return 1
+
         print(
             "SettingKeyRegistry.kt is up to date: %d settings (%d toggles, %d other)"
             % (
