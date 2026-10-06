@@ -204,10 +204,10 @@ class TaskerApi(
         if (!authenticator.hasToken()) return TaskerDispatchResult.Unauthorized
         if (authenticator.isExpired()) return TaskerDispatchResult.Expired
         if (!authenticator.isValid(token)) return TaskerDispatchResult.Unauthorized
-        return try {
+        return runCatching {
             executor.execute(command)
             TaskerDispatchResult.Accepted(command)
-        } catch (error: Throwable) {
+        }.getOrElse { error ->
             TaskerDispatchResult.Failed("the action failed: ${error.javaClass.simpleName}")
         }
     }
