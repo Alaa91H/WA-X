@@ -1,7 +1,6 @@
 package com.wax.module.ui.fragments.base
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
