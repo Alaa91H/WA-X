@@ -8,13 +8,14 @@
 # manifest verification, and GitHub Release publishing.
 #
 # Event matrix
-#   pull_request      Verify only. Builds, tests, lints and signs debug APKs,
-#                     but uploads nothing and publishes nothing.
-#   push to master    The same verification, publishes the signed debug APK
-#                     as a CI artifact, then posts it to Telegram Beta Testing.
-#   push of tag v*    The release path: release-signed APK, signature and
-#                     manifest verification, GitHub Release, then Telegram
-#                     Updates & Releases.
+#   pull_request      Verify only. Builds/tests the debug variant, imports no
+#                     production signing material, and publishes nothing.
+#   push to master    Verifies with debug tasks, then builds an optimized
+#                     release-type Beta APK signed with the WA X update key,
+#                     uploads it as an artifact and posts it to Beta Testing.
+#   push of tag v*    Builds the optimized release variant with the same WA X
+#                     update key, validates it, creates the GitHub Release,
+#                     then publishes it to Updates & Releases.
 #   workflow_dispatch Same as a master push, or the release path when dispatched
 #                     on an existing tag.
 #
@@ -24,9 +25,11 @@
 #     gradle.properties -> waxVersionName == <tag> without the leading "v"
 #     APK versionName   == waxVersionName
 #     APK versionCode   == waxVersionCode
-#   * Only a tag build is signed with the release keystore. Every other build
-#     is signed with the debug key, so a release key never signs an unreleased
-#     artifact and a debug-signed APK never reaches a Release.
+#   * Every APK distributed to users (Beta or tagged Release) is signed with
+#     the same WA X update key. Pull requests never receive signing secrets.
+#     This keeps Android updates signature-compatible across Beta and Stable.
+#   * Distributed Beta APKs use the optimized release build type (R8 enabled),
+#     but keep a development versionName and a commit-qualified filename.
 #   * A GitHub Release is created only from a tag, never from a branch push.
 #   * The release payload is exactly one .apk file. The staging directory is
 #     rejected if it holds any other file type or unexpected APK.
@@ -178,7 +181,14 @@ jobs:
           echo "| Version | \`$VERSION\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Version code | \`$VERSION_CODE\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Release tag | \`$TAG\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Mode | $(if [[ "$IS_TAG" == true ]]; then echo 'release'; else echo 'verification only'; fi) |" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$IS_TAG" == true ]]; then
+            MODE="stable release"
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            MODE="PR verification"
+          else
+            MODE="signed optimized beta"
+          fi
+          echo "| Mode | $MODE |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Commit | \`${GITHUB_SHA:0:8}\` |" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Make the Gradle wrapper executable
@@ -234,8 +244,8 @@ jobs:
           python3 tools/compatibility/validate_compatibility.py
           python3 tools/compatibility/sync_generated.py --check
 
-      - name: Import the release keystore
-        if: steps.version.outputs.is_tag == 'true'
+      - name: Import the WA X update keystore
+        if: github.event_name != 'pull_request'
         env:
           KEY_STORE: ${{ secrets.KEY_STORE }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -259,18 +269,33 @@ jobs:
           printf '%s' "$KEY_STORE" | base64 --decode > key.jks
 
           # key.jks is read back here so a truncated or mistyped secret fails
-          # now, in the build job, instead of halfway through a release.
+          # before any distributable Beta/Release APK is built.
           if ! keytool -list -keystore key.jks \
               -storepass "$KEY_STORE_PASSWORD" \
               -alias "$KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::The release keystore could not be opened with the configured alias"
+            echo "::error::The WA X update keystore could not be opened with the configured alias"
             exit 1
           fi
 
+          # The certificate fingerprint is public metadata. Carry it forward
+          # so every distributed APK can be proven to use this exact update key.
+          EXPECTED_SIGNING_CERT_SHA256="$(
+            keytool -exportcert \
+              -keystore key.jks \
+              -storepass "$KEY_STORE_PASSWORD" \
+              -alias "$KEY_ALIAS" |
+              sha256sum |
+              awk '{print toupper($1)}'
+          )"
+          if [[ ! "$EXPECTED_SIGNING_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]]; then
+            echo "::error::Could not derive the WA X signing certificate SHA-256"
+            exit 1
+          fi
+          echo "EXPECTED_SIGNING_CERT_SHA256=$EXPECTED_SIGNING_CERT_SHA256" >> "$GITHUB_ENV"
+
       # One staging directory, deterministic names, and nothing that is not an
-      # APK may enter it. Tag runs assemble the release variants with the release
-      # key; every other run keeps the debug-signed APKs, which are built and
-      # signed but never published.
+      # APK may enter it. Every user-distributed build uses the optimized release
+      # variant and the same WA X update key. Pull requests stay debug-only.
       - name: Build and stage the APKs
         if: github.event_name != 'pull_request'
         env:
@@ -287,16 +312,20 @@ jobs:
           # one output to stage and one asset to publish. The name is deterministic:
           # the release uses the version alone, a branch run adds the commit so a test
           # build is never mistaken for a release.
+          SOURCE_VARIANT=release
           if [[ "$IS_TAG" == "true" ]]; then
             ./gradlew $GRADLE_ARGS clean \
               assembleRelease \
               -PreleaseTag="$RELEASE_TAG"
-            SOURCE_VARIANT=release
             APK_NAME="WA-X-v$VERSION.apk"
           else
-            SOURCE_VARIANT=debug
+            # Beta distribution uses the release build type so R8 and release
+            # packaging optimizations match Stable. Without releaseTag Gradle
+            # deliberately keeps versionName as <base>-dev+<SHA8>.
+            ./gradlew $GRADLE_ARGS clean \
+              assembleRelease
             SHA8="${GITHUB_SHA:0:8}"
-            APK_NAME="WA-X-$VERSION-ci-$SHA8.apk"
+            APK_NAME="WA-X-$VERSION-beta-$SHA8.apk"
           fi
 
           mapfile -t found < <(
