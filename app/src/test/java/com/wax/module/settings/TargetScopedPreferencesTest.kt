@@ -155,7 +155,9 @@ class TargetScopedPreferencesTest {
     @Test
     fun `getAll leaves the other target's override out`() {
         SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "antirevoke", false)
-        assertEquals(true, scoped(wa).getAll()!!["antirevoke"])
+        val all = scoped(wa).getAll()!!
+        assertEquals(true, all["antirevoke"])
+        assertFalse(all.containsKey("waxtarget.business.antirevoke"))
     }
 
     @Test
@@ -261,6 +263,19 @@ class TargetScopedPreferencesTest {
     }
 
     // --- reload --------------------------------------------------------------------
+
+    @Test
+    fun `refresh resets the override count after the last override is removed`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeBoolean(SettingsScope.Target(wa), "showonline", true)
+        val target = scoped(wa)
+        assertEquals(1, target.count)
+
+        store.writeBoolean(SettingsScope.Target(wa), "showonline", null)
+        target.refresh(SharedPreferencesSettingsStore(prefs))
+
+        assertEquals(0, target.count)
+    }
 
     @Test
     fun `a refresh picks up a change made by the interface`() {
