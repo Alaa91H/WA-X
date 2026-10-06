@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List يخفي WA X عن:</string>
     <string name="diag_hma_disable">عطّل الحجب عن واتساب/واتساب للأعمال في Hide My App List حتى يعمل WA X بشكل صحيح.</string>
     <string name="diag_copied">تم نسخ السطر إلى الحافظة</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">إعدادات مخصّصة لكل تطبيق</string>
+    <string name="scope_global">عام</string>
+    <string name="scope_global_explainer">هذه هي الإعدادات الافتراضية. يستخدمها كل تطبيق مستهدف لم يتم تعيين قيمة خاصة به.</string>
+    <string name="scope_target_explainer">يوجد %1$d من أصل %2$d إعدادات مخصّصة لهذا التطبيق. الإعدادات المضبوطة على «استخدام الإعداد العام» تتبع القيمة العامة.</string>
+    <string name="search_settings">البحث في الإعدادات</string>
+    <string name="no_settings_match">لا توجد إعدادات تطابق هذا البحث.</string>
+    <string name="tri_state_inherit">استخدام الإعداد العام</string>
+    <string name="tri_state_enabled">تشغيل</string>
+    <string name="tri_state_disabled">إيقاف</string>
+    <string name="default_value">الافتراضي لكل تطبيق</string>
+    <string name="follows_global">يتبع الإعداد العام</string>
+    <string name="pinned_to">مثبّت على: %1$s</string>
+    <string name="pin_global">تثبيت</string>
+    <string name="follow_global">استخدام الإعداد العام</string>
+    <string name="copy_global_to_target">نسخ جميع القيم العامة إلى هذا التطبيق</string>
+    <string name="reset_this_target">إعادة ضبط هذا التطبيق</string>
+    <string name="reset_all_targets">إعادة ضبط جميع التطبيقات</string>
+    <string name="edit_on_original_screen">عدّل هذا الخيار في شاشة %1$s.</string>
+    <string name="open_per_target_settings">إعداد واتساب وواتساب للأعمال بشكل منفصل</string>
+    <string name="open_per_target_settings_summary">امنح واتساب وواتساب للأعمال إعدادات مستقلة لكل منهما، أو اترك الإعداد يتبع الإعداد الافتراضي العام.</string>
+    <string name="reload">إعادة تحميل</string>
 </resources>
