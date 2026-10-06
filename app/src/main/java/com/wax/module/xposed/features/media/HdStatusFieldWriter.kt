@@ -180,13 +180,13 @@ class HdStatusFieldWriter(
         aliases: List<String>,
         requiredType: Class<*>?,
     ): Field? {
-        for (name in aliases) {
-            val field = fields[name] ?: continue
-            field.isAccessible = true
-            if (requiredType != null && field.type != requiredType) continue
-            return field
-        }
-        return null
+        return aliases
+            .asSequence()
+            .mapNotNull(fields::get)
+            .firstOrNull { field ->
+                field.isAccessible = true
+                requiredType == null || field.type == requiredType
+            }
     }
 
     private fun recordMissing(

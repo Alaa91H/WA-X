@@ -17,7 +17,6 @@ object StateListDrawableCompact {
                 XposedHelpers.findMethodBestMatch(
                     drawableClass,
                     "getStateCount",
-                    *emptyArray<Class<*>>(),
                 )
             val result = method?.invoke(stateListDrawable)
             result as? Int ?: 0

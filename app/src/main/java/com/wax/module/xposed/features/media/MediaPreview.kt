@@ -270,7 +270,8 @@ class MediaPreview(
                 val query =
                     String.format(
                         Locale.ENGLISH,
-                        "SELECT message_url,mime_type,hex(media_key),direct_path,file_length FROM message_media WHERE message_row_id =\"%d\"",
+                        "SELECT message_url,mime_type,hex(media_key),direct_path,file_length " +
+                            "FROM message_media WHERE message_row_id =\"%d\"",
                         id,
                     )
                 val cursor0 = MessageStore.getInstance().getDatabase()?.rawQuery(query, null)

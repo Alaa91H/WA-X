@@ -43,15 +43,19 @@ class TargetScopedPreferences(
         val prefix = SettingsKeys.TARGET_PREFIX + target.code + "."
         val all = delegate.all ?: emptyMap()
         val rebuilt = HashMap<String, Any?>()
-        for ((physicalKey, value) in all) {
-            if (physicalKey == null || value == null) continue
-            if (!physicalKey.startsWith(prefix)) continue
-            // Decoded through the store so a set or a flag comes back as the type the
-            // writer used, not as the string the raw value happens to look like.
-            val key = physicalKey.removePrefix(prefix)
-            if (SettingKeyRegistry.find(key) == null) continue
-            rebuilt[key] = decode(store, physicalKey, key, value)
-        }
+        all.asSequence()
+            .filter { (physicalKey, value) ->
+                physicalKey != null &&
+                    value != null &&
+                    physicalKey.startsWith(prefix)
+            }.forEach { (physicalKey, value) ->
+                val key = physicalKey.removePrefix(prefix)
+                if (SettingKeyRegistry.find(key) != null) {
+                    // Decode through the typed store so the runtime sees the value kind
+                    // written by the manager rather than a raw string representation.
+                    rebuilt[key] = decode(store, physicalKey, key, value!!)
+                }
+            }
         overrides = rebuilt
         count = rebuilt.size
     }
