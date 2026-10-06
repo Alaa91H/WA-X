@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="version_s_unverified">Versione %1$s · build non verificata</string>
+</resources>

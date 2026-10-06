@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="version_s_unverified">Sürüm %1$s · doğrulanmamış yapı</string>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="version_s_unverified">الإصدار %1$s · إصدار غير متحقق منه</string>
+</resources>

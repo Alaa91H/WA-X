@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="version_s_unverified">Versi %1$s · build belum diverifikasi</string>
+</resources>
