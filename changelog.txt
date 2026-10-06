@@ -1,3 +1,92 @@
+WA X 1.1.0
+Release date: 2026-10-06
+
+Per-target settings, and the Compose foundation they are built on. This is the release
+where "one APK, two independent WhatsApp builds" stops being packaging and becomes
+behaviour: a setting can now differ between WhatsApp and WhatsApp Business, and the
+difference survives into the hooked process.
+
+PER-TARGET SETTINGS
+- Global remains the default for both builds. A target either follows it or has diverged,
+  and the new screen makes that visible: pick Global, WhatsApp or Business and edit that
+  one scope. 127 settings are available, 91 of them toggles.
+- "Use Global" means no override is stored. It never means the stored value happens to
+  equal the global one. Those are different, and collapsing them is a real bug: a user
+  who set WhatsApp to Enabled while Global was already Enabled would see "Use Global" in
+  the interface, and turning Global off would then silently turn their WhatsApp setting
+  off with it. The tests assert exactly that case.
+- A toggle offers three states: Use Global, On, Off. A setting that is not a toggle offers
+  two: follow Global, or hold the value it has today.
+- Per-target actions: copy every Global value onto this target, reset this target, reset
+  every target. Resetting a target leaves Global untouched.
+- An unreadable setting falls back to off rather than on, so a missing or corrupt value
+  can never enable a hook.
+- Keys the module uses for itself, and anything holding a credential or a file path, are
+  deliberately not offered per target. Two copies of an API key is two places to change
+  it.
+
+HOW IT REACHES THE HOOKS
+- One decorator sits under the preference object every feature already reads. Changing it
+  changes several hundred reads without touching any of them, which is why this is a small
+  change rather than an audit of the whole feature set.
+- It answers only for keys it owns. It also sees WhatsApp's own preference reads, because
+  it sits under the whole file, and it refuses anything that is not an override.
+- A feature cannot write a target key. Writes from a hooked process go to Global and a
+  target key is refused, so nothing inside WhatsApp can reconfigure the other build.
+- Overrides are namespaced under `waxtarget.<code>.`. Global keeps its original key, so
+  every setting configured before this release still reads back exactly as it was.
+- A change made in the interface applies the next time WhatsApp starts. There is no
+  cross-process notification yet; this is the one rough edge in the feature.
+
+TWO BUGS THE TESTS CAUGHT BEFORE EITHER SHIPPED
+- Values were being written with `putString` regardless of type. Every feature reads them
+  through SharedPreferences, so the first read of a boolean setting would have thrown
+  inside WhatsApp. It would have been a crash, not a wrong setting.
+- The override lookup compared types with `Class.isInstance` against `Boolean::class.java`,
+  which in Kotlin is the primitive `boolean` class and never matches a boxed value. Every
+  override was silently invisible: the interface would have shown a saved setting that did
+  nothing. The check is a type predicate now.
+
+COMPOSE FOUNDATION
+- Material3 1.4.0 through a pinned BOM, with the Compose compiler plugin. Stable
+  versions only.
+- `WaXTheme` provides light and dark schemes whose contrast ratios are stated in the
+  source, dynamic colour on Android 12 and later, and a type scale tightened for dense
+  settings screens.
+- `TargetSettingsActivity` is the first Compose screen. The existing preference screens
+  are unchanged and still work; converting a working preference screen and changing its
+  behaviour in one commit is not a change worth making.
+- `SettingKeyRegistry` is generated from the preference screens, so a renamed setting
+  cannot silently become unofferable. The generator reads `app:key`, which is how these
+  screens are written; a reader that only knows the `android:` namespace sees four keys in
+  total and reports success.
+
+SIZE, MEASURED RATHER THAN ASSUMED
+- `material-icons-extended` was pulled in for two icons and added 30 MiB of vectors to a
+  debug build. Removed in favour of the core icon set.
+- What remains is the Compose runtime: debug APK 37.0 to 57.8 MiB, and the release APK
+  users download 9.0 to 13.4 MiB.
+- The size ratchet is still active. The step is recorded in
+  `tools/baseline/APK_GROWTH_JUSTIFICATION.md` with its measurements, and the gate prints
+  it; deleting that file restores the default limit.
+
+QUALITY GATES
+- 854 unit tests, 0 failures. 41 of them are new and cover the persistence contract, the
+  tri-state, isolation in both directions between the two processes, type safety on reads
+  and the refusal of cross-target writes.
+- The formatting gate was extended to cover main source for the first time, which found
+  173 files it had never inspected. All of it is now formatted.
+- ktlint is told through its own configuration that composable functions are PascalCase,
+  rather than by renaming them or by suppressing findings.
+
+KNOWN LIMITATIONS
+- A per-target change applies on the next WhatsApp start rather than immediately.
+- No live-device verification was possible in the build environment. What changed is how
+  settings are stored and read; the hooks themselves are untouched.
+- The signing certificate still carries the previous project's name. It is the release
+  key, held in CI, and changing it would mean a different signing identity for every
+  future update.
+
 WA X 1.0.0
 Release date: 2026-10-06
 
