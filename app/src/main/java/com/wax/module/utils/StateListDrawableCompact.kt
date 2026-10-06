@@ -32,12 +32,13 @@ object StateListDrawableCompact {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return stateListDrawable.getStateDrawable(index)
         return try {
             val method =
-                XposedHelpers.findMethodBestMatch(
-                    drawableClass,
+                drawableClass.getDeclaredMethod(
                     "getStateDrawable",
                     Int::class.javaPrimitiveType,
-                )
-            method?.invoke(stateListDrawable, index) as? Drawable
+                ).apply {
+                    isAccessible = true
+                }
+            method.invoke(stateListDrawable, index) as? Drawable
         } catch (exception: Exception) {
             XposedBridge.log(exception)
             null
