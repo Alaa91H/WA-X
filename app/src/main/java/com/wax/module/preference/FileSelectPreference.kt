@@ -70,23 +70,22 @@ class FileSelectPreference :
     }
 
     override fun onPreferenceClick(preference: Preference): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            showAlertPermission()
-            return true
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                (context as Activity).requestPermissions(arrayOf(Manifest.permission.READ_MEDIA_IMAGES), 1)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                showAlertPermission()
                 return true
             }
-        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            (context as Activity).requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-            return true
+        } else {
+            val readDenied =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                    PackageManager.PERMISSION_GRANTED
+            val writeDenied =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                    PackageManager.PERMISSION_GRANTED
+            if (readDenied || writeDenied) {
+                ModuleApplication.showRequestStoragePermission(context as Activity)
+                return true
+            }
         }
 
         FilePicker.setOnFilePickedListener(this)
