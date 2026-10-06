@@ -1,9 +1,9 @@
 import com.diffplug.spotless.LineEnding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
