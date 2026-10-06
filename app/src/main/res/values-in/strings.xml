@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">Nonaktif</string>
     <string name="tri_state_enabled">Aktif</string>
     <string name="tri_state_inherit">Ikuti Global</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Aktifkan KeyBox khusus</string>
+    <string name="enable_custom_keybox_sum">Gunakan file keybox.xml khusus untuk pemalsuan bootloader.</string>
+    <string name="use_custom_keybox_file">Gunakan file keybox.xml khusus</string>
+    <string name="no_file_selected">Tidak ada file yang dipilih</string>
 </resources>
