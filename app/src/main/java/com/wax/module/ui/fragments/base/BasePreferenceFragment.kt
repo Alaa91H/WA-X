@@ -31,8 +31,6 @@ import com.wax.module.ModuleApplication
 import com.wax.module.R
 import com.wax.module.preference.FloatSeekBarPreference
 import rikka.material.preference.MaterialSwitchPreference
-import java.util.Locale
-import java.util.Objects
 
 abstract class BasePreferenceFragment :
     PreferenceFragmentCompat(),
@@ -105,7 +103,7 @@ abstract class BasePreferenceFragment :
         for (index in 0 until group.preferenceCount) {
             val preference = group.getPreference(index)
             if (preference is PreferenceCategory) {
-                val categoryIcon = getSectionIcon(preference.title, inheritedIcon)
+                val categoryIcon = PreferenceIconResolver.sectionIcon(preference.title, inheritedIcon)
                 if (preference.icon == null) preference.setIcon(categoryIcon)
                 preference.isIconSpaceReserved = true
                 preference.layoutResource = R.layout.preference_card_category
@@ -115,7 +113,7 @@ abstract class BasePreferenceFragment :
             }
 
             if (preference.icon == null) {
-                preference.setIcon(getPreferenceIcon(preference, inheritedIcon))
+                preference.setIcon(PreferenceIconResolver.preferenceIcon(preference, inheritedIcon))
             }
             preference.isIconSpaceReserved = true
 
@@ -144,111 +142,6 @@ abstract class BasePreferenceFragment :
         }
     }
 
-    private fun getSectionIcon(
-        title: CharSequence?,
-        fallback: Int,
-    ): Int {
-        val value = normalize(title)
-        return when {
-            value.contains("privacy") || value.contains("privacidade") -> {
-                R.drawable.ic_privacy
-            }
-
-            value.contains("media") ||
-                value.contains("midia") ||
-                value.contains("video") ||
-                value.contains("image") ||
-                value.contains("download") ||
-                value.contains("audio") -> {
-                R.drawable.ic_media
-            }
-
-            value.contains("call") || value.contains("chamada") || value.contains("gravacao") -> {
-                R.drawable.ic_recording
-            }
-
-            value.contains("status") || value.contains("home") || value.contains("inicio") -> {
-                R.drawable.ic_home_black_24dp
-            }
-
-            value.contains("custom") || value.contains("personal") || value.contains("personalizacao") -> {
-                R.drawable.ic_dashboard_black_24dp
-            }
-
-            value.contains("conversation") ||
-                value.contains("conversa") ||
-                value.contains("general") ||
-                value.contains("geral") -> {
-                R.drawable.ic_general
-            }
-
-            else -> {
-                fallback
-            }
-        }
-    }
-
-    private fun getPreferenceIcon(
-        preference: Preference,
-        fallback: Int,
-    ): Int {
-        val value = "${normalize(preference.key)} ${normalize(preference.title)}"
-        return when {
-            value.contains("privacy") ||
-                value.contains("privacidade") ||
-                value.contains("archive") ||
-                value.contains("ghost") ||
-                value.contains("freeze") ||
-                value.contains("read") -> {
-                R.drawable.ic_privacy
-            }
-
-            value.contains("record") || value.contains("grav") -> {
-                R.drawable.ic_recording
-            }
-
-            value.contains("media") ||
-                value.contains("video") ||
-                value.contains("image") ||
-                value.contains("audio") ||
-                value.contains("download") ||
-                value.contains("transcription") -> {
-                R.drawable.ic_media
-            }
-
-            value.contains("color") ||
-                value.contains("theme") ||
-                value.contains("wallpaper") ||
-                value.contains("bubble") ||
-                value.contains("css") ||
-                value.contains("animation") -> {
-                R.drawable.ic_dashboard_black_24dp
-            }
-
-            value.contains("status") || value.contains("home") || value.contains("inicio") -> {
-                R.drawable.ic_home_black_24dp
-            }
-
-            else -> {
-                fallback
-            }
-        }
-    }
-
-    private fun normalize(value: CharSequence?): String =
-        value
-            ?.toString()
-            ?.lowercase(Locale.ROOT)
-            ?.replace('í', 'i')
-            ?.replace('ç', 'c')
-            ?.replace('ã', 'a')
-            ?.replace('á', 'a')
-            ?.replace('é', 'e')
-            ?.replace('ê', 'e')
-            ?.replace('ó', 'o')
-            ?.replace('ú', 'u')
-            .orEmpty()
-
     override fun onViewCreated(
         view: View,
         savedInstanceState: Bundle?,
@@ -276,17 +169,6 @@ abstract class BasePreferenceFragment :
     override fun onDestroy() {
         super.onDestroy()
         mPrefs?.unregisterOnSharedPreferenceChangeListener(this)
-    }
-
-    private fun setPreferenceState(
-        key: String,
-        enabled: Boolean,
-    ) {
-        val preference = findPreference<Preference>(key) ?: return
-        preference.isEnabled = enabled
-        if (preference is MaterialSwitchPreference && !enabled) {
-            preference.isChecked = false
-        }
     }
 
     private fun monitorPreference() {
@@ -328,95 +210,8 @@ abstract class BasePreferenceFragment :
         return true
     }
 
-    @SuppressLint("ApplySharedPref")
     private fun updatePreferenceStates(key: String?) {
-        val changeColorEnabled = prefs.getBoolean("changecolor", false)
-        val changeColorMode = prefs.getString("changecolor_mode", "manual")
-        val monetAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        val useMonetColors = changeColorEnabled && monetAvailable && Objects.equals(changeColorMode, "monet")
-
-        setPreferenceState("changecolor_mode", changeColorEnabled && monetAvailable)
-        setPreferenceState("primary_color", changeColorEnabled && !useMonetColors)
-        setPreferenceState("background_color", changeColorEnabled && !useMonetColors)
-        setPreferenceState("text_color", changeColorEnabled && !useMonetColors)
-
-        if (key == "thememode") {
-            ModuleApplication.setThemeMode(prefs.getString("thememode", "0")!!.toInt())
-        }
-
-        val colorMode = prefs.getString("wae_color_mode", "preset")
-        val useMonet = Objects.equals(colorMode, "monet") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        setPreferenceState("wae_color_preset", !useMonet)
-
-        if (key == "wae_color_mode" || key == "wae_color_preset") {
-            activity?.recreate()
-        }
-
-        if (key == AppLanguage.KEY) {
-            // The whole activity is recreated so every string, including the ones behind
-            // labels that are already on screen, comes back in the chosen language.
-            activity?.recreate()
-        }
-
-        val igstatus = prefs.getBoolean("igstatus", false)
-        setPreferenceState("oldstatus", !igstatus)
-
-        val oldstatus = prefs.getBoolean("oldstatus", false)
-        setPreferenceState("verticalstatus", !oldstatus)
-        setPreferenceState("channels", !oldstatus)
-        setPreferenceState("removechannel_rec", !oldstatus)
-        setPreferenceState("status_style", !oldstatus)
-        setPreferenceState("igstatus", !oldstatus)
-
-        val channels = prefs.getBoolean("channels", false)
-        setPreferenceState("removechannel_rec", !channels && !oldstatus)
-
-        val freezelastseen = prefs.getBoolean("freezelastseen", false)
-        setPreferenceState("show_freezeLastSeen", !freezelastseen)
-        setPreferenceState("showonlinetext", !freezelastseen)
-        setPreferenceState("dotonline", !freezelastseen)
-
-        val separategroups = prefs.getBoolean("separategroups", false)
-        setPreferenceState("filtergroups", !separategroups)
-
-        val filtergroups = prefs.getBoolean("filtergroups", false)
-        setPreferenceState("separategroups", !filtergroups)
-
-        val bootloaderSpooferEnabled = prefs.getBoolean("bootloader_spoofer", false)
-        findPreference<Preference>("bootloader_spoofer_custom")?.isEnabled = bootloaderSpooferEnabled
-        val customKeyBoxEnabled = prefs.getBoolean("bootloader_spoofer_custom", false)
-        findPreference<Preference>("bootloader_spoofer_xml")?.isEnabled =
-            bootloaderSpooferEnabled &&
-            customKeyBoxEnabled
-
-        val transcriptionEnabled = prefs.getBoolean("audio_transcription", false)
-        val transcriptionProvider = prefs.getString("transcription_provider", "assemblyai")
-        findPreference<Preference>("transcription_provider")?.isEnabled = transcriptionEnabled
-        findPreference<Preference>("assemblyai_key")?.isEnabled =
-            transcriptionEnabled && transcriptionProvider == "assemblyai"
-        findPreference<Preference>("groq_api_key")?.isEnabled =
-            transcriptionEnabled && transcriptionProvider == "groq"
-
-        val callBlockContacts = findPreference<Preference>("call_block_contacts")
-        val callWhiteContacts = findPreference<Preference>("call_white_contacts")
-        if (callBlockContacts != null && callWhiteContacts != null) {
-            when (prefs.getString("call_privacy", "0")!!.toInt()) {
-                3 -> {
-                    callBlockContacts.isEnabled = true
-                    callWhiteContacts.isEnabled = false
-                }
-
-                4 -> {
-                    callWhiteContacts.isEnabled = true
-                    callBlockContacts.isEnabled = false
-                }
-
-                else -> {
-                    callWhiteContacts.isEnabled = false
-                    callBlockContacts.isEnabled = false
-                }
-            }
-        }
+        PreferenceStateController(this, prefs).update(key)
     }
 
     fun setDisplayHomeAsUpEnabled(enabled: Boolean) {
@@ -464,22 +259,19 @@ abstract class BasePreferenceFragment :
 
     private fun tryHighlightAgain(targetKey: String) {
         val recyclerView = listView ?: return
-        for (index in 0 until recyclerView.childCount) {
-            val child = recyclerView.getChildAt(index)
-            if (child is ViewGroup) {
-                val holder = recyclerView.getChildViewHolder(child)
-                if (holder is androidx.preference.PreferenceViewHolder) {
+        val child =
+            (0 until recyclerView.childCount)
+                .asSequence()
+                .map(recyclerView::getChildAt)
+                .filterIsInstance<ViewGroup>()
+                .firstOrNull { candidate ->
+                    val holder = recyclerView.getChildViewHolder(candidate)
+                    if (holder !is androidx.preference.PreferenceViewHolder) return@firstOrNull false
                     val position = holder.bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val preference = findPreferenceAtPosition(preferenceScreen, position)
-                        if (preference?.key == targetKey) {
-                            animateHighlight(child)
-                            break
-                        }
-                    }
+                    position != RecyclerView.NO_POSITION &&
+                        findPreferenceAtPosition(preferenceScreen, position)?.key == targetKey
                 }
-            }
-        }
+        animateHighlight(child)
     }
 
     private fun findPreferenceAtPosition(
