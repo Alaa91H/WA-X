@@ -176,6 +176,7 @@ def markdown(data: dict[str, Any]) -> str:
     out.append("")
     out.append("WA X uses one module APK with Global, WhatsApp and WhatsApp Business settings contexts.")
     out.append("Fork provenance is documented in [PROJECT_PROVENANCE.md](PROJECT_PROVENANCE.md).")
+    out.append("Current developer/maintainer: [Alaa](https://github.com/Alaa91H) · Telegram: [@Alaa91h](https://t.me/Alaa91h) · Community: [@WAXposed](https://t.me/WAXposed) · Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com) · Support: [Ko-fi](https://ko-fi.com/alaa91h)")
     out.append("")
     out.append("## Current inventory (auto-generated)")
     out.append("")
