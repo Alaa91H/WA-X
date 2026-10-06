@@ -20,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.wax.module.R
 import com.wax.module.activities.base.BaseActivity
@@ -179,7 +180,7 @@ class TextEditorActivity : BaseActivity() {
                             val prefs = PreferenceManager.getDefaultSharedPreferences(this@TextEditorActivity)
                             val key = intent.getStringExtra("key")
                             if (key != null && prefs.getString(key, "") == targetFolder) {
-                                prefs.edit().putString("custom_css", code).apply()
+                                prefs.edit { putString("custom_css", code) }
                             }
 
                             withContext(Dispatchers.Main) {

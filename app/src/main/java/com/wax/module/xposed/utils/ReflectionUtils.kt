@@ -270,7 +270,7 @@ object ReflectionUtils {
             try {
                 return cls.getField(cachedFieldName)
             } catch (_: NoSuchFieldException) {
-                cachePrefs?.edit()?.remove(cacheKey)?.apply()
+                cachePrefs?.edit { remove(cacheKey) }
             }
         }
 
@@ -282,7 +282,7 @@ object ReflectionUtils {
                 .orElse(null)
 
         if (field != null && field.declaringClass == cls) {
-            cachePrefs?.edit()?.putString(cacheKey, field.name)?.apply()
+            cachePrefs?.edit { putString(cacheKey, field.name) }
         }
 
         return field
