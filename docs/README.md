@@ -1,7 +1,7 @@
 # WA X — Project Guide
 
 <div align="center">
-  <img src="assets/wa-x-logo.png" alt="WA X logo" width="160" />
+  <img src="assets/wa-x-app-icon.svg" alt="WA X logo" width="160" />
   <p><strong>Advanced WhatsApp Xposed Module</strong></p>
 </div>
 
@@ -23,7 +23,7 @@ Distribution model: one WA X module APK
 
 WA X hooks selected behavior inside the installed WhatsApp/WhatsApp Business process through Xposed. It does not rebuild or redistribute WhatsApp itself.
 
-The project currently uses the legacy Xposed API. The scope includes both WhatsApp packages and the System Framework because the current bridge/package-visibility implementation still needs it. That system scope should only be removed after the bridge is redesigned and verified.
+The project currently uses the legacy Xposed API. In addition to the two WhatsApp targets, the hook scope contains `android` (System Framework) and `com.android.providers.settings` (Settings Provider) as infrastructure processes for package visibility and the settings bridge. They are not feature targets and should only be removed after that bridge is redesigned and verified.
 
 Settings use a target-aware model so one module APK can retain separate effective configuration for WhatsApp and WhatsApp Business.
 
@@ -53,7 +53,7 @@ A declared version is not a blanket support guarantee. `unknown` means the proje
 4. Scope the target package(s):
    - `com.whatsapp`
    - `com.whatsapp.w4b`
-5. Scope **System Framework** for the current legacy bridge implementation.
+5. If your Xposed manager requires explicit package scope, also include **System Framework** (`android`) and **Settings Provider** (`com.android.providers.settings`) for the current bridge implementation.
 6. Restart the target app after enabling the module or changing hook-sensitive settings.
 
 WA X is not a modified WhatsApp APK.

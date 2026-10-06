@@ -1,7 +1,7 @@
 # WA X
 
 <div align="center">
-  <img src="docs/assets/wa-x-logo.png" alt="WA X logo" width="168" />
+  <img src="docs/assets/wa-x-app-icon.svg" alt="WA X logo" width="168" />
 
   <h3>Advanced WhatsApp Xposed Module</h3>
 
@@ -59,7 +59,7 @@ Feature availability is version-dependent. A feature existing in source code or 
 4. Scope the module to the target package(s) you use:
    - `com.whatsapp`
    - `com.whatsapp.w4b`
-5. Also scope **System Framework** for the current legacy bridge/package-visibility implementation. This is an implementation requirement, not an attempt to claim broader compatibility.
+5. The current infrastructure bridge also hooks **System Framework** (`android`) and the Android **Settings Provider** (`com.android.providers.settings`). If your Xposed manager requires explicit package scope, include those infrastructure entries as well. They are not feature targets; they exist for package-visibility and settings-bridge behavior.
 6. Force-stop/restart the target app after changing hook-sensitive settings.
 
 The WA X APK is the Xposed module only. It is not a replacement WhatsApp APK.

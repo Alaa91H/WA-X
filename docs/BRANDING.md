@@ -13,20 +13,26 @@ Use **WA X** in user-facing text and **WA-X** where a repository/file identifier
 
 The current WA X mark is the flat phone/chat-bubble + **X** design approved for this fork.
 
-The repository uses the prepared WA X icon pack as the source for Android adaptive launcher layers, themed monochrome icons, legacy density icons, round icons and documentation branding.
+The repository uses the previously prepared WA X artwork as the source of truth. The phone/chat outline and green X were traced into scalable vector paths so the same mark is used consistently by Android adaptive icons, themed monochrome icons, round icons and documentation branding.
 
 ## Repository assets
 
-- `docs/assets/wa-x-logo.png`
-- `app/src/main/res/drawable-nodpi/ic_launcher_background.png`
-- `app/src/main/res/drawable-nodpi/ic_launcher_foreground.png`
-- `app/src/main/res/drawable-nodpi/ic_launcher_monochrome.png`
+Documentation:
+
+- `docs/assets/wa-x-app-icon.svg` — app-icon presentation.
+- `docs/assets/wa-x-logo.svg` — transparent project mark.
+
+Android launcher:
+
+- `app/src/main/res/drawable/ic_launcher_background.xml`
+- `app/src/main/res/drawable/ic_launcher_foreground.xml`
+- `app/src/main/res/drawable/ic_launcher_monochrome.xml`
 - `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
 - `app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml`
-- legacy `mipmap-*/ic_launcher.png`
-- legacy `mipmap-*/ic_launcher_round.png`
+- `app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml`
+- `app/src/main/res/mipmap-anydpi-v33/ic_launcher_round.xml`
 
-The Android manifest points to `@mipmap/ic_launcher` and `@mipmap/ic_launcher_round`.
+The Android manifest points to `@mipmap/ic_launcher` and `@mipmap/ic_launcher_round`. Because WA X has minSdk 28, adaptive icons cover every supported Android version; obsolete raster `launcher.png` resources were removed instead of maintaining a second, drifting logo set.
 
 ## Visual direction
 
