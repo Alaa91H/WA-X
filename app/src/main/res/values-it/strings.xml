@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List sta nascondendo WA X a:</string>
     <string name="diag_hma_disable">Disattiva il blocco per WhatsApp/Business in Hide My App List affinché WA X funzioni correttamente.</string>
     <string name="diag_copied">Riga copiata negli appunti</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">Impostazioni per app</string>
+    <string name="scope_global">Globale</string>
+    <string name="scope_global_explainer">Questi sono i valori predefiniti. Ogni app di destinazione a cui non è stato assegnato un valore proprio li utilizza.</string>
+    <string name="scope_target_explainer">%1$d di %2$d impostazioni sono personalizzate per questa app. Le impostazioni lasciate su «Usa globale» seguono il valore globale.</string>
+    <string name="search_settings">Cerca nelle impostazioni</string>
+    <string name="no_settings_match">Nessuna impostazione corrisponde alla ricerca.</string>
+    <string name="tri_state_inherit">Usa globale</string>
+    <string name="tri_state_enabled">Attivo</string>
+    <string name="tri_state_disabled">Disattivo</string>
+    <string name="default_value">Valore predefinito per ogni app</string>
+    <string name="follows_global">Segue le impostazioni globali</string>
+    <string name="pinned_to">Impostato su: %1$s</string>
+    <string name="pin_global">Fissa</string>
+    <string name="follow_global">Usa globale</string>
+    <string name="copy_global_to_target">Copia tutti i valori globali in questa app</string>
+    <string name="reset_this_target">Reimposta questa app</string>
+    <string name="reset_all_targets">Reimposta tutte le app</string>
+    <string name="edit_on_original_screen">Modifica questa impostazione nella schermata %1$s.</string>
+    <string name="open_per_target_settings">Configura WhatsApp e WhatsApp Business separatamente</string>
+    <string name="open_per_target_settings_summary">Assegna impostazioni proprie a WhatsApp e WhatsApp Business oppure lascia che una singola impostazione segua il valore globale predefinito.</string>
+    <string name="reload">Ricarica</string>
 </resources>
