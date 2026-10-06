@@ -270,23 +270,17 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    @Throws(Exception::class)
     private fun tryConnectBridge(baseClient: BaseClient): Boolean =
-        try {
+        runCatching {
             XposedBridge.log("Trying to connect to ${baseClient.javaClass.simpleName}")
             client = baseClient
             runBlocking {
-                val canLoad = baseClient.connect()
-                if (!canLoad) {
-                    throw IllegalStateException(
-                        "Bridge client ${baseClient.javaClass.simpleName} refused the connection",
-                    )
+                check(baseClient.connect()) {
+                    "Bridge client ${baseClient.javaClass.simpleName} refused the connection"
                 }
                 true
             }
-        } catch (_: Exception) {
-            false
-        }
+        }.getOrDefault(false)
 
     @JvmStatic
     fun sendMessage(
