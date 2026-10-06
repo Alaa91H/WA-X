@@ -181,7 +181,7 @@ android {
                 "src/main/java/**/*.kt",
                 "src/test/**/*.kt",
             )
-            ktlint("1.5.0")
+            ktlint("1.8.0")
             // Pinned, not inherited from .gitattributes: with the endings left to the
             // checkout, a CRLF working tree makes ktlint 1.5.0 demand a different wrap
             // for a multi-line boolean expression than an LF one does, so the same commit
@@ -191,7 +191,7 @@ android {
         }
         kotlinGradle {
             target("*.kts")
-            ktlint("1.5.0")
+            ktlint("1.8.0")
             lineEndings = LineEnding.UNIX
         }
     }
