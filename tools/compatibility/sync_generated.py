@@ -85,6 +85,7 @@ def render(matrix: dict) -> str:
     )
     add("")
     add("WA X is a fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), maintained by [Alaa](https://github.com/Alaa91H). Fork provenance does not change the evidence standard used by this matrix.")
+    add("Developer Telegram: [@Alaa91h](https://t.me/Alaa91h) · Community: [@WAXposed](https://t.me/WAXposed) · Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com) · Voluntary support: [Ko-fi](https://ko-fi.com/alaa91h)")
     add("")
 
     add("## Current state")
