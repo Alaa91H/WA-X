@@ -280,6 +280,7 @@ jobs:
           set -euo pipefail
           python3 tools/settings/generate_target_registry.py --check
           python3 tools/quality/check_preference_wiring.py
+          python3 tools/quality/check_preference_types.py
 
       # Every WA X-owned feature is free. The scanner fails the build if an internal
       # access gate reappears, and --check-mirror proves the scanner and the runtime
