@@ -370,32 +370,35 @@ jobs:
             exit 1
           fi
 
-          {
-            echo "### APK signature verification"
-            echo
-            for apk in dist/*.apk; do
-              VERIFY_FILE="$RUNNER_TEMP/apksigner-$(basename "$apk").txt"
-              if ! "$APKSIGNER" verify --verbose --print-certs "$apk" >"$VERIFY_FILE" 2>&1; then
-                echo "::error::apksigner rejected $apk"
-                cat "$VERIFY_FILE"
-                exit 1
-              fi
-              VERIFY_OUTPUT="$(cat "$VERIFY_FILE")"
-              ACTUAL_SIGNING_CERT_SHA256="$(
-                sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$VERIFY_FILE" |
-                  head -n 1 |
-                  tr '[:lower:]' '[:upper:]'
-              )"
+          echo "### APK signature verification" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
 
-              if [[ ! "$ACTUAL_SIGNING_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]]; then
-                echo "::error::Could not read the signing certificate SHA-256 from $apk"
-                exit 1
-              fi
-              if [[ "$ACTUAL_SIGNING_CERT_SHA256" != "$EXPECTED_SIGNING_CERT_SHA256" ]]; then
-                echo "::error::$apk is not signed with the configured WA X update certificate"
-                exit 1
-              fi
+          for apk in dist/*.apk; do
+            if ! VERIFY_OUTPUT="$("$APKSIGNER" verify --verbose --print-certs "$apk" 2>&1)"; then
+              echo "::error::apksigner rejected $apk"
+              printf "%s\n" "$VERIFY_OUTPUT" >&2
+              exit 1
+            fi
 
+            ACTUAL_SIGNING_CERT_SHA256="$(
+              sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$VERIFY_OUTPUT" |
+                head -n 1 |
+                tr '[:lower:]' '[:upper:]'
+            )"
+
+            if [[ ! "$ACTUAL_SIGNING_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]]; then
+              echo "::error::Could not read the signing certificate SHA-256 from $apk"
+              printf "%s\n" "$VERIFY_OUTPUT" >&2
+              exit 1
+            fi
+            if [[ "$ACTUAL_SIGNING_CERT_SHA256" != "$EXPECTED_SIGNING_CERT_SHA256" ]]; then
+              echo "::error::$apk is signed by a different certificate"
+              echo "Expected certificate SHA-256: $EXPECTED_SIGNING_CERT_SHA256" >&2
+              echo "Actual certificate SHA-256:   $ACTUAL_SIGNING_CERT_SHA256" >&2
+              exit 1
+            fi
+
+            {
               echo "**$(basename "$apk")**"
               echo
               echo "- WA X update certificate SHA-256: `$ACTUAL_SIGNING_CERT_SHA256`"
@@ -405,9 +408,8 @@ jobs:
               printf "%s\n" "$VERIFY_OUTPUT"
               echo '```'
               echo
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
-
+            } >> "$GITHUB_STEP_SUMMARY"
+          done
       # The published version is checked against the tag here, inside the APK,
       # so a stale or mismatched artifact can never be released.
       - name: Verify the version baked into the APKs
