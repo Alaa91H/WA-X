@@ -96,7 +96,7 @@ class CloudPrivacyGate(
     ): String = "Using ${service.displayName} would send ${data.dataDescription} to an external service."
 
     /** The policy statement shown on the privacy screen. */
-    fun policyStatement(): String = "Processing happens on this device. Cloud providers stay off until you enable them."
+    val policyStatement: String = "Processing happens on this device. Cloud providers stay off until you enable them."
 
     /** Drops every decision. Used by tests and factory reset. */
     fun clear() {
