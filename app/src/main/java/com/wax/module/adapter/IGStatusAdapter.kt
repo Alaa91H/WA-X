@@ -222,9 +222,10 @@ class IGStatusAdapter(
                 val statusInfo =
                     XposedHelpers.getObjectField(item, "A01").takeUnless { it is Number } ?: XposedHelpers.getObjectField(item, "A02")
 
+                val targetClassLoader = statusInfoClazz.classLoader ?: return
                 val classJid =
                     findFirstClassUsingName(
-                        statusInfoClazz.classLoader,
+                        targetClassLoader,
                         StringMatchType.EndsWith,
                         "jid.Jid",
                     )
