@@ -7,7 +7,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 
-private class FallbackTestFailure(message: String) : RuntimeException(message)
+private class FallbackTestFailure(
+    message: String,
+) : RuntimeException(message)
 
 class FallbackChainTest {
     private fun <T> exact(value: T) = Resolution.exact(value)

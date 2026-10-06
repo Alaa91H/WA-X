@@ -230,8 +230,20 @@ internal class GoogleTranslateChatUi(
     private fun summary(chat: String?): String {
         val value = config(chat)
         val state =
-            if (value.enabled) "${label(value.source)} → ${label(value.target)}" else ModuleContextWrapper(Utils.application).getString(R.string.gt_automatic_off)
-        return if (chat != null && !hasOverride(chat)) ModuleContextWrapper(Utils.application).getString(R.string.gt_global_default_format, state) else state
+            if (value.enabled) {
+                "${label(
+                    value.source,
+                )} → ${label(value.target)}"
+            } else {
+                ModuleContextWrapper(Utils.application).getString(R.string.gt_automatic_off)
+            }
+        return if (chat != null &&
+            !hasOverride(chat)
+        ) {
+            ModuleContextWrapper(Utils.application).getString(R.string.gt_global_default_format, state)
+        } else {
+            state
+        }
     }
 
     private fun updateInfoSummary(
@@ -395,17 +407,19 @@ internal class GoogleTranslateChatUi(
             .setView(ScrollView(ctx).apply { addView(layout) })
             .setNegativeButton(ctx.getString(R.string.cancel), null)
             .setPositiveButton(ctx.getString(R.string.save)) { _, _ ->
-                settings.edit().apply {
-                    if (chat != null && inherit.isChecked) {
-                        remove(key(chat))
-                    } else {
-                        putString(
-                            key(chat),
-                            draft.encode(),
-                        )
-                    }
-                    remove(legacyKey(chat))
-                }.apply()
+                settings
+                    .edit()
+                    .apply {
+                        if (chat != null && inherit.isChecked) {
+                            remove(key(chat))
+                        } else {
+                            putString(
+                                key(chat),
+                                draft.encode(),
+                            )
+                        }
+                        remove(legacyKey(chat))
+                    }.apply()
                 failures.clear()
                 // Invalidate requests from an older selection, including changes made away from the conversation.
                 bound.clear()
@@ -596,7 +610,9 @@ internal class GoogleTranslateChatUi(
         val original = renderedViews[view]?.original ?: android.text.SpannedString(view.text)
         if (original.toString().trim() == translation.trim()) return
         val output =
-            SpannableStringBuilder(original).append("\n\n").append(ModuleContextWrapper(Utils.application).getString(R.string.gt_name)).append("\n").append(translation)
+            SpannableStringBuilder(
+                original,
+            ).append("\n\n").append(ModuleContextWrapper(Utils.application).getString(R.string.gt_name)).append("\n").append(translation)
         renderedViews[view] = Rendered(original, output.toString())
         view.text = output
     }

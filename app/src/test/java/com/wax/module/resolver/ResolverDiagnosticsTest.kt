@@ -8,7 +8,9 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 
-private class ResolverDiagnosticsFailure(message: String) : RuntimeException(message)
+private class ResolverDiagnosticsFailure(
+    message: String,
+) : RuntimeException(message)
 
 class ResolverDiagnosticsTest {
     @Before

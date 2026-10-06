@@ -17,11 +17,11 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toDrawable
-import androidx.core.graphics.toColorInt
-import androidx.core.graphics.set
-import androidx.core.graphics.get
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.get
+import androidx.core.graphics.set
+import androidx.core.graphics.toColorInt
 import com.wax.module.ModuleEntryPoint
 import com.wax.module.utils.IColors
 import com.wax.module.xposed.core.ModuleRuntime
