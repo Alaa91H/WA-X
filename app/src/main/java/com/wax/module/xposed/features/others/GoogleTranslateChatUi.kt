@@ -580,19 +580,12 @@ internal class GoogleTranslateChatUi(
         val weakRoot = WeakReference(root)
         future.whenComplete { result, error ->
             main.post {
-                val view = weakRoot.get()
-                if (error == null &&
-                    result != null &&
-                    view != null &&
-                    bound[view] == request &&
-                    config(chat) == selection &&
-                    ConversationItemListener.isViewBoundToMessage(
-                        view,
-                        request.id,
-                    )
-                ) {
-                    messageTextView(view, text)?.let { render(it, result) }
-                }
+                val view = weakRoot.get() ?: return@post
+                if (error != null || result == null) return@post
+                if (bound[view] != request) return@post
+                if (config(chat) != selection) return@post
+                if (!ConversationItemListener.isViewBoundToMessage(view, request.id)) return@post
+                messageTextView(view, text)?.let { render(it, result) }
             }
         }
     }
