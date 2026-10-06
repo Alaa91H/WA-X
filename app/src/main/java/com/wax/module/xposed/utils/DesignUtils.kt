@@ -11,7 +11,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.ShapeDrawable
@@ -359,7 +358,7 @@ object DesignUtils {
         width: Int,
         height: Int,
     ): Drawable {
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         icon.setBounds(0, 0, canvas.width, canvas.height)
         icon.draw(canvas)

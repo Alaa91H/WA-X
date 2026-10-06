@@ -19,6 +19,7 @@ import android.widget.ListView
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.view.children
+import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textfield.TextInputEditText
@@ -527,7 +528,7 @@ internal class GoogleTranslateChatUi(
             }
             if (view is TextView &&
                 view !is EditText &&
-                view.visibility == View.VISIBLE &&
+                view.isVisible &&
                 (view.text.toString() == original || renderedViews[view]?.original?.toString() == original)
             ) {
                 return listOf(view)
