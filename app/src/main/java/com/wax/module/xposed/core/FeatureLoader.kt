@@ -121,7 +121,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.jvm.java
 
-class FeatureLoader {
+class FeatureLoader private constructor() {
     companion object {
         // These references are process-scoped by design: the Xposed hook is installed
         // into the WhatsApp process and lives exactly as long as that process. Neither
