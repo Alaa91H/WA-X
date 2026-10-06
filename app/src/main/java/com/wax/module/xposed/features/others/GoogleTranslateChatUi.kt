@@ -495,7 +495,7 @@ internal class GoogleTranslateChatUi(
                     start: Int,
                     count: Int,
                     after: Int,
-                ) {}
+                ) = Unit
 
                 override fun onTextChanged(
                     s: CharSequence?,
@@ -511,7 +511,7 @@ internal class GoogleTranslateChatUi(
                     markSelection()
                 }
 
-                override fun afterTextChanged(s: Editable?) {}
+                override fun afterTextChanged(s: Editable?) = Unit
             },
         )
         AlertDialogWpp(activity)
