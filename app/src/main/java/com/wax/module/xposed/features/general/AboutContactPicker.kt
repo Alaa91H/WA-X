@@ -721,7 +721,6 @@ class AboutContactPicker(
                 try {
                     val loadedItems =
                         ContactPickerDataProvider.loadPickerItems(
-                            activity,
                             ArrayList(preservedSelection),
                         )
                     mainHandler.post {
@@ -1102,10 +1101,7 @@ class AboutContactPicker(
     }
 
     private object ContactPickerDataProvider {
-        fun loadPickerItems(
-            activity: Activity,
-            pinnedJids: List<String>,
-        ): ArrayList<ContactPickerItem> {
+        fun loadPickerItems(pinnedJids: List<String>): ArrayList<ContactPickerItem> {
             val items = LinkedHashMap<String, ContactPickerItem>()
             val database = ModuleRuntime.getWaDatabase()
 
@@ -1175,7 +1171,11 @@ class AboutContactPicker(
                 XposedBridge.log(throwable)
             }
 
-            return ContactPickerItem(jid, displayName ?: "", waName ?: "", type)
+            val resolvedDisplayName =
+                displayName
+                    ?: sanitize(fallbackDisplayName)
+                    ?: localPart(jid)
+            return ContactPickerItem(jid, resolvedDisplayName, waName ?: "", type)
         }
 
         private fun isSupportedPickerJid(jid: String): Boolean {

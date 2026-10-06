@@ -200,7 +200,6 @@ class UnobfuscatorCache private constructor(
     private fun getMapIdString(search: String): String? {
         if (reverseResourceMap.isEmpty()) {
             initializeReverseResourceMap()
-            System.gc()
         }
         val s = search.lowercase(Locale.ROOT).replace("\\s".toRegex(), "")
         XposedBridge.log("need search obsfucate: $s")
