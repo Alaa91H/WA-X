@@ -176,7 +176,23 @@ open class HorizontalListView
         }
 
         override fun setSelection(position: Int) {
-            // TODO: implement
+            val adapter = mAdapter ?: return
+            if (position !in 0 until adapter.count) return
+            if (width == 0) {
+                post { setSelection(position) }
+                return
+            }
+
+            var targetX = 0
+            for (index in 0 until position) {
+                val child = adapter.getView(index, null, this)
+                child.measure(
+                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
+                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
+                )
+                targetX += child.measuredWidth
+            }
+            scrollTo(targetX)
         }
 
         private fun addAndMeasureChild(
