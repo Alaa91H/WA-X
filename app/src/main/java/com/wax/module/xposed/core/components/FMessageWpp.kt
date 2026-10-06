@@ -192,6 +192,7 @@ class FMessageWpp(
             return try {
                 abstractMediaMessageClass?.isInstance(fmessage) ?: false
             } catch (e: Exception) {
+                XposedBridge.log(e)
                 false
             }
         }
