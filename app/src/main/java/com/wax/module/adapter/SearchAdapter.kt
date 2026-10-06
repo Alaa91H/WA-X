@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.wax.module.R
 import com.wax.module.model.SearchableFeature
@@ -22,16 +23,46 @@ class SearchAdapter(
     private var searchQuery = ""
 
     fun setFeatures(newFeatures: List<SearchableFeature>) {
-        items.clear()
+        val nextItems = mutableListOf<Any>()
         val groupedFeatures = LinkedHashMap<SearchableFeature.Category, MutableList<SearchableFeature>>()
         newFeatures.forEach { feature ->
             groupedFeatures.getOrPut(feature.category) { mutableListOf() }.add(feature)
         }
         groupedFeatures.forEach { (category, features) ->
-            items.add(category.displayName)
-            items.addAll(features)
+            nextItems.add(category.displayName)
+            nextItems.addAll(features)
         }
-        notifyDataSetChanged()
+
+        val previousItems = items.toList()
+        val result =
+            DiffUtil.calculateDiff(
+                object : DiffUtil.Callback() {
+                    override fun getOldListSize(): Int = previousItems.size
+
+                    override fun getNewListSize(): Int = nextItems.size
+
+                    override fun areItemsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int,
+                    ): Boolean {
+                        val old = previousItems[oldItemPosition]
+                        val new = nextItems[newItemPosition]
+                        return when {
+                            old is SearchableFeature && new is SearchableFeature -> old.key == new.key
+                            old is String && new is String -> old == new
+                            else -> false
+                        }
+                    }
+
+                    override fun areContentsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int,
+                    ): Boolean = previousItems[oldItemPosition] == nextItems[newItemPosition]
+                },
+            )
+        items.clear()
+        items.addAll(nextItems)
+        result.dispatchUpdatesTo(this)
     }
 
     fun setSearchQuery(query: String?) {
