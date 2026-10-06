@@ -127,7 +127,7 @@ class ThemePreference(
                         Intent(currentContext, TextEditorActivity::class.java)
                             .putExtra("folder_name", folder)
                             .putExtra("key", key)
-                    ContextCompat.startActivity(currentContext, intent, null)
+                    currentContext.startActivity(intent)
                 }
             }
             folderListContainer.addView(itemView)
