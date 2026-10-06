@@ -103,7 +103,7 @@ bash tools/baseline/generate_baseline.sh
 ### T02 — Smoke tests للوظائف الأساسية ✅
 - **الهدف:** أول شبكة أمان حقيقية بدل اختبار واحد.
 - **المخرجات:** حزمة اختبارات في `app/src/test` تغطي المنطق القابل للاختبار دون Android framework، وتُقرَّر إضافة Robolectric فقط عند الحاجة الفعلية.
-- **معايير القبول:** تشغيل `testWhatsappDebugUnitTest` + `testBusinessDebugUnitTest` ينجح؛ لا اختبارات هشة تعتمد على وقت/شبكة.
+- **معايير القبول:** تشغيل `testDebugUnitTest` ينجح؛ لا اختبارات هشة تعتمد على وقت/شبكة.
 - **التحقق:** التشغيل محليًا وفي CI بعد إضافة البوابة في T04.
 - **التنفيذ (2026-10-04):** ارتفع العدد من 8 إلى **180 اختبارًا** (360 تنفيذًا عبر النكهتين). لم تُضَف Robolectric: كل ما اختير كان قابلًا للاختبار بـ JUnit وحده بعد استخراج المنطق النقي.
   - **منطق مُستخرَج وجديد:** `compat/TargetVersions.kt` (مطابقة الإصدارات — كانت مكررة في `FeatureLoader` و`HomeFragment`)، و`compat/UpdateOffer.kt` (منطق التحديث — مكرر في `UpdateChecker` و`HomeFragment`)، و`xposed/bridge/BridgeAccessPolicy.kt` (سياسة الوصول + احتواء المسارات)، و`config/ConfigBackupSchema.kt` (مخطط نسخة الإعدادات)، و`PreferenceValueHooks` (سلسلة تحويلات قيم الإعدادات).
@@ -148,7 +148,7 @@ bash tools/baseline/generate_baseline.sh
 ### T05 — معالجة lint-baseline.xml على دفعات 🟡
 - **الهدف:** تقليص الاستثناءات من 420 إلى ما يقارب الصفر، بدءًا بالمشاكل الوظيفية لا التجميلية.
 - **الترتيب:** WrongThread/التخزين/TrustAllX509TrustManager ← unused resources ← localization (MissingTranslation/ExtraTranslation) ← HardcodedText/Typography ← تحذيرات ثانوية.
-- **معايير القبول:** لا تُضاف استثناءات جديدة أبدًا؛ كل دفعة تخفض العدد؛ `lintWhatsappDebug` + `lintBusinessDebug` نظيفان بعد كل دفعة.
+- **معايير القبول:** لا تُضاف استثناءات جديدة أبدًا؛ كل دفعة تخفض العدد؛ `lintDebug` نظيفان بعد كل دفعة.
 - **التحقق:** تشغيل lint ومقارنة العدد مع `baseline.json` (نفس منطق T04).
 - **التنفيذ (2026-10-04) — الدفعة الأولى (الوظيفية): 419 ← 313.**
   - **اكتشاف: الـ baseline كان يحتوي مسارات خاصة بالجهاز.** المدخلات تشير إلى `$HOME/StudioProjects/WA X/...` و`$GRADLE_USER_HOME/...` من جهاز منشئه، بينما تقرير lint الجديد يستعمل مسارات مطلقة (`D:\WA X\app\...`). أي أن 125 مدخلًا **لم تُطفئ أي شيء** إطلاقًا، لكنها كانت تُحتسب ضمن الحجم الذي تقيسه بوابة T04 — أي أن «لا يزيد عدد الاستثناءات» كان مؤشرًا مضلّلًا للدين الحقيقي.
@@ -655,7 +655,7 @@ bash tools/baseline/generate_baseline.sh
 ## Definition of Done لكل مجموعة مهام
 
 1. المخرجات مكتوبة ومذكورة أعلاه مكتملة ضمن commit مستقل واضح.
-2. البناء ينجح: `assembleWhatsappDebug` + `assembleBusinessDebug` (وسيناريو release للتغييرات الحساسة).
+2. البناء ينجح: `assembleDebug` (وسيناريو release للتغييرات الحساسة).
 3. الاختبارات تنجح ولا ينقص عددها ولا يزيد زمنها بشكل غير مبرر.
 4. مقاييس `baseline.json` لم تتراجع (T04 بعد إقرارها).
 5. هذا الملف مُحدَّث: الحالة ✅ وملاحظات التنفيذ إن وُجدت.

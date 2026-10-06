@@ -1,3 +1,8 @@
+> Historical record. The task names below were current when this roadmap was
+> written. Since WA X 1.0.0 the product flavors are gone: run
+> `testDebugUnitTest`, `lintDebug` and `assembleDebug` instead of the per-flavor
+> tasks this table lists.
+
 # WA X — خارطة التوسعة بعد 2.0 (T76–T160)
 
 > **نقطة البداية:** `WA X 2.0.0` — بنية Resolvers المعزولة، FeatureRegistry، Safe Hook API، compatibility metadata، diagnostics، واختبارات حقيقية.

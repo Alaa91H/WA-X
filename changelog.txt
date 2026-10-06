@@ -1,3 +1,135 @@
+WA X 1.0.0
+Release date: 2026-10-06
+
+The first release under the WA X name. The module is now one application that hooks
+both WhatsApp builds, installs under a single package id, and carries its historical
+attribution instead of its old name. The version number restarts here because this is a
+different product identity, not a continuation of the old numbering.
+
+BREAKING CHANGES — READ BEFORE UPGRADING
+- The application id changed from `com.wmods.wppenhacer` to `com.wax.module`. Android
+  treats that as a different application, so installing over the old build is not
+  possible and the old settings are not carried over. Uninstall the previous version
+  first, then install WA X and set your preferences again.
+- WhatsApp Business is no longer a separate APK with its own id. There is one APK, and
+  it hooks `com.whatsapp` and `com.whatsapp.w4b`. Remove the old Business module
+  separately: it stays installed and hooked under its own package until you uninstall
+  it, and two hooked modules writing to the same WhatsApp process is a support
+  question nobody needs to have.
+- The scope must be reviewed once after upgrading. The module no longer offers a
+  per-flavor choice, and the recommended scope is the same for both targets.
+
+IDENTITY
+- Renamed from Wa Enhancer to WA X, including the application label, the root project
+  name, the preferences file, the exported component names and the release artifacts.
+- Neutral names replaced the acronym-heavy ones: `WppXposed` is `ModuleEntryPoint`,
+  `WppCore` is `ModuleRuntime`, and `App` is `ModuleApplication`. The Xposed bridge
+  types keep their upstream names, because they are not ours to rename.
+- Every one of the 1447 old-brand references in the repository was rewritten in place.
+  The classes that carry history were migrated rather than deleted, so a diff against
+  the previous release still reads as the same code.
+- Attribution is separated from maintenance. WA X is maintained by Alaa. The open
+  source notices keep every previous contributor and the original project history, and
+  the About screen says which is which instead of presenting a single author line.
+
+ONE APK
+- The two product flavors are gone. They existed for exactly one reason: separate
+  application ids, and therefore separate preference files by accident rather than by
+  design. That accident is now replaced by an explicit per-target settings model.
+- One id, one APK, one version number. `app/build/outputs/apk/debug` contains a single
+  file named `WA-X-<version>.apk`.
+- The module scope array lists both target packages plus `android`, which is required
+  for the package-visibility bypass and the settings bridge and is infrastructure
+  rather than a target.
+- CI was changed to match: it stages one artifact, verifies that exactly one APK was
+  produced, and publishes exactly one release asset. A run that produces two APKs now
+  fails instead of shipping both.
+
+TARGET ROUTING
+- The hook entry point resolves which WhatsApp build it is running inside from the
+  process package name, rather than from which build the user installed. That is the
+  change that makes a single APK correct rather than merely possible.
+- The target is attached once per process before any feature runs, and features read
+  settings through it. Nothing is cached across targets: a single shared
+  "current configuration" object read by both processes is exactly how Business ends
+  up applying WhatsApp's settings.
+- A process that is not a supported target resolves to no target at all and exposes no
+  settings snapshot, so a feature cannot read global defaults inside an unrelated
+  application by accident.
+
+SETTINGS MODEL — FOUNDATION, NOT YET THE SCREEN
+- The settings model that per-target configuration needs now exists and is tested:
+  Global holds concrete values, a target holds overrides, and each override either
+  inherits or diverges. Resolution is one rule, in one place: target override, else
+  global, else the documented default.
+- "Use Global" means no override is stored. It never means the stored value happens to
+  equal the global one. Collapsing those two is a real bug: a user who set WhatsApp to
+  Enabled while Global was already Enabled would see "Use Global" in the interface, and
+  turning Global off would then silently turn their WhatsApp setting off with it. The
+  tests assert exactly this case.
+- An unreadable setting falls back to false rather than to on, so a missing or
+  corrupt value can never enable a hook.
+- Backups carry Global and both targets in the existing v3 document, so a restore path
+  is not duplicated and an older backup still reads. A malformed document is validated
+  and flattened before anything is written, so a bad file cannot leave one target
+  restored and another wiped.
+- What is not in this release: the settings screen does not yet offer per-target
+  overrides, and the module still reads one shared preference file at runtime. The
+  model, the routing and the backup format are in place; the interface that writes to
+  them is the next step. Nothing in this release claims behaviour that is not there.
+
+QUALITY GATES — TWO GATES THAT WERE NOT GATEING
+- The formatting gate was matching nothing in the main source tree. Its targets still
+  pointed at the package tree from before the rename, which has not existed since the
+  identity migration, so it had been checking the test sources only while reporting
+  success. Every "formatting clean" claim before this release was unfounded for the
+  module itself.
+- With the target corrected, the formatter found 173 files it had never inspected and
+  20 errors it could not fix automatically. All 20 are fixed: reflected type holders
+  renamed to Kotlin conventions, JDK constants such as `java.lang.Void.TYPE` left
+  alone, two wildcard imports expanded, several constants and one private singleton
+  renamed to camelCase, four long lines wrapped and two duplicated documentation
+  blocks merged.
+- The regression gate read the removal of the second flavor as 785 deleted tests,
+  because the suite used to run once per flavor and the recorded count was therefore
+  twice the number of tests. The gate now compares tests per variant, which is what it
+  was trying to measure. A deliberately deleted test still fails it; that was verified
+  rather than assumed.
+- Two tooling parsers broke on reformatted source and reported success with nothing to
+  show for it: the feature extractor no longer found the plugin list after the
+  formatter split one long assignment across two lines, and the baseline generator
+  reported zero features for the same reason. Both match loosely now, and a full
+  compatibility re-sync follows.
+
+VERIFICATION
+- 813 unit tests in 47 files, 0 failures, 0 errors, 0 skipped. The count is lower than
+  the previous release's 1598 because the suite ran once instead of twice, not because
+  a test was removed.
+- 14 of those tests cover the new routing: that each process resolves to its own
+  target, that neither reads the other's overrides, that a reload drops the cached
+  snapshot, and that an unrelated package exposes no settings at all.
+- Android lint holds at 313 baselined issues, the Unobfuscator assertion ratchet is
+  unchanged at 27, and detekt and the compatibility matrix are clean.
+- The built APK was inspected rather than assumed: one package, the expected label, a
+  scope array containing both targets, and `assets/xposed_init` pointing at the new
+  entry point.
+
+KNOWN LIMITATIONS
+- No live-device verification was possible in the build environment. The hook
+  behaviour of 1.0.0 is unchanged from 1.8.0; what changed is packaging, identity and
+  routing, none of which alter the hooks themselves.
+- The static scope cannot be made hidden on the legacy Xposed API. LSPosed hard-codes
+  `staticScope = false` for a module loaded through `assets/xposed_init`, and adding
+  the modern metadata would make it ignore the legacy entry point and load nothing.
+  This is recorded next to the metadata so it is not retried.
+- The per-target settings screen and its persistence are not in this release. See the
+  section above.
+
+ATTRIBUTION
+WA X is maintained by Alaa. This release carries forward the work and the notices of
+the contributors listed in the About screen and in the open source notices; the rename
+changed the product, not the people who built it.
+
 WaEnhancer 1.8.0
 Release date: 2026-10-05
 
