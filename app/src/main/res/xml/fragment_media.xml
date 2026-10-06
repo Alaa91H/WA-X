@@ -94,11 +94,6 @@
             app:summary="@string/recording_mode_description"
             app:title="@string/call_recording_settings" />
 
-        <rikka.material.preference.MaterialSwitchPreference
-            android:enabled="false"
-            app:key="video_call_screen_rec"
-            app:summary="@string/coming_soon"
-            app:title="@string/video_call_screen_rec" />
     </PreferenceCategory>
 
     <PreferenceCategory
