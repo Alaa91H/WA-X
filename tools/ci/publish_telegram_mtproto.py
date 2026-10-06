@@ -134,7 +134,7 @@ class UploadProgress:
         self.last_print = 0.0
         self.last_percent = -1
 
-    async def __call__(self, current: int, total: int) -> None:
+    def __call__(self, current: int, total: int) -> None:
         now = time.monotonic()
         percent = int((current * 100) / total) if total else 0
         should_print = (
