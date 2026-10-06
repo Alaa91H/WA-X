@@ -73,7 +73,7 @@ class UpdateChecker(
             }
             dialog.show()
         } catch (e: Exception) {
-            e.printStackTrace()
+            XposedBridge.log(e)
         }
     }
 
