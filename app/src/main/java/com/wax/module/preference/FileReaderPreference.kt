@@ -1,6 +1,5 @@
 package com.wax.module.preference
 
-import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
@@ -9,8 +8,6 @@ import android.util.AttributeSet
 import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.wax.module.R
 import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RealPathUtil
 import com.wax.module.xposed.utils.Utils
