@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List מסתיר את WA X מ:</string>
     <string name="diag_hma_disable">השבת את החסימה עבור WhatsApp/Business ב-Hide My App List כדי ש-WA X יעבוד כראוי.</string>
     <string name="diag_copied">השורה הועתקה ללוח</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">הגדרות לפי אפליקציה</string>
+    <string name="scope_global">גלובלי</string>
+    <string name="scope_global_explainer">אלה ערכי ברירת המחדל. כל אפליקציית יעד שלא הוגדר לה ערך משלה משתמשת בהם.</string>
+    <string name="scope_target_explainer">%1$d מתוך %2$d הגדרות הותאמו לאפליקציה זו. הגדרות שנשארו על „שימוש בגלובלי” משתמשות בערך הגלובלי.</string>
+    <string name="search_settings">חיפוש בהגדרות</string>
+    <string name="no_settings_match">לא נמצאה הגדרה התואמת לחיפוש הזה.</string>
+    <string name="tri_state_inherit">שימוש בגלובלי</string>
+    <string name="tri_state_enabled">מופעל</string>
+    <string name="tri_state_disabled">כבוי</string>
+    <string name="default_value">ברירת מחדל לכל אפליקציה</string>
+    <string name="follows_global">עוקב אחר הגלובלי</string>
+    <string name="pinned_to">מקובע ל־%1$s</string>
+    <string name="pin_global">קיבוע</string>
+    <string name="follow_global">שימוש בגלובלי</string>
+    <string name="copy_global_to_target">העתקת כל הערכים הגלובליים לאפליקציה זו</string>
+    <string name="reset_this_target">איפוס אפליקציה זו</string>
+    <string name="reset_all_targets">איפוס כל האפליקציות</string>
+    <string name="edit_on_original_screen">עריכת הגדרה זו במסך %1$s.</string>
+    <string name="open_per_target_settings">הגדרת WhatsApp ו-WhatsApp Business בנפרד</string>
+    <string name="open_per_target_settings_summary">אפשר להגדיר ל-WhatsApp ול-WhatsApp Business הגדרות נפרדות, או להשאיר הגדרה שתעקוב אחר ברירת המחדל הגלובלית.</string>
+    <string name="reload">טעינה מחדש</string>
 </resources>
