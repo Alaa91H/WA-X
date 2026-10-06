@@ -123,7 +123,7 @@ internal class GoogleTranslateChatUi(
         MenuHome.addMenuItem { menu, activity ->
             if (menu.findItem(R.string.google_translate) == null) {
                 menu
-                    .add(0, R.string.google_translate, 0, "Google Translate")
+                    .add(0, R.string.google_translate, 0, ModuleContextWrapper(activity).getString(R.string.gt_name))
                     .setOnMenuItemClickListener {
                         showSettings(activity, null)
                         true
@@ -221,7 +221,7 @@ internal class GoogleTranslateChatUi(
 
     private fun label(code: String) =
         if (code == "auto") {
-            "Detect language"
+            ModuleContextWrapper(Utils.application).getString(R.string.gt_detect_language)
         } else {
             GoogleTranslateLanguages.entries.firstOrNull { it.first == code }?.second ?: code
         }
@@ -229,8 +229,8 @@ internal class GoogleTranslateChatUi(
     private fun summary(chat: String?): String {
         val value = config(chat)
         val state =
-            if (value.enabled) "${label(value.source)} → ${label(value.target)}" else "Automatic translation off"
-        return if (chat != null && !hasOverride(chat)) "Global default · $state" else state
+            if (value.enabled) "${label(value.source)} → ${label(value.target)}" else ModuleContextWrapper(Utils.application).getString(R.string.gt_automatic_off)
+        return if (chat != null && !hasOverride(chat)) ModuleContextWrapper(Utils.application).getString(R.string.gt_global_default_format, state) else state
     }
 
     private fun updateInfoSummary(
@@ -431,12 +431,12 @@ internal class GoogleTranslateChatUi(
                 orientation = LinearLayout.VERTICAL
                 setPadding(Utils.dipToPixels(16), 0, Utils.dipToPixels(16), 0)
             }
-        val searchLayout = TextInputLayout(ctx).apply { hint = "Search languages" }
+        val searchLayout = TextInputLayout(ctx).apply { hint = ctx.getString(R.string.gt_search_languages) }
         val search = TextInputEditText(searchLayout.context).apply { isSingleLine = true }
         searchLayout.addView(search)
         val list = ListView(activity).apply { choiceMode = ListView.CHOICE_MODE_SINGLE }
         val all =
-            (if (source) listOf("auto" to "Detect language") else emptyList()) +
+            (if (source) listOf("auto" to ctx.getString(R.string.gt_detect_language)) else emptyList()) +
                 GoogleTranslateLanguages.entries.sortedBy { it.second.lowercase(Locale.ROOT) }
         var visible = all
         var choice = current
@@ -502,10 +502,10 @@ internal class GoogleTranslateChatUi(
             },
         )
         AlertDialogWpp(activity)
-            .setTitle(if (source) "Translate from" else "Translate to")
+            .setTitle(if (source) ctx.getString(R.string.gt_translate_from) else ctx.getString(R.string.gt_translate_to))
             .setView(layout)
             .setNegativeButton("Cancel", null)
-            .setPositiveButton("OK") { _, _ -> selected(choice) }
+            .setPositiveButton(ctx.getString(android.R.string.ok)) { _, _ -> selected(choice) }
             .show()
     }
 
@@ -604,7 +604,7 @@ internal class GoogleTranslateChatUi(
         val original = renderedViews[view]?.original ?: android.text.SpannedString(view.text)
         if (original.toString().trim() == translation.trim()) return
         val output =
-            SpannableStringBuilder(original).append("\n\nGoogle Translate\n").append(translation)
+            SpannableStringBuilder(original).append("\n\n").append(ModuleContextWrapper(Utils.application).getString(R.string.gt_name)).append("\n").append(translation)
         renderedViews[view] = Rendered(original, output.toString())
         view.text = output
     }
@@ -637,7 +637,7 @@ internal class GoogleTranslateChatUi(
             val messageText =
                 wpp.messageStr.takeUnless { it.isNullOrBlank() } ?: return@register null
             ContextMenuActionProvider.ContextMenuAction(
-                title = "Translate",
+                title = ModuleContextWrapper(activity).getString(R.string.gt_translate_action),
             ) {
                 val chat =
                     messageChat(wpp)
