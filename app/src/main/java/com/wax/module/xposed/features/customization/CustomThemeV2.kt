@@ -43,68 +43,71 @@ class CustomThemeV2(
 ) : Feature(loader, preferences) {
     companion object {
         private const val FIELD_WALLPAPER_TOOLBAR = "wae_wallpaper_toolbar"
+        private const val DEFAULT_WALLPAPER_ALPHA = 30
+
+        private data class Rgb(
+            val red: Int,
+            val green: Int,
+            val blue: Int,
+        )
 
         @JvmStatic
         private fun processColors(
             color: String,
             mapColors: HashMap<String, String>,
         ) {
-            val inputColorFull: String =
-                when (color.length) {
-                    7 -> {
-                        "#ff" + color.substring(1)
+            val opaqueColor = normalizeOpaqueColor(color) ?: return
+            val rgb = parseRgb(opaqueColor) ?: return
+
+            mapColors.keys.toList().forEach { original ->
+                mapColors[original] =
+                    when (original.length) {
+                        9 -> applyOriginalAlpha(opaqueColor, rgb, mapColors[original])
+                        7 -> opaqueColor.substring(3)
+                        else -> mapColors[original]
                     }
-
-                    9 -> {
-                        "#ff" + color.substring(3)
-                    }
-
-                    else -> {
-                        return
-                    }
-                }
-
-            val inputR: Int
-            val inputG: Int
-            val inputB: Int
-            try {
-                inputR = inputColorFull.substring(3, 5).toInt(16)
-                inputG = inputColorFull.substring(5, 7).toInt(16)
-                inputB = inputColorFull.substring(7, 9).toInt(16)
-            } catch (_: NumberFormatException) {
-                return
-            }
-
-            for (c in mapColors.keys) {
-                val value = mapColors[c]
-
-                if (c.length == 9) {
-                    var finalColorStr = inputColorFull
-
-                    if (value != null && value.length == 9 && !value.startsWith("#ff")) {
-                        try {
-                            val existingAlphaInt = value.substring(1, 3).toInt(16)
-                            val alphaFactor = existingAlphaInt / 255.0f
-
-                            var newR = (inputR * alphaFactor + 255 * (1 - alphaFactor)).toInt()
-                            var newG = (inputG * alphaFactor + 255 * (1 - alphaFactor)).toInt()
-                            var newB = (inputB * alphaFactor + 255 * (1 - alphaFactor)).toInt()
-
-                            newR = newR.coerceIn(0, 255)
-                            newG = newG.coerceIn(0, 255)
-                            newB = newB.coerceIn(0, 255)
-
-                            finalColorStr = "#ff%02x%02x%02x".format(newR, newG, newB)
-                        } catch (_: NumberFormatException) {
-                            finalColorStr = inputColorFull
-                        }
-                    }
-                    mapColors[c] = finalColorStr
-                } else if (c.length == 7) {
-                    mapColors[c] = inputColorFull.substring(3)
-                }
             }
         }
+
+        private fun normalizeOpaqueColor(color: String): String? =
+            when (color.length) {
+                7 -> "#ff" + color.substring(1)
+                9 -> "#ff" + color.substring(3)
+                else -> null
+            }
+
+        private fun parseRgb(color: String): Rgb? =
+            runCatching {
+                Rgb(
+                    red = color.substring(3, 5).toInt(16),
+                    green = color.substring(5, 7).toInt(16),
+                    blue = color.substring(7, 9).toInt(16),
+                )
+            }.getOrNull()
+
+        private fun applyOriginalAlpha(
+            opaqueColor: String,
+            rgb: Rgb,
+            originalValue: String?,
+        ): String {
+            if (originalValue == null || originalValue.length != 9 || originalValue.startsWith("#ff")) {
+                return opaqueColor
+            }
+
+            val alpha = originalValue.substring(1, 3).toIntOrNull(16) ?: return opaqueColor
+            val factor = alpha / 255.0f
+            fun mix(channel: Int): Int =
+                (channel * factor + 255 * (1 - factor))
+                    .toInt()
+                    .coerceIn(0, 255)
+
+            return "#ff%02x%02x%02x".format(
+                mix(rgb.red),
+                mix(rgb.green),
+                mix(rgb.blue),
+            )
+        }
+
     }
 
     private var wallAlpha: HashMap<String, String>? = null
@@ -136,67 +139,68 @@ class CustomThemeV2(
 
     private fun loadAndApplyColorsWallpaper() {
         val customWallpaper = prefs.getBoolean("wallpaper", false)
+        if (!customWallpaper && properties?.containsKey("wallpaper") != true) return
 
-        if (customWallpaper || properties?.containsKey("wallpaper") == true) {
-            wallAlpha = HashMap(IColors.colors)
-            val wallpaperAlpha =
-                if (customWallpaper) {
-                    prefs.getInt("wallpaper_alpha", 30)
-                } else {
-                    Utils.tryParseInt(properties?.getProperty("wallpaper_alpha"), 30)
-                }
-            wallAlpha?.let { replaceTransparency(it, (100 - wallpaperAlpha) / 100.0f) }
-
-            navAlpha = HashMap(IColors.colors)
-            val wallpaperAlphaNav =
-                if (customWallpaper) {
-                    prefs.getInt("wallpaper_alpha_navigation", 30)
-                } else {
-                    Utils.tryParseInt(properties?.getProperty("wallpaper_alpha_navigation"), 30)
-                }
-            navAlpha?.let { replaceTransparency(it, (100 - wallpaperAlphaNav) / 100.0f) }
-
-            toolbarAlpha = HashMap(IColors.colors)
-            val wallpaperToolbarAlpha =
-                if (customWallpaper) {
-                    prefs.getInt("wallpaper_alpha_toolbar", 30)
-                } else {
-                    Utils.tryParseInt(properties?.getProperty("wallpaper_alpha_toolbar"), 30)
-                }
-            toolbarAlpha?.let { replaceTransparency(it, (100 - wallpaperToolbarAlpha) / 100.0f) }
-        }
+        wallAlpha = transparencyMap(alphaFor("wallpaper_alpha", customWallpaper))
+        navAlpha = transparencyMap(alphaFor("wallpaper_alpha_navigation", customWallpaper))
+        toolbarAlpha = transparencyMap(alphaFor("wallpaper_alpha_toolbar", customWallpaper))
     }
+
+    private fun alphaFor(
+        key: String,
+        customWallpaper: Boolean,
+    ): Int =
+        if (customWallpaper) {
+            prefs.getInt(key, DEFAULT_WALLPAPER_ALPHA)
+        } else {
+            Utils.tryParseInt(properties?.getProperty(key), DEFAULT_WALLPAPER_ALPHA)
+        }
+
+    private fun transparencyMap(alphaPercent: Int): HashMap<String, String> =
+        HashMap(IColors.colors).also { colors ->
+            replaceTransparency(colors, (100 - alphaPercent) / 100.0f)
+        }
 
     @Throws(Exception::class)
     private fun hookWallpaper() {
         if (!prefs.getBoolean("wallpaper", false)) return
 
         loadAndApplyColorsWallpaper()
-        val homeActivityClass = ModuleRuntime.homeActivityClass
-        val actionModeBarId = Utils.getID("action_mode_bar", "id")
+        hookWallpaperIntoHomeActivity()
+        hookActionModeBackground()
+        hookToolbarWallpaperColor()
+        hookFragmentWallpaperColors()
+        hookNavigationWallpaperColors()
+    }
 
+    private fun hookWallpaperIntoHomeActivity() {
         XposedHelpers.findAndHookMethod(
-            homeActivityClass,
+            ModuleRuntime.homeActivityClass,
             "onCreate",
             Bundle::class.java,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val activity = param.thisObject as Activity
-                    if (ContextCompat.checkSelfPermission(
-                            activity,
-                            Manifest.permission.READ_MEDIA_IMAGES,
-                        ) == PackageManager.PERMISSION_GRANTED ||
-                        ContextCompat.checkSelfPermission(
-                            activity,
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
+                    if (canReadWallpaper(activity)) {
                         injectWallpaper(activity.findViewById(Utils.getID("root_view", "id")))
                     }
                 }
             },
         )
+    }
 
+    private fun canReadWallpaper(activity: Activity): Boolean =
+        ContextCompat.checkSelfPermission(
+            activity,
+            Manifest.permission.READ_MEDIA_IMAGES,
+        ) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                activity,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
+
+    private fun hookActionModeBackground() {
+        val actionModeBarId = Utils.getID("action_mode_bar", "id")
         XposedHelpers.findAndHookMethod(
             View::class.java,
             "onAttachedToWindow",
@@ -209,7 +213,9 @@ class CustomThemeV2(
                 }
             },
         )
+    }
 
+    private fun hookToolbarWallpaperColor() {
         XposedHelpers.findAndHookMethod(
             View::class.java,
             "setBackgroundColor",
@@ -217,37 +223,36 @@ class CustomThemeV2(
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val colors = toolbarAlpha ?: return
-                    if (XposedHelpers.getAdditionalInstanceField(
+                    val isWallpaperToolbar =
+                        XposedHelpers.getAdditionalInstanceField(
                             param.thisObject,
                             FIELD_WALLPAPER_TOOLBAR,
-                        ) != true
-                    ) {
-                        return
-                    }
+                        ) == true
+                    if (!isWallpaperToolbar) return
 
-                    val color = colors[IColors.toString(param.args[0] as Int)]
-                    if (color != null) {
-                        param.args[0] = IColors.parseColor(color)
-                    }
+                    val color = colors[IColors.toString(param.args[0] as Int)] ?: return
+                    param.args[0] = IColors.parseColor(color)
                 }
             },
         )
+    }
 
-        val hookFragmentView = Unobfuscator.loadFragmentViewMethod(classLoader)
-
+    private fun hookFragmentWallpaperColors() {
+        val fragmentView = Unobfuscator.loadFragmentViewMethod(classLoader)
         XposedBridge.hookMethod(
-            hookFragmentView,
+            fragmentView,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     if (!colorsReady || checkNotHomeActivity()) return
-                    val viewGroup = param.result as ViewGroup
                     val colors = wallAlpha ?: return
-                    replaceColors(viewGroup, colors)
+                    replaceColors(param.result as ViewGroup, colors)
                 }
             },
         )
+    }
 
-        val loadTabFrameClass = Unobfuscator.loadTabFrameClass(classLoader)
+    private fun hookNavigationWallpaperColors() {
+        val tabFrameClass = Unobfuscator.loadTabFrameClass(classLoader)
         XposedHelpers.findAndHookMethod(
             FrameLayout::class.java,
             "onMeasure",
@@ -255,11 +260,11 @@ class CustomThemeV2(
             Int::class.javaPrimitiveType,
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    if (!loadTabFrameClass.isInstance(param.thisObject)) return
+                    if (!tabFrameClass.isInstance(param.thisObject)) return
                     if (!colorsReady || checkNotHomeActivity()) return
-                    val viewGroup = param.thisObject as ViewGroup
-                    val background = viewGroup.background
+
                     val colors = navAlpha ?: return
+                    val background = (param.thisObject as ViewGroup).background
                     replaceColor(background, colors)
                 }
             },
