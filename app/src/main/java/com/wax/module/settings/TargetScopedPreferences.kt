@@ -52,9 +52,7 @@ class TargetScopedPreferences(
             rebuilt[key] = decode(store, physicalKey, key, value)
         }
         overrides = rebuilt
-        if (rebuilt.isNotEmpty()) {
-            count = rebuilt.size
-        }
+        count = rebuilt.size
     }
 
     /** How many overrides this process is currently applying. */
@@ -175,8 +173,12 @@ class TargetScopedPreferences(
 
     override fun getAll(): MutableMap<String?, *>? {
         val all = delegate.all ?: return null
-        if (overrides.isEmpty()) return all
         val merged = HashMap<String?, Any?>(all)
+
+        // Physical target namespaces are an implementation detail. Exposing them through
+        // getAll() lets a feature iterating preferences see the other app's overrides.
+        merged.keys.removeAll { key -> key != null && SettingsKeys.isOverrideKey(key) }
+
         for ((key, value) in overrides) {
             if (value == null) merged.remove(key) else merged[key] = value
         }
