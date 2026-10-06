@@ -1,6 +1,7 @@
 package com.wax.module.settings
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.wax.module.platform.TargetApp
 import java.util.concurrent.ConcurrentHashMap
 
@@ -61,21 +62,21 @@ class SharedPreferencesSettingsStore(
         type: ValueType?,
     ) {
         val physicalKey = SettingsKeys.physicalKey(scope, key)
-        val editor = prefs.edit()
-        if (value == null) {
-            editor.remove(physicalKey)
-            mirror.remove(physicalKey)
-            types.remove(physicalKey)
-        } else {
-            // Typed on the way out, not encoded into one string. The hooked process reads
-            // these through SharedPreferences, which throws ClassCastException when a key
-            // written as a String is read with getBoolean, so the wrong type here would
-            // crash WhatsApp rather than mis-set a preference.
-            putTyped(editor, physicalKey, value, type ?: ValueType.Text)
-            mirror[physicalKey] = value
-            types[physicalKey] = type ?: ValueType.Text
+        prefs.edit {
+            if (value == null) {
+                remove(physicalKey)
+                mirror.remove(physicalKey)
+                types.remove(physicalKey)
+            } else {
+                // Typed on the way out, not encoded into one string. The hooked process reads
+                // these through SharedPreferences, which throws ClassCastException when a key
+                // written as a String is read with getBoolean, so the wrong type here would
+                // crash WhatsApp rather than mis-set a preference.
+                putTyped(this, physicalKey, value, type ?: ValueType.Text)
+                mirror[physicalKey] = value
+                types[physicalKey] = type ?: ValueType.Text
+            }
         }
-        editor.apply()
     }
 
     private fun putTyped(
@@ -220,13 +221,13 @@ class SharedPreferencesSettingsStore(
             }
         if (doomed.isEmpty()) return
 
-        val editor = prefs.edit()
-        for (key in doomed) {
-            editor.remove(key)
-            mirror.remove(key)
-            types.remove(key)
+        prefs.edit {
+            for (key in doomed) {
+                remove(key)
+                mirror.remove(key)
+                types.remove(key)
+            }
         }
-        editor.apply()
     }
 
     override fun copyScope(
@@ -249,14 +250,14 @@ class SharedPreferencesSettingsStore(
         clearScope(to)
         if (source.isEmpty()) return
 
-        val editor = prefs.edit()
-        for ((logicalKey, value, type) in source) {
-            val targetKey = SettingsKeys.physicalKey(to, logicalKey)
-            putTyped(editor, targetKey, value, type)
-            mirror[targetKey] = value
-            types[targetKey] = type
+        prefs.edit {
+            for ((logicalKey, value, type) in source) {
+                val targetKey = SettingsKeys.physicalKey(to, logicalKey)
+                putTyped(this, targetKey, value, type)
+                mirror[targetKey] = value
+                types[targetKey] = type
+            }
         }
-        editor.apply()
     }
 
     override fun replaceAll(
@@ -270,10 +271,10 @@ class SharedPreferencesSettingsStore(
         targets.forEach { (target, values) ->
             values.forEach { (key, value) -> staged[SettingsKeys.physicalKey(SettingsScope.Target(target), key)] = value }
         }
-        val editor = prefs.edit()
-        editor.clear()
-        staged.forEach { (key, value) -> editor.putString(key, value) }
-        editor.apply()
+        prefs.edit {
+            clear()
+            staged.forEach { (key, value) -> putString(key, value) }
+        }
         reload()
     }
 
