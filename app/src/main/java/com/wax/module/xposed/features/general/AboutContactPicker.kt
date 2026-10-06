@@ -569,8 +569,7 @@ class AboutContactPicker(
                                 start: Int,
                                 count: Int,
                                 after: Int,
-                            ) {
-                            }
+                            ) = Unit
 
                             override fun onTextChanged(
                                 s: CharSequence?,
@@ -581,7 +580,7 @@ class AboutContactPicker(
                                 scheduleFilterApply()
                             }
 
-                            override fun afterTextChanged(s: Editable?) {}
+                            override fun afterTextChanged(s: Editable?) = Unit
                         },
                     )
 
