@@ -486,11 +486,10 @@ class RulesEngine(
                 }
                 var outcome = ActionOutcome.EXECUTED
                 var detail = developerDetail(planned.action)
-                try {
-                    executor.execute(planned.action, event)
-                } catch (error: Throwable) {
+                val failure = runCatching { executor.execute(planned.action, event) }.exceptionOrNull()
+                if (failure != null) {
                     outcome = ActionOutcome.FAILED
-                    detail = "failed: ${error.javaClass.simpleName}" + (developerDetail(planned.action)?.let { " ($it)" } ?: "")
+                    detail = "failed: ${failure.javaClass.simpleName}" + (developerDetail(planned.action)?.let { " ($it)" } ?: "")
                 }
                 entries.add(
                     AuditEntry(at, planned.ruleId, planned.action.actionId, outcome, event.messageType, detail),
