@@ -16,6 +16,11 @@ set(OPUS_INSTALL_PKG_CONFIG_MODULE OFF CACHE BOOL "Install pkgconfig" FORCE)
 set(OPUS_INSTALL_CMAKE_CONFIG_MODULE OFF CACHE BOOL "Install cmake pkg" FORCE)
 add_subdirectory(opus)
 
+# Opus intentionally runs unoptimized in Android debug builds. Upstream emits a
+# compiler pragma warning for that configuration unless this acknowledgement is
+# present; make the intent explicit instead of silencing warnings globally.
+target_compile_definitions(opus PRIVATE $<$<CONFIG:Debug>:OPUS_WILL_BE_SLOW>)
+
 # libopusenc
 set(OPUSENC_SRC
     libopusenc/src/opusenc.c
