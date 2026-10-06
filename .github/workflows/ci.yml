@@ -45,9 +45,21 @@ on:
   push:
     branches:
       - master
+      - ci/telegram-release-publisher-test
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      publish_to_telegram:
+        description: Publish the validated APK to Telegram
+        required: true
+        default: true
+        type: boolean
+      force_publish:
+        description: Ignore an existing Telegram publication marker for this commit/channel
+        required: true
+        default: false
+        type: boolean
 
 # Superseded runs on a branch are pointless, so they are cancelled. A release
 # run must never be cancelled halfway through.
@@ -513,3 +525,438 @@ jobs:
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
           subject-path: dist/*.apk
+  telegram:
+    name: Publish the validated APK to Telegram
+    if: >-
+      ${{
+        always() &&
+        github.event_name != 'pull_request' &&
+        needs.build.result == 'success' &&
+        (needs.release.result == 'success' || needs.release.result == 'skipped') &&
+        (
+          startsWith(github.ref, 'refs/tags/v') ||
+          github.ref_name == 'master' ||
+          github.ref_name == 'ci/telegram-release-publisher-test'
+        ) &&
+        (github.event_name != 'workflow_dispatch' || inputs.publish_to_telegram)
+      }}
+    needs:
+      - build
+      - release
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    env:
+      TELEGRAM_CHAT_ID: '@WAXposed'
+      TELEGRAM_THREAD_ID: '4'
+      TELEGRAM_BOT_API_BASE: 'http://127.0.0.1:8081'
+      TELEGRAM_MAX_UPLOAD_BYTES: '2000000000'
+      TELEGRAM_BOT_API_COMMIT: 'e3e9dd8e5b3d7ab8537cd5a10dc31d5ffa8f82d1'
+
+    steps:
+      - name: Checkout publishing helpers and history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Download the APK from this workflow run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: dist
+
+      - name: Validate publishing helpers and prepare metadata
+        id: metadata
+        shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          IS_RELEASE: ${{ needs.build.outputs.release }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          chmod +x tools/ci/publish_telegram.sh
+          python3 -m py_compile tools/ci/generate_telegram_changelog.py
+          python3 tools/ci/test_telegram_changelog.py
+
+          mapfile -t apks < <(find dist -maxdepth 1 -type f -name '*.apk' | sort)
+          if [[ "${#apks[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one APK from this run, found ${#apks[@]}"
+            printf '%s\n' "${apks[@]:-none}"
+            exit 1
+          fi
+
+          APK="${apks[0]}"
+          SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          BYTES="$(stat -c '%s' "$APK")"
+          HUMAN_SIZE="$(numfmt --to=iec-i --suffix=B "$BYTES")"
+
+          if [[ "$IS_RELEASE" == "true" ]]; then
+            TYPE=stable
+            RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+            awk '
+              NR == 1 { first = 1 }
+              first && /^[A-Za-z][^ ]* [0-9]+\.[0-9]+\.[0-9]+/ && seen { exit }
+              first { seen = 1; print }
+            ' changelog.txt > telegram-changelog.txt
+          else
+            TYPE=development
+            RELEASE_URL=""
+            BASE_REF="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+            if [[ -z "$BASE_REF" ]]; then
+              BASE_REF="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+            fi
+            python3 tools/ci/generate_telegram_changelog.py \
+              --base "$BASE_REF" \
+              --head HEAD \
+              --output telegram-changelog.txt
+          fi
+
+          if [[ ! -s telegram-changelog.txt ]]; then
+            echo "::error::Telegram changelog generation produced an empty file"
+            exit 1
+          fi
+
+          {
+            echo "apk=$APK"
+            echo "filename=$(basename "$APK")"
+            echo "sha256=$SHA256"
+            echo "bytes=$BYTES"
+            echo "human_size=$HUMAN_SIZE"
+            echo "type=$TYPE"
+            echo "release_url=$RELEASE_URL"
+            echo "workflow_url=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "marker_name=telegram-published-$TYPE-$GITHUB_SHA"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Telegram publication metadata"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Target | \`@WAXposed / topic 4\` |"
+            echo "| File | \`$(basename "$APK")\` |"
+            echo "| Size | \`$HUMAN_SIZE\` |"
+            echo "| SHA-256 | \`$SHA256\` |"
+            echo "| Channel | \`$TYPE\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Render the Telegram publication in dry-run mode
+        shell: bash
+        env:
+          TELEGRAM_DRY_RUN: 'true'
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          tools/ci/publish_telegram.sh \
+            --file "${{ steps.metadata.outputs.apk }}" \
+            --type "${{ steps.metadata.outputs.type }}" \
+            --version "$VERSION" \
+            --commit "$GITHUB_SHA" \
+            --branch "$GITHUB_REF_NAME" \
+            --sha256 "${{ steps.metadata.outputs.sha256 }}" \
+            --size "${{ steps.metadata.outputs.human_size }}" \
+            --changelog-file telegram-changelog.txt \
+            --release-url "${{ steps.metadata.outputs.release_url }}" \
+            --workflow-url "${{ steps.metadata.outputs.workflow_url }}"
+
+      - name: Prevent accidental duplicate Telegram publications
+        id: guard
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARKER_NAME: ${{ steps.metadata.outputs.marker_name }}
+          FORCE_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.force_publish || false }}
+        run: |
+          set -euo pipefail
+
+          SHOULD_PUBLISH=true
+          if [[ "$FORCE_PUBLISH" != "true" ]]; then
+            EXISTING="$(
+              gh api \
+                -H 'Accept: application/vnd.github+json' \
+                "/repos/$GITHUB_REPOSITORY/actions/artifacts?name=$MARKER_NAME&per_page=1" \
+                --jq '.total_count'
+            )"
+            if [[ "$EXISTING" != "0" ]]; then
+              SHOULD_PUBLISH=false
+              echo "An existing Telegram publication marker was found for this channel and commit."
+            fi
+          fi
+
+          echo "should_publish=$SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Telegram secrets
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          set -euo pipefail
+          set +x
+          for name in TELEGRAM_BOT_TOKEN TELEGRAM_API_ID TELEGRAM_API_HASH; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required GitHub secret: $name"
+              exit 1
+            fi
+            echo "$name: configured"
+          done
+
+      - name: Check runner disk space
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          df -h "$GITHUB_WORKSPACE" "$RUNNER_TEMP"
+          AVAILABLE_KB="$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')"
+          if (( AVAILABLE_KB < 4 * 1024 * 1024 )); then
+            echo "::error::Less than 4 GiB of temporary disk space is available for the Local Bot API build"
+            exit 1
+          fi
+
+      - name: Build the official Telegram Local Bot API server
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            cmake \
+            gperf \
+            libssl-dev \
+            zlib1g-dev
+
+          SRC="$RUNNER_TEMP/telegram-bot-api-src"
+          INSTALL="$RUNNER_TEMP/telegram-bot-api-install"
+          rm -rf "$SRC" "$INSTALL"
+
+          git clone --filter=blob:none --no-checkout \
+            https://github.com/tdlib/telegram-bot-api.git "$SRC"
+          git -C "$SRC" checkout --detach "$TELEGRAM_BOT_API_COMMIT"
+          git -C "$SRC" submodule update --init --recursive --depth 1
+
+          cmake -S "$SRC" -B "$SRC/build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL"
+          cmake --build "$SRC/build" --target install --parallel 2
+
+          BOT_API_BIN="$(find "$INSTALL" "$SRC/build" -type f -name telegram-bot-api -perm -111 | head -n 1)"
+          if [[ -z "$BOT_API_BIN" ]]; then
+            echo "::error::telegram-bot-api binary was not produced"
+            exit 1
+          fi
+
+          echo "TELEGRAM_BOT_API_BIN=$BOT_API_BIN" >> "$GITHUB_ENV"
+          "$BOT_API_BIN" --help >/dev/null
+
+      - name: Move the build bot from cloud Bot API to Local Bot API
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          response="$RUNNER_TEMP/cloud-logout.json"
+          code="$(
+            curl --silent --show-error \
+              --connect-timeout 20 \
+              --max-time 60 \
+              --output "$response" \
+              --write-out '%{http_code}' \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/logOut" || true
+          )"
+
+          if [[ -f "$response" ]] && jq -e '.ok == true' "$response" >/dev/null 2>&1; then
+            echo "Cloud Bot API session logged out successfully."
+          else
+            echo "Cloud logOut did not return ok=true; continuing with local authorization check."
+            if [[ -f "$response" ]]; then
+              jq -r '.description // "No Telegram description"' "$response" 2>/dev/null || true
+            fi
+            echo "HTTP status: ${code:-unknown}"
+          fi
+
+      - name: Start and authorize the Local Bot API server
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          RUNTIME="$RUNNER_TEMP/telegram-bot-api-runtime"
+          mkdir -p "$RUNTIME"
+
+          (
+            cd "$RUNTIME"
+            "$TELEGRAM_BOT_API_BIN" \
+              --local \
+              --http-port=8081 \
+              --api-id="$TELEGRAM_API_ID" \
+              --api-hash="$TELEGRAM_API_HASH" \
+              > "$RUNNER_TEMP/telegram-bot-api.log" 2>&1 &
+            echo $! > "$RUNNER_TEMP/telegram-bot-api.pid"
+          )
+
+          ready=false
+          for attempt in $(seq 1 60); do
+            if response="$(
+              curl --silent --show-error \
+                --connect-timeout 5 \
+                --max-time 10 \
+                "http://127.0.0.1:8081/bot${TELEGRAM_BOT_TOKEN}/getMe" 2>/dev/null
+            )" && jq -e '.ok == true' <<<"$response" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            echo "::error::Local Telegram Bot API did not authorize the bot within 120 seconds"
+            tail -n 100 "$RUNNER_TEMP/telegram-bot-api.log" || true
+            exit 1
+          fi
+
+          echo "Local Telegram Bot API is ready."
+
+      - name: Validate the closed Updates & Releases topic
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          response="$RUNNER_TEMP/topic-check.json"
+          code="$(
+            curl --silent --show-error \
+              --connect-timeout 20 \
+              --max-time 60 \
+              --output "$response" \
+              --write-out '%{http_code}' \
+              --form-string "chat_id=$TELEGRAM_CHAT_ID" \
+              --form-string "message_thread_id=$TELEGRAM_THREAD_ID" \
+              --form-string 'action=typing' \
+              "${TELEGRAM_BOT_API_BASE}/bot${TELEGRAM_BOT_TOKEN}/sendChatAction"
+          )"
+
+          if [[ "$code" -lt 200 || "$code" -ge 300 ]] || ! jq -e '.ok == true' "$response" >/dev/null 2>&1; then
+            echo "::error::The build bot cannot post to @WAXposed topic 4"
+            jq -r '.description // "Unknown Telegram error"' "$response" 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "Telegram destination validated: @WAXposed / topic 4"
+
+      - name: Publish APK and changelog to Telegram
+        id: telegram_publish
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          tools/ci/publish_telegram.sh \
+            --file "${{ steps.metadata.outputs.apk }}" \
+            --type "${{ steps.metadata.outputs.type }}" \
+            --version "$VERSION" \
+            --commit "$GITHUB_SHA" \
+            --branch "$GITHUB_REF_NAME" \
+            --sha256 "${{ steps.metadata.outputs.sha256 }}" \
+            --size "${{ steps.metadata.outputs.human_size }}" \
+            --changelog-file telegram-changelog.txt \
+            --release-url "${{ steps.metadata.outputs.release_url }}" \
+            --workflow-url "${{ steps.metadata.outputs.workflow_url }}"
+
+      - name: Record successful Telegram publication
+        if: steps.guard.outputs.should_publish == 'true' && steps.telegram_publish.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p telegram-publication-marker
+          {
+            echo "repository=$GITHUB_REPOSITORY"
+            echo "sha=$GITHUB_SHA"
+            echo "channel=${{ steps.metadata.outputs.type }}"
+            echo "announcement_message_id=${{ steps.telegram_publish.outputs.announcement_message_id }}"
+            echo "document_message_id=${{ steps.telegram_publish.outputs.document_message_id }}"
+          } > telegram-publication-marker/published.txt
+
+      - name: Upload Telegram publication marker
+        if: steps.guard.outputs.should_publish == 'true' && steps.telegram_publish.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.metadata.outputs.marker_name }}
+          path: telegram-publication-marker/published.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summarize Telegram publication
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### Telegram distribution"
+            echo
+            echo "- Target: \`@WAXposed / topic 4\`"
+            echo "- Duplicate guard: \`${{ steps.guard.outputs.should_publish || 'not-evaluated' }}\`"
+            if [[ "${{ steps.guard.outputs.should_publish }}" == "true" ]]; then
+              echo "- Announcement message: \`${{ steps.telegram_publish.outputs.announcement_message_id || 'n/a' }}\`"
+              echo "- APK message: \`${{ steps.telegram_publish.outputs.document_message_id || 'n/a' }}\`"
+            else
+              echo "- Result: existing publication marker found; Telegram post skipped"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log out and stop the Local Bot API server
+        if: always() && steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          set +e
+          set +x
+
+          if [[ -n "${TELEGRAM_BOT_TOKEN:-}" ]]; then
+            curl --silent --show-error \
+              --connect-timeout 5 \
+              --max-time 30 \
+              "${TELEGRAM_BOT_API_BASE}/bot${TELEGRAM_BOT_TOKEN}/logOut" \
+              >/dev/null 2>&1 || true
+          fi
+
+          if [[ -f "$RUNNER_TEMP/telegram-bot-api.pid" ]]; then
+            PID="$(cat "$RUNNER_TEMP/telegram-bot-api.pid")"
+            if [[ "$PID" =~ ^[0-9]+$ ]] && kill -0 "$PID" 2>/dev/null; then
+              kill "$PID" || true
+              for _ in $(seq 1 10); do
+                kill -0 "$PID" 2>/dev/null || break
+                sleep 1
+              done
+              kill -9 "$PID" 2>/dev/null || true
+            fi
+          fi
+
+          rm -rf \
+            "$RUNNER_TEMP/telegram-bot-api-runtime" \
+            "$RUNNER_TEMP/telegram-bot-api-src" \
+            "$RUNNER_TEMP/telegram-bot-api-install"
