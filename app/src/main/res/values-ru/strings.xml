@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List скрывает WA X от:</string>
     <string name="diag_hma_disable">Отключите блокировку для WhatsApp/Business в Hide My App List, чтобы WA X работал корректно.</string>
     <string name="diag_copied">Строка скопирована в буфер обмена</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">Настройки для каждого приложения</string>
+    <string name="scope_global">Общие</string>
+    <string name="scope_global_explainer">Это значения по умолчанию. Каждое целевое приложение, для которого не задано собственное значение, использует их.</string>
+    <string name="scope_target_explainer">%1$d из %2$d настроек переопределены для этого приложения. Настройки со значением «Использовать общие» следуют общему значению.</string>
+    <string name="search_settings">Поиск настроек</string>
+    <string name="no_settings_match">Нет настроек, соответствующих этому поиску.</string>
+    <string name="tri_state_inherit">Использовать общие</string>
+    <string name="tri_state_enabled">Вкл.</string>
+    <string name="tri_state_disabled">Выкл.</string>
+    <string name="default_value">Значение по умолчанию для каждого приложения</string>
+    <string name="follows_global">Используются общие настройки</string>
+    <string name="pinned_to">Закреплено: %1$s</string>
+    <string name="pin_global">Закрепить</string>
+    <string name="follow_global">Использовать общие</string>
+    <string name="copy_global_to_target">Скопировать все общие значения в это приложение</string>
+    <string name="reset_this_target">Сбросить это приложение</string>
+    <string name="reset_all_targets">Сбросить все приложения</string>
+    <string name="edit_on_original_screen">Измените этот параметр на экране %1$s.</string>
+    <string name="open_per_target_settings">Настроить WhatsApp и WhatsApp Business отдельно</string>
+    <string name="open_per_target_settings_summary">Задайте отдельные настройки для WhatsApp и WhatsApp Business или оставьте параметр с общим значением по умолчанию.</string>
+    <string name="reload">Обновить</string>
 </resources>
