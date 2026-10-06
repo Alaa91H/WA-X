@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">Выкл.</string>
     <string name="tri_state_enabled">Вкл.</string>
     <string name="tri_state_inherit">Глобальные</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Включить пользовательский KeyBox</string>
+    <string name="enable_custom_keybox_sum">Использовать пользовательский файл keybox.xml для подмены загрузчика.</string>
+    <string name="use_custom_keybox_file">Использовать пользовательский keybox.xml</string>
+    <string name="no_file_selected">Файл не выбран</string>
 </resources>
