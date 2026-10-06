@@ -17,29 +17,10 @@ import com.wax.module.resolver.Confidence
  */
 object PlatformFeatureCatalog {
     /** WhatsApp versions the current module declares support for. */
-    val WHATSAPP_VERSIONS: List<String> =
-        listOf(
-            "2.26.32.xx",
-            "2.26.34.xx",
-            "2.26.35.xx",
-            "2.26.36.xx",
-            "2.26.37.xx",
-            "2.26.38.xx",
-            "2.26.39.xx",
-            "2.26.40.xx",
-        )
+    val WHATSAPP_VERSIONS: List<String> = PlatformCatalogSupport.WHATSAPP_VERSIONS
 
     /** WhatsApp Business versions the current module declares support for. */
-    val BUSINESS_VERSIONS: List<String> =
-        listOf(
-            "2.26.32.xx",
-            "2.26.34.xx",
-            "2.26.35.xx",
-            "2.26.36.xx",
-            "2.26.37.xx",
-            "2.26.38.xx",
-            "2.26.39.xx",
-        )
+    val BUSINESS_VERSIONS: List<String> = PlatformCatalogSupport.BUSINESS_VERSIONS
 
     /** Every feature declaration, in roadmap order. */
     fun metadata(): List<FeatureMetadata> =
@@ -126,6 +107,77 @@ object PlatformFeatureCatalog {
                 StartupPolicy.LAZY,
                 tests = listOf("CompatibilitySummaryTest"),
                 tags = setOf("compat", "diagnostics"),
+            ),
+            // The access contract owns no preference keys on purpose: the keys it reads are the
+            // legacy entitlement names it removes, and declaring them here would make the
+            // contract's own audit flag itself. Its scope is the catalog, not a setting.
+            feature(
+                PlatformFeatures.ACCESS_CONTRACT,
+                "All-features-free contract",
+                FeatureCategory.RUNTIME_SAFETY,
+                StartupPolicy.EAGER_CRITICAL,
+                tests = listOf("NoPaywallContractTest", "FeatureContractTest"),
+                fallback = FallbackBehavior.DISABLE_FEATURE,
+                critical = true,
+                tags = setOf("safety", "access", "catalog"),
+                accountSupport = AccountSupport.NOT_APPLICABLE,
+            ),
+            feature(
+                PlatformFeatures.STOCK_MODE,
+                "Stock WhatsApp Mode",
+                FeatureCategory.THEME,
+                StartupPolicy.EAGER_NORMAL,
+                tests = listOf("StockModeTest"),
+                preferenceKeys = listOf("wae.stockmode."),
+                tags = setOf("theme", "fidelity", "stock-mode"),
+                // It does not add anything to WhatsApp: it restores the official appearance by
+                // suppressing the injections other features would make. MODIFIES_NATIVE_STATE
+                // is the honest value for "returns native state to how it was".
+                visualImpact = VisualImpact.MODIFIES_NATIVE_STATE,
+                stockModeFallback = StockModeFallback.NONE_NEEDED,
+            ),
+            // --- outgoing send-time policy -------------------------------------------------
+            feature(
+                PlatformFeatures.OUTGOING_POLICY,
+                "Outgoing policy engine",
+                FeatureCategory.PRIVACY,
+                StartupPolicy.EAGER_NORMAL,
+                tests = listOf("OutgoingPolicyEngineTest", "MessageRevocationQueueTest"),
+                preferenceKeys = listOf("wae.outgoing.policy."),
+                optionalResolvers = listOf("loadSendMessage", "loadRevokeMessage"),
+                tags = setOf("privacy", "outgoing", "policy", "local-only"),
+                confidence = Confidence.LIKELY,
+                riskLevel = RiskLevel.MEDIUM,
+            ),
+            feature(
+                PlatformFeatures.AUTO_VIEW_ONCE,
+                "Automatic View Once",
+                FeatureCategory.PRIVACY,
+                StartupPolicy.LAZY,
+                tests = listOf("OutgoingPolicyEngineTest"),
+                preferenceKeys = listOf("wae.outgoing.policy."),
+                requiredResolvers = listOf("loadSendMessage"),
+                tags = setOf("privacy", "view-once", "media"),
+                confidence = Confidence.LIKELY,
+                // A misfire sends media the user asked to be ephemeral as a persistent
+                // attachment, which is a privacy harm rather than an inconvenience, so it is
+                // gated on the native send path resolving before it may load.
+                riskLevel = RiskLevel.HIGH,
+                visualImpact = VisualImpact.INJECTS_UI,
+                stockModeFallback = StockModeFallback.POLICY_ONLY,
+            ),
+            feature(
+                PlatformFeatures.TIMED_REVOKE,
+                "Timed delete for everyone",
+                FeatureCategory.PRIVACY,
+                StartupPolicy.EAGER_NORMAL,
+                tests = listOf("MessageRevocationQueueTest", "OutgoingPolicyEngineTest"),
+                preferenceKeys = listOf("wae.outgoing.policy.", "wae.revoke.job."),
+                requiredResolvers = listOf("loadSendMessage", "loadRevokeMessage"),
+                tags = setOf("privacy", "revoke", "ephemeral", "scheduler"),
+                confidence = Confidence.LIKELY,
+                riskLevel = RiskLevel.HIGH,
+                accountSupport = AccountSupport.ACCOUNT_AWARE,
             ),
             // --- privacy (T76-T79) ---------------------------------------------------------
             feature(
@@ -533,43 +585,11 @@ object PlatformFeatureCatalog {
                 preferenceKeys = listOf("wae.acct.", "wae.pkg.accounts."),
                 tags = setOf("multi", "accounts"),
             ),
-        )
+        ) + additionDeclarations()
 
     /** Registers every declaration, returning the results so callers can surface failures. */
     fun registerInto(registry: FeatureRegistry = FeatureRegistry): List<RegistrationResult> = registry.registerAll(metadata())
 
     /** How many declarations the catalog holds. */
     fun count(): Int = metadata().size
-
-    private fun feature(
-        id: String,
-        name: String,
-        category: FeatureCategory,
-        policy: StartupPolicy = StartupPolicy.LAZY,
-        tests: List<String>,
-        preferenceKeys: List<String> = emptyList(),
-        requiredResolvers: List<String> = emptyList(),
-        optionalResolvers: List<String> = emptyList(),
-        fallback: FallbackBehavior = FallbackBehavior.DISABLE_FEATURE,
-        critical: Boolean = false,
-        permissions: List<String> = emptyList(),
-        tags: Set<String> = emptySet(),
-        confidence: Confidence = Confidence.EXACT,
-    ): FeatureMetadata =
-        FeatureMetadata(
-            id = id,
-            displayName = name,
-            category = category,
-            preferenceKeys = preferenceKeys,
-            startupPolicy = policy,
-            requiredResolvers = requiredResolvers,
-            optionalResolvers = optionalResolvers,
-            permissions = permissions,
-            supportedWhatsAppVersions = WHATSAPP_VERSIONS,
-            supportedBusinessVersions = BUSINESS_VERSIONS,
-            compatibilityConfidence = confidence,
-            fallbackBehavior = fallback,
-            diagnostics = DiagnosticsMetadata(critical = critical, tags = tags),
-            tests = tests,
-        )
 }

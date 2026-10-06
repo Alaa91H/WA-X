@@ -44,6 +44,30 @@ data class FeatureMetadata(
     val diagnostics: DiagnosticsMetadata,
     /** Test classes that cover the feature; a feature without tests is rejected. */
     val tests: List<String>,
+    /**
+     * Whether the feature can run here, from technical facts alone.
+     *
+     * A declaration may pin a feature to [FeatureAvailability.NOT_IMPLEMENTED] to stay
+     * honest about work that is planned but not built. Every other value is derived by
+     * [FeatureAccessPolicy] at runtime; none of them can express a paid state, because the
+     * enum has no such member.
+     */
+    val availability: FeatureAvailability = FeatureAvailability.AVAILABLE,
+    /** What the feature does to WhatsApp's own interface, which drives the Stock Mode rule. */
+    val visualImpact: VisualImpact = VisualImpact.NONE,
+    /** What replaces the feature's injected interface when Stock WhatsApp Mode is enabled. */
+    val stockModeFallback: StockModeFallback = StockModeFallback.NONE_NEEDED,
+    /** How much enabling the feature can cost the account. */
+    val riskLevel: RiskLevel = RiskLevel.LOW,
+    /** What the user has to do before a change takes effect. */
+    val restartRequirement: RestartRequirement = RestartRequirement.NONE,
+    /** How the feature behaves when a target holds more than one account. */
+    val accountSupport: AccountSupport = AccountSupport.ACCOUNT_AWARE,
+    /**
+     * The feature's access tier. There is one value, and every declaration carries it, so a
+     * second tier would have to be added to [FeatureAccessTier] to exist at all.
+     */
+    val accessTier: FeatureAccessTier = FeatureAccessTier.FREE,
 ) {
     /** Whether the feature declares support for the standard WhatsApp package. */
     val supportsWhatsApp: Boolean get() = supportedWhatsAppVersions.isNotEmpty()
@@ -56,6 +80,24 @@ data class FeatureMetadata(
 
     /** One line for diagnostics and the feature browser. */
     fun toDisplayLine(): String = "$id [$category] $displayName (${startupPolicy.name.lowercase()})"
+
+    /**
+     * Whether the feature's work still runs inside WhatsApp while Stock Mode is on.
+     *
+     * There are exactly two ways to survive. Either the feature never touched WhatsApp's
+     * interface, or its declared fallback keeps its behaviour running with no in-app control
+     * at all ([StockModeFallback.POLICY_ONLY]).
+     *
+     * A fallback that only *relocates the control* — the WA X manager, a share sheet, a tile, a
+     * shortcut, a notification action — does not keep the injected surface working; it tells the
+     * user where to drive the feature instead. That distinction is why this is derived from the
+     * metadata rather than authored per feature: an author who means "the policy keeps running"
+     * has to say so, and one who means "the button moved" gets the honest answer for free.
+     */
+    val survivesStockMode: Boolean
+        get() =
+            !visualImpact.isVisibleInWhatsApp ||
+                stockModeFallback == StockModeFallback.POLICY_ONLY
 }
 
 /** Product area, matching the release phases so filters line up with the roadmap. */

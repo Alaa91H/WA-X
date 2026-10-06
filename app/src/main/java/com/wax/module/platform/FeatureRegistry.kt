@@ -54,6 +54,16 @@ object FeatureRegistry {
      */
     fun validate(metadata: FeatureMetadata): List<String> {
         val problems = ArrayList<String>()
+        problems.addAll(validateIdentity(metadata))
+        problems.addAll(validateDependencies(metadata))
+        problems.addAll(validateCompatibility(metadata))
+        problems.addAll(validateSafety(metadata))
+        return problems
+    }
+
+    /** The declaration names itself and says how it is covered. */
+    private fun validateIdentity(metadata: FeatureMetadata): List<String> {
+        val problems = ArrayList<String>()
         if (!ID_PATTERN.matches(metadata.id)) {
             problems.add("id '${metadata.id}' must be lower-case dot-separated (for example 'privacy.profiles')")
         }
@@ -69,6 +79,12 @@ object FeatureRegistry {
         if (metadata.preferenceKeys.size != metadata.preferenceKeys.count { it.isNotBlank() }) {
             problems.add("preference keys must not be blank")
         }
+        return problems
+    }
+
+    /** The resolvers it needs are named, and a resolver is not claimed twice under two roles. */
+    private fun validateDependencies(metadata: FeatureMetadata): List<String> {
+        val problems = ArrayList<String>()
         val required = metadata.requiredResolvers.toSet()
         val optional = metadata.optionalResolvers.toSet()
         if (required.any { it.isBlank() } || optional.any { it.isBlank() }) {
@@ -78,6 +94,12 @@ object FeatureRegistry {
         if (overlap.isNotEmpty()) {
             problems.add("resolvers cannot be both required and optional: ${overlap.sorted()}")
         }
+        return problems
+    }
+
+    /** The versions it declares support for are present and readable. */
+    private fun validateCompatibility(metadata: FeatureMetadata): List<String> {
+        val problems = ArrayList<String>()
         if (!metadata.supportsWhatsApp && !metadata.supportsBusiness) {
             problems.add("at least one supported WhatsApp or Business version must be declared")
         }
@@ -86,11 +108,40 @@ object FeatureRegistry {
         ) {
             problems.add("supported versions must not be blank")
         }
+        return problems
+    }
+
+    /**
+     * The declaration can be held back when it goes wrong.
+     *
+     * These are the rules that make "never crash WhatsApp because a feature resolver failed"
+     * enforceable rather than aspirational: a critical feature must have a fallback, a feature
+     * that changes WhatsApp's interface must say what replaces it under Stock Mode, and a
+     * high-risk feature must be capability-gated so a failed check can stop it before it can
+     * do damage.
+     */
+    private fun validateSafety(metadata: FeatureMetadata): List<String> {
+        val problems = ArrayList<String>()
         if (metadata.startupPolicy == StartupPolicy.EAGER_CRITICAL && !metadata.isCritical) {
             problems.add("an EAGER_CRITICAL feature must be declared critical")
         }
         if (metadata.isCritical && metadata.fallbackBehavior == FallbackBehavior.NONE) {
             problems.add("a critical feature must declare a fallback behavior")
+        }
+        // Stock Mode is a visual contract, and it can only be enforced if every feature that
+        // touches WhatsApp's interface says what replaces it while the contract is active.
+        // Rejecting the declaration is what stops a new feature from silently breaking it.
+        if (metadata.visualImpact.isVisibleInWhatsApp && metadata.stockModeFallback == StockModeFallback.NONE_NEEDED) {
+            problems.add(
+                "a feature that changes WhatsApp's own interface must declare a stockModeFallback " +
+                    "(visualImpact=${metadata.visualImpact.name})",
+            )
+        }
+        // A high-risk feature has to be capability-gated, or a WhatsApp update can move the
+        // thing it hooks with nothing to notice it: the kill switch strikes are driven by
+        // failures, and a required resolver is what turns "it broke" into "it stopped".
+        if (metadata.riskLevel == RiskLevel.HIGH && metadata.requiredResolvers.isEmpty()) {
+            problems.add("a HIGH risk feature must declare at least one required resolver so it can be held back")
         }
         return problems
     }
