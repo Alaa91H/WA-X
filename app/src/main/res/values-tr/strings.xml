@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Bootloader sahtelemesi için özel bir keybox.xml dosyası kullanın.</string>
     <string name="use_custom_keybox_file">Özel keybox.xml dosyası kullan</string>
     <string name="no_file_selected">Dosya seçilmedi</string>
+    <string name="developer_warning_title">Geliştirme derlemesi</string>
+    <string name="developer_warning_summary">Bu derleme geliştirme aşamasındaki değişiklikleri içerir ve daha az kararlı olabilir.</string>
+    <string name="system_info">Sistem bilgileri</string>
+    <string name="edit">Düzenle</string>
 </resources>

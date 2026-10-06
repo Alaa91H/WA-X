@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Использовать пользовательский файл keybox.xml для подмены загрузчика.</string>
     <string name="use_custom_keybox_file">Использовать пользовательский keybox.xml</string>
     <string name="no_file_selected">Файл не выбран</string>
+    <string name="developer_warning_title">Сборка для разработки</string>
+    <string name="developer_warning_summary">Эта сборка содержит изменения в разработке и может быть менее стабильной.</string>
+    <string name="system_info">Сведения о системе</string>
+    <string name="edit">Изменить</string>
 </resources>

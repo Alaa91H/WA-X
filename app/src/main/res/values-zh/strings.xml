@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">使用自定义 keybox.xml 文件进行 Bootloader 伪装。</string>
     <string name="use_custom_keybox_file">使用自定义 keybox.xml 文件</string>
     <string name="no_file_selected">未选择文件</string>
+    <string name="developer_warning_title">开发版本</string>
+    <string name="developer_warning_summary">此版本包含仍在开发中的更改，稳定性可能较低。</string>
+    <string name="system_info">系统信息</string>
+    <string name="edit">编辑</string>
 </resources>

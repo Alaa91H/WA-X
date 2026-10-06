@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">שימוש בקובץ keybox.xml מותאם אישית לזיוף ה-Bootloader.</string>
     <string name="use_custom_keybox_file">שימוש בקובץ keybox.xml מותאם אישית</string>
     <string name="no_file_selected">לא נבחר קובץ</string>
+    <string name="developer_warning_title">גרסת פיתוח</string>
+    <string name="developer_warning_summary">גרסה זו כוללת שינויים בפיתוח ועלולה להיות פחות יציבה.</string>
+    <string name="system_info">מידע מערכת</string>
+    <string name="edit">עריכה</string>
 </resources>
