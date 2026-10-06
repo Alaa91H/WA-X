@@ -60,6 +60,7 @@ Feature availability is version-dependent. A feature existing in source code or 
    - `com.whatsapp`
    - `com.whatsapp.w4b`
 5. The current infrastructure bridge also hooks **System Framework** (`android`) and the Android **Settings Provider** (`com.android.providers.settings`). If your Xposed manager requires explicit package scope, include those infrastructure entries as well. They are not feature targets; they exist for package-visibility and settings-bridge behavior.
+   - WA X declares these four packages as its **recommended LSPosed scope**. On the current legacy Xposed API, LSPosed can still display unrelated installed apps in its selector; selecting them is unnecessary, and WA X refuses to install hooks outside the declared runtime scope.
 6. Force-stop/restart the target app after changing hook-sensitive settings.
 
 The WA X APK is the Xposed module only. It is not a replacement WhatsApp APK.

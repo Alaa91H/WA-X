@@ -38,7 +38,7 @@ The Android manifest points to `@mipmap/ic_launcher` and `@mipmap/ic_launcher_ro
 
 The mark is intentionally flat and non-3D. Do not add fake 3D bevels, chrome, heavy drop shadows or a white square background.
 
-Do not crop away the lower-left chat-bubble tail or the right side of the X. For circular avatars or masked icons, preserve enough safe area for the complete mark.
+Do not crop away the lower-left chat-bubble tail or the right side of the X. The Android launcher foreground is intentionally scaled to 60% of the 108×108 adaptive viewport so the complete mark stays inside the central safe zone used by circular/squircle masks, including LSPosed/Xposed manager icon rendering.
 
 ## Project ownership and contact
 
