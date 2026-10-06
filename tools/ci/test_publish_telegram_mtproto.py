@@ -50,6 +50,10 @@ class TelegramPublisherTests(unittest.TestCase):
         chunks = module.split_text(text, limit=200)
         self.assertIn("إضافة حماية 🔒", "".join(chunks))
 
+    def test_development_title_is_beta_testing(self) -> None:
+        args = self.make_args()
+        self.assertEqual(module.title_for(args), "🧪 WA X Beta Testing Build")
+
     def test_stable_title(self) -> None:
         args = self.make_args()
         args = module.PublishArgs(**{**args.__dict__, "publish_type": "stable", "version": "2.0.0"})
