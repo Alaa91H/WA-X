@@ -380,9 +380,10 @@ jobs:
               exit 1
             fi
 
+            CERT_DIGEST_LINE="$(grep -im1 'certificate SHA-256 digest:' <<< "$VERIFY_OUTPUT" || true)"
             ACTUAL_SIGNING_CERT_SHA256="$(
-              sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$VERIFY_OUTPUT" |
-                head -n 1 |
+              sed -E 's/^.*certificate SHA-256 digest:[[:space:]]*//I' <<< "$CERT_DIGEST_LINE" |
+                tr -d '[:space:]:' |
                 tr '[:lower:]' '[:upper:]'
             )"
 
