@@ -10,7 +10,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.wax.module.R
 import com.wax.module.utils.FilePicker
-import com.wax.module.utils.RealPathUtil
 import com.wax.module.xposed.utils.Utils
 import org.w3c.dom.Document
 import java.io.File
@@ -62,16 +61,9 @@ class FileReaderPreference
         override fun onUriPicked(uri: Uri) {
             Utils.executor.execute {
                 try {
-                    val realPath = RealPathUtil.getRealFilePath(context, uri)
-                    if (realPath != null) {
-                        val file = File(realPath)
-                        processXmlFileInBg(file)
-                    } else {
-                        val inputStream = context.contentResolver.openInputStream(uri)
-                        if (inputStream != null) {
-                            processXmlStreamInBg(inputStream, uri.lastPathSegment ?: "XML")
-                        }
-                    }
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        processXmlStreamInBg(inputStream, uri.lastPathSegment ?: "XML")
+                    } ?: throw IllegalStateException("Unable to open selected XML file")
                 } catch (e: Exception) {
                     Handler(Looper.getMainLooper()).post {
                         Toast.makeText(context, "Error processing XML file: " + e.message, Toast.LENGTH_SHORT).show()
