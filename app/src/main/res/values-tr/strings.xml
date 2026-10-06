@@ -288,7 +288,10 @@
     <string name="contact_block_list">Engellenen kişiler listesi</string>
     <string name="contact_white_list">İzin verilen kişiler listesi</string>
     <string name="no_contacts_selected">Hiç kişi seçilmedi</string>
-    <string name="contact_were_selected">%d kişi seçildi</string>
+    <plurals name="contact_were_selected">
+        <item quantity="one">%d kişi seçildi</item>
+        <item quantity="other">%d kişi seçildi</item>
+    </plurals>
     <string name="standard">Standart</string>
     <string name="audio_note">Ses notu</string>
     <string name="voice_note">Sesli not</string>
