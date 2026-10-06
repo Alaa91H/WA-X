@@ -196,5 +196,6 @@ Use the **Assistant Developer** application/tool to inspect the layout and find 
 - Community: https://t.me/WAXposed
 - Developer Telegram: https://t.me/Alaa91h
 - Email: alahus2591@gmail.com
+- Voluntary support: https://ko-fi.com/alaa91h
 - Compatibility: docs/COMPATIBILITY.md
 - Branding: docs/BRANDING.md
