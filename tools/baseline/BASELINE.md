@@ -5,6 +5,8 @@ Regenerate after every phase and compare against `baseline.json`.
 
 > The Xposed/features path counters in this snapshot were corrected after the package migration to `com.wax.module`; the generator now scans the current package path.
 
+WA X is a fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer). Current developer/maintainer: [Alaa](https://github.com/Alaa91H) · Telegram: [@Alaa91h](https://t.me/Alaa91h) · Community: [@WAXposed](https://t.me/WAXposed) · Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com) · Voluntary support: [Ko-fi](https://ko-fi.com/alaa91h)
+
 - Generated: 2026-10-05T23:51:19Z
 - Module: 1.0.0 (code 100)
 - Git: `5805374c23b5` on `master` (dirty worktree: true)
