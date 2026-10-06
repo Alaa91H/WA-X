@@ -79,15 +79,16 @@
             app:key="bootloader_spoofer" />
 
         <rikka.material.preference.MaterialSwitchPreference
-            android:summary="@string/bootloader_spoofer_sum"
-            android:title="Enable Custom KeyBox"
+            android:dependency="bootloader_spoofer"
+            android:summary="@string/enable_custom_keybox_sum"
+            android:title="@string/enable_custom_keybox"
             app:key="bootloader_spoofer_custom" />
 
         <com.wax.module.preference.FileReaderPreference
             android:key="bootloader_spoofer_xml"
             android:dependency="bootloader_spoofer_custom"
-            android:title="Use Custom keybox.xml file"
-            android:summary="No file selected" />
+            android:title="@string/use_custom_keybox_file"
+            android:summary="@string/no_file_selected" />
 
         <rikka.material.preference.MaterialSwitchPreference
             app:key="ampm"
