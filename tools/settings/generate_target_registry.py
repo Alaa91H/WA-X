@@ -224,7 +224,7 @@ def main() -> int:
         # generator gate and formatting gate do not fight each other.
         entry_pattern = re.compile(
             r'Entry\(\s*"([^"]+)",\s*Kind\.([A-Z]+),\s*"([^"]*)",\s*"([^"]*)",\s*'
-            r'(?:com\.wax\.module\.R\.string\.([A-Za-z0-9_]+)|0),\s*\)',
+            r'(?:com\.wax\.module\.R\.string\.([A-Za-z0-9_]+)|0),?\s*\)',
             re.DOTALL,
         )
         actual = {
