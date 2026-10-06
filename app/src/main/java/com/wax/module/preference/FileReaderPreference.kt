@@ -63,7 +63,7 @@ class FileReaderPreference
                 try {
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
                         processXmlStreamInBg(inputStream, uri.lastPathSegment ?: "XML")
-                    } ?: throw IllegalStateException("Unable to open selected XML file")
+                    } ?: error("Unable to open selected XML file")
                 } catch (e: Exception) {
                     Handler(Looper.getMainLooper()).post {
                         Toast.makeText(context, "Error processing XML file: " + e.message, Toast.LENGTH_SHORT).show()
