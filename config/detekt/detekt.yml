@@ -68,4 +68,6 @@ naming:
   FunctionNaming:
     active: true
     # Hook callbacks mirror Xposed's own method names.
-    ignoreAnnotated: ['com.wax.module.xposed.core.Feature']
+    ignoreAnnotated:
+      - 'com.wax.module.xposed.core.Feature'
+      - 'androidx.compose.runtime.Composable'
