@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "moduleCommit": "",
+  "generatedAt": "",
+  "targets": {
+    "whatsapp": {
+      "packageName": "com.whatsapp",
+      "version": "",
+      "apkSha256": "",
+      "device": {
+        "manufacturer": "",
+        "model": "",
+        "api": 0,
+        "abi": "",
+        "rooted": false,
+        "lsposedVersion": ""
+      },
+      "features": {},
+      "resolvers": {},
+      "preferences": {}
+    },
+    "business": {
+      "packageName": "com.whatsapp.w4b",
+      "version": "",
+      "apkSha256": "",
+      "device": {
+        "manufacturer": "",
+        "model": "",
+        "api": 0,
+        "abi": "",
+        "rooted": false,
+        "lsposedVersion": ""
+      },
+      "features": {},
+      "resolvers": {},
+      "preferences": {}
+    }
+  }
+}
