@@ -2,13 +2,14 @@ package com.wax.module.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.net.toUri
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -96,7 +97,7 @@ class MainActivity : BaseActivity() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
                     binding.navView.menu
-                        .getItem(position)
+                        [position]
                         .isChecked = true
 
                     val scrollKey = pendingScrollToPreference
@@ -240,7 +241,7 @@ class MainActivity : BaseActivity() {
                     val batteryIntent =
                         Intent().apply {
                             action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                            data = Uri.parse("package:$packageName")
+                            data = "package:$packageName".toUri()
                         }
                     startActivity(batteryIntent)
                 }

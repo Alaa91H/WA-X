@@ -70,7 +70,7 @@ object RealPathUtil {
                 val id = DocumentsContract.getTreeDocumentId(uri)
                 val contentUri =
                     ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"),
+                        "content://downloads/public_downloads".toUri(),
                         id.toLong(),
                     )
                 return getDataColumn(context, contentUri, null, null)
