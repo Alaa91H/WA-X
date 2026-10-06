@@ -2,7 +2,7 @@
 <resources>
     <string name="force_restore_backup">גיבוי שחזור כפוי</string>
     <string name="force_restore_backup_summary">הפעל את מסך שחזור הגיבוי באופן ידני. השתמש באפשרות זו אם דילגת על השחזור במהלך ההתקנה.</string>
-    <string name="app_desc">מודול ווצאפ - Enhancer</string>
+    <string name="app_desc">מודול Xposed מתקדם ל-WhatsApp</string>
     <string name="antirevoke">חסימת מחיקת הודעות</string>
     <string name="antirevoke_sum">הודעות לא יימחקו אצלך</string>
     <string name="ghostmode">הסתר הקלדה</string>
@@ -318,7 +318,6 @@
     <string name="viewed_your_message">%s צפו בהודעה שלך</string>
     <string name="old_statuses">סגנון סטטוס ישן</string>
     <string name="old_statuses_sum">שנה לדף הסטטוסים הישן בצורה אנכית וללא ערוצים (שים לב: עלול לגרום לבעיות בממשק)</string>
-    <string name="force_english">אלץ אנגלית ב-WA X</string>
     <string name="select_status_type">בחר סוג סטטוס</string>
     <string name="open_camera">פתח מצלמה</string>
     <string name="edit_text">ערוך טקסט</string>
@@ -327,7 +326,7 @@
     <string name="installation_desc">1. ודא שהמכשיר שלך מושרש.\n2. התקן את Xposed Framework במכשיר שלך.\n3. הורד את WA X מקטע הפעולות.\n4. התקן את קובץ ה-APK של WA X.\n5. הפעל את המודול WA X באפליקציית Xposed Installer.</string>
     <string name="go_to_telegram">לך לטלגרם</string>
     <string name="go_to_github">לך לאתר GitHub</string>
-    <string name="contributors">תורמים</string>
+    <string name="contributors">הודעות קוד פתוח</string>
     <string name="support">תמיכה</string>
     <string name="support_desc">אם אתה נתקל בבעיות כלשהן או שיש לך שאלות והערות לגבי המודול WA X, אנא בקר בטלגרם שלנו.\nתורגם לעברית ע\'\'י אורי.</string>
     <string name="license">רישיון</string>
@@ -408,8 +407,8 @@
     <string name="select_all">בחר הכל</string>
     <string name="custom_colors_for_text_status">צבעים מותאמים אישית עבור סטטוס טקסט</string>
     <string name="custom_colors_for_text_status_sum">לחץ והחזק את בורר הצבעים בסטטוס כדי להתאים אותו אישית</string>
-    <string name="enable_wa_enhancer_button">הפעל את לחצן WA X</string>
-    <string name="enable_wa_enhancer_button_sum">הוסף כפתור במסך הבית כדי לפתוח את WA X</string>
+    <string name="enable_wax_button">הפעל את לחצן WA X</string>
+    <string name="enable_wax_button_sum">הוסף כפתור במסך הבית כדי לפתוח את WA X</string>
     <string name="custom_privacy">פרטיות מותאמת אישית</string>
     <string name="custom_privacy_sum">הפעל/השבת פרטיות מותאמת אישית</string>
     <string name="custom_privacy_per_contact">פרטיות מותאמת אישית לכל איש קשר</string>
@@ -550,27 +549,27 @@
     <string name="diag_hma_blocked">Hide My App List מסתיר את WA X מ:</string>
     <string name="diag_hma_disable">השבת את החסימה עבור WhatsApp/Business ב-Hide My App List כדי ש-WA X יעבוד כראוי.</string>
     <string name="diag_copied">השורה הועתקה ללוח</string>
-
-    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
-    <string name="per_target_settings">הגדרות לפי אפליקציה</string>
-    <string name="scope_global">גלובלי</string>
-    <string name="scope_global_explainer">אלה ערכי ברירת המחדל. כל אפליקציית יעד שלא הוגדר לה ערך משלה משתמשת בהם.</string>
-    <string name="scope_target_explainer">%1$d מתוך %2$d הגדרות הותאמו לאפליקציה זו. הגדרות שנשארו על „שימוש בגלובלי” משתמשות בערך הגלובלי.</string>
-    <string name="search_settings">חיפוש בהגדרות</string>
-    <string name="no_settings_match">לא נמצאה הגדרה התואמת לחיפוש הזה.</string>
-    <string name="tri_state_inherit">שימוש בגלובלי</string>
-    <string name="tri_state_enabled">מופעל</string>
-    <string name="tri_state_disabled">כבוי</string>
-    <string name="default_value">ברירת מחדל לכל אפליקציה</string>
-    <string name="follows_global">עוקב אחר הגלובלי</string>
-    <string name="pinned_to">מקובע ל־%1$s</string>
-    <string name="pin_global">קיבוע</string>
-    <string name="follow_global">שימוש בגלובלי</string>
-    <string name="copy_global_to_target">העתקת כל הערכים הגלובליים לאפליקציה זו</string>
-    <string name="reset_this_target">איפוס אפליקציה זו</string>
-    <string name="reset_all_targets">איפוס כל האפליקציות</string>
-    <string name="edit_on_original_screen">עריכת הגדרה זו במסך %1$s.</string>
-    <string name="open_per_target_settings">הגדרת WhatsApp ו-WhatsApp Business בנפרד</string>
-    <string name="open_per_target_settings_summary">אפשר להגדיר ל-WhatsApp ול-WhatsApp Business הגדרות נפרדות, או להשאיר הגדרה שתעקוב אחר ברירת המחדל הגלובלית.</string>
+    <string name="app_language">שפה</string>
+    <string name="copy_global_to_target">העתק את כל הערכים הגלובליים ליעד הזה</string>
+    <string name="default_value">ברירת המחדל לכל יעד</string>
+    <string name="edit_on_original_screen">אפשר לערוך במסך %1$s.</string>
+    <string name="follow_global">השתמש בגלובלי</string>
+    <string name="follows_global">עוקב אחרי גלובלי</string>
+    <string name="language_system_default">שפת המערכת</string>
+    <string name="no_settings_match">אין הגדרה שתואמת לחיפוש הזה.</string>
+    <string name="open_per_target_settings">הגדרת WhatsApp ו-Business בנפרד</string>
+    <string name="open_per_target_settings_summary">לכל גרסה של WhatsApp הגדרות משלה, או שהגדרה תמשיך לעקוב אחרי הערך הגלובלי.</string>
+    <string name="per_target_settings">הגדרות לכל יעד</string>
+    <string name="pin_global">נעץ</string>
+    <string name="pinned_to">נעוץ ל־%1$s</string>
     <string name="reload">טעינה מחדש</string>
+    <string name="reset_all_targets">איפוס כל היעדים</string>
+    <string name="reset_this_target">איפוס היעד הזה</string>
+    <string name="scope_global">גלובלי</string>
+    <string name="scope_global_explainer">אלה הערכים ברירת המחדל. כל יעד שאין לו ערך משלו משתמש בהם.</string>
+    <string name="scope_target_explainer">%1$d מתוך %2$d דריסות ביעד הזה. הגדרות שנשארו על „גלובלי“ עוקבות אחרי הערך הגלובלי.</string>
+    <string name="search_settings">חיפוש בהגדרות</string>
+    <string name="tri_state_disabled">כבוי</string>
+    <string name="tri_state_enabled">פועל</string>
+    <string name="tri_state_inherit">גלובלי</string>
 </resources>

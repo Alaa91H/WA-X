@@ -2,7 +2,7 @@
 <resources>
     <string name="force_restore_backup">强制恢复备份</string>
     <string name="force_restore_backup_summary">手动启动恢复备份界面。如果你在设置时跳过了恢复，请使用此项。</string>
-    <string name="app_desc">WhatsApp 增强模块</string>
+    <string name="app_desc">高级 WhatsApp Xposed 模块</string>
     <string name="antirevoke">防止消息撤回</string>
     <string name="antirevoke_sum">消息将不会在您的设备上删除</string>
     <string name="ghostmode">隐藏正在输入</string>
@@ -318,7 +318,6 @@
     <string name="viewed_your_message">%s 查看了你的消息</string>
     <string name="old_statuses">旧版动态界面</string>
     <string name="old_statuses_sum">更改为垂直且无频道的旧版动态界面（注意：可能会导致界面卡顿）</string>
-    <string name="force_english">在 WA X 中强制使用英文</string>
     <string name="select_status_type">选择动态类型</string>
     <string name="open_camera">打开相机</string>
     <string name="edit_text">编辑文本</string>
@@ -327,7 +326,7 @@
     <string name="installation_desc">1. 确保您的设备已获取 root 权限。\n2. 在您的设备上安装 Xposed 框架。\n3. 从Github的“Actions”部分下载 WA X。\n4. 安装 WA X APK。\n5. 在 Xposed 框架中启用 WA X 模块。</string>
     <string name="go_to_telegram">前往Telegram</string>
     <string name="go_to_github">前往Github</string>
-    <string name="contributors">贡献者</string>
+    <string name="contributors">开源声明</string>
     <string name="support">支持</string>
     <string name="support_desc">如果您遇到任何问题或对 WA X 有疑问，请访问 Telegram。</string>
     <string name="license">执照</string>
@@ -408,8 +407,8 @@
     <string name="select_all">选择全部</string>
     <string name="custom_colors_for_text_status">自定义文本动态的颜色</string>
     <string name="custom_colors_for_text_status_sum">按住动态中的颜色选择器以对其进行自定义</string>
-    <string name="enable_wa_enhancer_button">启用 WA X 按钮</string>
-    <string name="enable_wa_enhancer_button_sum">在主页工具栏添加按钮用于打开 WA X</string>
+    <string name="enable_wax_button">启用 WA X 按钮</string>
+    <string name="enable_wax_button_sum">在主页工具栏添加按钮用于打开 WA X</string>
     <string name="custom_privacy">自定义隐私设置</string>
     <string name="custom_privacy_sum">启用/禁用自定义隐私设置</string>
     <string name="custom_privacy_per_contact">每个联系人的自定义隐私设置</string>
@@ -550,27 +549,27 @@
     <string name="diag_hma_blocked">Hide My App List 正在向以下对象隐藏 WA X：</string>
     <string name="diag_hma_disable">请在 Hide My App List 中取消对 WhatsApp/Business 的屏蔽，以便 WA X 正常工作。</string>
     <string name="diag_copied">已复制该行到剪贴板</string>
-
-    <!-- Per-app settings -->
-    <string name="per_target_settings">按应用设置</string>
-    <string name="scope_global">全局</string>
-    <string name="scope_global_explainer">这些是默认值。未单独设置值的每个目标应用都会使用它们。</string>
-    <string name="scope_target_explainer">此应用已覆盖 %2$d 项设置中的 %1$d 项。保持“使用全局设置”的项目会使用全局值。</string>
-    <string name="search_settings">搜索设置</string>
-    <string name="no_settings_match">没有与此次搜索匹配的设置。</string>
-    <string name="tri_state_inherit">使用全局设置</string>
-    <string name="tri_state_enabled">开启</string>
-    <string name="tri_state_disabled">关闭</string>
-    <string name="default_value">所有应用的默认值</string>
-    <string name="follows_global">使用全局设置</string>
-    <string name="pinned_to">固定为：%1$s</string>
+    <string name="app_language">语言</string>
+    <string name="copy_global_to_target">将所有全局值复制到此目标</string>
+    <string name="default_value">所有目标的默认值</string>
+    <string name="edit_on_original_screen">请在“%1$s”屏幕中修改。</string>
+    <string name="follow_global">使用全局值</string>
+    <string name="follows_global">跟随全局值</string>
+    <string name="language_system_default">系统语言</string>
+    <string name="no_settings_match">没有与该搜索匹配的设置。</string>
+    <string name="open_per_target_settings">分别配置 WhatsApp 和 Business</string>
+    <string name="open_per_target_settings_summary">为每个 WhatsApp 版本设置独立参数，或让某项设置跟随全局值。</string>
+    <string name="per_target_settings">按目标分别设置</string>
     <string name="pin_global">固定</string>
-    <string name="follow_global">使用全局设置</string>
-    <string name="copy_global_to_target">将所有全局值复制到此应用</string>
-    <string name="reset_this_target">重置此应用</string>
-    <string name="reset_all_targets">重置所有应用</string>
-    <string name="edit_on_original_screen">请在 %1$s 页面编辑此设置。</string>
-    <string name="open_per_target_settings">分别配置 WhatsApp 和 WhatsApp Business</string>
-    <string name="open_per_target_settings_summary">为 WhatsApp 和 WhatsApp Business 分别设置独立选项，或让设置继续使用全局默认值。</string>
+    <string name="pinned_to">已固定为：%1$s</string>
     <string name="reload">重新加载</string>
+    <string name="reset_all_targets">重置所有目标</string>
+    <string name="reset_this_target">重置此目标</string>
+    <string name="scope_global">全局</string>
+    <string name="scope_global_explainer">这些是默认值。没有单独设置的目标都会使用它们。</string>
+    <string name="scope_target_explainer">此目标有 %1$d 项覆盖，共 %2$d 项。保持“全局”的设置会跟随全局值。</string>
+    <string name="search_settings">搜索设置</string>
+    <string name="tri_state_disabled">关闭</string>
+    <string name="tri_state_enabled">开启</string>
+    <string name="tri_state_inherit">全局</string>
 </resources>

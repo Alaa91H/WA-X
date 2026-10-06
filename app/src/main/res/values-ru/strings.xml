@@ -2,7 +2,7 @@
 <resources>
     <string name="force_restore_backup">Принудительно восстановить резервную копию</string>
     <string name="force_restore_backup_summary">Запустите экран восстановления резервной копии вручную. Используйте это, если пропустили восстановление при настройке.</string>
-    <string name="app_desc">Модуль WhatsApp Enhancer</string>
+    <string name="app_desc">Расширенный Xposed-модуль для WhatsApp</string>
     <string name="antirevoke">Защита от удаления сообщений</string>
     <string name="antirevoke_sum">Активирован, удаленные сообщения останутся у вас</string>
     <string name="ghostmode">Скрыть ввод</string>
@@ -318,7 +318,6 @@
     <string name="viewed_your_message">%s Просмотрел ваше сообщение</string>
     <string name="old_statuses">Старые статусы</string>
     <string name="old_statuses_sum">Перейдите на старую страницу статусов по вертикали и без каналов (примечание: это может привести к задержке работы интерфейса)</string>
-    <string name="force_english">Принудительный английский в WA X</string>
     <string name="select_status_type">Выберите тип статуса</string>
     <string name="open_camera">Открыть камеру</string>
     <string name="edit_text">Редактировать текст</string>
@@ -327,7 +326,7 @@
     <string name="installation_desc">1. Убедитесь, что ваше устройство имеет root.\n2. Установите Xposed Framework на ваше устройство.\n3. Загрузите плагин WA X в разделе Действия.\n4. Установите WA X APK.\n5. Включите модуль WA X в приложении Xposed Installer.</string>
     <string name="go_to_telegram">Перейти в Telegram</string>
     <string name="go_to_github">Перейти на GitHub</string>
-    <string name="contributors">Участники</string>
+    <string name="contributors">Уведомления об открытом коде</string>
     <string name="support">Поддержка</string>
     <string name="support_desc">Если у вас возникли какие-либо проблемы или у вас есть вопросы о WA X, пожалуйста, посетите Telegram.</string>
     <string name="license">Лицензия</string>
@@ -408,8 +407,8 @@
     <string name="select_all">Выбрать все</string>
     <string name="custom_colors_for_text_status">Пользовательские цвета для текста статуса</string>
     <string name="custom_colors_for_text_status_sum">Нажмите и удерживайте селектор цветов в статусе, чтобы настроить его</string>
-    <string name="enable_wa_enhancer_button">Включить кнопку Enhancer</string>
-    <string name="enable_wa_enhancer_button_sum">Кнопка на домашнем экране, чтобы открыть Enhancer</string>
+    <string name="enable_wax_button">Включить кнопку WA X</string>
+    <string name="enable_wax_button_sum">Кнопка на главном экране для открытия WA X</string>
     <string name="custom_privacy">Конфиденциальность</string>
     <string name="custom_privacy_sum">Включить/отключить конфиденциальность</string>
     <string name="custom_privacy_per_contact">Пользовательская конфиденциальность на контакт</string>
@@ -550,27 +549,27 @@
     <string name="diag_hma_blocked">Hide My App List скрывает WA X от:</string>
     <string name="diag_hma_disable">Отключите блокировку для WhatsApp/Business в Hide My App List, чтобы WA X работал корректно.</string>
     <string name="diag_copied">Строка скопирована в буфер обмена</string>
-
-    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
-    <string name="per_target_settings">Настройки для каждого приложения</string>
-    <string name="scope_global">Общие</string>
-    <string name="scope_global_explainer">Это значения по умолчанию. Каждое целевое приложение, для которого не задано собственное значение, использует их.</string>
-    <string name="scope_target_explainer">%1$d из %2$d настроек переопределены для этого приложения. Настройки со значением «Использовать общие» следуют общему значению.</string>
-    <string name="search_settings">Поиск настроек</string>
-    <string name="no_settings_match">Нет настроек, соответствующих этому поиску.</string>
-    <string name="tri_state_inherit">Использовать общие</string>
-    <string name="tri_state_enabled">Вкл.</string>
-    <string name="tri_state_disabled">Выкл.</string>
-    <string name="default_value">Значение по умолчанию для каждого приложения</string>
-    <string name="follows_global">Используются общие настройки</string>
-    <string name="pinned_to">Закреплено: %1$s</string>
+    <string name="app_language">Язык</string>
+    <string name="copy_global_to_target">Скопировать все глобальные значения в эту цель</string>
+    <string name="default_value">Значение по умолчанию для всех целей</string>
+    <string name="edit_on_original_screen">Изменяется на экране «%1$s».</string>
+    <string name="follow_global">Использовать глобальные</string>
+    <string name="follows_global">Следует глобальному</string>
+    <string name="language_system_default">Язык системы</string>
+    <string name="no_settings_match">Нет параметров, соответствующих этому запросу.</string>
+    <string name="open_per_target_settings">Настроить WhatsApp и Business отдельно</string>
+    <string name="open_per_target_settings_summary">Задайте свои параметры для каждой версии WhatsApp или оставьте параметр общим.</string>
+    <string name="per_target_settings">Настройки для каждой цели</string>
     <string name="pin_global">Закрепить</string>
-    <string name="follow_global">Использовать общие</string>
-    <string name="copy_global_to_target">Скопировать все общие значения в это приложение</string>
-    <string name="reset_this_target">Сбросить это приложение</string>
-    <string name="reset_all_targets">Сбросить все приложения</string>
-    <string name="edit_on_original_screen">Измените этот параметр на экране %1$s.</string>
-    <string name="open_per_target_settings">Настроить WhatsApp и WhatsApp Business отдельно</string>
-    <string name="open_per_target_settings_summary">Задайте отдельные настройки для WhatsApp и WhatsApp Business или оставьте параметр с общим значением по умолчанию.</string>
+    <string name="pinned_to">Закреплено: %1$s</string>
     <string name="reload">Обновить</string>
+    <string name="reset_all_targets">Сбросить все цели</string>
+    <string name="reset_this_target">Сбросить эту цель</string>
+    <string name="scope_global">Глобальные</string>
+    <string name="scope_global_explainer">Это значения по умолчанию. Их использует любая цель, у которой нет собственных значений.</string>
+    <string name="scope_target_explainer">%1$d из %2$d переопределений для этой цели. Параметры со значением «Глобальные» следуют за общим значением.</string>
+    <string name="search_settings">Поиск настроек</string>
+    <string name="tri_state_disabled">Выкл.</string>
+    <string name="tri_state_enabled">Вкл.</string>
+    <string name="tri_state_inherit">Глобальные</string>
 </resources>
