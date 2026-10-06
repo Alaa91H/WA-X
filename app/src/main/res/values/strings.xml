@@ -603,4 +603,10 @@
     <string name="reload">Reload</string>
     <string name="app_language">Language</string>
     <string name="language_system_default">System default</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Enable Custom KeyBox</string>
+    <string name="enable_custom_keybox_sum">Use a custom keybox.xml file for bootloader spoofing.</string>
+    <string name="use_custom_keybox_file">Use custom keybox.xml file</string>
+    <string name="no_file_selected">No file selected</string>
 </resources>
