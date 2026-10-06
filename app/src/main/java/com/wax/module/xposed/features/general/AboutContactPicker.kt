@@ -803,7 +803,11 @@ class AboutContactPicker(
                 subtitleView?.text = getString(R.string.no_contacts_selected)
             } else {
                 subtitleView?.text =
-                    getString(R.string.contact_were_selected, selectedJids.size)
+                    activity.resources.getQuantityString(
+                        R.plurals.contact_were_selected,
+                        selectedJids.size,
+                        selectedJids.size,
+                    )
             }
         }
 
