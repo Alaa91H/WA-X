@@ -183,6 +183,57 @@ class TargetScopedPreferencesTest {
         assertNull(scoped(business).getString("sneaky", null))
     }
 
+    // --- scope copies ---------------------------------------------------------------
+
+    @Test
+    fun `copying global into a target preserves stored value types`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        val global = SettingsScope.Global
+        val target = SettingsScope.Target(wa)
+
+        store.writeBoolean(global, "copied_flag", true)
+        store.writeInt(global, "copied_int", 7)
+        store.writeFloat(global, "copied_float", 1.5f)
+        store.writeString(global, "copied_text", "value")
+        store.writeStringSet(global, "copied_set", setOf("a", "b"))
+
+        store.copyScope(global, target)
+
+        val scoped = scoped(wa)
+        assertTrue(scoped.getBoolean("copied_flag", false))
+        assertEquals(7, scoped.getInt("copied_int", 0))
+        assertEquals(1.5f, scoped.getFloat("copied_float", 0f))
+        assertEquals("value", scoped.getString("copied_text", null))
+        assertEquals(setOf("a", "b"), scoped.getStringSet("copied_set", null)?.toSet())
+    }
+
+    @Test
+    fun `copying global never nests another target namespace`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeBoolean(SettingsScope.Global, "global_flag", true)
+        store.writeBoolean(SettingsScope.Target(business), "business_only", true)
+
+        store.copyScope(SettingsScope.Global, SettingsScope.Target(wa))
+
+        val snapshot = prefs.snapshot()
+        assertEquals(true, snapshot["waxtarget.whatsapp.global_flag"])
+        assertNull(snapshot["waxtarget.whatsapp.waxtarget.business.business_only"])
+        assertNull(scoped(wa).getBoolean("business_only", false).takeIf { it })
+    }
+
+    @Test
+    fun `clearing global leaves target overrides intact`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeBoolean(SettingsScope.Global, "global_only", true)
+        store.writeBoolean(SettingsScope.Target(wa), "wa_only", true)
+
+        store.clearScope(SettingsScope.Global)
+
+        assertNull(store.readBoolean(SettingsScope.Global, "global_only"))
+        assertEquals(true, store.readBoolean(SettingsScope.Target(wa), "wa_only"))
+        assertTrue(scoped(wa).getBoolean("wa_only", false))
+    }
+
     // --- no target ----------------------------------------------------------------
 
     @Test
