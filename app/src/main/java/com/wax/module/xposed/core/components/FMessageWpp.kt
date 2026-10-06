@@ -455,25 +455,18 @@ class FMessageWpp(
 
         val phoneNumber: String?
             get() {
-                val str = phoneRawString
-                try {
-                    if (str == null) return null
-                    if (str.contains(".") && str.contains("@") && str.indexOf(".") < str.indexOf("@")) {
-                        return str.substring(0, str.indexOf("."))
-                    } else if (str.contains("@g.us") ||
-                        str.contains("@s.whatsapp.net") ||
-                        str.contains(
-                            "@broadcast",
-                        ) ||
-                        str.contains("@lid")
-                    ) {
-                        return str.substring(0, str.indexOf("@"))
-                    }
-                    return str
-                } catch (e: Exception) {
-                    XposedBridge.log(e)
-                    return str
+                val str = phoneRawString ?: return null
+                val dotIndex = str.indexOf('.')
+                val atIndex = str.indexOf('@')
+                if (dotIndex >= 0 && atIndex > dotIndex) {
+                    return str.substring(0, dotIndex)
                 }
+                val knownJidSuffix =
+                    str.endsWith("@g.us") ||
+                        str.endsWith("@s.whatsapp.net") ||
+                        str.endsWith("@broadcast") ||
+                        str.endsWith("@lid")
+                return if (knownJidSuffix && atIndex > 0) str.substring(0, atIndex) else str
             }
 
         private fun isInvalidJid(rawjid: String?): Boolean {
