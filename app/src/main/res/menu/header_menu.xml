@@ -7,20 +7,20 @@
         android:icon="@drawable/ic_search"
         android:title="@string/search_features_title"
         app:iconTint="@color/text_on_gradient"
-        app:showAsAction="always" />
+        android:showAsAction="always" />
 
     <item
         android:id="@+id/batteryoptimization"
         android:icon="@drawable/ic_battery_optimization"
         android:title="@string/disable_battery_optimization"
         app:iconTint="@color/text_on_gradient"
-        app:showAsAction="ifRoom" />
+        android:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menu_about"
         android:icon="@drawable/about"
         android:title="@string/about"
         app:iconTint="@color/text_on_gradient"
-        app:showAsAction="ifRoom" />
+        android:showAsAction="ifRoom" />
 
 </menu>
