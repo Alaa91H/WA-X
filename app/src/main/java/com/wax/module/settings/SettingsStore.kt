@@ -122,8 +122,6 @@ class InMemorySettingsStore(
             }
         }
 
-    private fun bucket(scope: SettingsScope): MutableMap<String, String>? = data[scope]
-
     private fun require(scope: SettingsScope): MutableMap<String, String> = data.getOrPut(scope) { ConcurrentHashMap() }
 
     private fun readRaw(
