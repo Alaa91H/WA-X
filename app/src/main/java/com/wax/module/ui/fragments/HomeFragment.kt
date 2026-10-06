@@ -28,6 +28,7 @@ import com.wax.module.R
 import com.wax.module.adapter.LogLineAdapter
 import com.wax.module.compat.TargetVersions
 import com.wax.module.compat.UpdateOffer
+import com.wax.module.compat.UpdateReleaseClient
 import com.wax.module.config.BackupEntry
 import com.wax.module.config.ConfigBackupSchema
 import com.wax.module.config.ConfigValue
@@ -41,17 +42,13 @@ import com.wax.module.xposed.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import rikka.core.util.IOUtils
-import java.net.UnknownHostException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 class HomeFragment : BaseFragment() {
     private var currentBinding: FragmentHomeBinding? = null
@@ -143,7 +140,7 @@ class HomeFragment : BaseFragment() {
 
         binding.updateCard.setOnClickListener { view ->
             animateClick(view)
-            Utils.openLink(requireActivity(), "https://t.me/Alaa91h")
+            Utils.openLink(requireActivity(), UpdateReleaseClient.LATEST_RELEASE_PAGE)
         }
 
         binding.diagBtn.setOnClickListener { view ->
@@ -503,44 +500,25 @@ class HomeFragment : BaseFragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val client =
-                    OkHttpClient
-                        .Builder()
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .readTimeout(10, TimeUnit.SECONDS)
-                        .build()
+                val release = UpdateReleaseClient.fetchLatestRelease()
+                val comparison =
+                    UpdateOffer.compareVersions(
+                        releaseVersion = release.version,
+                        currentVersion = BuildConfig.VERSION_NAME,
+                    )
 
-                val request =
-                    Request
-                        .Builder()
-                        .url("https://api.github.com/repos/Alaa91H/WA X/releases/latest")
-                        .build()
-
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) {
-                        updateCardState(success = false, isUpToDate = false, newVersion = null)
-                        return@use
-                    }
-
-                    val body = response.body
-                    val content = body.string()
-                    val release = JSONObject(content)
-                    val tagName = release.optString("tag_name", "")
-
-                    if (tagName.isBlank()) {
-                        updateCardState(success = true, isUpToDate = true, newVersion = null)
-                        return@use
-                    }
-
-                    val releaseVersion = UpdateOffer.normaliseTag(tagName)
-                    val currentVersion = UpdateOffer.normaliseModuleVersion(BuildConfig.VERSION_NAME)
-                    val isNewVersion = releaseVersion.isNotEmpty() && releaseVersion != currentVersion
-
-                    updateCardState(success = true, isUpToDate = !isNewVersion, newVersion = tagName)
+                if (comparison == null) {
+                    updateCardState(success = false, isUpToDate = false, newVersion = null)
+                    return@launch
                 }
-            } catch (_: UnknownHostException) {
-                updateCardState(success = false, isUpToDate = false, newVersion = null)
-            } catch (_: Exception) {
+
+                updateCardState(
+                    success = true,
+                    isUpToDate = comparison <= 0,
+                    newVersion = release.tagName,
+                )
+            } catch (e: Exception) {
+                Log.w("WA-X Update", "Unable to check GitHub release metadata", e)
                 updateCardState(success = false, isUpToDate = false, newVersion = null)
             }
         }

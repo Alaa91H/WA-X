@@ -2,6 +2,7 @@ package com.wax.module.compat
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -17,15 +18,13 @@ class UpdateOfferTest {
     }
 
     @Test
-    fun trailingWhitespaceIsTrimmed() {
-        assertEquals("1.6.3", UpdateOffer.normaliseTag("v1.6.3  "))
+    fun surroundingWhitespaceIsTrimmedBeforePrefixRemoval() {
+        assertEquals("1.6.3", UpdateOffer.normaliseTag("  v1.6.3  "))
     }
 
     @Test
-    fun leadingWhitespaceDefeatsTheVPrefixStrip() {
-        // Faithful to the original inline behaviour: removePrefix only fires when "v" is
-        // the very first character, so a padded tag keeps its prefix after trimming.
-        assertEquals("v1.6.3", UpdateOffer.normaliseTag("  v1.6.3"))
+    fun uppercaseVPrefixIsNormalised() {
+        assertEquals("1.6.3", UpdateOffer.normaliseTag("V1.6.3"))
     }
 
     @Test
@@ -59,8 +58,13 @@ class UpdateOfferTest {
     }
 
     @Test
+    fun olderReleaseIsNotOffered() {
+        assertFalse(UpdateOffer.shouldOffer("1.6.1", "1.6.2", ""))
+    }
+
+    @Test
     fun ignoredVersionIsNotOffered() {
-        assertFalse(UpdateOffer.shouldOffer("1.6.3", "1.6.2", "1.6.3"))
+        assertFalse(UpdateOffer.shouldOffer("1.6.3", "1.6.2", "v1.6.3"))
     }
 
     @Test
@@ -76,19 +80,42 @@ class UpdateOfferTest {
     }
 
     @Test
-    fun comparisonIgnoresSurroundingWhitespace() {
-        assertFalse(UpdateOffer.shouldOffer(" 1.6.2 ", " 1.6.2 ", ""))
+    fun numericComparisonHandlesTwoDigitMinorVersions() {
+        assertTrue(UpdateOffer.isUpdateAvailable("1.10.0", "1.9.9"))
+        assertFalse(UpdateOffer.isUpdateAvailable("1.9.9", "1.10.0"))
     }
 
     @Test
-    fun comparisonIsStringInequalityNotSemanticOrdering() {
-        // Documents existing behaviour: 1.6.10 sorts below 1.6.9 alphabetically but is
-        // still offered because the rule is "differs from installed", not "greater than".
-        assertTrue(UpdateOffer.shouldOffer("1.6.10", "1.6.9", ""))
+    fun missingTrailingCorePartsCompareAsZero() {
+        assertEquals(0, UpdateOffer.compareVersions("1.6", "1.6.0"))
     }
 
     @Test
-    fun bothSidesBlankIsNotAnUpdate() {
-        assertFalse(UpdateOffer.shouldOffer("", "", ""))
+    fun stableReleaseSortsAfterPrerelease() {
+        assertTrue((UpdateOffer.compareVersions("1.6.0", "1.6.0-rc.1") ?: 0) > 0)
+        assertTrue((UpdateOffer.compareVersions("1.6.0-rc.2", "1.6.0-rc.1") ?: 0) > 0)
+    }
+
+    @Test
+    fun buildMetadataDoesNotChangePrecedence() {
+        assertEquals(0, UpdateOffer.compareVersions("1.6.0+release", "1.6.0+local"))
+    }
+
+    @Test
+    fun debugBuildOfSameBaseVersionIsCurrent() {
+        assertFalse(UpdateOffer.isUpdateAvailable("v1.6.2", "1.6.2-dev+544991A8"))
+    }
+
+    @Test
+    fun malformedVersionsFailClosed() {
+        assertNull(UpdateOffer.compareVersions("release-1.6.3", "1.6.2"))
+        assertFalse(UpdateOffer.isUpdateAvailable("release-1.6.3", "1.6.2"))
+        assertFalse(UpdateOffer.shouldOffer("release-1.6.3", "1.6.2", ""))
+    }
+
+    @Test
+    fun currentWaxReleaseIsDetectedAsUpToDate() {
+        assertEquals(0, UpdateOffer.compareVersions("v1.1.0", "1.1.0"))
+        assertFalse(UpdateOffer.isUpdateAvailable("v1.1.0", "1.1.0"))
     }
 }

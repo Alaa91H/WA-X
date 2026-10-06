@@ -2,73 +2,37 @@ package com.wax.module
 
 import android.app.Activity
 import com.wax.module.compat.UpdateOffer
+import com.wax.module.compat.UpdateReleaseClient
 import com.wax.module.xposed.core.ModuleRuntime
 import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.utils.Utils
 import de.robv.android.xposed.XposedBridge
 import io.noties.markwon.Markwon
-import okhttp3.OkHttpClient
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 class UpdateChecker(
     private val mActivity: Activity,
 ) : Runnable {
-    companion object {
-        private const val LATEST_RELEASE_API = "https://api.github.com/repos/Alaa91H/WA X/releases/latest"
-        private const val TELEGRAM_UPDATE_URL = "https://t.me/Alaa91h"
-
-        private val DEFAULT_CHANGELOG = UpdateOffer.DEFAULT_CHANGELOG
-
-        private val httpClient: OkHttpClient by lazy {
-            OkHttpClient
-                .Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .build()
-        }
-    }
-
     override fun run() {
         try {
-            val request =
-                okhttp3.Request
-                    .Builder()
-                    .url(LATEST_RELEASE_API)
-                    .build()
-
-            val releaseVersion: String
-            val changelog: String
-            val publishedAt: String
-
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return
-
-                val content = response.body.string()
-                val release = JSONObject(content)
-                val tagName = release.optString("tag_name", "")
-
-                if (tagName.isBlank()) return
-
-                releaseVersion = UpdateOffer.normaliseTag(tagName)
-                changelog = release.optString("body", DEFAULT_CHANGELOG).trim()
-                publishedAt = release.optString("published_at", "")
-            }
-
-            if (releaseVersion.isBlank()) return
-
+            val release = UpdateReleaseClient.fetchLatestRelease()
             val currentVersion = UpdateOffer.normaliseModuleVersion(BuildConfig.VERSION_NAME)
-            if (UpdateOffer.shouldOffer(
-                    releaseVersion = releaseVersion,
+
+            if (
+                UpdateOffer.shouldOffer(
+                    releaseVersion = release.version,
                     currentVersion = currentVersion,
                     ignoredVersion = ModuleRuntime.getPrivString("ignored_version", ""),
                 )
             ) {
                 mActivity.runOnUiThread {
-                    showUpdateDialog(releaseVersion, changelog, publishedAt)
+                    showUpdateDialog(
+                        version = release.version,
+                        changelog = release.changelog,
+                        publishedAt = release.publishedAt,
+                        releaseUrl = release.htmlUrl,
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -80,6 +44,7 @@ class UpdateChecker(
         version: String,
         changelog: String,
         publishedAt: String,
+        releaseUrl: String,
     ) {
         try {
             val markwon = Markwon.create(mActivity)
@@ -103,7 +68,7 @@ class UpdateChecker(
                 dialog.dismiss()
             }
             dialog.setPositiveButton("Update Now") { dialog, _ ->
-                Utils.openLink(mActivity, TELEGRAM_UPDATE_URL)
+                Utils.openLink(mActivity, releaseUrl)
                 dialog.dismiss()
             }
             dialog.show()
