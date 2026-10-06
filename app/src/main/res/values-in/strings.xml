@@ -537,4 +537,23 @@
     <string name="developer_warning_summary">Build ini berisi perubahan yang masih dikembangkan dan mungkin kurang stabil.</string>
     <string name="system_info">Informasi sistem</string>
     <string name="edit">Edit</string>
+    <string name="gt_name">Google Translate</string>
+    <string name="gt_use_global_settings">Gunakan pengaturan global</string>
+    <string name="gt_auto_translate">Terjemahkan pesan masuk secara otomatis</string>
+    <string name="gt_from_format">Dari: %1$s</string>
+    <string name="gt_to_format">Ke: %1$s</string>
+    <string name="gt_privacy_notice">Teks pesan dikirim ke Google untuk diterjemahkan. Pesan asli tetap terlihat.</string>
+    <string name="gt_global_title">Google Translate · Global</string>
+    <string name="gt_message_too_long">Pesan ini terlalu panjang untuk diterjemahkan.</string>
+    <string name="gt_close">Tutup</string>
+    <string name="gt_translating">Menerjemahkan…</string>
+    <string name="gt_translator">Penerjemah</string>
+    <string name="gt_unavailable">Terjemahan tidak tersedia. Periksa koneksi atau coba bahasa lain.</string>
+    <string name="gt_detect_language">Deteksi bahasa</string>
+    <string name="gt_automatic_off">Terjemahan otomatis nonaktif</string>
+    <string name="gt_global_default_format">Default global · %1$s</string>
+    <string name="gt_search_languages">Cari bahasa</string>
+    <string name="gt_translate_from">Terjemahkan dari</string>
+    <string name="gt_translate_to">Terjemahkan ke</string>
+    <string name="gt_translate_action">Terjemahkan</string>
 </resources>

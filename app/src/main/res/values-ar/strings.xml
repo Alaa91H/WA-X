@@ -537,4 +537,23 @@
     <string name="developer_warning_summary">يتضمن هذا الإصدار تغييرات قيد التطوير وقد يكون أقل استقرارًا.</string>
     <string name="system_info">معلومات النظام</string>
     <string name="edit">تعديل</string>
+    <string name="gt_name">Google Translate</string>
+    <string name="gt_use_global_settings">استخدام الإعدادات العامة</string>
+    <string name="gt_auto_translate">ترجمة الرسائل الواردة تلقائيًا</string>
+    <string name="gt_from_format">من: %1$s</string>
+    <string name="gt_to_format">إلى: %1$s</string>
+    <string name="gt_privacy_notice">يتم إرسال نص الرسالة إلى Google للترجمة. تبقى الرسائل الأصلية ظاهرة.</string>
+    <string name="gt_global_title">Google Translate · عام</string>
+    <string name="gt_message_too_long">هذه الرسالة طويلة جدًا ولا يمكن ترجمتها.</string>
+    <string name="gt_close">إغلاق</string>
+    <string name="gt_translating">جارٍ الترجمة…</string>
+    <string name="gt_translator">المترجم</string>
+    <string name="gt_unavailable">الترجمة غير متاحة. تحقق من الاتصال أو جرّب لغة أخرى.</string>
+    <string name="gt_detect_language">اكتشاف اللغة</string>
+    <string name="gt_automatic_off">الترجمة التلقائية متوقفة</string>
+    <string name="gt_global_default_format">الإعداد العام · %1$s</string>
+    <string name="gt_search_languages">البحث عن اللغات</string>
+    <string name="gt_translate_from">الترجمة من</string>
+    <string name="gt_translate_to">الترجمة إلى</string>
+    <string name="gt_translate_action">ترجمة</string>
 </resources>

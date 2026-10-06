@@ -537,4 +537,23 @@
     <string name="developer_warning_summary">Questa build contiene modifiche in fase di sviluppo e potrebbe essere meno stabile.</string>
     <string name="system_info">Informazioni di sistema</string>
     <string name="edit">Modifica</string>
+    <string name="gt_name">Google Translate</string>
+    <string name="gt_use_global_settings">Usa impostazioni globali</string>
+    <string name="gt_auto_translate">Traduci automaticamente i messaggi in arrivo</string>
+    <string name="gt_from_format">Da: %1$s</string>
+    <string name="gt_to_format">A: %1$s</string>
+    <string name="gt_privacy_notice">Il testo del messaggio viene inviato a Google per la traduzione. I messaggi originali restano visibili.</string>
+    <string name="gt_global_title">Google Translate · Globale</string>
+    <string name="gt_message_too_long">Questo messaggio è troppo lungo per essere tradotto.</string>
+    <string name="gt_close">Chiudi</string>
+    <string name="gt_translating">Traduzione in corso…</string>
+    <string name="gt_translator">Traduttore</string>
+    <string name="gt_unavailable">Traduzione non disponibile. Controlla la connessione o prova un\'altra lingua.</string>
+    <string name="gt_detect_language">Rileva lingua</string>
+    <string name="gt_automatic_off">Traduzione automatica disattivata</string>
+    <string name="gt_global_default_format">Valore globale · %1$s</string>
+    <string name="gt_search_languages">Cerca lingue</string>
+    <string name="gt_translate_from">Traduci da</string>
+    <string name="gt_translate_to">Traduci in</string>
+    <string name="gt_translate_action">Traduci</string>
 </resources>
