@@ -230,11 +230,10 @@ class PrivacyProfileStore(
             if (problems.isNotEmpty()) return@synchronized PrivacyOpResult.Rejected(problems)
 
             if (applier != null) {
-                try {
-                    applier.apply(profile)
-                } catch (error: Throwable) {
+                val failure = runCatching { applier.apply(profile) }.exceptionOrNull()
+                if (failure != null) {
                     return@synchronized PrivacyOpResult.Failed(
-                        "applying the profile failed: ${error.javaClass.simpleName}",
+                        "applying the profile failed: ${failure.javaClass.simpleName}",
                     )
                 }
             }
