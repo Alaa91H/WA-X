@@ -90,9 +90,9 @@ object DrawableColors {
                 }
             }
             is DrawableContainer -> {
-                val state = drawable.constantState!!
-                val children = XposedHelpers.getObjectField(state, "mDrawables") as Array<Drawable?>
-                children.forEach { replaceColor(it, colors) }
+                val state = drawable.constantState ?: return
+                val children = XposedHelpers.getObjectField(state, "mDrawables") as? Array<*> ?: return
+                children.filterIsInstance<Drawable>().forEach { replaceColor(it, colors) }
             }
             else -> replaceMaterialShapeDrawable(drawable, colors)
         }
