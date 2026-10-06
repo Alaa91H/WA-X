@@ -1,9 +1,11 @@
 package com.wax.module.ui.targets
 
 import android.app.Application
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
+import com.wax.module.BuildConfig
 import com.wax.module.platform.TargetApp
 import com.wax.module.settings.EffectiveSettingsResolver
 import com.wax.module.settings.SettingKeyRegistry
@@ -92,6 +94,7 @@ class TargetSettingsViewModel(
             TriState.ENABLED -> store.writeBoolean(scope, entry.key, true)
             TriState.DISABLED -> store.writeBoolean(scope, entry.key, false)
         }
+        notifyRuntime(scope)
         reload()
     }
 
@@ -121,6 +124,7 @@ class TargetSettingsViewModel(
             SettingKeyRegistry.Kind.TEXT ->
                 store.writeString(scope, entry.key, resolver.effectiveString(entry.key, global))
         }
+        notifyRuntime(scope)
         reload()
     }
 
@@ -137,6 +141,7 @@ class TargetSettingsViewModel(
     ) {
         if (entry.kind != SettingKeyRegistry.Kind.BOOLEAN) return
         store.writeBoolean(SettingsScope.Global, entry.key, enabled)
+        notifyRuntime(SettingsScope.Global)
         reload()
     }
 
@@ -145,6 +150,7 @@ class TargetSettingsViewModel(
         val scope = _state.value.scope
         if (scope !is SettingsScope.Target) return
         store.clearScope(scope)
+        notifyRuntime(scope)
         reload()
     }
 
@@ -153,6 +159,7 @@ class TargetSettingsViewModel(
         val scope = _state.value.scope
         if (scope !is SettingsScope.Target) return
         store.copyScope(SettingsScope.Global, scope)
+        notifyRuntime(scope)
         reload()
     }
 
@@ -161,7 +168,23 @@ class TargetSettingsViewModel(
         for (app in TargetApp.entries) {
             store.clearScope(SettingsScope.Target(app))
         }
+        notifyRuntime(SettingsScope.Global)
         reload()
+    }
+
+    /**
+     * Uses the same restart signal as the ordinary preference screens.
+     *
+     * A target-only change is addressed to that WhatsApp package so Business is not
+     * asked to restart for a WhatsApp-only override. Global changes are broadcast to
+     * both targets because both inherit them.
+     */
+    private fun notifyRuntime(scope: SettingsScope) {
+        val intent = Intent("${BuildConfig.APPLICATION_ID}.MANUAL_RESTART")
+        if (scope is SettingsScope.Target) {
+            intent.setPackage(scope.app.packageName)
+        }
+        getApplication<Application>().sendBroadcast(intent)
     }
 
     /** The physical key an override occupies, for the interface's diagnostics line. */
