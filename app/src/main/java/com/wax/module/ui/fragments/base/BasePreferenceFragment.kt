@@ -340,7 +340,8 @@ abstract class BasePreferenceFragment :
         findPreference<Preference>("bootloader_spoofer_custom")?.isEnabled = bootloaderSpooferEnabled
         val customKeyBoxEnabled = prefs.getBoolean("bootloader_spoofer_custom", false)
         findPreference<Preference>("bootloader_spoofer_xml")?.isEnabled =
-            bootloaderSpooferEnabled && customKeyBoxEnabled
+            bootloaderSpooferEnabled &&
+            customKeyBoxEnabled
 
         val transcriptionEnabled = prefs.getBoolean("audio_transcription", false)
         val transcriptionProvider = prefs.getString("transcription_provider", "assemblyai")
