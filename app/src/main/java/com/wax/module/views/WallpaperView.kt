@@ -12,6 +12,8 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.scale
 import com.wax.module.preference.ThemePreference
 import com.wax.module.xposed.core.ModuleRuntime
 import com.wax.module.xposed.utils.Utils
@@ -77,7 +79,7 @@ class WallpaperView(
 
         if (cacheKey == cachedData && File(fileOut).exists()) {
             val bitmap = BitmapFactory.decodeFile(fileOut) ?: return null
-            return BitmapDrawable(resources, bitmap)
+            return bitmap.toDrawable(resources)
         }
 
         val bitmap =
@@ -95,7 +97,7 @@ class WallpaperView(
         val width = if (displayMetrics.widthPixels > 0) displayMetrics.widthPixels else bitmap.width
         val height = if (displayMetrics.heightPixels > 0) displayMetrics.heightPixels else bitmap.height
 
-        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
+        val scaledBitmap = bitmap.scale(width, height, true)
 
         try {
             FileOutputStream(fileOut).use { outputStream ->
@@ -110,6 +112,6 @@ class WallpaperView(
             bitmap.recycle()
         }
 
-        return BitmapDrawable(resources, scaledBitmap)
+        return scaledBitmap.toDrawable(resources)
     }
 }

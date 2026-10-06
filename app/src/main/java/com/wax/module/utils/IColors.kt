@@ -1,6 +1,6 @@
 package com.wax.module.utils
 
-import android.graphics.Color
+import androidx.core.graphics.toColorInt
 
 object IColors {
     @JvmField
@@ -19,7 +19,7 @@ object IColors {
     val textColors = HashMap<String, String>()
 
     @JvmStatic
-    fun parseColor(color: String): Int = Color.parseColor(color)
+    fun parseColor(color: String): Int = color.toColorInt()
 
     @JvmStatic
     fun toString(color: Int): String {
