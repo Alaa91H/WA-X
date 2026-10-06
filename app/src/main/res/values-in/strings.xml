@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List menyembunyikan WA X dari:</string>
     <string name="diag_hma_disable">Nonaktifkan pemblokiran untuk WhatsApp/Business di Hide My App List agar WA X berfungsi dengan benar.</string>
     <string name="diag_copied">Baris disalin ke papan klip</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">Pengaturan per aplikasi</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">Ini adalah nilai default. Setiap aplikasi target yang belum diberi nilai sendiri akan menggunakannya.</string>
+    <string name="scope_target_explainer">%1$d dari %2$d pengaturan diubah khusus untuk aplikasi ini. Pengaturan yang dibiarkan pada “Gunakan Global” mengikuti nilai global.</string>
+    <string name="search_settings">Cari pengaturan</string>
+    <string name="no_settings_match">Tidak ada pengaturan yang cocok dengan pencarian ini.</string>
+    <string name="tri_state_inherit">Gunakan Global</string>
+    <string name="tri_state_enabled">Aktif</string>
+    <string name="tri_state_disabled">Nonaktif</string>
+    <string name="default_value">Nilai default untuk setiap aplikasi</string>
+    <string name="follows_global">Mengikuti Global</string>
+    <string name="pinned_to">Ditetapkan ke: %1$s</string>
+    <string name="pin_global">Tetapkan</string>
+    <string name="follow_global">Gunakan Global</string>
+    <string name="copy_global_to_target">Salin semua nilai Global ke aplikasi ini</string>
+    <string name="reset_this_target">Reset aplikasi ini</string>
+    <string name="reset_all_targets">Reset semua aplikasi</string>
+    <string name="edit_on_original_screen">Edit pengaturan ini di layar %1$s.</string>
+    <string name="open_per_target_settings">Atur WhatsApp dan WhatsApp Business secara terpisah</string>
+    <string name="open_per_target_settings_summary">Berikan pengaturan tersendiri untuk WhatsApp dan WhatsApp Business, atau biarkan pengaturan mengikuti nilai default global.</string>
+    <string name="reload">Muat ulang</string>
 </resources>
