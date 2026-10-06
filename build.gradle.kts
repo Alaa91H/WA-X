@@ -8,9 +8,10 @@ plugins {
 
 // Generic Java/Kotlin analyzers such as CodeQL probe for the conventional
 // testClasses lifecycle task. Android does not create one at the root, so expose a
-// deterministic alias that compiles and executes the debug JVM tests.
+// deterministic compile-only alias. Test failures belong to the dedicated test gate and
+// must not prevent CodeQL from extracting the production bytecode it needs to analyse.
 tasks.register("testClasses") {
     group = "verification"
-    description = "Compile and run debug JVM tests for generic analyzers such as CodeQL."
-    dependsOn(":app:testDebugUnitTest")
+    description = "Compile debug production bytecode for generic analyzers such as CodeQL."
+    dependsOn(":app:compileDebugKotlin", ":app:compileDebugJavaWithJavac")
 }

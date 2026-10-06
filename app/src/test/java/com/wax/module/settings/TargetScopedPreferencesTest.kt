@@ -29,6 +29,7 @@ class TargetScopedPreferencesTest {
         val store = SharedPreferencesSettingsStore(prefs)
         val global = SettingsScope.Global
         store.writeBoolean(global, "showonline", true)
+        store.writeString(global, "status_style", "1")
         store.writeString(global, "thememode", "dark")
         store.writeString(global, "whatsapp_only_unrelated", "value")
     }
@@ -65,8 +66,8 @@ class TargetScopedPreferencesTest {
 
     @Test
     fun `a text override wins over global`() {
-        SharedPreferencesSettingsStore(prefs).writeString(SettingsScope.Target(wa), "thememode", "light")
-        assertEquals("light", scoped(wa).getString("thememode", "dark"))
+        SharedPreferencesSettingsStore(prefs).writeString(SettingsScope.Target(wa), "status_style", "2")
+        assertEquals("2", scoped(wa).getString("status_style", "1"))
     }
 
     @Test
