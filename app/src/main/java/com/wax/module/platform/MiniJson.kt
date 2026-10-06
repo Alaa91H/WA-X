@@ -218,7 +218,7 @@ object MiniJson {
         }
 
         private fun readEscape(): Char =
-            when (val escaped = next()) {
+            when (next()) {
                 '"' -> '"'
                 '\\' -> '\\'
                 '/' -> '/'
