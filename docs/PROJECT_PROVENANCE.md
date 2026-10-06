@@ -18,6 +18,7 @@ The WA X fork is currently developed and maintained by:
 - Telegram: [@Alaa91h](https://t.me/Alaa91h)
 - Community: [@WAXposed](https://t.me/WAXposed)
 - Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com)
+- Voluntary development support: [Ko-fi](https://ko-fi.com/alaa91h)
 
 Alaa is the current developer/maintainer of this fork. This statement does **not** claim authorship of code, designs, commits or ideas inherited from upstream or other contributors.
 
