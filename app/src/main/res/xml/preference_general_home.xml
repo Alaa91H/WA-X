@@ -113,4 +113,11 @@
 
     </PreferenceCategory>
 
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="per_target_settings"
+            app:summary="@string/open_per_target_settings_summary"
+            app:title="@string/open_per_target_settings" />
+
 </PreferenceScreen>

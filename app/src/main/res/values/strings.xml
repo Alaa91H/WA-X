@@ -580,4 +580,25 @@
     <string name="wax_version_format" translatable="false">Version %1$s (%2$d)</string>
     <string name="wax_account_risk_title" translatable="false">Account safety</string>
     <string name="wax_account_risk" translatable="false">Xposed modules modify WhatsApp from the inside and some features may conflict with server-side checks. Use at your own risk, keep a backup of your data, and avoid features you do not need.</string>
+    <string name="per_target_settings">Per-target settings</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">These are the defaults. Every target that has not been given its own value uses them.</string>
+    <string name="scope_target_explainer">%1$d of %2$d overrides on this target. Settings left on Use Global follow the value on the left.</string>
+    <string name="search_settings">Search settings</string>
+    <string name="no_settings_match">No setting matches that search.</string>
+    <string name="tri_state_inherit">Use Global</string>
+    <string name="tri_state_enabled">On</string>
+    <string name="tri_state_disabled">Off</string>
+    <string name="default_value">Default for every target</string>
+    <string name="follows_global">Following Global</string>
+    <string name="pinned_to">Pinned to: %1$s</string>
+    <string name="pin_global">Pin</string>
+    <string name="follow_global">Use Global</string>
+    <string name="copy_global_to_target">Copy every Global value to this target</string>
+    <string name="reset_this_target">Reset this target</string>
+    <string name="reset_all_targets">Reset every target</string>
+    <string name="edit_on_original_screen">Edit this on the %1$s screen.</string>
+    <string name="open_per_target_settings">Configure WhatsApp and Business separately</string>
+    <string name="open_per_target_settings_summary">Give each WhatsApp build its own settings, or leave a setting following the global default.</string>
+    <string name="reload">Reload</string>
 </resources>

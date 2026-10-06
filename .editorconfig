@@ -1,0 +1,25 @@
+# EditorConfig, read by ktlint.
+
+# Compose names composable functions in PascalCase. That is the convention the Compose
+# compiler follows and the one every Compose codebase uses, and it conflicts with the
+# function-naming rule. ktlint provides a setting for exactly this case, so the rule is
+# taught the exception instead of being suppressed per finding or worked around by
+# renaming functions into something nobody would write.
+
+root = true
+
+[*.{kt,kts}]
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
+# Stated rather than inherited: with the limit left to ktlint's default, upgrading ktlint
+# silently changes how much code passes the gate.
+max_line_length = 140
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.xml]
+indent_size = 4
+
+[*.{py,sh}]
+indent_size = 4

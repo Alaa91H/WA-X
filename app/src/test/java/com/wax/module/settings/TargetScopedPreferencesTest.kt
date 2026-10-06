@@ -1,0 +1,203 @@
+package com.wax.module.settings
+
+import com.wax.module.platform.TargetApp
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+/**
+ * The read path inside a hooked WhatsApp process.
+ *
+ * This is the class every feature's preference read passes through, so a mistake here is
+ * not a bug in one setting: it is every setting, in both builds, at once. The tests are
+ * written around the two properties that make that safe: a target only ever sees its own
+ * overrides, and a key that is not ours is never touched.
+ */
+class TargetScopedPreferencesTest {
+    private lateinit var prefs: FakePreferences
+
+    private val wa = TargetApp.WHATSAPP
+    private val business = TargetApp.WHATSAPP_BUSINESS
+
+    @Before
+    fun setUp() {
+        // A file as an earlier release would have left it: globals at their raw keys.
+        prefs = FakePreferences()
+        val store = SharedPreferencesSettingsStore(prefs)
+        val global = SettingsScope.Global
+        store.writeBoolean(global, "antirevoke", true)
+        store.writeString(global, "thememode", "dark")
+        store.writeString(global, "whatsapp_only_unrelated", "value")
+    }
+
+    private fun scoped(target: TargetApp): TargetScopedPreferences {
+        val store = SharedPreferencesSettingsStore(prefs)
+        val wrapped = TargetScopedPreferences.wrap(prefs, target) as TargetScopedPreferences
+        wrapped.refresh(store)
+        return wrapped
+    }
+
+    // --- inheritance ------------------------------------------------------------
+
+    @Test
+    fun `with no override the global value is returned`() {
+        assertTrue(scoped(wa).getBoolean("antirevoke", false))
+    }
+
+    @Test
+    fun `an override wins over global`() {
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        assertFalse(scoped(wa).getBoolean("antirevoke", true))
+    }
+
+    @Test
+    fun `a text override wins over global`() {
+        SharedPreferencesSettingsStore(prefs).writeString(SettingsScope.Target(wa), "thememode", "light")
+        assertEquals("light", scoped(wa).getString("thememode", "dark"))
+    }
+
+    @Test
+    fun `removing the override makes the target follow global again`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        assertFalse(scoped(wa).getBoolean("antirevoke", true))
+
+        store.writeBoolean(SettingsScope.Target(wa), "antirevoke", null)
+        assertTrue(scoped(wa).getBoolean("antirevoke", false))
+    }
+
+    // --- isolation between the two processes -------------------------------------
+
+    @Test
+    fun `a whatsapp override never reaches the business process`() {
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        assertTrue(scoped(business).getBoolean("antirevoke", false))
+    }
+
+    @Test
+    fun `a business override never reaches the whatsapp process`() {
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "antirevoke", false)
+        assertTrue(scoped(wa).getBoolean("antirevoke", false))
+    }
+
+    @Test
+    fun `each process sees its own override`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        store.writeBoolean(SettingsScope.Target(business), "antirevoke", true)
+
+        assertFalse(scoped(wa).getBoolean("antirevoke", true))
+        assertTrue(scoped(business).getBoolean("antirevoke", false))
+    }
+
+    // --- keys that are not ours --------------------------------------------------
+
+    @Test
+    fun `an unknown key reads the caller default`() {
+        assertNull(scoped(wa).getString("no_such_key", null))
+        assertFalse(scoped(wa).getBoolean("no_such_key", false))
+    }
+
+    @Test
+    fun `an unknown key does not become present`() {
+        assertFalse(scoped(wa).contains("no_such_key"))
+    }
+
+    @Test
+    fun `a whatsapp key that looks like ours is still WhatsApp's to read`() {
+        // Same physical prefix, different target: the whatsapp process must not resolve it.
+        prefs.put("waxtarget.business.something", "business-value")
+        assertNull(scoped(wa).getString("something", null))
+    }
+
+    @Test
+    fun `a global key is never treated as an override`() {
+        assertNull(scoped(wa).overrideForHook("antirevoke", "original").let { if (it == "original") null else it })
+    }
+
+    // --- types -------------------------------------------------------------------
+
+    @Test
+    fun `an int override is returned as an int`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        prefs.put("seek", 5)
+        store.reload()
+        store.writeInt(SettingsScope.Target(wa), "seek", 9)
+        assertEquals(9, scoped(wa).getInt("seek", 5))
+    }
+
+    @Test
+    fun `a set override is returned as a set`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeStringSet(SettingsScope.Target(wa), "multi", setOf("x", "y"))
+        assertEquals(setOf("x", "y"), scoped(wa).getStringSet("multi", null)?.toSet())
+    }
+
+    @Test
+    fun `a set is not handed to a boolean read`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeStringSet(SettingsScope.Target(wa), "mixed", setOf("x"))
+        // Falls through to the caller's own default rather than coercing.
+        assertFalse(scoped(wa).getBoolean("mixed", false))
+    }
+
+    @Test
+    fun `getAll reports the merged view`() {
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        val all = scoped(wa).getAll()!!
+        assertEquals(false, all["antirevoke"])
+        assertEquals("dark", all["thememode"])
+    }
+
+    @Test
+    fun `getAll leaves the other target's override out`() {
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "antirevoke", false)
+        assertEquals(true, scoped(wa).getAll()!!["antirevoke"])
+    }
+
+    @Test
+    fun `contains is true for an overridden key`() {
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "only_here", true)
+        assertTrue(scoped(wa).contains("only_here"))
+        assertFalse(scoped(business).contains("only_here"))
+    }
+
+    // --- writes ------------------------------------------------------------------
+
+    @Test
+    fun `a write from a hooked process lands in global and not in the target`() {
+        scoped(wa).edit().putBoolean("runtime_flag", true).apply()
+        assertEquals(true, prefs.snapshot()["runtime_flag"])
+        assertNull(prefs.snapshot()["waxtarget.whatsapp.runtime_flag"])
+    }
+
+    @Test
+    fun `a hooked process cannot write a target key directly`() {
+        scoped(wa).edit().putString("waxtarget.business.sneaky", "x").apply()
+        // Refused outright rather than forwarded: a feature inside the WhatsApp process
+        // must not be able to reconfigure the other build.
+        assertNull(prefs.snapshot()["waxtarget.business.sneaky"])
+        assertNull(scoped(business).getString("sneaky", null))
+    }
+
+    // --- no target ----------------------------------------------------------------
+
+    @Test
+    fun `outside a target the delegate is returned untouched`() {
+        assertTrue(TargetScopedPreferences.wrap(prefs, null) === prefs)
+    }
+
+    // --- reload --------------------------------------------------------------------
+
+    @Test
+    fun `a refresh picks up a change made by the interface`() {
+        val target = scoped(wa)
+        assertTrue(target.getBoolean("antirevoke", false))
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        target.refresh(SharedPreferencesSettingsStore(prefs))
+        assertFalse(target.getBoolean("antirevoke", true))
+    }
+}

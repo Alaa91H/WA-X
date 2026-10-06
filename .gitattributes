@@ -16,6 +16,7 @@
 *.pro text eol=lf
 *.cfg text eol=lf
 *.properties text eol=lf
+*.toml text eol=lf
 
 # gradlew and gradlew.bat are left alone on purpose: the shell script and the
 # batch file each need their own ending in the worktree, and their committed
