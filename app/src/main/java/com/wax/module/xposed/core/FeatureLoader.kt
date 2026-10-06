@@ -123,9 +123,14 @@ import kotlin.jvm.java
 
 class FeatureLoader {
     companion object {
+        // These references are process-scoped by design: the Xposed hook is installed
+        // into the WhatsApp process and lives exactly as long as that process. Neither
+        // field ever stores an Activity or shorter-lived UI context.
+        @SuppressLint("StaticFieldLeak")
         @JvmField
         var mApp: Application? = null
 
+        @SuppressLint("StaticFieldLeak")
         lateinit var moduleContext: Context
 
         const val PACKAGE_WPP = SupportedPackages.WHATSAPP
