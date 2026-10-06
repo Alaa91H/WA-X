@@ -72,5 +72,6 @@ object HookBinder : WaeIIFace.Stub() {
 
     override fun exists(path: String): Boolean = resolveAllowedPath(path).exists()
 
-    override fun listFiles(path: String): List<File> = resolveAllowedPath(path).listFiles()?.toList() ?: emptyList()
+    override fun listFiles(path: String): List<String> =
+        resolveAllowedPath(path).listFiles()?.map { it.path } ?: emptyList()
 }

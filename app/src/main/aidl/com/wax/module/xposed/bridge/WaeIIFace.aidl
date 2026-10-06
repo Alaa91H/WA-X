@@ -15,7 +15,7 @@ interface WaeIIFace {
 
     boolean createDir(String path);
 
-    List listFiles(String path);
+    List<String> listFiles(String path);
 
     boolean exists(String path);
 
