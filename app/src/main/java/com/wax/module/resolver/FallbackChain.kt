@@ -82,13 +82,12 @@ class FallbackChain<T : Any> private constructor(
         // Installation is where a resolver's value is actually used, and it can throw for
         // reasons the resolver never saw. Isolating it here is what keeps the failure
         // attached to this feature only.
-        try {
-            install(resolved.value)
-        } catch (error: Throwable) {
+        val installFailure = runCatching { install(resolved.value) }.exceptionOrNull()
+        if (installFailure != null) {
             return FeatureOutcome.failed(
                 featureId,
-                FailureCode.classify(error, "install"),
-                "installing the hook failed: ${error.javaClass.simpleName}",
+                FailureCode.classify(installFailure, "install"),
+                "installing the hook failed: ${installFailure.javaClass.simpleName}",
             )
         }
 
