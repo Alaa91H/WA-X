@@ -269,6 +269,15 @@ jobs:
           python3 tools/compatibility/validate_compatibility.py
           python3 tools/compatibility/sync_generated.py --check
 
+      # Preferences are user-visible API. Keep the generated target registry in sync
+      # with XML, preserve the correct persisted value type, and reject rows that have
+      # no implementation-side consumer.
+      - name: Validate settings registry and preference wiring
+        run: |
+          set -euo pipefail
+          python3 tools/settings/generate_target_registry.py --check
+          python3 tools/quality/check_preference_wiring.py
+
       # Every WA X-owned feature is free. The scanner fails the build if an internal
       # access gate reappears, and --check-mirror proves the scanner and the runtime
       # audit still share one definition of what a gate is. The self-test runs first
