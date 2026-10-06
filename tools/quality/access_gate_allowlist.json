@@ -1,0 +1,61 @@
+{
+  "//": [
+    "Exemptions for the access-gate scanner. Every entry needs a path, a category and a",
+    "reason, and an entry that matches nothing fails the scan: an allowlist nobody prunes",
+    "is how a check becomes a formality.",
+    "",
+    "Categories: 'contract' (the policy that defines what a gate is), 'tests' (a test must",
+    "be able to name the gate it plants), 'documentation' (licence text and voluntary",
+    "support links the project ships), 'third-party' (another party's paid capability,",
+    "which is read and respected rather than bypassed).",
+    "",
+    "Prefer 'tokens' when only some tokens are legitimate in a file. A whole-file exemption",
+    "for the feature catalog would stop the scanner from noticing a gated feature id added",
+    "to the one file that declares every feature."
+  ],
+  "allow": [
+    {
+      "path": "tools/quality/",
+      "category": "contract",
+      "reason": "The scanner and its self-test necessarily spell the tokens they detect, and the self-test plants violations on purpose in a temporary tree."
+    },
+    {
+      "path": "app/src/main/java/com/wax/module/platform/NoPaywallContract.kt",
+      "category": "contract",
+      "reason": "Defines the contract: it lists the legacy entitlement keys the migration removes and the gate tokens the audit detects. A policy that forbids a word has to be able to spell it."
+    },
+    {
+      "path": "app/src/test/",
+      "category": "tests",
+      "reason": "A test that proves an internal gate cannot exist has to name the token it plants, and the platform contract test names the audit it calls."
+    },
+    {
+      "path": "tools/settings/add_identity_strings.py",
+      "category": "documentation",
+      "tokens": ["licence", "license"],
+      "reason": "Rewrites the GPL licence notice the About screen shows during the product-identity migration. It writes licence text and touches no feature access."
+    },
+    {
+      "path": "app/src/main/res/",
+      "category": "documentation",
+      "reason": "The licence name and text the About screen shows, and the voluntary Ko-fi support links. Neither unlocks anything: the app is GPL-3.0 and every feature is reachable without supporting the project."
+    },
+    {
+      "path": "app/src/main/java/com/wax/module/activities/AboutActivity.kt",
+      "category": "documentation",
+      "reason": "Renders the licence terms and the support links; carries no feature entitlement."
+    },
+    {
+      "path": "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt",
+      "category": "third-party",
+      "tokens": ["subscription"],
+      "reason": "Reads WhatsApp's own presence-subscription protocol vocabulary from the installed client. This is another party's server-side concept, not a WA X feature gate."
+    },
+    {
+      "path": "app/src/main/java/com/wax/module/platform/PlatformFeatureCatalog.kt",
+      "category": "contract",
+      "tokens": ["paywall"],
+      "reason": "Names NoPaywallContractTest as the test that covers the access contract. Only that token is exempt: a gated feature id added to the catalog still fails the scan."
+    }
+  ]
+}
