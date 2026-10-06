@@ -288,7 +288,10 @@
     <string name="contact_block_list">Список заблокированных контактов</string>
     <string name="contact_white_list">Список разрешенных контактов</string>
     <string name="no_contacts_selected">Не выбрано контактов</string>
-    <string name="contact_were_selected">Выбрано контактов: %d</string>
+    <plurals name="contact_were_selected">
+        <item quantity="one">Выбран %d контакт</item>
+        <item quantity="other">Выбрано %d контактов</item>
+    </plurals>
     <string name="standard">Стандарт</string>
     <string name="audio_note">Аудиозаметка</string>
     <string name="voice_note">Голосовая заметка</string>
