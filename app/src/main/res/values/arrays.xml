@@ -32,7 +32,7 @@
         user can still add a package by hand. That is a property of the API, not of
         this declaration.
 
-        Two details are deliberate:
+        Three details are deliberate:
 
           * `android` is the system framework process. It is not a target the module
             enhances, but the package-visibility bypass (`AppsFilter`) and the
@@ -41,6 +41,10 @@
             WhatsApp are rejected by the installer. LSPosed shows this entry as
             "System Framework" and stores it as `system`; the legacy name `android`
             is the one it expects here and it performs the swap itself.
+          * `com.android.providers.settings` hosts the SettingsProvider bridge
+            fallback used when the direct BridgeService path is unavailable. It must
+            be in scope so ScopeHook can intercept the `Settings.System` binder
+            request and return the module binder to the hooked WhatsApp process.
           * The module's own package is absent on purpose. LSPosed adds a legacy
             module to its own scope automatically, because a legacy module reads its
             preferences from its own process through world-readable files. Declaring
@@ -50,6 +54,7 @@
         <item>com.whatsapp</item>
         <item>com.whatsapp.w4b</item>
         <item>android</item>
+        <item>com.android.providers.settings</item>
     </string-array>
 
 
