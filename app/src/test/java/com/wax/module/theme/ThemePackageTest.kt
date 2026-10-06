@@ -117,7 +117,7 @@ class ThemePackageTest {
 
     @Test
     fun theGalleryPolicyStatesThemesAreDataOnly() {
-        val policy = ThemeGallery(ThemeRepository(store)).distributionPolicy()
+        val policy = ThemeGallery(ThemeRepository(store)).distributionPolicy
         assertTrue(policy.contains("data only"))
         assertFalse(policy.contains("code execution"))
     }
