@@ -6,9 +6,6 @@
     <string name="delete_multiple_confirmation">Are you sure you want to delete %d recordings?</string>
     <string name="share_recording">Share Recording</string>
     <string name="share_recordings">Share Recordings</string>
-    <string name="permission_required">Permission Required</string>
-    <string name="permission_required_desc">Full File Access is required to manage recordings stored in the root folder.</string>
-    <string name="grant">Grant</string>
     <string name="sort_by">Sort By</string>
     <string name="sort_name">Name</string>
     <string name="sort_date">Date</string>
@@ -21,15 +18,11 @@
     
     <!-- Selection mode -->
     <string name="selected_count">%d selected</string>
-    <string name="recordings_select_all">Select All</string>
     
     <!-- Contact recordings -->
-    <string name="recordings_for">Recordings for %s</string>
-    <string name="recording_count">%d recording(s)</string>
     
     <!-- Audio player -->
     <string name="play">Play</string>
-    <string name="pause">Pause</string>
     <string name="play_pause">Play/Pause</string>
     <string name="close">Close</string>
     <string name="share">Share</string>
