@@ -645,13 +645,13 @@ jobs:
             echo "| Field | Value |"
             echo "| --- | --- |"
             echo "| Transport | Direct MTProto via Kurigram |"
-            echo "| Group | `@WAXposed` |"
-            echo "| Topic | `$TELEGRAM_TOPIC_NAME` |"
-            echo "| Topic ID | `$TELEGRAM_THREAD_ID` |"
-            echo "| File | `$(basename "$APK")` |"
-            echo "| Size | `$HUMAN_SIZE` |"
-            echo "| SHA-256 | `$SHA256` |"
-            echo "| Channel | `$TYPE` |"
+            echo "| Group | @WAXposed |"
+            echo "| Topic | $TELEGRAM_TOPIC_NAME |"
+            echo "| Topic ID | $TELEGRAM_THREAD_ID |"
+            echo "| File | $(basename "$APK") |"
+            echo "| Size | $HUMAN_SIZE |"
+            echo "| SHA-256 | $SHA256 |"
+            echo "| Channel | $TYPE |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Render the Telegram publication in dry-run mode
@@ -806,14 +806,14 @@ jobs:
           {
             echo "### Telegram distribution"
             echo
-            echo "- Transport: `Direct MTProto / Kurigram 2.2.26`"
-            echo "- Group: `@WAXposed`"
-            echo "- Topic: `${{ steps.metadata.outputs.topic_name || 'not-evaluated' }}`"
-            echo "- Topic ID: `${{ steps.metadata.outputs.thread_id || 'n/a' }}`"
-            echo "- Duplicate guard: `${{ steps.guard.outputs.should_publish || 'not-evaluated' }}`"
+            echo "- Transport: Direct MTProto / Kurigram 2.2.26"
+            echo "- Group: @WAXposed"
+            echo "- Topic: ${{ steps.metadata.outputs.topic_name || 'not-evaluated' }}"
+            echo "- Topic ID: ${{ steps.metadata.outputs.thread_id || 'n/a' }}"
+            echo "- Duplicate guard: ${{ steps.guard.outputs.should_publish || 'not-evaluated' }}"
             if [[ "${{ steps.guard.outputs.should_publish }}" == "true" ]]; then
-              echo "- Changelog message: `${{ steps.telegram_publish.outputs.announcement_message_id || 'n/a' }}`"
-              echo "- APK message: `${{ steps.telegram_publish.outputs.document_message_id || 'n/a' }}`"
+              echo "- Changelog message: ${{ steps.telegram_publish.outputs.announcement_message_id || 'n/a' }}"
+              echo "- APK message: ${{ steps.telegram_publish.outputs.document_message_id || 'n/a' }}"
             else
               echo "- Result: existing publication marker found; Telegram post skipped"
             fi
