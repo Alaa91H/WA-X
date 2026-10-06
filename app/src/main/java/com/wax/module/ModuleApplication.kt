@@ -20,7 +20,6 @@ import com.wax.module.activities.CrashReportActivity
 import com.wax.module.xposed.utils.Utils
 import rikka.material.app.LocaleDelegate.Companion.defaultLocale
 import java.io.File
-import java.util.Locale
 
 class ModuleApplication : Application() {
     @SuppressLint("ApplySharedPref")
@@ -122,16 +121,19 @@ class ModuleApplication : Application() {
             }
         }
 
+        /**
+         * Applies the chosen interface language.
+         *
+         * With no choice stored this is the system language, which is also the default
+         * state: nothing is written until the user picks something, so following the
+         * system keeps following it when the system language changes.
+         */
         @JvmStatic
         fun changeLanguage(context: Context) {
-            val force =
-                PreferenceManager
-                    .getDefaultSharedPreferences(context)
-                    .getBoolean("force_english", false)
-            defaultLocale = if (force) Locale.ENGLISH else Locale.getDefault()
+            val locale = AppLanguage.localeFor(context)
+            defaultLocale = locale
             val res = context.resources
-            val config = res.configuration
-            config.setLocale(defaultLocale)
+            val config = AppLanguage.configurationFor(context, locale)
             @Suppress("DEPRECATION")
             res.updateConfiguration(config, res.displayMetrics)
         }

@@ -8,9 +8,9 @@ package com.wax.module.settings
  * overridden, and one that is listed but no longer exists would show an empty
  * row in the interface. Regenerate instead.
  *
- * 127 settings, of which 91 are toggles.
+ * 126 settings, of which 90 are toggles.
  *
- * 16 settings are excluded on purpose: the module's own appearance and diagnostics,
+ * 17 settings are excluded on purpose: the module's own appearance and diagnostics,
  * and anything holding a credential or a file path.
  */
 object SettingKeyRegistry {
@@ -251,7 +251,6 @@ object SettingKeyRegistry {
                 "preference_general_conversation",
                 com.wax.module.R.string.force_disable_emojis,
             ),
-            Entry("force_english", Kind.BOOLEAN, "general", "preference_general_home", com.wax.module.R.string.force_english),
             Entry(
                 "force_restore_backup_feature",
                 Kind.BOOLEAN,

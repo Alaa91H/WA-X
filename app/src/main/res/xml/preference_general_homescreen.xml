@@ -40,8 +40,8 @@
         <rikka.material.preference.MaterialSwitchPreference
             app:defaultValue="true"
             app:key="open_wae"
-            app:summary="@string/enable_wa_enhancer_button_sum"
-            app:title="@string/enable_wa_enhancer_button" />
+            app:summary="@string/enable_wax_button_sum"
+            app:title="@string/enable_wax_button" />
 
         <rikka.material.preference.MaterialSwitchPreference
             app:key="separategroups"

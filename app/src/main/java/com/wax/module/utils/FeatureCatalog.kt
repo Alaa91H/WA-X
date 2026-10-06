@@ -1,6 +1,7 @@
 package com.wax.module.utils
 
 import android.content.Context
+import com.wax.module.AppLanguage
 import com.wax.module.R
 import com.wax.module.model.SearchableFeature
 import java.util.ArrayList
@@ -87,8 +88,8 @@ object FeatureCatalog {
         add(
             catalog,
             context,
-            "force_english",
-            R.string.force_english,
+            AppLanguage.KEY,
+            R.string.app_language,
             null,
             SearchableFeature.Category.GENERAL_HOME,
             general,
@@ -272,8 +273,8 @@ object FeatureCatalog {
             catalog,
             context,
             "open_wae",
-            R.string.enable_wa_enhancer_button,
-            R.string.enable_wa_enhancer_button_sum,
+            R.string.enable_wax_button,
+            R.string.enable_wax_button_sum,
             SearchableFeature.Category.GENERAL_HOMESCREEN,
             general,
             "homescreen",
