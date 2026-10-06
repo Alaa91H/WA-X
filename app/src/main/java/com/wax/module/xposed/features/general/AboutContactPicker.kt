@@ -1131,7 +1131,10 @@ class AboutContactPicker(
                     .query(
                         "wa_contacts",
                         arrayOf("jid", "display_name"),
-                        "jid IS NOT NULL AND jid != '' AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) AND is_whatsapp_user = 1",
+                        "jid IS NOT NULL AND jid != '' " +
+                            "AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') " +
+                            "AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) " +
+                            "AND is_whatsapp_user = 1",
                         null,
                         null,
                         null,
