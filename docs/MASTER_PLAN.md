@@ -1,710 +1,110 @@
-# WA X — الخطة الرئيسية للتحسين (T00–T75)
+# WA X — Historical Architecture & Migration Plan
 
-> **نقطة البداية:** `v1.6.1` (الفرع `master`) مع تعديلات محلية لدعم إصدار واتساب `2.26.40.xx`.
-> **الهدف النهائي:** `v2.0.0` — معمارية نظيفة، طبقة Resolvers معزولة، اختبارات حقيقية، وأمن وتشخيص بمستوى إنتاجي.
-> **آخر تحديث:** 2026-10-04 — أُنشئت الوثيقة وبدأ تنفيذ T00.
+> [!IMPORTANT]
+> This file is an **English historical record**, not the current source of truth for releases or compatibility.
+>
+> WA X is a fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), currently maintained by [Alaa](https://github.com/Alaa91H). The project now ships one `com.wax.module` APK for WhatsApp and WhatsApp Business with target-aware settings.
+>
+> Current operational truth is maintained in [../README.md](../README.md), [COMPATIBILITY.md](COMPATIBILITY.md), [SETTING_MIGRATION_MATRIX.md](SETTING_MIGRATION_MATRIX.md) and the CI workflow.
 
----
+## Purpose
 
-## 0) كيف تُستخدم هذه الوثيقة
+The original T00–T75 program was created to move an inherited Xposed module toward a safer architecture without pretending that WhatsApp compatibility could be proven statically.
 
-1. تُنفَّذ المهام بالترتيب `T00 → T75`. لا تبدأ مرحلة قبل إغلاق المرحلة السابقة واعتماد نتائجها.
-2. كل مجموعة مهام تُنفَّذ في **commit مستقل** (أو سلسلة commits صغيرة متماسكة) برسالة واضحة تصف المرحلة.
-3. بعد كل مجموعة: بناء `whatsapp` + `business`، تشغيل الاختبارات، فحص APK والتوقيع، تحديث حالة المرحلة هنا، ثم الانتقال.
-4. أي انحراف عن الوثيقة يُسجَّل في قسم «القرارات والانحرافات» في الأسفل، ولا تُعدَّل المهام بصمت.
-5. الأرقام المرجعية تُقرأ من `tools/baseline/baseline.json` المولَّد آليًا — لا أرقام يدوية إلا كنقطة مقارنة.
-6. رمزا الحالة: ✅ منجز — 🟡 قيد التنفيذ — ⬜ مخطط.
+The plan was governed by these principles:
 
-## 1) القواعد الحاكمة (غير قابلة للكسر)
+1. Measure a baseline before large refactors.
+2. Keep compatibility evidence separate from declared target versions.
+3. Refactor one architectural layer at a time.
+4. Add tests before replacing fragile hook/resolver behavior.
+5. Fail individual features safely instead of crashing the whole module.
+6. Keep user data out of diagnostics by default.
+7. Preserve release signing and reproducible CI behavior.
+8. Document architectural deviations instead of silently changing assumptions.
 
-1. **طبقة واحدة لكل مرحلة:** لا تُغيَّر `Unobfuscator` و`FeatureLoader` و`targetSdk` والاعتماديات في نفس المرحلة. كل تغيير معزول حتى نعرف مصدر أي regression فورًا.
-2. **لا regression مسموح:** ارتفاع مشاكل lint، أو نقص اختبار ناجح، أو تضخم APK بلا مبرر ⇒ يُرفض الدمج (يتحقق آليًا في T04).
-3. **`applicationId` لا يتغير أبدًا:** `com.wax.module` (و`.w4b` لنسخة Business) — حتى لا يُكسر التحديث أو التوقيع أو الإعدادات.
-4. **مسار الإصدار كما هو:** PR لا ينشر شيئًا، tag وحده يستخدم مفتاح release، والأصول ملفا APK فقط، وSHA-256 في release notes بدل ملفات جانبية.
-5. **التوافق مع WhatsApp أهم من الميزات الجديدة:** لا يُعلَن دعم إصدار واتساب إلا بنتيجة resolvers فعلية (راجع T61).
-6. **لا يُحذف مسار قديم قبل وجود بديل مختبر + دليل من diagnostics**، وليس بالتخمين.
-7. **الاختبارات شرط للـ refactor:** لا إعادة هيكلة قبل اختبارات تحمي السلوك (T26–T30).
-8. **التوثيق يرافق الكود:** أي ميزة جديدة تُوثَّق بمفاتيح preferences الخاصة بها.
-9. **حماية بيانات المستخدم:** لا أرقام هاتف/JIDs/محتوى رسائل في أي log أو تقرير يُرسل أو يُنسخ.
+## Historical phases
 
-## 2) خط الأساس المقاس (Baseline v1.6.1)
+| Phase | Focus | Current interpretation |
+|---|---|---|
+| T00–T04 | Baseline, CI regression gates, compatibility inventory | Superseded by current CI and generated baseline/compatibility tooling |
+| T05–T15 | Resolver isolation and Unobfuscator hardening | Foundation for typed resolver outcomes and fallback behavior |
+| T16–T25 | Feature registry, failure isolation, security | Converged into the current runtime/platform safety layer |
+| T26–T40 | Tests, native/runtime hardening | Continued as normal maintenance |
+| T41–T55 | UI, preferences, diagnostics | Evolved into target-aware settings and manager UI work |
+| T56–T65 | Compatibility/release discipline | Current compatibility matrix and CI enforce the core intent |
+| T66–T75 | Cleanup and release readiness | Historical completion criteria; current release workflow is authoritative |
 
-المصدر: `tools/baseline/baseline.json` — يولَّد بالأمر:
+## Current architecture that supersedes old flavor assumptions
+
+Earlier versions of the plan referred to separate WhatsApp/Business product flavors and separate module application IDs. That is no longer the current architecture.
+
+```text
+One module APK
+applicationId: com.wax.module
+
+Targets:
+- com.whatsapp
+- com.whatsapp.w4b
+
+Settings:
+- Global defaults
+- WhatsApp overrides
+- WhatsApp Business overrides
+```
+
+The target apps remain separate processes, but WA X itself is one application/module.
+
+## Current release model
+
+```text
+Pull request
+→ verification only
+→ no Telegram publication
+
+Successful non-release build
+→ GitHub Actions artifact
+→ Telegram Beta Testing (topic 18)
+
+Version tag
+→ validated signed APK
+→ GitHub Release
+→ Telegram Updates & Releases (topic 4)
+```
+
+## Compatibility truth
+
+The project intentionally distinguishes target versions declared by maintainers, structural feature dependencies, runtime resolver evidence and feature-level support state.
+
+No documentation should equate “declared version” with “fully supported version” unless runtime evidence justifies that claim.
+
+## Security and privacy principles retained from the plan
+
+- Do not log raw phone numbers, JIDs or message bodies in diagnostics.
+- Do not expose signing or Telegram secrets in CI.
+- Do not execute untrusted pull-request code with release secrets.
+- Do not claim anti-ban guarantees.
+- Do not claim server-side capabilities that are not implemented locally.
+- Preserve upstream license and authorship history.
+
+## Historical metrics
+
+Older task notes referenced per-flavor builds and test counts. Those figures represented the repository at that time. They are not automatically current after the one-APK migration.
+
+For current metrics, regenerate:
 
 ```bash
 bash tools/baseline/generate_baseline.sh
 ```
 
-| المقياس | القيمة |
-|---|---|
-| إصدار الوحدة | `1.6.1` (versionCode 161) |
-| ملفات Kotlin (main) | 171 |
-| ملفات Kotlin في طبقة xposed | 114 |
-| ملفات features | 67 |
-| ملفات Java متبقية | 3 |
-| Features المسجلة في `FeatureLoader` | 64 |
-| اختبارات Unit | ملف واحد، 8 اختبارات (`GoogleTranslateSettingsTest`) |
-| Unit tests المنفَّذة (آخر تشغيل) | 16 (8 × نكهتين)، 0 failures / 0 errors |
-| `Unobfuscator.kt` | 3491 سطرًا — 187 دالة `load*` — 60 استخدام `!!` |
-| `lint-baseline.xml` | 419 استثناءً |
-| أعلى الاستثناءات | UnusedResources 145، MissingTranslation 70، HardcodedText 44، TypographyEllipsis 38، DefaultLocale 16 |
-| مشاكل وظيفية في الـ baseline | WrongThread، TrustAllX509TrustManager، SdCardPath ×2، ExportedContentProvider، … |
-| SDK | compileSdk 37 / targetSdk 34 / minSdk 28 |
-| مكونات `android:exported="true"` | 7 |
-| ملفات `.idea` متتبعة في Git | 13 |
-| Submodules | 3 مثبتّة على SHAs محددة (opus, libopusenc, ogg) |
-| CI | ملف واحد `.github/workflows/ci.yml` (jobs: build / release / create-tag) |
-| حجم APK (debug، أول قياس) | WhatsApp: 37,137,367 بايت (35.42 MiB) — Business: 37,137,347 بايت (35.42 MiB) |
+and use the generated baseline files.
 
-**بيئة التطوير المحلية:** JDK 17 وAndroid SDK (مع NDK 28.2 وCMake 3.22.1) متوفران؛ submodules الثلاثة هُيئت أثناء T00؛ والبناء المحلي (debug) يعمل بعد إصلاح locale. بناء release والتوقيع يبقيان في CI حسب قاعدة الإصدار.
+## Maintainer and provenance
 
-## 3) خريطة الإصدارات
+- Current developer/maintainer: [Alaa](https://github.com/Alaa91H)
+- Telegram: [@Alaa91h](https://t.me/Alaa91h)
+- Community: [@WAXposed](https://t.me/WAXposed)
+- Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com)
+- Support: [Ko-fi](https://ko-fi.com/alaa91h)
+- Upstream: [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer)
 
-| الإصدار | النطاق | المهام |
-|---|---|---|
-| **1.6.2** | خط أساس + اختبارات + lint + diagnostics، بدون تغيير جوهري في الـ hooks | T00–T09 |
-| **1.7.0** | إعادة بناء طبقة Resolver / Unobfuscator | T10–T15 |
-| **1.8.0** | FeatureRegistry + طبقة الأداء | T16–T20 + T31–T35 |
-| **1.9.0** | UI/UX + التخزين + التوثيق + التشخيص | T41–T45 (جزئيًا) + T46–T55 + T66–T70 |
-| **2.0.0** | الفصل المعماري الكامل بعد فترة soak | T21–T25 + T36–T40 + T56–T65 + T71–T75 |
-
-> ملاحظة: T21–T25 (الأمن) وT36–T40 (Native) وT56–T65 (CI/توافق واتساب) تعمل بالتوازي مع الإصدارات أعلاه كلما سمح وقت الاختبار، لكن دون كسر قاعدة «طبقة واحدة لكل مرحلة».
-
----
-
-## المرحلة 1 — T00–T04: تثبيت خط أساس لا يمكن كسره
-
-**الحالة:** 🟡 قيد التنفيذ — T00 ✅، T01 ✅، T02 ✅، T03 ✅ منجزة؛ T04 🟡 (تعمل في CI وتقارن مع فرع الأساس؛ يتبقى اختبار رفض PR متراجع فعليًا)
-
-### T00 — تقرير Baseline آلي ✅
-- **الهدف:** قياس كل ما لا نريد كسره قبل أي تغيير: حجم APK، عدد Features، زمن تحميل كل Feature، مؤشرات Unobfuscator، وعدد عناصر lint baseline.
-- **المخرجات:** `tools/baseline/generate_baseline.sh` + `tools/baseline/baseline.json` (آلي) + `tools/baseline/BASELINE.md` (مقروء) + دعم `--xposed-log` لاستخراج أزمنة التحميل من سجل LSPosed.
-- **معايير القبول:** أمر واحد ينتج JSON صالحًا للتحليل + تقريرًا مقروءًا؛ الحقول غير القابلة للقياس حاليًا تظهر `null` صريحة (وليس صفرًا مضللًا)؛ دعم إدخال سجل Xposed لاستخراج `Loaded Plugin X in Yms`.
-- **التحقق:** تشغيل السكربت، فحص JSON بـ `python -m json.tool` أو `node JSON.parse`، ومقارنة الأرقام بعدّ يدوي.
-- **ملاحظات التنفيذ (2026-10-04):** أُنشئ `tools/baseline/generate_baseline.sh` مع `tools/baseline/fixtures/sample_xposed_log.txt`؛ الاختبار بـ `--xposed-log` نجح (استُخرجت أزمنة 4 features + الزمن الكلي). الأرقام الأساسية: 64 features، 419 مشكلة lint، 187 resolver، 60 `!!`، 8 اختبارات.
-- **اكتشاف مهم:** البناء المحلي كان يفشل على أي جهاز بـ locale عربي — مولّد Room 2.8.4 (KSP) يكتب الأرقام بالصيغة العربية-الهندية في الكود المولَّد (`var _argIndex: Int = ١` بدل `1`) فيتعطل التصريف. هذا يفسر نجاح CI (locale إنجليزي) وفشل البناء المحلي. أُصلح بفرض `-Duser.language=en -Duser.country=US` في `org.gradle.jvmargs` و`kotlin.daemon.jvmargs`. وبعد الإصلاح نجح بناء `whatsapp` + `business` محليًا (BUILD SUCCESSFUL)، وسُجّل أول قياس لحجم APK (debug): WhatsApp 37,137,367 بايت — Business 37,137,347 بايت (35.42 MiB لكل منهما).
-
-### T01 — Compatibility Matrix حقيقية ✅
-- **الهدف:** مصدر حقيقة واحد لتوافق الإصدارات بدل الاعتماد على `arrays.xml` وحده.
-- **المخرجات:** `compatibility.json` + `docs/COMPATIBILITY.md` مولَّد منه؛ الأبعاد: `whatsapp`/`business` × إصدار WhatsApp × SDK × ABI × حالة كل Feature: `supported` / `degraded` / `unsupported` / `unknown`.
-- **معايير القبول:** الـ 64 Features كلها ممثلة؛ لا تُعلَن حالة `supported` دون دليل من resolvers؛ التحديث جزء إلزامي من دورة إضافة إصدار جديد (T61).
-- **ملاحظة:** تبدأ نصف آلية من نتائج T00 + T02، ثم تُغذّى آليًا من diagnostics في T51+.
-- **التنفيذ (2026-10-04):** أُنشئ مجلد `tools/compatibility/` بمكوّناته:
-  - `extract_features.py` — يستخرج الحقائق **المثبَتة** من شجرة المصدر: قائمة الـ 64 Features من `plugins()`، والفئة، واعتماديات الـ resolvers من نداءات `Unobfuscator.load*`، وطبقات الحل المستخدمة، ومفاتيح الإعدادات، وإصدارات `arrays.xml`، وحقائق SDK/ABI. لا يخترع أي بيانات توافق؛ ما لا يمكن إثباته يبقى `unknown`.
-  - `compatibility.json` — مصدر الحقيقة. الأقسام المنسّقية (`matrix` و`evidence`) يدوية، وقسم `derived` مُولَّد آليًا ويجب ألّا يُحرَّر يدويًا.
-  - `validate_compatibility.py` — يفحص: صحة الـ schema، وحداثة قسم `derived` مقابل المصدر، واكتمال جرد الـ 64 Features، و**عدم جواز ادعاء `supported` دون دليل resolvers كامل يحمل `verifiedAt`)،** ومزامنة الإصدارات وSDK/ABI مع `arrays.xml` و`build.gradle.kts`.
-  - `sync_generated.py` — يولّد `docs/COMPATIBILITY.md` **و** يعيد كتابة `string-array` الإصدارات في `arrays.xml` انطلاقًا من الـ matrix، فتصبح الـ matrix مصدر الحقيقة فعليًا، وتصبح `arrays.xml` مرآةً مولَّدة لا مكانًا ثانيًا لتذكّر التحديث فيه.
-  - `test_validator.py` — اختبارات mutation تُثبت أن المدقق **يفشل** فعلًا عند كل انتهاك (13 حالة).
-- **حالة الأدلة:** صفر خلية مُتحقَّق منها حتى الآن، وكل الحالات `unknown` — وهذا هو الوضع الصحيح. `declaredVersions` إعلان صيانة تفرضه بوابة الإصدار وقت التشغيل، وليست دليلًا. تُمنع أي خلية `supported` حتى تجمع T51+ أدلة runtime فعلية.
-- **اكتشاف مفيد:** 5 من 64 Features لا تلمس أي طبقة حل داخلية إطلاقًا (`DebugFeature` و`FloatingBottomBar` و`GoogleTranslate` و`HideSeenView` و`MinorFixes`)، فهي **مستقلة بنيويًا** عن داخليات واتساب ولا يمكن أن تنكسر عبر DexKit. وفي المقابل 47 منها تنادي resolvers مباشرة وتحتاج دليلًا قبل أي `supported`. هذه الخريطة هي ما يجعل عمل T10–T15 موجّهًا بدل shotgun.
-- **التحقق:** `validate_compatibility.py` و`test_validator.py` (13/13) و`sync_generated.py --check` تمرّ محليًا. اختُبرت دورة إضافة إصدار كاملة: إضافة `2.26.41.xx` إلى الـ matrix وحده ← فشل المدقق مع بيان الانحراف ← `sync_generated.py` ← نجح المدقق وتحدّث `arrays.xml` نظيفًا. إعادة التوليد **byte-exact** بلا ضجيج line-endings. وأُضيفت إلى `ci.yml` خطوة «Validate compatibility matrix» بعد بوابة الـ baseline.
-- **انحراف مسجَّل:** `arrays.xml` صار ملفًا مولَّدًا (لا يُحرَّر يدويًا) بدل كتابته يدويًا — يخدم هدف «مصدر حقيقة واحد» دون أي تغيير في سلوك وقت التشغيل.
-
-### T02 — Smoke tests للوظائف الأساسية ✅
-- **الهدف:** أول شبكة أمان حقيقية بدل اختبار واحد.
-- **المخرجات:** حزمة اختبارات في `app/src/test` تغطي المنطق القابل للاختبار دون Android framework، وتُقرَّر إضافة Robolectric فقط عند الحاجة الفعلية.
-- **معايير القبول:** تشغيل `testDebugUnitTest` ينجح؛ لا اختبارات هشة تعتمد على وقت/شبكة.
-- **التحقق:** التشغيل محليًا وفي CI بعد إضافة البوابة في T04.
-- **التنفيذ (2026-10-04):** ارتفع العدد من 8 إلى **180 اختبارًا** (360 تنفيذًا عبر النكهتين). لم تُضَف Robolectric: كل ما اختير كان قابلًا للاختبار بـ JUnit وحده بعد استخراج المنطق النقي.
-  - **منطق مُستخرَج وجديد:** `compat/TargetVersions.kt` (مطابقة الإصدارات — كانت مكررة في `FeatureLoader` و`HomeFragment`)، و`compat/UpdateOffer.kt` (منطق التحديث — مكرر في `UpdateChecker` و`HomeFragment`)، و`xposed/bridge/BridgeAccessPolicy.kt` (سياسة الوصول + احتواء المسارات)، و`config/ConfigBackupSchema.kt` (مخطط نسخة الإعدادات)، و`PreferenceValueHooks` (سلسلة تحويلات قيم الإعدادات).
-  - **أخطاء حقيقية كشفتها الاختبارات وأُصلحت في نفس المهمة:**
-    1. **ضابط أمني كان معطّلًا فعليًا.** كانت `ScopeHook.getPackageNameFromPackageSettings` تلتقط النص بين آخر مسافة وآخر `/`، فترجع `"codePath=/data/user/0"` على مخرجات `PackageSettings` حقيقية — أي أنها لا تُرجع اسم حزمة إطلاقًا. وبما أن موضعَي الاستدعاء يقارنان النتيجة بـ `APPLICATION_ID`، فإن الشرط **لم يكن يتحقق أبدًا**، أي أن الحماية التي كان يفترضها هذا الكود كانت بلا أثر. صار القراءة الآن من حقل `pkg=` صراحةً، مع اختبار regression يثبّت الحالة.
-    2. **فقدان بيانات (سلامة).** كان استيراد الإعدادات **يمسح كل المفاتيح أولًا ثم** يطبّق الملف؛ فأي ملف جزئي أو نوع غير معروف كان يمسح إعدادات المستخدم بصمت. صار الاستيراد **كله أو لا شيء**: يُفكّ المستند كاملًا أولًا، ويُرفض قبل لمس `preferences` إن فشل أي entry.
-- **انحراف مُسجَّل:** أُصلح خطآن أثناء T02 بدل تأجيلهما إلى T21–T25. كلاهما يخرق قاعدة «حماية بيانات المستخدم» (قاعدة 9)، وكلاهما إصلاح سلوكي عملي لا تحسين اختياري.
-
-### T03 — تقارير فشل Features منظمة (structured) ✅
-- **الهدف:** عند فشل تحميل Feature، نعرف: أي feature، أي resolver، أي إصدار واتساب — بدون بيانات مستخدم.
-- **المخرجات:** تحويل `ErrorItem` الخاصة إلى نموذج تقرير منظم (feature، resolver، WA version، module version، error code)، يُحفظ محليًا ويُعرض في crash/diagnostics.
-- **معايير القبول:** فشل محاكى لـ feature ينتج تقريرًا منظمًا قابلًا للقراءة الآلية؛ لا أرقام/JIDs/رسائل داخل التقرير.
-- **التحقق:** اختبار وحدة على serialization + مراجعة يدوية لعينة تقرير.
-- **التنفيذ (2026-10-04):** حزمة `diagnostics/` من ست وحدات:
-  - `FailureCode` — 12 رمز خطأ مستقر (`RESOLVER_NOT_FOUND`، `CLASS_NOT_FOUND`، `ACCESS_DENIED`، …) مع `classify(throwable, hint)`. الأسماء جزء من العقد: تُضاف ولا يُعاد استخدام معنى رمز قائم.
-  - `ReportRedactor` — **طبقة الخصوصية**. كل حقل حر في التقرير يمرّ من هنا قبل أن يدخل التقرير، فلا يمكن بناء تقرير يحتوي مُعرّّفًا بالخطأ. الترتيب: المعرّف أولاً (JID/بريد)، ثم وسوم صريح (`jid=`)، ثم أرقام الهواتف، ثم ستة أرقام فأكثر، ثم `[`نص طويل]` و`"نص طويل"`.
-  - `FeatureFailureReport` — يجيب عن: أي feature، أي resolver، أي إصدار واتساب، أي إصدار وحدة، ما رمز الخطأ، وما الإطارات. **لا يوجد أي حقل حر غير مُنقَّى** — الحماية مطبَّقة في البناء لا في العرض.
-  - `FailureReportCodec` / `FailureReportParser` — JSON مكتوب يدويًا بلا `org.json`، ليصبح قابلًا للاختبار في CI، **مع اختبار round-trip** يثبّت أن الشكل متسق مع نفسه. الأرقام (`schemaVersion`، `timestamp`) تُكتب كأرقام JSON حقيقية لا كنصوص.
-  - `FailureReportStore` — ملف `feature-failures.json` في `filesDir`، بحد أقصى 50 تقريرًا (يُحذف الأقدم)، ويُكتب كاملًا في كل مرة حتى لا يترك انقطاعٌ ملفًا نصف مكتوب.
-  - `SimulatedFeatureFailureTest` — يحاكي فشل resolver حقيقيًا **والرسالة فيه JID ومحتوى رسالة**، ويتحقق من معايير القبول مباشرة.
-- **إصلاح خصوصية:** كان `CrashReportActivity` يشارك `Log.getStackTraceString(throwable)` الخام عبر زر «مشاركة»، ورسالة الاستثناء قد تحتوي JID أو نص رسالة. صار النص المُمرَّر هو `buildRedactedTrace` المُنقَّى فقط.
-- **خطأ أُصلح أثناء التنفيذ:** أول نسخة من `ReportRedactor` كانت تُنقّي **أرقام الإصدارات** (`2.26.40.21`) لأنها تطابق شكل رقم الهاتف — أي أن كل تقرير يفقد أهم ما يحمله. أُصلح برفع رموز شكله إصدار قبل القواعد واستعادتها بعدها، مع اختبار regression. (كما أُصلح `parseOne` الذي كان يُدخل كائنًا مفردًا في محلّل مصفوفة فيُرجع null دائمًا.)
-
-### T04 — بوابة دمج في CI 🟡
-- **الهدف:** لا يُدمج تغيير يكسر خط الأساس.
-- **المخرجات:** `tools/baseline/check_baseline.py` (يحل المرجع بنفسه) + خطوة «Enforce baseline regression gates» في `ci.yml` (بعد lint وقبل تجهيز الإصدار) تمرر سياق GitHub فقط.
-- **العتبات المعتمدة:** lint: لا يزيد عدد استثناءات `lint-baseline.xml` إطلاقًا (0% tolerance) — tests: صفر failures/errors وعدم نقصان عدد الاختبارات المنفَّذة عن الـ baseline — APK: نمو أقصى ‎+2%‎ لكل APK مقابل `baseline.json` (قابل للضبط بـ `--max-apk-growth`).
-- **معايير القبول:** PR مفتعل التراجع يفشل وPR سليم يمر (تتحقق عند أول تشغيل CI)، ولا يمكن تجاوز العتبات بتعديل `baseline.json` داخل التغيير نفسه لأن المقارنة تتم مع نسخة فرع الأساس؛ حالة bootstrap تظهر كـ WARN ولا تعطّل البوابة؛ العتبات موثقة هنا وفي كود البوابة.
-- **ملاحظات التنفيذ (2026-10-04):** أُضيف عدّاد `testResults` إلى المولّد (يُقرأ من JUnit XML بعد تشغيل الاختبارات). جُرّبت البوابة محليًا على 6 حالات: سليمة (exit 0)، وخمس حالات مفتعلة فشلت كما يجب: lint متجاوز، نقص اختبارات، فشل اختبار، نمو APK ‎+6.11%‎، غياب ملف APK (exit 1 لكل منها)، وغياب baseline (exit 2).
-- **تحصين المقارنة (2026-10-04):** يُحل مرجع المقارنة داخل `check_baseline.py` نفسه (خيارات `--event-name/--base-ref/--pr-base-sha/--before-sha/--base-rev`) ليبقى المنطق قابلًا للاختبار محليًا، بينما تمرر خطوة CI سياق GitHub فقط. الترتيب: `--base-rev` (إلزامي الحل) ← `origin/<base-ref>` ← `pr.base.sha` ← `before` SHA (إن لم يكن أصفارًا) ← `HEAD^`، ولا يُستخدم احتياط `HEAD^` خارج سياق CI؛ والرجوع إلى نسخة الشجرة المحلية يحدث فقط في حالة bootstrap برسالة WARN صريحة.
-- **توافق schema (2026-10-04):** baseline بلا `testResults.tests` (النسخة الملزمة حاليًا على master) يعطّل فحص نقصان العدد برسالة WARN فقط، مع إبقاء فحص failures/errors ووجود XML — لا فشل زائف ولا تعطيل صامت. يكتمل الفحص تلقائيًا بعد دمج T04 (النسخة المعاد توليدها تتضمن العدّاد).
-- **اختبار التحصين (2026-10-04):** 18 تشغيلًا محليًا: 7 سليمة (نسخة محلية بلا سياق CI، legacy base، bootstrap عبر `--base-rev` وpush وPR، وتجاهل SHA أصفار)، و6 حالات مفتعلة فشلت كما يجب (lint متجاوز، نقص اختبارات ‎4<16‎، فشل اختبار، نمو APK ‎+6%‎، غياب APK، وحالة سليمة)، وسيناريو «تعديل baseline داخل التغيير» يُمرَّر عند الوثوق بالنسخة المعدَّلة (exit 0) ويُكشف عند المقارنة بنسخة فرع الأساس (exit 1)، و3 مدخلات غير صالحة (exit 2)؛ و`--help` يوثق كل الخيارات.
-- **التحقق المتبقي:** تأكيد الرفض على PR متراجع متعمد؛ البوابة تعمل فعليًا في CI: تشغيل `37189666050` (master) وتشغيل الإصدار `37189939509` نجحا بمقارنة مع فرع الأساس.
-- **إغلاق التحقق المحلي (2026-10-04):** بدل انتظار PR حقيقي، حُققت خاصية «الرفض» محليًا على 4 حالات مقابل الـ baseline المُجدَّد: سليم ⇒ **PASS**؛ حذف الاختبارات 295 ← 63 ⇒ **FAIL**؛ حقن فشل واحد ⇒ **FAIL**؛ غياب APK ⇒ **FAIL**. البوابة ترفض التراجع فعلًا.
-- **ضعف حقيقي في البوابة اكتُشف وأُصلح:** كان الحد الأدنى لعدد الاختبارات **مثبَّتًا عند 16** من لحظة T00، ولا يرتفع تلقائيًا. عمليًا: بعد نمو المجموعة إلى 590 تنفيذًا، كان بإمكان PR حذف 90% من الاختبارات ويمرّ بوضعة. أعيد توليد `tools/baseline/baseline.json` فصار الحد 590، وأُعيد التحقق أن الحذف الآن يُرفض. **الحدّ يجب إعادة توليد `baseline.json` مع كل نمو حقيقي في المجموعة، وإلا عاد الضعف نفسه.**
-- **المتبقي فعلًا:** التشغيل على PR حقيقي مرفوع إلى CI. هذا يتطلب commit + push، وهو خارج ما أُنفِّذ هنا.
-
-## المرحلة 2 — T05–T09: تنظيف الدين التقني
-**الحالة:** 🟡 قيد التنفيذ — T05 ✅ (الدفعة الوظيفية: 419 ← 313) ، T06 🟡 (أُثبت أن الحذف الجماعي غير آمن؛ `values-id` حذف)، T07–T09 ⬜
-**الحالة:** ✅ مكتملة — T05 (419 ← 313، الدفعة الوظيفية)، T06 (حُذف `values-id`، وأُثبت أن الحذف الجماعي غير آمن)، T07 (13 ← 7)، T08 (الاسم يبقى)، T09 (detekt + spotless داخل `ci.yml`).
-
-### T05 — معالجة lint-baseline.xml على دفعات 🟡
-- **الهدف:** تقليص الاستثناءات من 420 إلى ما يقارب الصفر، بدءًا بالمشاكل الوظيفية لا التجميلية.
-- **الترتيب:** WrongThread/التخزين/TrustAllX509TrustManager ← unused resources ← localization (MissingTranslation/ExtraTranslation) ← HardcodedText/Typography ← تحذيرات ثانوية.
-- **معايير القبول:** لا تُضاف استثناءات جديدة أبدًا؛ كل دفعة تخفض العدد؛ `lintDebug` نظيفان بعد كل دفعة.
-- **التحقق:** تشغيل lint ومقارنة العدد مع `baseline.json` (نفس منطق T04).
-- **التنفيذ (2026-10-04) — الدفعة الأولى (الوظيفية): 419 ← 313.**
-  - **اكتشاف: الـ baseline كان يحتوي مسارات خاصة بالجهاز.** المدخلات تشير إلى `$HOME/StudioProjects/WA X/...` و`$GRADLE_USER_HOME/...` من جهاز منشئه، بينما تقرير lint الجديد يستعمل مسارات مطلقة (`D:\WA X\app\...`). أي أن 125 مدخلًا **لم تُطفئ أي شيء** إطلاقًا، لكنها كانت تُحتسب ضمن الحجم الذي تقيسه بوابة T04 — أي أن «لا يزيد عدد الاستثناءات» كان مؤشرًا مضلّلًا للدين الحقيقي.
-  - أُضيف `tools/baseline/prune_lint_baseline.py` — يقارن كل مدخل بالتقارير الحالي على `(id, file)` بعد تطبيع المسارات (المطابقة تتجاهل رقم السطر لأن lint يتحمّل انزياحه)، ويقرأ الملف **كمستند XML** لا بتعبير نمطي: الـ baseline يحتوي `<location/>` مكتفًا داخل كل `<issue>`، فالنمط الكسول يتوقف عند `/>` الخاطئة ويقتطع كل مدخل. يكتب فقط بعد التحقق، وقبل الكتابة يُعاد قراءة الملف للتأكد.
-  - **النتيجة 419 ← 313** مع ثبوت سلوك lint: قبل وبعد التقليم أبلغ lint الأرقام نفسها بالضبط (`5 errors and 289 warnings filtered`).
-  - **بعد التقليم صارت كل المشاكل الوظيفية صفرًا:** `WrongThread` و`TrustAllX509TrustManager` و`ExportedContentProvider` و`SdCardPath` و`DefaultLocale`(16) و`NotifyDataSetChanged`(13) و`ApplySharedPref` و`SetTextI18n` و`InflateParams` و`DiscouragedApi` و`InlinedApi` — كلها كانت ميتة أصلًا.
-  - **حُذف `values-id`** (504 مورد مكرَّر): `values-in` مجموعة كاملة superset (504/504 مفتاح، لا مفتاح حصري في `id`) وترجماته أفضل (`values-id` ترك نصوصًا إنجليزية). و`minSdk=28` يفهم `in` دائمًا، و`id` اسم قديم. هذا أزال `LocaleFolder` و504 موردًا مكررًا.
-  - **`AppCompatResource` (5 أخطاء) إيجابية كاذبة موثّقة:** الـ menus تستعمل `app:showAsAction`، وlint يقول استعمل `android:` لأنه لا يرى appcompat — لكن `androidx.appcompat:appcompat` **مستبعَد** في `build.gradle.kts:200` بينما `dev.rikka.rikkax.appcompat:1.6.1` (**403 صنف `androidx/appcompat/*` بما فيها `SupportMenuInflater` الذي يحلّ `app:`**) هو الموجود فعلًا. تغييرها كان سيُصلح غير existent ويتلف السلوك، لذلك تُبقي مُستثناةً مع تبرير.
-- **ضعف في البوابة أُصلح:** كان `check_baseline.py` يعدّ مدخلات الـ baseline بتعبير `^\s*id="` حسّاس للتنسيق. ولأن ElementTree يكتب السمات على سطر `<issue`، صار العدّ **0** — أي أن فحص lint تحوّل إلى **no-op صامت يمرّر أي شيء**. صار العدّ يتم بقراءة XML، وقد اختبر أن ذر كل الملف في سطر واحد: النتيجة نفسها في الحالتين. (`generate_baseline.sh` كان فيه العيب نفسه وكان سيكتب `0` في `baseline.json`.)
-- **المتبقي (313):** `UnusedResources` 139، `MissingTranslation` 70، `TypographyEllipsis` 34، `HardcodedText` 33، `ContentDescription` 8، `AlwaysShowAction` 6، `AppCompatResource` 5 (موثّقة)، والباقي ثانوي. `UnusedResources` هو هدف T06.
-
-### T06 — حذف غير المستخدم والـ deprecated 🟡
-- **الهدف:** إزالة الموارد والكود الميت ومراجعة adapters القديمة وJava remnants الثلاثة وواجهات Android المهجورة.
-- **معايير القبول:** لا حذف عشوائي خارج أدلة lint/الاستخدام؛ كل حذف في commit مستقل قابل للتراجع؛ البناء والاختبارات تبقى خضراء.
-- **التحقق:** بناء كامل + فحص أن لا مراجع مفقودة (R8/compile).
-- **التنفيذ (2026-10-04):**
-  - **حُذف `values-id`** (504 مورد مكرَّر) — سُجّل في T05 لأن التنفيذ وقع هناك، وهو في الأصل من نطاق T06.
-  - **أُضيف `tools/baseline/find_dead_resources.py`** — لا يحذف شيئًا؛ يجمع **دليل استخدام** لكل مورد معلَّم `UnusedResources` قبل أي حذف، لأن شرط القبول هنا صريح: «لا حذف عشوائي خارج أدلة lint/الاستخدام».
-  - **النتيجة المهمة: الحذف الجماعي غير آمن، ومُثبت بالإيجابيات الكاذبة.** الأداة بحثت في الشجرة كلها عن كل اسم، فوجدت 136 من 139 «ما تزال مستعملة». لكن الفحص أثبت أن lint نفسه يُبلّغ إيجابيات كاذبة: `bottom_sheet_background` معلن غير مستعمل **وهو مستعمل فعلًا** في `layout_restore_coming_soon.xml:9`، و`nav_background` في `activity_main.xml:49`. والأسماء القصيرة (`loading` في 21 ملف، `select` في 13) تُطابق نصوص السجلات والتعليقات، فالبحث لا يثبت شيءًاً في اتجاهها.
-  - **القرار: لم يُحذف أي مورد من الـ 139.** القاعدة 6 تمنع الحذف بالتخمين، وقد ثبت أن التخمين هنا يخطئ في الاتجاهين. هذا يمنع حذف 139 موردًا حيًّا كان سيبدو «تنظيفًا». الباقي يحتاج مراجعة موردًا بمورد، وهذا عمل يدوي لا يمكن أتمتته بأمان.
-  - **يبقى في T06:** Java remnants الثلاثة (`ScopeHook.java` و`HookBL.java` و`Patch.java`، و`HookBL` منجمد حتى T08/T21)، ومراجعة adapters القديمة، وواجهات Android المهجورة.
-
-### T07 — تنظيف `.idea` من Git
-- **الهدف:** إبقاء ملفات المشروع المشتركة فقط (codeStyle، inspections المختارة) وحذف ما يخص المستخدم.
-- **معايير القبول:** `git ls-files .idea` يعرض عددًا صغيرًا مدروسًا؛ لا كسر في فتح المشروع.
-- **التحقق:** مراجعة القائمة المتبقية سطرًا سطرًا.
-- **التنفيذ (2026-10-04): 13 ← 7 ملفات.** المحفوظ: `.name` و`AndroidProjectSystem.xml` و`compiler.xml` و`gradle.xml` و`inspectionProfiles/Project_Default.xml` و`vcs.xml` و`.gitignore`.
-  - **`vcs.xml` جوهري للمشروع:** هو ما يسجّل `opus` و`libopusenc` و`ogg` كجذور VCS منفصلة؛ حذفه كان سيفقد IDE معرفتها.
-  - **حُذف 6 ملفات حالة محلية:** `appInsightsSettings.xml`، `deploymentTargetDropDown.xml`، `runConfigurations.xml`، `migrations.xml`، `misc.xml` (يربط `project-jdk-name="jbr-21"`)، و`kotlinc.xml`.
-  - **`kotlinc.xml` كان مُضلِّلًا لا مجرد فائض:** يذكر Kotlin `2.1.10` بينما المشروع على `2.4.10`.
-  - أُضيفت في `.gitignore` استثناءات بعد قاعدة `/.idea/` (ولأنها تأتي بعدها وإلا فلا أثر لها)، واختُبر الطرفان: المحفوظة ليست متجاهَلة، والحالة المحلية (`workspace.xml`، `misc.xml`، `shelf/`) متجاهَلة.
-
-### T08 — توحيد naming/package conventions ✅
-- **الهدف:** اتساق التسمية والحزم، مع تقييم الاسم التاريخي `wppenhacer`.
-- **معايير القبول:** **ممنوع** تغيير `applicationId` أو namespace بشكل يكسر التوقيع/الإعدادات؛ أي إعادة تسمية للحزم الداخلية فقط وبـ move آمن له. يُوثَّق القرار حتى لو كان «نُبقي الاسم كما هو».
-- **التحقق:** بحث آلي عن الأسماء القديمة + بناء كامل.
-- **القرار (2026-10-04): الاسم يبقى `wppenhacer` كما هو.** لم يُقترح أي نقل.
-  - **الأسباب:** (1) تغيير `applicationId` يكسر مسار التحديث لمن عنده Module مثبَّت؛ (2) `namespace` مرتبط بمفتاح التوقيع، وتغييره يُبطل أي إصدار موقّع سابق؛ (3) إعدادات المستخدم ومجلد `.w4b` مرتبطة بالمعرّف؛ (4) الجسر و`compat` و`diagnostics` تمرّ جميعها عبر `BuildConfig.APPLICATION_ID`، وتغييره يمسّ عقدًا تحقّق في T01–T03.
-  - **الشجرة متسقة فعليًا:** 38 حزمة مترابطة بلا تعارض، والحزم الجديدة (`compat`، `config`، `diagnostics`) تتبع النمط نفسه.
-  - **تنظيف حقيقي:** حُذف `LINT_ID_RE` الميت في `check_baseline.py` بعد استبداله بعدّ مبني على تحليل XML.
-  - **يبقى لـ T08:** مراجعة `HookBL.java` (يُؤجَّل إلى T21)، وتوحيد أسماء الميزات عند بناء `FeatureRegistry` في T16.
-
-### T09 — Formatter + Static Analysis داخل نفس ci.yml ✅
-- **الهدف:** ktlint/Spotless وDetekt داخل نفس الملف الواحد، بدون إعادة تنسيق كل الملفات دفعة واحدة.
-- **معايير القبول:** فحص التنسيق يفشل على الملفات المعدَّلة فقط في البداية (incremental)، ثم يتوسع تدريجيًا؛ لا تعطيل لقواعد بلا مبرر موثق.
-- **التحقق:** تشغيل محلي + CI، وضمان أن الملفات القديمة لا تسبب ضوضاء.
-- **التنفيذ (2026-10-04):**
-  - `spotless` + `ktlint 1.5.0`، و`detekt 1.23.8`، بإصدارات مثبّتة في `libs.versions.toml` حتى لا تتغيّر القواعد صامتة.
-  - **التنسيق incremental كما تشترط المعايير:** الهدف هو حزم T01–T03 الجديدة (`compat`، `config`، `diagnostics`، `BridgeAccessPolicy`، `PreferenceValueHooks`) + `src/test/**` + ملفات `*.kts`. **لم** يُنسَّق الـ 168 ملفًا القديمة دفعة واحدة، لأن ذلك كان سيدفن الفرق الحقيقي. يُوسَّع الهدف كلما لُمس ذلك الجزء من الشجرة.
-  - `config/detekt/detekt.yml` يوثّق الاستثناءات وأسبابها (لا استثناء بلا مبرر): `LongMethod=120` لأن طبقة الميزات تجميع خطوطاف كثيرة في الملف الواحد حتى T71، والالتقاط العام لـ`Throwable` مسموح لأنه سلوك عزل الإخفاق المطلوب من قاعدة 2.3.
-  - detekt في **وضع التقرير** (`ignoreFailures` + `detekt-baseline.xml`) لأن الدين قائم؛ يُشدَّد مع تقلّص الـ baseline.
-  - أضيفت خطوة واحدة في `ci.yml` بعد بوابة الـ baseline (بموجب شرط «نفس الملف الواحد»)، total 13 خطوة.
-  - **ما التقطه ktlint فعلًا في الملف الجديد:** 26 ملفًا مخالفًا، وأخطاء لا تُصلَح آليًا أُصلحت يدويًا: `KDoc` يتلواه KDoc آخر في `ReportRedactor.kt` (أثر تعديل سابق حرّك الـ KDoc)، و`import org.junit.Assert.*` وحشي في `GoogleTranslateSettingsTest.kt` (ملف قديم) → فُكَّ إلى أربعة imports صريحة.
-  - **خطأ ارتُكبته وأُصلح:** أضفت `alias(libs.plugins.kotlinAndroid)` إلى `app/build.gradle.kts` ظنًّا أنه موجود. إنه **غير** موجود لأن AGP 9.0 يوفّر دعم Kotlin داخليًا وي رفض الإضافة صراحةً. أزاله، والبناء عاد.
-  - **حاجز بيئي:** امتلأ قرص C: (578 MB) أثناء العمل فأخفقت كل تحويلات AAR بـ «There is not enough space on the disk». حُذف `~/.gradle/caches/build-cache-1` (‏2.4 GB ذاكرة إعادة بناء) فتعافى البناء. **إن تكرّر خطأ التحويلات فالسبب قرص ممتلئ لا ذاكرة.**
-
-## المرحلة 3 — T10–T15: إعادة بناء طبقة التوافق مع WhatsApp
-
-**الحالة:** 🟡 قيد التنفيذ — T10 ✅،T11 🟡،T12 🟡،T13 🟡 (60 ← 27)،**T14 ✅** (سلسلة fallback والعزل، 40 اختبارًا)،T15 على الواتق؛ 816 تنفيذ اختبار.
-
-> هذه أخطر مرحلة في المشروع: `Unobfuscator.kt` يجب ألا يبقى ملفًا يحوي 187 resolver. التقسيم يتم **بعد** اختبارات T02/T26–T30 وبوابة T04.
-
-### T10 — تجريد موحد `HookResolver<T>`
-- **الهدف:** نتيجة موحدة بدل `null` و`!!`: `Resolved` / `NotFound` / `Ambiguous` / `Incompatible`.
-- **المخرجات:** واجهة `HookResolver<T>` + أنواع النتائج + طبقة adapter تُغلّف دوال `Unobfuscator` الحالية دون تغيير سلوكها.
-- **معايير القبول:** لا تغيير وظيفي في هذه الخطوة (wrapping فقط)؛ كل نوع نتيجة قابل للاختبار؛ بناء WhatsApp + Business ينجح بنفس سلوك ما قبل التغيير.
-- **التنفيذ (2026-10-04) — الأساس والأنواع جاهزة:**
-  - `resolver/Confidence.kt` — أربع درجات (`EXACT`، `LIKELY`، `AMBIGUOUS`، `NONE`) مع سياسة عتبة في مكان واحد: `Confidence.minimumToInstall`.
-  - `resolver/Resolution.kt` — `sealed interface Resolution<out T>` بالنواتج الأربعة `Resolved` و`NotFound` و`Ambiguous` و`Incompatible`، ودالة موحّدة `ofCandidates(...)`. **`Ambiguous` لا يحمل قيمة** لأن اختيار أحد المرشحين سيكون تخمينًا، وخطّاف على الطريقة الخطأ أسوأ من عدم وجود خطّاف.
-  - `resolver/HookResolver.kt` — العقد، و`resolveRecorded()` يضمن تسجيل كل نتيجة في `ResolverRegistry` سواء نجحت أو غابت أو التبست.
-  - `resolver/ResolverRegistry.kt` — سجل في الذاكرة لمادة T15 التشخيصية، ولتوثيق قرارات عتبة T11. لا يكتب على القرص لأن T03 يملك الحفظ، و«لم يُعثر على شيء» ليس فشلًا يستحق التسجيل في كل إقلاع.
-  - **46 اختبارًا جديدًا** تغطي أنماط النتائج كلها.
-  - **لم يُغيَّر أي سلوك في `Unobfuscator`**، وهذا مقصود: معيار T10 «بلا تغيير وظيفي» محفوظ، ويأتي التغليف الفعلي في T13.
-- **التحقق:** مقارنة نتائج resolver diagnostics قبل/بعد على نفس إصدار واتساب.
-
-### T11 — Confidence score لكل resolver 🟡
-- **الهدف:** لا يُركَّب Hook بنتيجة غير موثوقة.
-- **المخرجات:** درجة ثقة لكل نتيجة + سياسة عتبة (تركيب / تسجيل فقط / تعطيل الميزة).
-- **معايير القبول:** الحالات `Ambiguous` لا تُركَّب؛ تُسجَّل في diagnostics بسببها؛ قابلية ضبط العتبة مركزيًا.
-- **التحقق:** سيناريوهات اختبار بتطابق متعدد المرشحين.
-- **التنفيذ (2026-10-04) — العتبة والنتيجة جاهزان، يُوصَلان بالـ hooks في T13:**
-  - درجات `Confidence` الأربع موجودة، وسياسة العتبة في **مكان واحد**: `Confidence.minimumToInstall` (حاليًا `LIKELY`).
-  - `Ambiguous` **غير قابل للتركيب بحكم النوع**: `Confidence.isInstallable` و`Resolution.isInstallable` يرفضانه، و`valueOrNull()` يعيد `null`. الاختبار `thePolicyIsAdjustableInOnePlace` يثبّت أن العتبة قابلة للتعديل مركزيًا.
-  - `ResolverRegistry.unusable()` يجمع ما لا يجوز تركيبه، وهو ما ستحتاجه T15 للعرض.
-
-### T12 — Cache مرتبط بهوية واتساب 🟡
-- **الهدف:** منع cache قديم بعد تحديث واتساب.
-- **المخرجات:** مفتاح cache = `WhatsApp version + versionCode + APK hash + resolver schema version`.
-- **معايير القبول:** تحديث واتساب يبطل cache تلقائيًا؛ ترقية schema تبطل cache؛ سلوك واضح عند فشل حساب APK hash.
-- **التحقق:** اختبار وحدة لتوليد المفتاح + سيناريو إبطال.
-- **التنفيذ (2026-10-04) — مفتاح Cache منجز، الربط بـ`UnobfuscatorCache` في T13:**
-  - `resolver/ResolverCacheKey.kt` يركّب المفتاح من المدخلات الأربعة مع فاصل يمنع التصادم.
-  - **قرار مقصود: نسخة الوحدة ليست جزءًا من المفتاح.** إعادة بناء الوحدة التي لا تغيّر منطق الحل يجب أن تستفيد من الـ cache؛ عكس ذلك يجعل كل إصدار يبطل الـ cache بلا داعٍ.
-  - **فشل حساب APK hash لا يُعامَل كـ«hash فارغ».** يُستبدل بعلامة ظاهرة `nohash`، **ولا يُقبل أي مفتاح يحملها لإعادة الاستخدام**. قبوله كان سيعيد علة الـ cache القديم نفسها لكن بأقل وضوح.
-  - 27 اختبارًا تغطي: تغيّر الإصدار، تغيّر versionCode، تغيّر الهاش، رفع schema، غياب الهاش، مفاتيح مشوّهة، ومحاولات تزوير مفتاح عبر حقن الفاصل.
-
-### T13 — إزالة `!!` من Unobfuscator تدريجيًا 🟡
-- **الهدف:** صفر `!!` في مسار resolution (حاليًا 60).
-- **المخرجات:** استبدال تدريجي بـ نتائج typed من T10، على دفعات مرقمة.
-- **معايير القبول:** العدد ينخفض بشكل رتيب؛ كل دفعة مرفوقة بإبقاء البناء أخضر؛ لا `!!` جديدة.
-- **التحقق:** عدّ آلي (ضمن baseline) بعد كل دفعة.
-- **التنفيذ (2026-10-04) — الدفعات 1–3: 60 ← 27.**
-  - **الأهم قبل أي حذف: صُنع «المِزلاج» (ratchet) في البوابة.** شرط «لا `!!` جديدة» كان غير مُنفَّذ؛ صار الآن فحصًا في `check_baseline.py` يقارن العدّ بخط الأساس **ويفشل إذا ارتفع**. اختُبر بإضافة تأكيدات مصطنعة: رُفضت، ثم عاد القبول بعد إزالتها. هكذا لا يمكن التراجع عن التقدم لاحقًا.
-  - **الدفعة 1 (‏5): `X::class.javaPrimitiveType!!` ← `java.lang.X.TYPE`.** كانت تأكيدات زائدة: قيمة `TYPE` ثابتة لا يمكن أن تكون `null` أصلًا. **وأهمّ: `returnType` في DexKit تتطلّب `Class<*>` غير فارغ**، فمحاولة أولRemoving `!!` فقط لم تُترجم. `TYPE` هو البديل الصحيح: غير فارغ في نظام الأنواع ومعنويًا مطابق.
-  - **الدفعة 2 (‏5): `findFirstClassUsingStrings(...)!!` ← `requireClass(...)`.** استُبدل `NullPointerException` عديم الدلالة برسالة تسمّي الـ resolver وما كان يبحث عنه: `"loadChatCacheClass: no class matched [Chatscache/] on this WhatsApp build"`. تدفّق التحكم لم يتغير (غياب الصنف ما زال يرمي)، لكن الرسالة صارت قابلة للعرض للمستخدم في T15 بدل أن تكون «null cannot be cast».
-  - كل دفعة تُقفل ببناء كامل + 736 اختبارًا + البوابة، وكلها خضراء.
-  - **الدفعة 3 (‏23):** كل مواضع `findFirstClass/MethodUsingStrings(...)!!` متعددة الأسطر، عبر سكربت `tools/baseline/rewrite_unobfuscator_bangs.py` (idempotent، و`--check` یُبلّغ دون كتابة). أضافت `requireMethod` مقابلة لـ`requireClass` لأن فشل «الصنف» وفشل «الطريقة» يرسلان المستخدم إلى أماكن مختلفة. كل موضع صار: `requireClass("loadTranscriptSegment", "TranscriptionSegment(", ...)`.
-  - **العدد 60 ← 27.**
-  - **عيب في المِزلاج اكتُشف وأُصلح:** كان يعدّ `!!` نصًّا خامًا، فيحسب ذِكرها في تعليقات التوثيق تأكيدات. اكتُشف لأن العدد أظهر 52 بينما الحقيقي 50. صار العدّ **واعيًا للتعليقات والسلاسل النصية**، و`generate_baseline.sh` صار يستدعي نفس التنفيذ من `check_baseline.py` عبر `--print-non-null-assertions` بدل أن يكون له عدّ خاص — تفاديًا لتناقض بين رقمين.
-  - **المتبقي (‏27):** `getClassData()!!`، `superClass!!`، `declaredClass!!`، ومتغيّرات `methodData!!` و`classData!!`. **لا تُمكن إعادة كتابتها على دفعات:** كل واحد يحتاج `Resolution` مُنمَّطة تصل إلى مستدعيه، وهذا هو بقيّة T13 مع T14.
-
-### T14 — Fallback chain رسمي + عزل
-- **الهدف:** `primary → compatibility fallback → تعطيل الميزة` بشكل موحد، وفشل ميزة لا يُسقط غيرها.
-- **المخرجات:** سياسة fallback لكل hook + عزل أخطاء في التحميل والتشغيل.
-- **معايير القبول:** ميزة فاشلة تظهر كـ degraded وحدها؛ لا تأثير على بقية الـ Features.
-- **التحقق:** إفساد resolver عمدًا في اختبار ومراقبة البقية.
-- **التنفيذ (2026-10-04) — سلسلة fallback والعزل منجزان بـ 40 اختبارًا:**
-  - `resolver/FeatureHealth.kt` — الحالات القياسية السبع (HEALTHY/DEGRADED/FALLBACK/DISABLED/INCOMPATIBLE/FAILED/UNKNOWN) مع `isRunning` و`isNotable`. فصل «يعمل بطريقة أضعف» عن «لا يعمل» مقصود: الإجراءان المطلوبان من المستخدم مختلفان.
-  - `resolver/FeatureOutcome.kt` — المخرج الموحّد (featureId + health + reason + code + fallback)، مع `toDisplayLine()` الذي تحتاجه T15.
-  - `resolver/FallbackChain.kt` — **القرار في مكان واحد**: `primary → fallback → تعطيل`. كل مسار يُجرَّب في `attempt()` الذي يحوّل أي throwable إلى «لم يُحل» بدل أن يفلت، فلا يكسر resolver واحد السلسلة ولا بقية الوحدة.
-  - `resolver/FeatureInstaller.kt` — العزل: يلتقط فشل ميزة ويسجّله ويكمل البقية. **يلتقط `Throwable` كلها بما فيها `Error`**، لأن تسرب واحد يوقف الوحدة كلها.
-  - **اختبار معيار القبول مباشرة:** `oneFailingFeatureDoesNotStopTheOthers` — أربع ميزات، إحداها ترمي، والثلاث الباقية تُثبَّت. و`aFailureIsAttributedToTheFailingFeatureOnly` يثبت أن الفشل منسوب لتلك الميزة وحدها.
-  - **قرار privacy:** `FeatureInstaller` يسجّل **نوع** الاستثناء فقط في السبب، لا رسالته — لأن رسالة الاستثناء قد تحوي JID. اختبار `theFailureReasonDoesNotLeakTheThrowableMessage` يثبت ذلك.
-  - **خطآن في كتابتي:** (1) `?: run { ... }` داخل عضو اسمه `run` حلّ إلى العضو نفسه فتسبّب في `StackOverflowError`؛ صار `if` صريحًا مع تعليق يشرح السبب. (2) توقّعت رمز `RESOLVER_NOT_FOUND` لخطأ تثبيت عام، والصحيح `UNEXPECTED`؛ التوقّع صُحّح ليطابق السلوك الصادق.
-
-### T15 — Resolver diagnostics للمستخدم
-- **الهدف:** رسالة مفهومة: «هذه الميزة تعطلت بسبب تغير توقيع WhatsApp» بدل crash أو صمت.
-- **المخرجات:** شاشة/قسم diagnostics يعرض resolver state لكل feature + error code ثابت.
-- **معايير القبول:** كل تعطيل له سبب ظاهر ورمز خطأ؛ لا تفاصيل حساسة في العرض.
-- **التحقق:** سيناريو تعطيل محاكى على جهاز اختبار.
-
-## المرحلة 4 — T16–T20: إعادة تصميم FeatureLoader
-
-**الحالة:** ⬜ مخطط
-
-### T16 — FeatureRegistry بدل القائمة اليدوية
-- **الهدف:** الـ 64 class اليدوية تصبح registry ببيانات وصفية: الاسم، الفئة، preference key، dependencies، required resolvers، supported versions، priority، startup policy.
-- **المخرجات:** `FeatureRegistry` + factory typed بدل reflection.
-- **معايير القبول:** كل feature لها مدخل واحد؛ إضافة feature جديدة لا تتطلب تعديل أكثر من ملف واحد؛ لا reflection لإنشاء الـ classes قدر الإمكان.
-- **التحقق:** اختبار وحدة يكشف أي feature غير مسجلة أو مكررة.
-
-### T17 — تصنيف زمن الإقلاع
-- **الهدف:** ليس منطقيًا تحميل الـ 64 بنفس الطريقة عند إقلاع واتساب.
-- **المخرجات:** تصنيف `BOOT_CRITICAL` / `EARLY` / `NORMAL` / `LAZY` مع سياسة تشغيل لكل فئة.
-- **معايير القبول:** الزمن الكلي للإقلاع ينخفض أو يبقى ثابتًا؛ الميزات الثقيلة لا تُحمَّل إلا عند الحاجة؛ كل تصنيف موثق.
-- **التحقق:** قياس أزمنة التحميل عبر baseline/diagnostics قبل/بعد.
-
-### T18 — Dependency graph
-- **الهدف:** feature تعتمد على MessageResolver/MenuResolver لا تبدأ إذا فشل الـ dependency.
-- **المخرجات:** رسم اعتماديات + فحص عند التحميل + رفض واضح بدل فشل غامض.
-- **معايير القبول:** لا حلقات؛ فشل dependency يُعطّل التابع بلطف ويُسجَّل.
-- **التحقق:** اختبار وحدة على الرسم + سيناريو فشل dependency.
-
-### T19 — Startup time budget لكل feature
-- **الهدف:** كشف الميزات البطيئة تلقائيًا.
-- **المخرجات:** budget بالمللي ثانية لكل فئة + تسجيل التجاوزات في diagnostics.
-- **معايير القبول:** أي feature تتجاوز الـ budget تظهر في التقرير مع زمنها.
-- **التحقق:** قياس على جهاز اختبار عبر `--xposed-log` أو diagnostics التطبيق.
-
-### T20 — Safe Hook API موحد
-- **الهدف:** غلاف موحد حول `XposedBridge.hookMethod` و`XposedHelpers` يطبّق logging + error isolation + fallback تلقائيًا.
-- **المخرجات:** `SafeHook` API + تحويل تدريجي للميزات لاستخدامه.
-- **معايير القبول:** لا استخدامات مباشرة جديدة للـ Xposed APIs خارج الغلاف في الكود الجديد؛ الأخطاء لا تُسقط الـ process.
-- **التحقق:** اختبارات + بناء كامل + مقارنة سلوك على جهاز اختبار.
-
-## المرحلة 5 — T21–T25: الأمن والخصوصية (مراجعة ثانية أشد)
-
-**الحالة:** ⬜ مخطط
-
-### T21 — مراجعة كل المكونات المصدّرة
-- **الهدف:** تقليص سطح الهجوم: CrashReportActivity، ForceStartActivity، BridgeService، HookProvider، RemotePreferenceProvider، WAFReceiver وغيرها (7 حاليًا `exported=true`).
-- **معايير القبول:** أي مكوّن لا يحتاج exposure خارجي يصبح `exported=false`؛ البقية لديها تحقق UID/package/signature؛ لا كسر لوظائف module↔WhatsApp.
-- **التحقق:** فحص manifest + اختبارات وصول من داخل التطبيق/خارجي.
-
-### T22 — تقييم إنهاء `MODE_WORLD_READABLE` / `makeWorldReadable()`
-- **الهدف:** التخلص من المسار القديم إن أمكن مع LSPosed الحديث.
-- **معايير القبول:** إن كان مطلوبًا لتوافق قديم يبقى خلف compatibility path صريح وليس المسار الأساسي؛ توثيق القرار.
-- **التحقق:** اختبار على إصدارات LSPosed مدعومة + مسار بديل RemotePreferences.
-
-### T23 — Redaction تلقائي في crash reports
-- **الهدف:** إخفاء أرقام الهاتف، JIDs، الرسائل، المسارات، tokens وAPI keys قبل العرض/النسخ.
-- **المخرجات:** طبقة redaction مركزية + اختبارات عيّنات.
-- **معايير القبول:** عينة crash حقيقية لا تُسرّب أي معرّف؛ لا استثناءات صامتة في الـ redaction.
-- **التحقق:** اختبارات وحدة بعينات معروفة + مراجعة يدوية.
-
-### T24 — أمان Tasker token
-- **الهدف:** تخزين أقوى + rotation.
-- **المخرجات:** تخزين مشفّر/محمي حسب المتاح + Regenerate/Revoke من الواجهة.
-- **معايير القبول:** إبطال token فوري؛ لا token ثابت افتراضي؛ توثيق الصلاحيات.
-- **التحقق:** سيناريو إبطال + محاولة استخدام token قديم.
-
-### T25 — Network Security + Bridge file API
-- **الهدف:** حصر الاتصالات + تحصين file API.
-- **المخرجات:** Network Security Config؛ allowlist لعمليات bridge؛ حماية symlink/path traversal؛ حدود حجم/عدد العمليات؛ مراجعة كل HTTP clients.
-- **معايير القبول:** محاولات traversal تفشل؛ العمليات غير المسموحة مرفوضة ومسجلة؛ لا hosts غير مبررة.
-- **التحقق:** اختبارات وحدة+تكامل لمسارات الخطر.
-
-## المرحلة 6 — T26–T30: اختبارات حقيقية
-
-**الحالة:** ⬜ مخطط
-
-### T26 — تغطية المناطق القاتلة
-- **الهدف:** ليس 100% coverage، بل تغطية ما يمكن أن يكسر التطبيق: version parsing، FeatureRegistry، SharedPreferences، Tasker auth، Bridge path validation، update checker، backup schema، DB migrations، dependency resolution، resolver fallback.
-- **معايير القبول:** ≥ 100 اختبار مفيد قبل 2.0؛ لا اختبارات شكلية بلا assertions ذات معنى.
-- **التحقق:** تشغيل محلي + CI مع بوابة T04.
-
-### T27 — Dex fixtures صناعية
-- **الهدف:** اختبار Unobfuscator بدون تضمين ملفات WhatsApp المحمية في المستودع.
-- **المخرجات:** ملفات DEX صغيرة مُولَّدة (synthetic) تغطي حالات: تطابق واحد، متعدد، غياب، تغيير توقيع.
-- **معايير القبول:** يمكن تشغيل اختبارات resolver في CI بلا أي أصول مملوكة.
-- **التحقق:** تشغيل الحزمة في CI.
-
-### T28 — Integration test على جهاز/محاكي مع LSPosed
-- **الهدف:** اختبار حقيقي للوحدة داخل واتساب.
-- **المخرجات:** سيناريو آلي (أو نصف آلي موثق) + self-hosted runner منفصل إن أمكن.
-- **معايير القبول:** يغطي: تحميل الوحدة، فتح الواجهة، تفعيل مجموعة features أساسية، عدم crash.
-- **التحقق:** تشغيل دوري + قبل كل إصدار.
-
-### T29 — Coverage requirement على المنطق الأساسي
-- **الهدف:** فرض تغطية على core logic فقط، وليس Xposed glue بشكل مصطنع.
-- **معايير القبول:** عتبة محددة على حزم محددة (utils/resolvers/registry)، لا على الملفات الملتصقة بواجهات واتساب.
-- **التحقق:** تقرير coverage في CI.
-
-### T30 — اختبارات انحدار لسلوك المستخدم
-- **الهدف:** حماية السلوكيات التي يشتكي منها المستخدمون عادة (revoke، view-once، privacy toggles).
-- **معايير القبول:** كل إصلاح bug مستقبلي يرافقه اختبار انحدار.
-- **التحقق:** مراجعة دورية لحزمة الاختبارات.
-
-## المرحلة 7 — T31–T35: الأداء والذاكرة
-
-**الحالة:** ⬜ مخطط
-
-### T31 — قياس دقيق
-- **الهدف:** قياس زمن `FeatureLoader`، DexKit scans، DB startup، Preference access، واستهلاك الذاكرة.
-- **المخرجات:** instrumentation خفيفة + تقرير من diagnostics.
-- **معايير القبول:** أرقام قبل/بعد لكل تحسين؛ لا تحسين بلا قياس.
-- **التحقق:** سيناريو إقلاع متكرر ومقارنة.
-
-### T32 — تخزين نتائج resolution الموثوقة
-- **الهدف:** عدم إعادة البحث في كل إقلاع.
-- **معايير القبول:** cache من T12 يُستغل فعليًا؛ زمن الإقلاع ينخفض بشكل قابل للقياس.
-- **التحقق:** قياس قبل/بعد.
-
-### T33 — إزالة العمل الثقيل من Main Thread
-- **الهدف:** لا disk/network/database على الـ main thread (lint يشير لـ WrongThread حاليًا).
-- **معايير القبول:** اختفاء تحذيرات النوع؛ لا ANR في السيناريو الأساسي.
-- **التحقق:** lint + قياس على جهاز.
-
-### T34 — Indices ومراجعة queries + migrations
-- **الهدف:** MessageStore وMessageHistoryStore أسرع وأأمن عند الترقية.
-- **معايير القبول:** كل migration لها اختبار؛ الاستعلامات المتكررة لها indices مناسبة.
-- **التحقق:** اختبارات migration على قواعد حقيقية الحجم.
-
-### T35 — فحص memory leaks
-- **الهدف:** Activities/Fragments/BroadcastReceivers/Xposed callbacks، خصوصًا ما يحتفظ بـ Context/View.
-- **معايير القبول:** لا تسريبات مؤكدة في السيناريوهات الأساسية؛ إصلاحات موثقة.
-- **التحقق:** profiling على جهاز اختبار.
-
-## المرحلة 8 — T36–T40: Native layer
-
-**الحالة:** ⬜ مخطط
-
-### T36 — مراجعة كاملة للـ C++ والـ submodules
-- **الهدف:** مراجعة `AudioOpusConverter.cpp` وlibopusenc/opus/ogg سطرًا سطرًا وتثبيت revisions موثقة.
-- **المخرجات:** قائمة findings + توثيق SHAs الحالية + آلية فحص تحديثات (Dependabot-equivalent أو سكربت).
-- **معايير القبول:** لا تعديل صامت في revisions؛ كل ترقية موثقة مع سبب.
-- **التحقق:** تشغيل سكربت الفحص + مراجعة diff.
-
-### T37 — اختبارات مدخلات صوتية تالفة
-- **الهدف:** corrupted / truncated / huge inputs.
-- **المعايير:** لا crash للـ process الأصلي؛ أخطاء تُعاد بأكواد واضحة؛ حدود حجم صريحة.
-- **التحقق:** حزمة fixtures صوتية + تشغيل آلي.
-
-### T38 — Sanitizers في build اختباري
-- **الهدف:** ASan/UBSan في build مخصص للاختبار (ليس Release).
-- **المعايير:** يعمل محليًا/CI منفصل؛ الإصدار العام غير متأثر.
-- **التحقق:** تشغيل smoke test تحت sanitizer.
-
-### T39 — مراجعة bounds/return codes/allocations
-- **الهدف:** سلامة الذاكرة وإغلاق الموارد دائمًا.
-- **المعايير:** كل مسار خطأ يغلق الموارد؛ لا allocations بلا حد.
-- **التحقق:** مراجعة بشرية ثانية + sanitizers.
-
-### T40 — بناء واختبار arm64-v8a وarmeabi-v7a منفصلين
-- **الهدف:** كشف مشاكل ABI مبكرًا ومراقبة حجم `.so`.
-- **المعايير:** كلا الـ ABIs يُبنيان ويُختبران؛ أحجام `.so` مسجلة في baseline.
-- **التحقق:** مقارنة الحجم بين الإصدارات.
-
-## المرحلة 9 — T41–T45: تحديث Android والبنية
-
-**الحالة:** ⬜ مخطط
-
-### T41 — رفع targetSdk درجة بدرجة
-- **الهدف:** 34 → 35 → 36 → 37 مع اختبار كل انتقال: storage، receivers، foreground/background restrictions، notifications، package visibility.
-- **المعايير:** لا قفز مباشر؛ كل درجة في commit مستقل؛ سلوك الوحدة داخل واتساب مختبر على كل درجة.
-- **التحقق:** سيناريوهات T28 قبل/بعد لكل انتقال.
-
-### T42 — تقييم `MANAGE_EXTERNAL_STORAGE`
-- **الهدف:** إزالته من المسارات التي يمكن تحويلها إلى SAF/MediaStore.
-- **المعايير:** أي إبقاء له سبب موثق وقابل للقياس؛ لا كسر لميزات التنزيل.
-- **التحقق:** اختبار تنزيل/حفظ على مسارات مختلفة.
-
-### T43 — إعادة تصميم storage API
-- **الهدف:** لا مسارات `/sdcard/...` hardcoded (lint: SdCardPath ×2).
-- **المعايير:** كل مسار يُبنى من API مناسب؛ قابلية التخصيص تبقى.
-- **التحقق:** grep آلي على أنماط المسارات + اختبارات.
-
-### T44 — ترقية Gradle/AGP/Kotlin/KSP والاعتماديات
-- **الهدف:** تحديثات منفصلة ومؤكدة بـ CI أخضر لكل دفعة.
-- **المعايير:** لا تجميع تحديث Android مع refactor hooks في commit واحد؛ كل ترقية لها rollback واضح.
-- **التحقق:** CI + بناء + توقيع.
-
-### T45 — توافق Android الجديد مع تجربة المستخدم
-- **الهدف:** permissions/notifications الحديثة دون كسر التفضيلات القديمة.
-- **المعايير:** ترحيل إعدادات قديمة، لا فقدان تفضيلات مستخدمين قدامى.
-- **التحقق:** سيناريو ترقية من إصدار قديم.
-
-## المرحلة 10 — T46–T50: UI/UX
-
-**الحالة:** ⬜ مخطط
-
-### T46 — Dashboard رئيسي
-- **الهدف:** عرض واضح: Module active، إصدار واتساب، حالة التوافق، عدد Features السليمة/المتعطلة، حالة root/LSPosed، آخر خطأ.
-- **المعايير:** كل معلومة حقيقية من diagnostics (لا قيم ثابتة)؛ زمن فتح معقول.
-- **التحقق:** جهاز اختبار + مقارنة مع resolver diagnostics.
-
-### T47 — تصنيف Features + بحث موحد
-- **الهدف:** Privacy / Media / Appearance / Messaging / Automation / Experimental مع Search.
-- **المعايير:** كل feature في فئة واحدة؛ البحث فوري وقابل للتوسع.
-- **التحقق:** اختبار يدوي على كامل القائمة.
-
-### T48 — حالة لكل Feature
-- **الهدف:** Stable / Experimental / Unsupported on this WhatsApp version.
-- **المعايير:** الحالة مشتقة من compatibility + resolver state (T01/T15).
-- **التحقق:** تعطيل resolver محاكى ⇒ الحالة تتغير.
-
-### T49 — Progressive disclosure للإعدادات
-- **الهدف:** بدل عشرات الخيارات دفعة واحدة: أقسام رئيسية ← خيارات متقدمة عند الحاجة.
-- **المعايير:** لا يُحذف خيار موجود؛ الوصول يبقى ممكنًا؛ مقاييس نقرات أوضح.
-- **التحقق:** مراجعة UX + RTL.
-
-### T50 — Backup/Restore versioned + accessibility/RTL/ترجمات
-- **الهدف:** backup/restore بإصدار schema + preview قبل الاستعادة؛ تحسين الوصول وRTL والترجمات الناقصة.
-- **المعايير:** استعادة schema أقدم تعمل؛ preview يعرض الفروق؛ لا كسر إعدادات.
-- **التحقق:** اختبارات schema + مراجعة يدوية.
-
-## المرحلة 11 — T51–T55: نظام تشخيص احترافي
-
-**الحالة:** ⬜ مخطط
-
-### T51 — Diagnostics bundle اختياري
-- **الهدف:** حزمة تُشارك يدويًا تحتوي: إصدار WA X، Android، LSPosed، WhatsApp، resolver states، feature failures، أزمنة التحميل — **بدون أي محتوى رسائل**.
-- **المعايير:** لا بيانات حساسة (تحقق آلي)؛ حجم معقول؛ تُنسخ بخطوة واحدة.
-- **التحقق:** عينة + فحص redaction.
-
-### T52 — زر Run compatibility test
-- **الهدف:** فحص أهم الـ resolvers بدون تفعيل ميزات خطرة.
-- **المعايير:** لا يغيّر حالة أي إعداد؛ نتيجته مفهومة للمستخدم العادي.
-- **التحقق:** جهاز اختبار + مقارنة مع T15.
-
-### T53 — Copy sanitized report
-- **الهدف:** نسخ تقرير منقّى للـ issue tracker.
-- **المعايير:** نسخة واحدة ثابتة التركيب؛ مراجعة redaction.
-- **التحقق:** محتوى عينة مرفق في issue تجريبي.
-
-### T54 — Error codes ثابتة
-- **الهدف:** مثل `WAE-RESOLVER-001` بدل stack traces فقط، مع فهرس أكواد موثق.
-- **المعايير:** كل كود له وصف وسبب وحل مقترح في `docs/ERROR_CODES.md`.
-- **التحقق:** مطابقة الأكواد في الكود والمستندات آليًا.
-
-### T55 — سجلات محلية محدودة مع rotation
-- **الهدف:** لا نمو غير محدود ولا سجلات تتضمن بيانات حساسة.
-- **المعايير:** حد أقصى للحجم/العدد؛ تنظيف تلقائي؛ محتوى منقّى.
-- **التحقق:** سيناريو تشغيل طويل.
-
-## المرحلة 12 — T56–T60: CI/CD من المستوى التالي (ملف واحد)
-
-**الحالة:** ⬜ مخطط
-
-### T56 — تقسيم `ci.yml` داخليًا إلى Jobs
-- **الهدف:** `validation → unit tests → lint/static analysis → native checks → build → signature verification → release` مع بقاء ملف واحد.
-- **المعايير:** التبعيات بين الـ jobs واضحة؛ الفشل يتوقف عند أقصى نقطة مبكرة؛ زمن pipeline معقول.
-- **التحقق:** تشغيل PR + tag تجريبي.
-
-### T57 — فحوصات أمنية للمستودع
-- **الهدف:** dependency review + secret scanning + SBOM + Gradle dependency verification + submodule SHA verification.
-- **المعايير:** كل فحص يفشل البناء عند الخطأ الحقيقي، لا عند warn فقط بلا آلية.
-- **التحقق:** PR تجريبي مع تبعية/سرّ مزروع.
-
-### T58 — APK size budget
-- **الهدف:** منع تضخم صامت.
-- **المعايير:** الهامش محدد وموثق؛ تجاوزه يفشل PR إلا بمبرر مع تسجيل في وثيقة القرارات.
-- **التحقق:** مقارنة مع `baseline.json`.
-
-### T59 — Reproducible metadata + attestation
-- **الهدف:** إمكانية تتبع كل إصدار: commit، dependencies، SBOM، قيم hash.
-- **المعايير:** لا تغيير في أصول Release (ملفا APK فقط)؛ SHA-256 في release notes.
-- **التحقق:** إصدار تجريبي على tag.
-
-### T60 — الحفاظ على قواعد الإصدار الحالية
-- **الهدف:** PR لا ينشر؛ tag وحده بمفتاح release؛ موافقات jobs محدودة.
-- **المعايير:** مراجعة permissions وإثبات أن PR build لا يستهلك الأسرار.
-- **التحقق:** مراجعة يدوية لسجل التشغيلات.
-
-## المرحلة 13 — T61–T65: إدارة توافق WhatsApp بشكل مستمر
-
-**الحالة:** ⬜ مخطط
-
-### T61 — `compatibility.json` كمصدر حقيقة واحد
-- **الهدف:** KOTLIN-generated table أو ملف موثق يمثل الواجهة الرسمية للتوافق بين الوحدة وإصدارات WhatsApp/Business.
-- **المعايير:** لا إضافة إصدار إلى `arrays.xml` وحده؛ الإعلان مرتبط بنتيجة resolvers.
-- **التحقق:** مقارنة آلية بين الملف والـ arrays.
-
-### T62 — Workflow إصدار واتساب جديد
-- **الهدف:** `build → resolver smoke → compatibility report → enable version` كإجراء واضح.
-- **المعايير:** قابل للتنفيذ خلال جلسة واحدة؛ النتائج تُسجَّل في الوثيقة.
-- **التحقق:** تطبيقه على إصدار جديد فعلي.
-
-### T63 — Upstream diff watcher
-- **الهدف:** مراقبة فروقات fork عن `Dev4Mod/WA X` (الفork حاليًا متقدم ~93 commit، وغير متأخر) وcherry-pick انتقائي بدل merge أعمى.
-- **المعايير:** لا merge شامل؛ كل التزام مفحوص بـ CI هنا.
-- **التحقق:** تقرير فروقات دوري.
-
-### T64 — سياسة التعطيل الجزئي
-- **الهدف:** الميزات غير المتوافقة تُعطَّل وحدها، ولا يمنع إصدار واتساب جديد بقية WA X من العمل.
-- **المعايير:** اختبار سيناريو إصدار «غير مدعوم جزئيًا».
-- **التحقق:** محاكاة resolver incompatible.
-
-### T65 — تقرير توافق لكل إصدار WA X
-- **الهدف:** مع كل إصدار: ما تم اختباره، على أي إصدار واتساب، وأي features degraded.
-- **المعايير:** يُرفَق في release notes أو وثيقة الإصدار.
-- **التحقق:** إصدار تجريبي.
-
-## المرحلة 14 — T66–T70: التوثيق وجودة المشروع
-
-**الحالة:** ⬜ مخطط
-
-### T66 — README احترافي
-- **الهدف:** README في الجذر يوجّه إلى `docs/` مع Installation / Supported versions / FAQ / Troubleshooting / Privacy & Security model / Build / Release process / Architecture.
-- **المعايير:** خطوات البناء تعمل من نسخة نظيفة؛ لا وعود غير قابلة للتحقق.
-- **التحقق:** تنفيذ الخطوات من clone نظيف.
-
-### T67 — CONTRIBUTING و SECURITY وسياسة الإصدارات
-- **الهدف:** مساهمة واضحة + قناة إفصاح أمني + قواعد branches/tags.
-- **المعايير:** لا تعقيد زائد؛ يتوافق مع سير العمل الحالي.
-- **التحقق:** مراجعة بشرية.
-
-### T68 — Issue/PR templates
-- **الهدف:** تقارير قابلة للفرز: إصدار WA X/واتساب، diagnostics، خطوات إعادة.
-- **المعايير:** يمنع غالبية التقارير «لا يعمل» بسؤالين.
-- **التحقق:** تجربة نموذج بلاغ.
-
-### T69 — Diagram معماري
-- **الهدف:** شرح: Module App ↔ IPC/Preferences ↔ WhatsApp process ↔ FeatureLoader ↔ Resolver layer ↔ Feature.
-- **المعايير:** محدث مع تغييرات T16–T20.
-- **التحقق:** مراجعة مقابل الكود الفعلي.
-
-### T70 — توثيق كل Feature ومفاتيح preferences
-- **الهدف:** جدول مرجعي دائم حتى لا تتحول الإعدادات القديمة إلى ألغام بعد سنوات.
-- **المعايير:** كل feature + كل مفتاح + القيم الافتراضية + الاعتماديات.
-- **التحقق:** توليد/مقارنة آلية مع الكود إن أمكن (T16 registry).
-
-## المرحلة 15 — T71–T75: الفصل المعماري وصولًا إلى 2.0
-
-**الحالة:** ⬜ مخطط (لا تبدأ قبل اكتمال الاختبارات)
-
-### T71 — فصل تدريجي إلى وحدات
-- **الهدف:** `core`, `hook-api`, `resolvers`, `features`, `storage`, `ui`, `native-audio`.
-- **المعايير:** كل وحدة تُفصل في commit مستقل مع بناء أخضر؛ لا فصل مبكر قبل الاختبارات.
-- **التحقق:** بناء + اختبارات + قياس APK بعد كل وحدة.
-
-### T72 — Feature metadata كمصدر واحد
-- **الهدف:** ربط UI وhook loader بالـ registry بحيث لا يوجد تعريف في ثلاثة أماكن.
-- **المعايير:** إضافة feature = تعديل ملف واحد + موارد.
-- **التحقق:** اختبار يكشف أي تعريف غير متطابق.
-
-### T73 — APIs داخلية مستقرة بين الطبقات
-- **الهدف:** حدود واضحة تمنع الميزات من لمس `XposedBridge` مباشرة.
-- **المعايير:** اعتماد Safe Hook API (T20) في كل الطبقات.
-- **التحقق:** grep آلي على الاستخدامات المباشرة.
-
-### T74 — إزالة legacy paths بناءً على diagnostics
-- **الهدف:** حذف مسارات التوافق القديمة بناءً على دليل من الاستخدام الفعلي، لا التخمين.
-- **المعايير:** كل حذف مرفوق بتقارب metrics/telemetry محلية.
-- **التحقق:** مراجعة بيانات diagnostics قبل الحذف.
-
-### T75 — WA X 2.0
-- **الهدف:** دمج كل ما سبق في أساس معماري نظيف مع استقرار ميداني (soak طويل).
-- **المعايير:** كل مراحل compatibility/security/performance مغلقة؛ لا ديون معروفة غير موثقة.
-- **التحقق:** إصدار 2.0.0 مع تقرير توافق كامل.
-
----
-
-## المرحلة 16 — T76–T160: التوسعة بعد 2.0 (WA X 3.0)
-
-**الحالة:** ✅ منجزة — 10 مراحل (P–X) في تنفيذ متصل واحد مع الحفاظ الكامل على معمارية 2.0.
-
-- **المخرجات:** 11 حزمة جديدة (`platform`, `privacy`, `history`, `scheduler`, `automation`, `intelligence`, `media`, `theme`, `notifications`, `storage`, `multipackage`)، وكل ميزة مسجَّلة بـ `FeatureMetadata` عبر `PlatformFeatureCatalog` مع resolvers وfallback وdiagnostics واختبارات.
-- **التحقق:** 720 اختبارًا لكل نكهة (1440 تنفيذًا، 0 فشل)، بناء WhatsApp + Business، lint/spotless/detekt، مدقق التوافق 13/13.
-- **المصفوفة الكاملة وأدلة التحقق:** `docs/ROADMAP_3.0.md`.
-
----
-
-## Definition of Done لكل مجموعة مهام
-
-1. المخرجات مكتوبة ومذكورة أعلاه مكتملة ضمن commit مستقل واضح.
-2. البناء ينجح: `assembleDebug` (وسيناريو release للتغييرات الحساسة).
-3. الاختبارات تنجح ولا ينقص عددها ولا يزيد زمنها بشكل غير مبرر.
-4. مقاييس `baseline.json` لم تتراجع (T04 بعد إقرارها).
-5. هذا الملف مُحدَّث: الحالة ✅ وملاحظات التنفيذ إن وُجدت.
-
-## المخاطر وrollback
-
-| الخطر | الاحتواء |
-|---|---|
-| تغيير Unobfuscator يكسر ميزات بصمت | adapter أولًا (T10) + diagnostics + عزل (T14) + التراجع عبر commit معزول |
-| تحديث واتساب يكسر الوحدة كليًا | سياسة التعطيل الجزئي (T64) + compatibility.json (T61) |
-| cache قديم بعد تحديث واتساب | مفتاح cache مربوط بهاش APK (T12) |
-| regression في الأداء أو الحجم | Gate T04 + APK budget T58 |
-| فشل بناء محلي | التهيئة: submodules + NDK، وإلا الاعتماد على CI |
-
-## القرارات والانحرافات
-
-| التاريخ | القرار/الانحراف | السبب |
-|---|---|---|
-| 2026-10-04 | إنشاء الوثيقة وبدء T00 | تنفيذ الخطة |
-| 2026-10-04 | فرض en-US على JVMs البناء في `gradle.properties` | Room 2.8.4 KSP يُولّد أرقامًا عربية-هندية على locale=ar فيفشل البناء المحلي؛ CI غير متأثر |
-| 2026-10-04 | عتبات T04: lint 0% — tests لا تنقص — APK ‎+2%‎ | قيم محافظة؛ APK قابل للضبط بـ `--max-apk-growth` وT58 سيشدّده لاحقًا |
-| 2026-10-04 | البوابة تقارن مع baseline فرع الأساس (origin/base ← pr.base.sha ← before ← HEAD^) لا نسخة التغيير | منع تجاوز العتبات بتعديل `baseline.json` داخل التغيير نفسه؛ فرع أساس بلا baseline يمر بمسار bootstrap موثّق |
-| 2026-10-04 | baseline بلا `testResults.tests` يعطّل فحص العدد برسالة WARN ويُبقي فحص failures/errors | نافذة انتقال الـ schema (وُلدت مع T00) بلا فشل زائف ولا تعطيل صامت |
-| 2026-10-04 | T01: `compatibility.json` هو المصدر الوحيد للحقيقة، و`arrays.xml` صار مرآة **مولَّدة** منه | يخدم هدف المهمة («بدل الاعتماد على `arrays.xml` وحده») دون تغيير سلوك وقت التشغيل؛ المدقق يفشل فورًا عند أي انحراف بين الاثنين |
-| 2026-10-04 | T01: كل خلايا الـ matrix تبدأ `unknown` ولا يُسمح بـ `supported` دون دليل resolvers كامل | قاعدة «لا يُعلَن support دون نتيجة resolvers فعلية»؛ الأدلة تُجمع في T51+، والمدقق يفرضها بـ 13 اختبار mutation |
-| 2026-10-04 | T01: استخراج حقائق الـ Features آليًا من المصدر بدل قائمة يدوية | FeatureInventory كان سيصبح نسخة خامسة من قائمة الـ Features (إضافة إلى `plugins()` و7 ملفات `res/xml` و`FeatureCatalog`)؛ الاستخراج يجعلها مشتقّة وغير قابلة للانحراف الصامت |
-| 2026-10-04 | T02: استخراج المنطق الققي إلى وحدات صغيرة بدل Robolectric | كل المنطق المطلوب كان قابلًا للاختبار بـ JUnit وحده بعد فصله عن Android؛ Robolectric كانت ستُبطئ كل اختبار بلا حاجة |
-| 2026-10-04 | T02: إصلاح معطّل في `ScopeHook.getPackageNameFromPackageSettings` | الضابط الأمني كان غير فعّال تمامًا (ال scraping لا يُرجع اسم حزمة أبدًا)، ومخرَج T02 كشفه |
-| 2026-10-04 | T02: استيراد الإعدادات صار all-or-nothing | كان يمسح كل الإعدادات ثم يطبّق ملفًا قد يكون جزئيًا أو bear نوعًا غير معروف = فقد بيانات صامت |
-| 2026-10-04 | T02: `BridgeAccessPolicy` يوحّد ثلاث قوائم سماح متباينة | كانت `HookBinder` و`HookProvider` و`ScopeHook` تختلف حول settings provider و SYSTEM_UID؛ التوحيد يمنع انحرافًا أمنيًا مستقبليًا |
-| 2026-10-04 | إصلاح خطأ إملائي في السطر 240 (`应用中` → `من داخل التطبيق`) | خطأ موجود مسبقًا في الوثيقة، يُصحَّح أثناء العمل على T01 |
-| 2026-10-05 | T76–T160: إعادة توليد `tools/baseline/baseline.json` | التوسعة أضافت ‎≈1.17‎ MiB إلى APK debug (35.90 → 37.01 MiB، ‎+3.1%‎)؛ نمو مبرَّر بـ11 حزمة ميزات جديدة. البوابة تقارن مع baseline فرع الأساس، فيسري الأساس الجديد من التغيير التالي |
-| 2026-10-05 | T76–T160: قارئ `MiniJson` صار يستهلك المحارف فعليًا في `next()` | الاختبارات كشفت أن كل مستندات التخزين كانت تُقرأ فاشلة: `next()` كان مرادفًا لـ`peek()` |
-| 2026-10-05 | T76–T160: معرّفات features تسمح بشرطة سفلية داخل المقاطع | نمط معرّفات المنصة الجديدة (`platform.kill_switch`, `privacy.profiles`) يتطلب ذلك، والمدقق ما زال يرفض الأحرف الكبيرة والمسافات |
-| | | |
-
-## سجل التنفيذ
-
-| المهمة | التاريخ | الـ commit | ملاحظات |
-|---|---|---|---|
-| T00 | 2026-10-04 | `80aac79d` + `cb96de53` | سكربت + fixture + تقريران؛ parser سجل Xposed مختبر؛ بناء whatsapp+business نجح (35.42 MiB لكل APK debug)؛ 8/8 اختبارات نجحت؛ إصلاح locale لـ Room KSP |
-| T04 | 2026-10-04 | `ffd28e64` + `cff8039b` | `check_baseline.py` + بوابة CI؛ المرجع من فرع الأساس مع مسارَي bootstrap/legacy صريحين؛ 18 تشغيلًا محليًا؛ أول تشغيل CI نجح (`37189666050`) |
-| CI | 2026-10-04 | `cff8039b` | توحيد workflow واحد: بناء/اختبار/lint/بوابة T04 لكل تغيير؛ توقيع debug artifacts بلا نشر؛ النشر من التاقات فقط وبأصول .apk حصرًا |
-| Release v1.6.2 | 2026-10-04 | tag `v1.6.2` → `6f115da9` | أول إصدار يمر عبر البوابة الموحدة؛ تشغيل master `37189666050` وتشغيل tag `37189939509` ناجحان؛ الأصول: APKان فقط بأسماء مرتبطة بالإصدار |
-| T01 | 2026-10-04 | (لم يُنفَّذ بعد) | `tools/compatibility/` (4 أدوات) + `compatibility.json` + `docs/COMPATIBILITY.md`؛ جرد 64 Feature مع اعتماديات الـ resolvers؛ 13/13 اختبار mutation؛ دورة إضافة إصدار مُختبرة؛ `arrays.xml` byte-exact؛ خطوة CI جديدة. **0 خلية مُتحقَّق منها — كل الحالات `unknown` عمدًا** |
-| T02 | 2026-10-04 | (لم يُنفَّذ بعد) | 8 ← **180 اختبارًا** (360 تنفيذًا). 5 وحدات منطقية نقي مُستخرَجة: `TargetVersions`، `UpdateOffer`، `BridgeAccessPolicy`، `ConfigBackupSchema`، `PreferenceValueHooks`. **أُصلح ضابط أمني معطّل + فقد بيانات في الاستيراد.** البوابة: lint 419/419، اختبارات 360 (الأساس 16)، APK ‎+0.09%‎ |
-| T03 | 2026-10-04 | (لم يُنفَّذ بعد) | حزمة `diagnostics/` (6 وحدات): `FailureCode` (12 رمزًا)، `ReportRedactor` (طبقة الخصوصية)، `FeatureFailureReport`، `FailureReportCodec` + `FailureReportParser` (JSON بلا `org.json`)، `FailureReportStore` (حد 50). حُذف `ErrorItem`. ‏**أُصلح تسريب خصوصية:** كان زر «مشاركة» في شاشة الانهيار يشارك stack trace خامًا. الاختبارات 292 (584 تنفيذًا)، APK ‎+0.27%‎ |
-
-
-| T04 | 2026-10-04 | (لم يُنفّذ بعد) | خاصية الرفض مُتحقّق منها على 4 حالات (سليم/حذف اختبارات/فشل واحد/غياب APK). **أُصلح ضعف:** حدّ الاختبارات كان مثبّتًا عند 16 ولا يرتفع — أعيد توليد `baseline.json` فصار 590، والحذف الآن يُرفض. متبقّ: PR حقيقي في CI |
-| T05–T09 | 2026-10-04 | (لم يُنفّذ بعد) | **Phase 2 كاملة.** T05: lint 419 ← 313 + إصلاح عداد في البوابة. T06: حُذف `values-id` (504 مورد) وإثباث عدم الحذف الجماعي. T07: `.idea` 13 → 7. T08: الاسم يُبقى. T09: detekt + spotless/ktlint (26 ملفًا صوصًا). البوابة: lint 313، اختبارات 590، APK 35.46 MiB (+0.00%) |
-| T76–T160 | 2026-10-05 | (لم يُودَع بعد) | التوسعة بعد 2.0: 10 مراحل (P–X) و11 حزمة؛ 720 اختبارًا/نكهة (1440 تنفيذًا، 0 فشل)؛ بناء WhatsApp + Business؛ lint/spotless/detekt نظيفة؛ مدقق التوافق 13/13؛ إعادة توليد baseline. التفاصيل في `docs/ROADMAP_3.0.md` |
+For attribution details see [PROJECT_PROVENANCE.md](PROJECT_PROVENANCE.md).
