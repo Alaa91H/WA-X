@@ -281,7 +281,7 @@ class FeatureLoader {
                                         Only the function of ignoring the expiration of the WhatsApp version has been applied!
                                         ${assessment.explanation}
                                         """.trimIndent()
-                                    throw Exception(errorMsg)
+                                    error(errorMsg)
                                 }
                             } else if (assessment.isExperimental) {
                                 // A tolerated build is loaded, but the log records that it was
