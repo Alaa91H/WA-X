@@ -374,9 +374,15 @@ jobs:
             echo "### APK signature verification"
             echo
             for apk in dist/*.apk; do
-              VERIFY_OUTPUT="$("$APKSIGNER" verify --verbose --print-certs "$apk")"
+              VERIFY_FILE="$RUNNER_TEMP/apksigner-$(basename "$apk").txt"
+              if ! "$APKSIGNER" verify --verbose --print-certs "$apk" >"$VERIFY_FILE" 2>&1; then
+                echo "::error::apksigner rejected $apk"
+                cat "$VERIFY_FILE"
+                exit 1
+              fi
+              VERIFY_OUTPUT="$(cat "$VERIFY_FILE")"
               ACTUAL_SIGNING_CERT_SHA256="$(
-                sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$VERIFY_OUTPUT" |
+                sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$VERIFY_FILE" |
                   head -n 1 |
                   tr '[:lower:]' '[:upper:]'
               )"
