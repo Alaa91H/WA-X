@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List versteckt WA X vor:</string>
     <string name="diag_hma_disable">Deaktivieren Sie die Sperre für WhatsApp/Business in Hide My App List, damit WA X korrekt funktioniert.</string>
     <string name="diag_copied">Zeile in die Zwischenablage kopiert</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">App-spezifische Einstellungen</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">Dies sind die Standardwerte. Jede Ziel-App ohne eigenen Wert verwendet sie.</string>
+    <string name="scope_target_explainer">%1$d von %2$d Einstellungen sind für diese Ziel-App überschrieben. Einstellungen mit „Global verwenden“ übernehmen den globalen Wert.</string>
+    <string name="search_settings">Einstellungen durchsuchen</string>
+    <string name="no_settings_match">Keine Einstellung entspricht dieser Suche.</string>
+    <string name="tri_state_inherit">Global verwenden</string>
+    <string name="tri_state_enabled">Ein</string>
+    <string name="tri_state_disabled">Aus</string>
+    <string name="default_value">Standard für jede Ziel-App</string>
+    <string name="follows_global">Folgt Global</string>
+    <string name="pinned_to">Festgelegt auf: %1$s</string>
+    <string name="pin_global">Festlegen</string>
+    <string name="follow_global">Global verwenden</string>
+    <string name="copy_global_to_target">Alle globalen Werte auf diese Ziel-App kopieren</string>
+    <string name="reset_this_target">Diese Ziel-App zurücksetzen</string>
+    <string name="reset_all_targets">Alle Ziel-Apps zurücksetzen</string>
+    <string name="edit_on_original_screen">Auf dem Bildschirm %1$s bearbeiten.</string>
+    <string name="open_per_target_settings">WhatsApp und WhatsApp Business getrennt konfigurieren</string>
+    <string name="open_per_target_settings_summary">Eigene Einstellungen für WhatsApp und WhatsApp Business festlegen oder die jeweilige Einstellung dem globalen Standard folgen lassen.</string>
+    <string name="reload">Neu laden</string>
 </resources>
