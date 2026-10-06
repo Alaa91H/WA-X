@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">Aus</string>
     <string name="tri_state_enabled">Ein</string>
     <string name="tri_state_inherit">Global</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Benutzerdefinierte KeyBox aktivieren</string>
+    <string name="enable_custom_keybox_sum">Eine benutzerdefinierte keybox.xml für den Bootloader-Spoofer verwenden.</string>
+    <string name="use_custom_keybox_file">Benutzerdefinierte keybox.xml verwenden</string>
+    <string name="no_file_selected">Keine Datei ausgewählt</string>
 </resources>
