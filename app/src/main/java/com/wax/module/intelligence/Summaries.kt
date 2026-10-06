@@ -75,11 +75,10 @@ class ConversationSummarizer(
                 cloudBlocked = true,
             )
         }
-        return try {
-            provider.summarize(request)
-        } catch (error: Throwable) {
-            SummaryOutcome.Failed("summarisation failed: ${error.javaClass.simpleName}")
-        }
+        return runCatching { provider.summarize(request) }
+            .getOrElse { error ->
+                SummaryOutcome.Failed("summarisation failed: ${error.javaClass.simpleName}")
+            }
     }
 
     /** The disclosure shown before a cloud summary would run. */
