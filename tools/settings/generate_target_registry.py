@@ -54,6 +54,10 @@ def element_kind(tag: str) -> str:
         return "FLOAT"
     if simple.endswith("SeekBarPreference"):
         return "INT"
+    if "ColorPreference" in simple:
+        # ColorPreferenceCompat persists an Android ARGB color as an Int.
+        # Treating it as TEXT makes per-target pinning silently write null.
+        return "INT"
     if simple.endswith("FileSelectPreference") or simple.endswith("FileReaderPreference"):
         return "TEXT"
     return KIND_BY_ELEMENT.get(simple, "TEXT")
@@ -118,8 +122,11 @@ EXCLUDED = {
     "app_language", "thememode", "wae_color_mode", "wae_color_preset", "update_check", "enablelogs",
     "restartbutton", "open_wae", "bootsloader_placeholder", "bootloader_spoofer",
     "bootloader_spoofer_custom", "bootloader_spoofer_xml",
-    "groq_api_key", "transcription_provider", "css_theme", "wallpaper_file",
+    "groq_api_key", "assemblyai_key", "transcription_provider", "css_theme", "wallpaper_file",
     "call_recording_path", "tasker_auth_token",
+    # Navigation/action rows and intentionally disabled placeholders do not hold a
+    # target-specific value and must never appear as fake settings in the scope editor.
+    "per_target_settings", "call_recording_settings", "video_call_screen_rec",
 }
 
 
@@ -205,7 +212,29 @@ def main() -> int:
     lines.append("    fun toggles(): List<Entry> = ALL.filter { it.isToggle }")
     lines.append("}")
 
-    io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
+    rendered = "\n".join(lines) + "\n"
+    if "--check" in sys.argv[1:]:
+        try:
+            current = io.open(OUT, "r", encoding="utf-8").read()
+        except OSError:
+            current = ""
+        if current != rendered:
+            print(
+                "SettingKeyRegistry.kt is stale. Run: python tools/settings/generate_target_registry.py",
+                file=sys.stderr,
+            )
+            return 1
+        print(
+            "SettingKeyRegistry.kt is up to date: %d settings (%d toggles, %d other)"
+            % (
+                len(offered),
+                by_kind.get("BOOLEAN", 0),
+                len(offered) - by_kind.get("BOOLEAN", 0),
+            )
+        )
+        return 0
+
+    io.open(OUT, "w", encoding="utf-8", newline="\n").write(rendered)
     print(
         "wrote %s: %d settings (%d toggles, %d other)"
         % (
