@@ -58,7 +58,7 @@ class TargetSettingsViewModel(
             _state.value.copy(
                 rows = rows,
                 overrideCount = store.keysWithOverrides(scope).size,
-                totalOverrideCount = TargetApp.entries.sumOf { app -> store.keysWithOverrides(SettingsScope.Target(app)).size },
+                totalSettingCount = SettingKeyRegistry.entries.size,
             )
     }
 
@@ -228,6 +228,6 @@ class TargetSettingsViewModel(
         val query: String = "",
         val rows: List<Row> = emptyList(),
         val overrideCount: Int = 0,
-        val totalOverrideCount: Int = 0,
+        val totalSettingCount: Int = SettingKeyRegistry.entries.size,
     )
 }
