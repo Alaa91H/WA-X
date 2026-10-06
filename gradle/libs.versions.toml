@@ -13,7 +13,7 @@ agp = "9.3.1"
 colorpicker = "1.1.0"
 roomRuntime = "2.8.4"
 nav = "2.9.6"
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 markwon = "4.6.2"
 remotePreferences = "0.8"
 detekt = "1.23.8"
@@ -81,7 +81,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kspPlugin = { id = "com.google.devtools.ksp", version = "2.3.10" }
+kspPlugin = { id = "com.google.devtools.ksp", version = "2.3.12" }
 # T09: static analysis and formatting, both pinned so a build never silently changes rules.
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

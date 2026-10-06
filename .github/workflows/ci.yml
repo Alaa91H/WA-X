@@ -111,8 +111,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: jetbrains
-          java-package: jdk
+          distribution: temurin
           cache: gradle
 
       # The single point where the tag, the configured version and the release
@@ -549,8 +548,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: jetbrains
-          java-package: jdk
+          distribution: temurin
           cache: gradle
       - name: Run every static gate before returning a verdict
         shell: bash
@@ -618,8 +616,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: jetbrains
-          java-package: jdk
+          distribution: temurin
           cache: gradle
       - name: Execute all unit tests and enforce every JaCoCo counter at 100%
         shell: bash
@@ -674,8 +671,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: jetbrains
-          java-package: jdk
+          distribution: temurin
           cache: gradle
       - name: Run Android instrumentation to completion and enforce 100% E2E coverage
         shell: bash
