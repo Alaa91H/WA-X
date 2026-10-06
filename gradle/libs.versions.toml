@@ -9,14 +9,14 @@ flatbuffers = "25.2.10"
 jstyleparser = "4.0.1"
 okhttp = "5.4.0"
 xposed-legacy = "82"
-agp = "9.4.0"
+agp = "9.4.1"
 colorpicker = "1.1.0"
 roomRuntime = "2.8.4"
 nav = "2.9.6"
 kotlin = "2.4.20"
 markwon = "4.6.2"
 remotePreferences = "0.8"
-detekt = "1.23.8"
+detekt = "2.0.0-alpha.6"
 spotless = "8.10.3"
 # Compose. One BOM for the whole Compose surface so the runtime, UI and Material3
 # artifacts cannot drift apart, with Material3 pinned explicitly to the stable
@@ -83,5 +83,5 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspPlugin = { id = "com.google.devtools.ksp", version = "2.3.12" }
 # T09: static analysis and formatting, both pinned so a build never silently changes rules.
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
