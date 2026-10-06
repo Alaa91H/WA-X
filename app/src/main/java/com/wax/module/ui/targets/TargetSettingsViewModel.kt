@@ -50,7 +50,8 @@ class TargetSettingsViewModel(
                 Row(
                     entry = entry,
                     triState = resolver.triState(entry.key, scope),
-                    effective = resolver.effectiveString(entry.key, scope),
+                    overridden = resolver.isOverridden(entry.key, scope),
+                    effective = effectiveDisplay(entry, scope),
                 )
             }
         _state.value =
@@ -145,6 +146,27 @@ class TargetSettingsViewModel(
         reload()
     }
 
+    /** Removes one target override, regardless of the preference's stored type. */
+    fun clearOverride(entry: SettingKeyRegistry.Entry) {
+        val scope = _state.value.scope
+        if (scope !is SettingsScope.Target) return
+        resolver.resetKey(entry.key, scope)
+        notifyRuntime(scope)
+        reload()
+    }
+
+    private fun effectiveDisplay(
+        entry: SettingKeyRegistry.Entry,
+        scope: SettingsScope,
+    ): String? =
+        when (entry.kind) {
+            SettingKeyRegistry.Kind.BOOLEAN -> resolver.effectiveBoolean(entry.key, scope).toString()
+            SettingKeyRegistry.Kind.INT -> resolver.effectiveInt(entry.key, scope).toString()
+            SettingKeyRegistry.Kind.FLOAT -> resolver.effectiveFloat(entry.key, scope).toString()
+            SettingKeyRegistry.Kind.SET -> resolver.effectiveStringSet(entry.key, scope).sorted().joinToString(", ")
+            SettingKeyRegistry.Kind.TEXT -> resolver.effectiveString(entry.key, scope)
+        }
+
     /** Removes every override on the current target, leaving Global alone. */
     fun resetTarget() {
         val scope = _state.value.scope
@@ -194,7 +216,9 @@ class TargetSettingsViewModel(
     data class Row(
         val entry: SettingKeyRegistry.Entry,
         val triState: TriState,
-        /** The value this scope resolves to, as text, for the summary line. */
+        /** True when this target owns an explicit value instead of following Global. */
+        val overridden: Boolean,
+        /** The value this scope resolves to, rendered for the summary line. */
         val effective: String?,
     )
 
