@@ -362,7 +362,7 @@ class SeenTick(
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val menu = param.args[0] as Menu
                     val menuItem = menu.add(0, 0, 0, R.string.send_blue_tick)
-                    if (ticktype == 1) menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                    if (ticktype == 1) menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                     menuItem.setIcon(Utils.getID("ic_notif_mark_read", "drawable"))
                     menuItem.setOnMenuItemClickListener {
                         val currentUserJid = ModuleRuntime.getCurrentUserJid()
@@ -436,7 +436,7 @@ class SeenTick(
                         menu
                             .add(0, 0, 0, R.string.send_blue_tick)
                             .setIcon(Utils.getID("ic_notif_mark_read", "drawable"))
-                    if (ticktype == 1) item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                    if (ticktype == 1) item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
 
                     item.setOnMenuItemClickListener {
                         scope.launch(Dispatchers.IO) {
@@ -477,7 +477,7 @@ class SeenTick(
                         menu
                             .add(0, 0, 0, R.string.send_blue_tick)
                             .setIcon(Utils.getID("ic_notif_mark_read", "drawable"))
-                    if (ticktype == 1) item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                    if (ticktype == 1) item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
 
                     item.setOnMenuItemClickListener {
                         scope.launch(Dispatchers.IO) {
