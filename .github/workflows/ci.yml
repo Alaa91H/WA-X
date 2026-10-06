@@ -164,7 +164,7 @@ jobs:
           if [[ "$IS_TAG" == "true" ]]; then
             ARTIFACT="apk-$VERSION-$SHA8"
           else
-            ARTIFACT="apk-$VERSION-ci-$SHA8"
+            ARTIFACT="apk-$VERSION-beta-$SHA8"
           fi
 
           {
@@ -354,7 +354,7 @@ jobs:
 
           ls -l dist
 
-      - name: Verify the APK signatures
+      - name: Verify the APK signatures and update certificate
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
@@ -365,15 +365,38 @@ jobs:
             echo "::error::apksigner was not found"
             exit 1
           fi
+          if [[ -z "${EXPECTED_SIGNING_CERT_SHA256:-}" ]]; then
+            echo "::error::Expected WA X signing certificate fingerprint is unavailable"
+            exit 1
+          fi
 
           {
             echo "### APK signature verification"
             echo
             for apk in dist/*.apk; do
+              VERIFY_OUTPUT="$("$APKSIGNER" verify --verbose --print-certs "$apk")"
+              ACTUAL_SIGNING_CERT_SHA256="$(
+                sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$VERIFY_OUTPUT" |
+                  head -n 1 |
+                  tr '[:lower:]' '[:upper:]'
+              )"
+
+              if [[ ! "$ACTUAL_SIGNING_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]]; then
+                echo "::error::Could not read the signing certificate SHA-256 from $apk"
+                exit 1
+              fi
+              if [[ "$ACTUAL_SIGNING_CERT_SHA256" != "$EXPECTED_SIGNING_CERT_SHA256" ]]; then
+                echo "::error::$apk is not signed with the configured WA X update certificate"
+                exit 1
+              fi
+
               echo "**$(basename "$apk")**"
               echo
+              echo "- WA X update certificate SHA-256: `$ACTUAL_SIGNING_CERT_SHA256`"
+              echo "- Signature matches configured update key: **yes**"
+              echo
               echo '```'
-              "$APKSIGNER" verify --verbose --print-certs "$apk"
+              printf "%s\n" "$VERIFY_OUTPUT"
               echo '```'
               echo
             done
