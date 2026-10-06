@@ -50,8 +50,7 @@ class WaCallback : ActivityLifecycleCallbacks {
     override fun onActivitySaveInstanceState(
         activity: Activity,
         bundle: Bundle,
-    ) {
-    }
+    ) = Unit
 
     companion object {
         private fun triggerActivityState(
