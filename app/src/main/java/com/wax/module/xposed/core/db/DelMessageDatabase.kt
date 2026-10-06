@@ -28,41 +28,19 @@ abstract class DelMessageDatabase : RoomDatabase() {
                 }
             }
 
-        private val MIGRATION_4_6 =
-            object : Migration(4, 6) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                }
-            }
+        private class NoOpMigration(
+            startVersion: Int,
+            endVersion: Int,
+        ) : Migration(startVersion, endVersion) {
+            override fun migrate(db: SupportSQLiteDatabase) = Unit
+        }
 
-        private val MIGRATION_5_6 =
-            object : Migration(5, 6) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                }
-            }
-
-        private val MIGRATION_6_7 =
-            object : Migration(6, 7) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                }
-            }
-
-        private val MIGRATION_7_8 =
-            object : Migration(7, 8) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                }
-            }
-
-        private val MIGRATION_8_9 =
-            object : Migration(8, 9) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                }
-            }
-
-        private val MIGRATION_9_10 =
-            object : Migration(9, 10) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                }
-            }
+        private val MIGRATION_4_6 = NoOpMigration(4, 6)
+        private val MIGRATION_5_6 = NoOpMigration(5, 6)
+        private val MIGRATION_6_7 = NoOpMigration(6, 7)
+        private val MIGRATION_7_8 = NoOpMigration(7, 8)
+        private val MIGRATION_8_9 = NoOpMigration(8, 9)
+        private val MIGRATION_9_10 = NoOpMigration(9, 10)
 
         private val MIGRATION_10_11 =
             object : Migration(10, 11) {
