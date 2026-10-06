@@ -1,15 +1,30 @@
-# Telegram Release Publishing
+# Telegram Build & Release Publishing
 
-WA X publishes successful development and stable builds to the Telegram forum topic:
+WA X publishes validated APKs from GitHub Actions to the `@WAXposed` Telegram forum by using **direct MTProto bot authorization through Kurigram**.
+
+## Routing policy
+
+There are exactly two publishing destinations:
 
 ```text
-Group: @WAXposed
-Updates & Releases topic ID: 4
+GitHub Release / version tag
+→ Updates & Releases
+→ https://t.me/WAXposed/4
+→ message_thread_id = 4
+
+Build without a GitHub Release
+→ Beta Testing
+→ https://t.me/WAXposed/18
+→ message_thread_id = 18
 ```
+
+A non-release build must never be posted to **Updates & Releases**.
+
+A tagged build is posted to **Updates & Releases** only after the GitHub Release job has succeeded.
 
 ## Required GitHub secrets
 
-These repository secrets already exist and are consumed only at publish time:
+These secrets are required and are read only by the Telegram publishing job:
 
 ```text
 TELEGRAM_BOT_TOKEN
@@ -17,45 +32,24 @@ TELEGRAM_API_ID
 TELEGRAM_API_HASH
 ```
 
-Never store their values in the repository, build artifacts, workflow summaries, or logs.
+Never write their values to the repository, workflow summaries, artifacts, changelogs, or logs.
 
-## Architecture
+## Transport architecture
 
-Telegram distribution uses **direct MTProto bot authorization through Kurigram**.
+The pipeline uses direct MTProto.
 
-The pipeline does **not**:
+It does **not**:
 
 - compile `tdlib/telegram-bot-api`;
-- run a Local Bot API daemon;
+- run a Local Bot API server;
 - call Bot API `logOut`;
-- switch the bot between cloud and local Bot API servers;
-- persist a Telegram session file.
+- move the bot between cloud and local Bot API servers;
+- persist a Telegram session file;
+- use a third-party GitHub Action for Telegram upload.
 
-The CI runner creates an in-memory MTProto session, authenticates with:
+The CI runner creates an in-memory Kurigram session, authenticates the bot with the existing API credentials, uploads the APK directly to Telegram, publishes the changelog in the selected forum topic, and disconnects.
 
-```text
-TELEGRAM_API_ID
-TELEGRAM_API_HASH
-TELEGRAM_BOT_TOKEN
-```
-
-uploads the current-run APK directly to Telegram, sends the changelog to forum topic `4`, then disconnects. The ephemeral CI runner is destroyed after the job.
-
-## Why MTProto
-
-The normal HTTP Bot API upload path is too restrictive for the requested large-file distribution.
-
-Direct MTProto provides the same Telegram transport used by clients and supports the large-file upload RPCs used by bots. Kurigram 2.2.26 currently uses 512 KiB parts and a multi-worker pipeline for files larger than 10 MiB.
-
-The CI limit is aligned to the non-Premium/bot limit used by Kurigram:
-
-```text
-2000 MiB
-```
-
-If Telegram or Kurigram changes the supported limit in the future, update the pinned dependency and the CI guard together after verification.
-
-## Pinned publisher dependency
+## Pinned dependency
 
 The publisher uses:
 
@@ -69,63 +63,91 @@ from:
 tools/ci/telegram-requirements.txt
 ```
 
-The `fast` extra enables TgCrypto and uvloop where supported.
+The `fast` extra enables TgCrypto and uvloop on the Linux runner.
 
-The workflow pins Python through the official `actions/setup-python` action.
+## Event behavior
 
-## Publishing model
-
-- Pull requests: build/test only; no secret-bearing Telegram step.
-- `master`: development APK artifact + Telegram development publication.
-- Version tags `v*`: GitHub Release + Telegram stable publication.
-- `ci/telegram-release-publisher-test`: isolated live test of the same development publishing path before merge.
-- `workflow_dispatch`: supports normal publication and explicit force republish.
-
-## Telegram target
-
-All release/build messages use:
+### Pull requests
 
 ```text
-chat_id = @WAXposed
-message_thread_id = 4
+Build
+Test
+Lint
+Static checks
+No Telegram
+No GitHub Release
 ```
 
-The publisher uses Kurigram's native `message_thread_id` support, so messages and documents stay inside the **Updates & Releases** topic.
+### Push to master
 
-## Required Telegram permissions
+```text
+Build
+Test
+Validate APK
+Upload GitHub Actions artifact
+Publish to Beta Testing / topic 18
+```
 
-The bot must be present in `@WAXposed` and be able to post messages/documents in the closed **Updates & Releases** topic.
+### Test branch
 
-Give only the minimum administrator permissions required for that topic. Do not grant unrelated moderation permissions.
+```text
+ci/telegram-release-publisher-test
+→ same non-release path
+→ Beta Testing / topic 18
+```
+
+This allows live Telegram validation without touching `master`.
+
+### Version tag
+
+```text
+Build release APK
+Verify tag/version/signature
+Create GitHub Release
+Publish the exact same APK to Updates & Releases / topic 4
+```
+
+The Telegram stable publication depends on the GitHub Release job. If the Release job fails, nothing is posted to topic 4.
 
 ## Artifact integrity
 
-Before publication CI calculates:
+Before publication CI computes:
 
-- exact APK filename;
+- filename;
 - byte size;
 - human-readable size;
 - SHA-256;
 - version;
-- commit SHA;
+- full commit SHA;
+- short commit SHA;
 - workflow URL;
-- GitHub Release URL for tagged releases.
+- GitHub Release URL for release tags.
 
-For stable releases, GitHub Release and Telegram must use the **same downloaded artifact from the same workflow run**.
+The APK sent to Telegram is downloaded from the artifact produced by the current workflow run.
 
-Do not rebuild separately for Telegram.
+For a tagged release, the GitHub Release asset and Telegram APK must therefore originate from the same validated build artifact.
 
 ## Changelog
 
-Stable releases continue to use the current version section from the repository's authoritative `changelog.txt`.
+### Stable releases
 
-Development builds generate a concise changelog from Git history using:
+The Telegram changelog is extracted from the current WA X version section in:
+
+```text
+changelog.txt
+```
+
+This is the same authoritative release text used by the GitHub Release.
+
+### Beta builds
+
+The changelog is generated from Git history with:
 
 ```text
 tools/ci/generate_telegram_changelog.py
 ```
 
-The generated sections include:
+It categorizes relevant changes into sections such as:
 
 - Added
 - Fixed
@@ -136,62 +158,82 @@ The generated sections include:
 - Internal
 - Other
 
-Long text is split into safe message chunks before publishing.
+The publisher splits long text into safe Telegram-sized chunks.
 
-## Publication order
+## Telegram presentation
 
-To avoid leaving a release announcement with no attached binary, the MTProto publisher uploads the APK first.
+### Updates & Releases — topic 4
 
-After successful document creation, it posts the changelog as replies in the same topic.
+Release title:
 
-The APK caption contains the essential metadata:
+```text
+🚀 WA X v<VERSION>
+```
 
-- release/development label;
-- file name;
-- size;
-- short commit;
-- CI status;
-- SHA-256;
-- GitHub Release or workflow link when it fits.
+Destination:
 
-## Large files
+```text
+https://t.me/WAXposed/4
+```
 
-Configured maximum:
+Only builds that are actually published as GitHub Releases belong here.
+
+### Beta Testing — topic 18
+
+Non-release title:
+
+```text
+🧪 WA X Beta Testing Build
+```
+
+Destination:
+
+```text
+https://t.me/WAXposed/18
+```
+
+Normal branch builds, test-branch builds, and manual non-tag builds belong here.
+
+## File-size support
+
+The MTProto publisher targets the Telegram bot limit used by the pinned Kurigram runtime:
 
 ```text
 2000 MiB
 ```
 
-If an APK exceeds the verified Telegram/Kurigram bot limit, CI must not split the APK. The publisher sends a link/checksum fallback instead.
+Kurigram uploads large files in 512 KiB pieces and uses a multi-worker upload pipeline for large media.
 
-## Upload progress
+If an APK exceeds the supported bot limit, the workflow must not split the APK. It posts a download/checksum fallback instead.
 
-Large uploads print coarse CI progress only, approximately every 5 percentage points or 20 seconds.
+## Publication order
 
-The log includes transferred MiB and approximate throughput without exposing secrets.
+The APK is uploaded first.
+
+After Telegram confirms the document message, the changelog is sent into the same topic as replies to that document.
+
+This avoids posting a release announcement when the APK upload itself failed.
 
 ## Duplicate protection
 
-After a successful Telegram publication the workflow stores a small GitHub Actions marker artifact keyed by:
+After a successful Telegram publication, CI stores a small marker artifact keyed by:
 
 ```text
-channel + commit SHA
+publish type + topic ID + commit SHA
 ```
 
-A normal rerun skips a duplicate publication.
+This means:
 
-A maintainer may intentionally republish through `workflow_dispatch` with:
-
-```text
-force_publish=true
-```
+- a beta publication to topic 18 does not collide with a stable publication to topic 4;
+- a normal rerun does not spam the same topic;
+- an explicit manual `force_publish=true` can intentionally republish.
 
 ## Dry run
 
-The publisher has a network-free validation mode:
+The MTProto publisher can render the exact output without making a Telegram connection:
 
 ```bash
-python tools/ci/publish_telegram_mtproto.py \
+python3 tools/ci/publish_telegram_mtproto.py \
   --dry-run \
   --file <apk> \
   --type development \
@@ -200,83 +242,79 @@ python tools/ci/publish_telegram_mtproto.py \
   --branch <branch> \
   --sha256 <hash> \
   --size <size> \
-  --changelog-file <file>
+  --changelog-file <file> \
+  --chat-id @WAXposed \
+  --thread-id 18
 ```
 
-Dry run validates local inputs and renders:
+For release dry-runs use:
 
-- target;
-- topic;
-- document caption;
-- changelog chunks.
-
-It does not import or require Kurigram until real publication begins.
+```text
+--type stable
+--thread-id 4
+```
 
 ## Local tests
 
 Run:
 
 ```bash
-python3 tools/ci/test_telegram_changelog.py
-python3 tools/ci/test_publish_telegram_mtproto.py
 python3 -m py_compile \
   tools/ci/generate_telegram_changelog.py \
   tools/ci/publish_telegram_mtproto.py
+
+python3 tools/ci/test_telegram_changelog.py
+python3 tools/ci/test_publish_telegram_mtproto.py
 ```
 
-## Test branch
+## Telegram permissions
 
-Live validation is performed on:
+The bot must be able to post files/messages in both forum topics:
 
 ```text
-ci/telegram-release-publisher-test
+Updates & Releases — topic 4
+Beta Testing       — topic 18
 ```
 
-That branch exercises the actual Android build, artifact validation, changelog generation, MTProto authorization, forum-topic upload, checksum metadata, and duplicate marker without touching `master`.
+If **Updates & Releases** is closed/admin-only, the bot needs the appropriate administrator/topic permission to publish there.
 
 ## Troubleshooting
 
-### Authorization fails
+### Release went to Beta Testing
 
-Check that all three GitHub secrets exist and belong to the intended Telegram application/bot.
+This is incorrect. Verify that the workflow's `IS_RELEASE` output is true only for a version-tag run and that the GitHub Release job completed successfully.
 
-Do not print their values.
+### Beta build went to Updates & Releases
 
-### Bot can resolve the group but cannot send
+This is incorrect. Non-tag runs must resolve:
+
+```text
+TYPE=development
+TELEGRAM_THREAD_ID=18
+```
+
+### Bot authorizes but cannot post
 
 Verify:
 
-- the bot is still in `@WAXposed`;
-- topic ID is still `4`;
-- the topic was not deleted/recreated with another ID;
-- the bot can post in the closed topic.
+- bot is still in `@WAXposed`;
+- topic IDs are still `4` and `18`;
+- the topics were not deleted/recreated;
+- bot permissions allow messages and documents in both topics.
 
-### Upload fails near the start
+### Telegram upload fails
 
-Check:
+The GitHub artifact/release remains the fallback.
 
-- the APK exists and is not empty;
-- the runner has outbound Telegram connectivity;
-- the bot is allowed to post documents;
-- the current file is within the supported bot size limit.
-
-### FloodWait
-
-Kurigram handles short flood waits automatically up to the configured threshold. A larger rate limit is surfaced as a CI failure instead of sleeping indefinitely.
-
-### Telegram fails after GitHub release succeeds
-
-Do not delete the valid GitHub Release.
-
-The GitHub Artifact/Release remains the distribution fallback. Re-run only the Telegram publication path through the normal workflow after fixing permissions/connectivity.
+Do not publish an older APK from another workflow run.
 
 ## Security rules
 
 - never print Telegram secrets;
-- no Telegram publishing on untrusted pull requests;
-- use an in-memory MTProto session only;
-- do not commit `.session` files;
-- treat commit/changelog text as data, never shell;
-- publish only the APK downloaded from the current workflow run;
-- keep the Kurigram version pinned;
+- never publish from untrusted pull requests;
+- use an in-memory MTProto session;
+- never commit Telegram `.session` files;
+- treat Git commit/changelog text as data, not shell;
+- publish only the APK from the current workflow run;
+- keep Kurigram pinned;
 - do not use third-party Telegram uploader Actions for the secret-bearing step.
