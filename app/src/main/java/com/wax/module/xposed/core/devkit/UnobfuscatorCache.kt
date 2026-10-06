@@ -462,14 +462,9 @@ class UnobfuscatorCache private constructor(
     }
 
     private fun fieldToJson(field: Field): JSONObject {
-        val value = JSONObject()
-        try {
-            value.put("class", field.declaringClass.name)
-            value.put("name", field.name)
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
-        return value
+        return JSONObject()
+            .put("class", field.declaringClass.name)
+            .put("name", field.name)
     }
 
     private fun getFieldFromJson(
@@ -481,15 +476,10 @@ class UnobfuscatorCache private constructor(
     }
 
     private fun methodToJson(method: Method): JSONObject {
-        val value = JSONObject()
-        try {
-            value.put("class", method.declaringClass.name)
-            value.put("name", method.name)
-            value.put("params", classArrayToJson(method.parameterTypes))
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
-        return value
+        return JSONObject()
+            .put("class", method.declaringClass.name)
+            .put("name", method.name)
+            .put("params", classArrayToJson(method.parameterTypes))
     }
 
     private fun getMethodFromJson(
@@ -502,13 +492,7 @@ class UnobfuscatorCache private constructor(
     }
 
     private fun classToJson(cls: Class<*>): JSONObject {
-        val value = JSONObject()
-        try {
-            value.put("class", cls.name)
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
-        return value
+        return JSONObject().put("class", cls.name)
     }
 
     private fun getClassFromJson(
@@ -563,13 +547,10 @@ class UnobfuscatorCache private constructor(
         key: String,
         constructor: Constructor<*>,
     ) {
-        val value = JSONObject()
-        try {
-            value.put("class", constructor.declaringClass.name)
-            value.put("params", classArrayToJson(constructor.parameterTypes))
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
+        val value =
+            JSONObject()
+                .put("class", constructor.declaringClass.name)
+                .put("params", classArrayToJson(constructor.parameterTypes))
         sPrefsCacheHooks.edit { putString(key, value.toString()) }
     }
 
@@ -593,13 +574,10 @@ class UnobfuscatorCache private constructor(
         key: String,
         number: Number,
     ) {
-        val value = JSONObject()
-        try {
-            value.put("class", number.javaClass.name)
-            value.put("value", number)
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
+        val value =
+            JSONObject()
+                .put("class", number.javaClass.name)
+                .put("value", number)
         sPrefsCacheHooks.edit { putString(key, value.toString()) }
     }
 
