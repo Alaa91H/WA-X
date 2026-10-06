@@ -77,7 +77,7 @@
     <string name="show_online_dot_in_conversation_list_sum">Show a green online dot on home screen\n(NOTE: Must activate show online for everyone in WhatsApp\'s Privacy Settings menu)</string>
     <string name="show_dnd_button">Show DND Button</string>
     <string name="show_dnd_button_sum">Show button for DND Mode on home screen toolbar</string>
-    <string name="dev4mod">Dev4Mod (Contributor)</string>
+    <string name="dev4mod">Dev4Mod / WaEnhancer (upstream)</string>
     <string name="disable_pinned_limit">Disable Pinned Chats Limit</string>
     <string name="disable_pinned_limit_sum">Disable limit of 3 pinned chats</string>
     <string name="delete_for_everyone_all_messages">Increase limit of &quot;Delete for everyone&quot; option</string>
@@ -324,17 +324,17 @@
     <string name="select_status_type">Select status type</string>
     <string name="open_camera">Open Camera</string>
     <string name="edit_text">Edit Text</string>
-    <string name="developer" translatable="false">Maintained by Alaa</string>
-    <string name="about_info">WA X is an Xposed module that enhances your WhatsApp experience by offering advanced privacy features, home screen customization, general tweaks, and media improvements.</string>
+    <string name="developer" translatable="false">Developer &amp; maintainer: Alaa</string>
+    <string name="about_info">WA X is an independent open-source Xposed module and a fork/continuation of Dev4Mod/WaEnhancer. This fork is developed and maintained by Alaa. It hooks WhatsApp and WhatsApp Business at runtime; compatibility varies by target version.</string>
     <string name="installation">Installation</string>
-    <string name="installation_desc">1. Ensure that your device is rooted.\n2. Install the Xposed Framework on your device.\n3. Download the WA X from the Actions section.\n4. Install the WA X APK.\n5. Enable the WA X module in the Xposed Installer app.</string>
-    <string name="go_to_telegram">Go to Telegram</string>
-    <string name="go_to_github">Go to GitHub</string>
+    <string name="installation_desc">1. Install a compatible Xposed environment such as LSPosed.\n2. Download the WA X module APK from GitHub Releases (or Beta Testing for development builds).\n3. Install WA X and enable the module.\n4. Scope WhatsApp and/or WhatsApp Business.\n5. For the current bridge, also include System Framework (android) and Settings Provider (com.android.providers.settings) when your Xposed manager exposes explicit package scope.\n6. Restart the target app after changing hook-sensitive settings.</string>
+    <string name="go_to_telegram">Developer Telegram</string>
+    <string name="go_to_github">WA X on GitHub</string>
     <string name="contributors" translatable="false">Open-source notices</string>
     <string name="support">Support</string>
-    <string name="support_desc">If you encounter any issues or have questions about WA X, please visit Telegram.</string>
+    <string name="support_desc">Community support: @WAXposed. Report reproducible bugs through GitHub Issues. Direct contact: @Alaa91h or alahus2591@gmail.com. Development support is voluntary through Ko-fi.</string>
     <string name="license">License</string>
-    <string name="license_desc">This project is licensed under the GNU License - see the LICENSE file for details.\n\nNote: Please use WA X responsibly and in compliance with the terms and conditions of the apps you are modifying. Misuse of this tool may lead to legal consequences.</string>
+    <string name="license_desc">WA X is distributed under GNU GPL-3.0. Commercial use is permitted when the GPL obligations are followed. Inherited upstream work remains credited to its original authors. See LICENSE and the project provenance documentation for details.</string>
     <string name="select_a_color">Select a color</string>
     <string name="custom_appearance">Custom Appearance</string>
     <string name="custom_filters_sum">Activate filters by ID and Custom CSS</string>
@@ -570,10 +570,11 @@
     <string name="wax_disclaimer" translatable="false">WA X is an independent open-source project and is not affiliated with, endorsed by, sponsored by, or officially associated with WhatsApp or Meta.</string>
     <string name="wax_legal_title" translatable="false">About &amp; Legal</string>
     <string name="wax_open_source_notices" translatable="false">Open-source notices</string>
-    <string name="wax_open_source_notices_desc" translatable="false">WA X builds on the work of earlier contributors and on open-source libraries. They are credited here for their original work. The full licence text and the commit history are part of this repository.</string>
-    <string name="wax_upstream_author" translatable="false">Original author of the pre-rename project</string>
+    <string name="wax_open_source_notices_desc" translatable="false">WA X is a fork and continuation of Dev4Mod/WaEnhancer. Upstream authors and contributors retain credit for inherited work; Alaa maintains this fork and does not claim authorship of inherited code. Git history and GPL-3.0 remain authoritative.</string>
+    <string name="wax_upstream_author" translatable="false">Upstream project: Dev4Mod/WaEnhancer</string>
+    <string name="wax_go_to_community" translatable="false">WA X Community</string>
     <string name="wax_go_to_email" translatable="false">Email the maintainer</string>
-    <string name="wax_go_to_profile" translatable="false">Maintainer profile</string>
+    <string name="wax_go_to_profile" translatable="false">Alaa on GitHub</string>
     <string name="wax_go_to_support" translatable="false">Support development</string>
     <string name="wax_license_name" translatable="false">GNU General Public License v3.0</string>
     <string name="wax_license_terms" translatable="false">WA X is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Commercial distribution is permitted provided the licence conditions are met and the source is made available; the licence does not forbid commercial use by itself.</string>

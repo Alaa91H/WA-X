@@ -73,16 +73,19 @@ def render(matrix: dict) -> str:
     out: list[str] = []
     add = out.append
 
-    add("# WaEnhancer compatibility matrix")
+    add("# WA X compatibility matrix")
     add("")
     add("<!-- GENERATED FILE - do not edit by hand. -->")
     add("<!-- Source: tools/compatibility/compatibility.json -->")
-    add("<!-- Regenerate: python3 tools/compatibility/generate_compatibility_md.py -->")
+    add("<!-- Regenerate: python3 tools/compatibility/sync_generated.py -->")
     add("")
     add(
-        "This document is the human readable view of the compatibility matrix. It is the"
+        "This document is the human-readable view of the WA X compatibility matrix. It is the"
         " single place to look before adding support for a new WhatsApp version."
     )
+    add("")
+    add("WA X is a fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), maintained by [Alaa](https://github.com/Alaa91H). Fork provenance does not change the evidence standard used by this matrix.")
+    add("Developer Telegram: [@Alaa91h](https://t.me/Alaa91h) · Community: [@WAXposed](https://t.me/WAXposed) · Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com) · Voluntary support: [Ko-fi](https://ko-fi.com/alaa91h)")
     add("")
 
     add("## Current state")
@@ -228,18 +231,18 @@ def render(matrix: dict) -> str:
     add("")
     add("When adding a new WhatsApp version:")
     add("")
-    add("1. Add the version prefix to `app/src/main/res/values/arrays.xml`.")
-    add("2. Mirror it in `packages.<target>.declaredVersions` in `compatibility.json`.")
-    add("3. Run `python3 tools/compatibility/validate_compatibility.py` to confirm sync.")
-    add("4. Record resolver evidence under `evidence.<FeatureId>.resolvers`.")
+    add("1. Add the version prefix to `packages.<target>.declaredVersions` in `compatibility.json`.")
+    add("2. Run `python3 tools/compatibility/sync_generated.py` to regenerate this document and `arrays.xml`.")
+    add("3. Run `python3 tools/compatibility/validate_compatibility.py` and `sync_generated.py --check`.")
+    add("4. Record real runtime resolver evidence under `evidence.<FeatureId>.resolvers`.")
     add("5. Only then set cells to `supported`.")
-    add("6. Run `python3 tools/compatibility/sync_generated.py`.")
+    add("6. Re-run validation and commit the source-of-truth and generated artifacts together.")
     add("")
     add("The validator refuses any `supported` cell whose resolver evidence is missing,")
     add("partial, or lacking a `verifiedAt` timestamp.")
     add("")
     add(
-        "Step 6 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the"
+        "Step 2 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the"
         " runtime version gate and this document can never disagree."
     )
     add("")

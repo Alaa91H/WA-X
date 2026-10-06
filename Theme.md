@@ -1,8 +1,10 @@
-# Customization Guide for WhatsApp Enhancer
+# WA X — Customization Guide
 
 Custom CSS allows you to modify the appearance of the application, including colors, layouts, and
 visibility of elements. This guide details the available customization options supported by the
 `CustomView` engine.
+
+> WA X is a fork of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), maintained by [Alaa](https://github.com/Alaa91H). Custom CSS targets WhatsApp views and can require updates when WhatsApp changes resources or UI internals. Test themes against the exact target version you use.
 
 ## 1. Global Configuration
 
@@ -184,3 +186,16 @@ TextView:contains(Archived) {
 
 Use the **Assistant Developer** application/tool to inspect the layout and find the resource IDs (
 `#id`) or class names of the elements you wish to customize.
+
+
+---
+
+## WA X project links
+
+- Repository: https://github.com/Alaa91H/WA-X
+- Community: https://t.me/WAXposed
+- Developer Telegram: https://t.me/Alaa91h
+- Email: alahus2591@gmail.com
+- Voluntary support: https://ko-fi.com/alaa91h
+- Compatibility: docs/COMPATIBILITY.md
+- Branding: docs/BRANDING.md

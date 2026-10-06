@@ -8,12 +8,14 @@
 # manifest verification, and GitHub Release publishing.
 #
 # Event matrix
-#   pull_request      Verify only. Builds, tests, lints and signs debug APKs,
-#                     but uploads nothing and publishes nothing.
-#   push to master    The same verification, then publishes the signed debug
-#                     APKs as a CI artifact for manual testing. No Release.
-#   push of tag v*    The release path: release-signed APKs, signature and
-#                     manifest verification, then a GitHub Release.
+#   pull_request      Verify only. Builds/tests the debug variant, imports no
+#                     production signing material, and publishes nothing.
+#   push to master    Verifies with debug tasks, then builds an optimized
+#                     release-type Beta APK signed with the WA X update key,
+#                     uploads it as an artifact and posts it to Beta Testing.
+#   push of tag v*    Builds the optimized release variant with the same WA X
+#                     update key, validates it, creates the GitHub Release,
+#                     then publishes it to Updates & Releases.
 #   workflow_dispatch Same as a master push, or the release path when dispatched
 #                     on an existing tag.
 #
@@ -23,12 +25,14 @@
 #     gradle.properties -> waxVersionName == <tag> without the leading "v"
 #     APK versionName   == waxVersionName
 #     APK versionCode   == waxVersionCode
-#   * Only a tag build is signed with the release keystore. Every other build
-#     is signed with the debug key, so a release key never signs an unreleased
-#     artifact and a debug-signed APK never reaches a Release.
+#   * Every APK distributed to users (Beta or tagged Release) is signed with
+#     the same WA X update key. Pull requests never receive signing secrets.
+#     This keeps Android updates signature-compatible across Beta and Stable.
+#   * Distributed Beta APKs use the optimized release build type (R8 enabled),
+#     but keep a development versionName and a commit-qualified filename.
 #   * A GitHub Release is created only from a tag, never from a branch push.
-#   * Release assets are exactly two .apk files and nothing else. The staging
-#     directory is rejected if it holds any other file type.
+#   * The release payload is exactly one .apk file. The staging directory is
+#     rejected if it holds any other file type or unexpected APK.
 #   * Release notes come from changelog.txt, which must be present and must
 #     name the released version.
 #
@@ -45,9 +49,21 @@ on:
   push:
     branches:
       - master
+      - ci/telegram-release-publisher-test
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      publish_to_telegram:
+        description: Publish the validated APK to Telegram
+        required: true
+        default: true
+        type: boolean
+      force_publish:
+        description: Ignore an existing Telegram publication marker for this commit/channel
+        required: true
+        default: false
+        type: boolean
 
 # Superseded runs on a branch are pointless, so they are cancelled. A release
 # run must never be cancelled halfway through.
@@ -70,7 +86,7 @@ env:
 jobs:
   build:
     name: Verify, test and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
       contents: read
@@ -83,14 +99,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           # The baseline gate and the compatibility validator both need history.
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up JDK
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
@@ -148,7 +164,7 @@ jobs:
           if [[ "$IS_TAG" == "true" ]]; then
             ARTIFACT="apk-$VERSION-$SHA8"
           else
-            ARTIFACT="apk-$VERSION-ci-$SHA8"
+            ARTIFACT="apk-$VERSION-beta-$SHA8"
           fi
 
           {
@@ -165,7 +181,14 @@ jobs:
           echo "| Version | \`$VERSION\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Version code | \`$VERSION_CODE\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Release tag | \`$TAG\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Mode | $(if [[ "$IS_TAG" == true ]]; then echo 'release'; else echo 'verification only'; fi) |" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$IS_TAG" == true ]]; then
+            MODE="stable release"
+          elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            MODE="PR verification"
+          else
+            MODE="signed optimized beta"
+          fi
+          echo "| Mode | $MODE |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Commit | \`${GITHUB_SHA:0:8}\` |" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Make the Gradle wrapper executable
@@ -246,8 +269,8 @@ jobs:
           python3 tools/compatibility/validate_compatibility.py
           python3 tools/compatibility/sync_generated.py --check
 
-      - name: Import the release keystore
-        if: steps.version.outputs.is_tag == 'true'
+      - name: Import the WA X update keystore
+        if: github.event_name != 'pull_request'
         env:
           KEY_STORE: ${{ secrets.KEY_STORE }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -271,18 +294,33 @@ jobs:
           printf '%s' "$KEY_STORE" | base64 --decode > key.jks
 
           # key.jks is read back here so a truncated or mistyped secret fails
-          # now, in the build job, instead of halfway through a release.
+          # before any distributable Beta/Release APK is built.
           if ! keytool -list -keystore key.jks \
               -storepass "$KEY_STORE_PASSWORD" \
               -alias "$KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::The release keystore could not be opened with the configured alias"
+            echo "::error::The WA X update keystore could not be opened with the configured alias"
             exit 1
           fi
 
+          # The certificate fingerprint is public metadata. Carry it forward
+          # so every distributed APK can be proven to use this exact update key.
+          EXPECTED_SIGNING_CERT_SHA256="$(
+            keytool -exportcert \
+              -keystore key.jks \
+              -storepass "$KEY_STORE_PASSWORD" \
+              -alias "$KEY_ALIAS" |
+              sha256sum |
+              awk '{print toupper($1)}'
+          )"
+          if [[ ! "$EXPECTED_SIGNING_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]]; then
+            echo "::error::Could not derive the WA X signing certificate SHA-256"
+            exit 1
+          fi
+          echo "EXPECTED_SIGNING_CERT_SHA256=$EXPECTED_SIGNING_CERT_SHA256" >> "$GITHUB_ENV"
+
       # One staging directory, deterministic names, and nothing that is not an
-      # APK may enter it. Tag runs assemble the release variants with the release
-      # key; every other run keeps the debug-signed APKs, which are built and
-      # signed but never published.
+      # APK may enter it. Every user-distributed build uses the optimized release
+      # variant and the same WA X update key. Pull requests stay debug-only.
       - name: Build and stage the APKs
         if: github.event_name != 'pull_request'
         env:
@@ -299,16 +337,20 @@ jobs:
           # one output to stage and one asset to publish. The name is deterministic:
           # the release uses the version alone, a branch run adds the commit so a test
           # build is never mistaken for a release.
+          SOURCE_VARIANT=release
           if [[ "$IS_TAG" == "true" ]]; then
             ./gradlew $GRADLE_ARGS clean \
               assembleRelease \
               -PreleaseTag="$RELEASE_TAG"
-            SOURCE_VARIANT=release
             APK_NAME="WA-X-v$VERSION.apk"
           else
-            SOURCE_VARIANT=debug
+            # Beta distribution uses the release build type so R8 and release
+            # packaging optimizations match Stable. Without releaseTag Gradle
+            # deliberately keeps versionName as <base>-dev+<SHA8>.
+            ./gradlew $GRADLE_ARGS clean \
+              assembleRelease
             SHA8="${GITHUB_SHA:0:8}"
-            APK_NAME="WA-X-$VERSION-ci-$SHA8.apk"
+            APK_NAME="WA-X-$VERSION-beta-$SHA8.apk"
           fi
 
           mapfile -t found < <(
@@ -337,7 +379,7 @@ jobs:
 
           ls -l dist
 
-      - name: Verify the APK signatures
+      - name: Verify the APK signatures and update certificate
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
@@ -348,20 +390,52 @@ jobs:
             echo "::error::apksigner was not found"
             exit 1
           fi
+          if [[ -z "${EXPECTED_SIGNING_CERT_SHA256:-}" ]]; then
+            echo "::error::Expected WA X signing certificate fingerprint is unavailable"
+            exit 1
+          fi
 
-          {
-            echo "### APK signature verification"
-            echo
-            for apk in dist/*.apk; do
+          echo "### APK signature verification" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+
+          for apk in dist/*.apk; do
+            if ! VERIFY_OUTPUT="$("$APKSIGNER" verify --verbose --print-certs "$apk" 2>&1)"; then
+              echo "::error::apksigner rejected $apk"
+              printf "%s\n" "$VERIFY_OUTPUT" >&2
+              exit 1
+            fi
+
+            CERT_DIGEST_LINE="$(grep -im1 'certificate SHA-256 digest:' <<< "$VERIFY_OUTPUT" || true)"
+            ACTUAL_SIGNING_CERT_SHA256="$(
+              sed -E 's/^.*certificate SHA-256 digest:[[:space:]]*//I' <<< "$CERT_DIGEST_LINE" |
+                tr -d '[:space:]:' |
+                tr '[:lower:]' '[:upper:]'
+            )"
+
+            if [[ ! "$ACTUAL_SIGNING_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]]; then
+              echo "::error::Could not read the signing certificate SHA-256 from $apk"
+              printf "%s\n" "$VERIFY_OUTPUT" >&2
+              exit 1
+            fi
+            if [[ "$ACTUAL_SIGNING_CERT_SHA256" != "$EXPECTED_SIGNING_CERT_SHA256" ]]; then
+              echo "::error::$apk is signed by a different certificate"
+              echo "Expected certificate SHA-256: $EXPECTED_SIGNING_CERT_SHA256" >&2
+              echo "Actual certificate SHA-256:   $ACTUAL_SIGNING_CERT_SHA256" >&2
+              exit 1
+            fi
+
+            {
               echo "**$(basename "$apk")**"
               echo
+              echo "- WA X update certificate SHA-256: `$ACTUAL_SIGNING_CERT_SHA256`"
+              echo "- Signature matches configured update key: **yes**"
+              echo
               echo '```'
-              "$APKSIGNER" verify --verbose --print-certs "$apk"
+              printf "%s\n" "$VERIFY_OUTPUT"
               echo '```'
               echo
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
-
+            } >> "$GITHUB_STEP_SUMMARY"
+          done
       # The published version is checked against the tag here, inside the APK,
       # so a stale or mismatched artifact can never be released.
       - name: Verify the version baked into the APKs
@@ -402,7 +476,7 @@ jobs:
 
       - name: Upload the APK artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.version.outputs.artifact_name }}
           path: dist/*.apk
@@ -416,7 +490,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: write
@@ -428,7 +502,7 @@ jobs:
 
     steps:
       - name: Checkout the release metadata
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
 
@@ -452,7 +526,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Download the signed APKs from this run
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ needs.build.outputs.artifact_name }}
           path: dist
@@ -538,3 +612,296 @@ jobs:
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
           subject-path: dist/*.apk
+  telegram:
+    name: Publish the validated APK to Telegram
+    if: >-
+      ${{
+        always() &&
+        github.event_name != 'pull_request' &&
+        needs.build.result == 'success' &&
+        (needs.release.result == 'success' || needs.release.result == 'skipped') &&
+        (
+          startsWith(github.ref, 'refs/tags/v') ||
+          github.ref_name == 'master' ||
+          github.ref_name == 'ci/telegram-release-publisher-test'
+        ) &&
+        (github.event_name != 'workflow_dispatch' || inputs.publish_to_telegram)
+      }}
+    needs:
+      - build
+      - release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout publishing helpers and history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tools/ci/telegram-requirements.txt
+
+      - name: Download the APK from this workflow run
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: dist
+
+      - name: Validate helpers and prepare publication metadata
+        id: metadata
+        shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          IS_RELEASE: ${{ needs.build.outputs.release }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          python3 -m py_compile tools/ci/generate_telegram_changelog.py tools/ci/publish_telegram_mtproto.py
+          python3 tools/ci/test_telegram_changelog.py
+          python3 tools/ci/test_publish_telegram_mtproto.py
+
+          mapfile -t apks < <(find dist -maxdepth 1 -type f -name '*.apk' | sort)
+          if [[ "${#apks[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one APK from this run, found ${#apks[@]}"
+            printf '%s\n' "${apks[@]:-none}"
+            exit 1
+          fi
+
+          APK="${apks[0]}"
+          SHA256="$(sha256sum "$APK" | awk '{print $1}')"
+          BYTES="$(stat -c '%s' "$APK")"
+          HUMAN_SIZE="$(numfmt --to=iec-i --suffix=B "$BYTES")"
+
+          if [[ "$IS_RELEASE" == "true" ]]; then
+            TYPE=stable
+            TELEGRAM_THREAD_ID=4
+            TELEGRAM_TOPIC_NAME="Updates & Releases"
+            RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+            awk '
+              NR == 1 { first = 1 }
+              first && /^[A-Za-z][^ ]* [0-9]+\.[0-9]+\.[0-9]+/ && seen { exit }
+              first { seen = 1; print }
+            ' changelog.txt > telegram-changelog.txt
+          else
+            TYPE=development
+            TELEGRAM_THREAD_ID=18
+            TELEGRAM_TOPIC_NAME="Beta Testing"
+            RELEASE_URL=""
+            BASE_REF="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+            if [[ -z "$BASE_REF" ]]; then
+              BASE_REF="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+            fi
+            python3 tools/ci/generate_telegram_changelog.py \
+              --base "$BASE_REF" \
+              --head HEAD \
+              --output telegram-changelog.txt
+          fi
+
+          if [[ ! -s telegram-changelog.txt ]]; then
+            echo "::error::Telegram changelog generation produced an empty file"
+            exit 1
+          fi
+
+          {
+            echo "apk=$APK"
+            echo "filename=$(basename "$APK")"
+            echo "sha256=$SHA256"
+            echo "bytes=$BYTES"
+            echo "human_size=$HUMAN_SIZE"
+            echo "type=$TYPE"
+            echo "thread_id=$TELEGRAM_THREAD_ID"
+            echo "topic_name=$TELEGRAM_TOPIC_NAME"
+            echo "release_url=$RELEASE_URL"
+            echo "workflow_url=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "marker_name=telegram-published-$TYPE-$TELEGRAM_THREAD_ID-$GITHUB_SHA"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Telegram publication metadata"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Transport | Direct MTProto via Kurigram |"
+            echo "| Group | @WAXposed |"
+            echo "| Topic | $TELEGRAM_TOPIC_NAME |"
+            echo "| Topic ID | $TELEGRAM_THREAD_ID |"
+            echo "| File | $(basename "$APK") |"
+            echo "| Size | $HUMAN_SIZE |"
+            echo "| SHA-256 | $SHA256 |"
+            echo "| Channel | $TYPE |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Render the Telegram publication in dry-run mode
+        shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 tools/ci/publish_telegram_mtproto.py \
+            --dry-run \
+            --file "${{ steps.metadata.outputs.apk }}" \
+            --type "${{ steps.metadata.outputs.type }}" \
+            --version "$VERSION" \
+            --commit "$GITHUB_SHA" \
+            --branch "$GITHUB_REF_NAME" \
+            --sha256 "${{ steps.metadata.outputs.sha256 }}" \
+            --size "${{ steps.metadata.outputs.human_size }}" \
+            --changelog-file telegram-changelog.txt \
+            --release-url "${{ steps.metadata.outputs.release_url }}" \
+            --workflow-url "${{ steps.metadata.outputs.workflow_url }}" \
+            --chat-id "@WAXposed" \
+            --thread-id "${{ steps.metadata.outputs.thread_id }}"
+
+      - name: Prevent accidental duplicate Telegram publications
+        id: guard
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARKER_NAME: ${{ steps.metadata.outputs.marker_name }}
+          FORCE_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.force_publish || false }}
+        run: |
+          set -euo pipefail
+
+          SHOULD_PUBLISH=true
+          if [[ "$FORCE_PUBLISH" != "true" ]]; then
+            EXISTING="$(
+              gh api \
+                -H 'Accept: application/vnd.github+json' \
+                "/repos/$GITHUB_REPOSITORY/actions/artifacts?name=$MARKER_NAME&per_page=1" \
+                --jq '.total_count'
+            )"
+            if [[ "$EXISTING" != "0" ]]; then
+              SHOULD_PUBLISH=false
+              echo "An existing Telegram publication marker was found for this build and topic."
+            fi
+          fi
+
+          echo "should_publish=$SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Telegram secrets
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          set -euo pipefail
+          set +x
+          for name in TELEGRAM_BOT_TOKEN TELEGRAM_API_ID TELEGRAM_API_HASH; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required GitHub secret: $name"
+              exit 1
+            fi
+            echo "$name: configured"
+          done
+
+      - name: Install pinned MTProto publisher dependencies
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install \
+            --disable-pip-version-check \
+            --no-input \
+            -r tools/ci/telegram-requirements.txt
+
+          python3 - <<'PY'
+          import pyrogram
+
+          print(f"Kurigram/Pyrogram runtime version: {pyrogram.__version__}")
+          try:
+              import tgcrypto
+              print("TgCrypto acceleration: enabled")
+          except ImportError:
+              raise SystemExit("TgCrypto acceleration is missing")
+          try:
+              import uvloop
+              print(f"uvloop acceleration: enabled ({uvloop.__version__})")
+          except ImportError:
+              raise SystemExit("uvloop acceleration is missing")
+          PY
+
+      - name: Publish APK and changelog through direct MTProto
+        id: telegram_publish
+        if: steps.guard.outputs.should_publish == 'true'
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          python3 tools/ci/publish_telegram_mtproto.py \
+            --file "${{ steps.metadata.outputs.apk }}" \
+            --type "${{ steps.metadata.outputs.type }}" \
+            --version "$VERSION" \
+            --commit "$GITHUB_SHA" \
+            --branch "$GITHUB_REF_NAME" \
+            --sha256 "${{ steps.metadata.outputs.sha256 }}" \
+            --size "${{ steps.metadata.outputs.human_size }}" \
+            --changelog-file telegram-changelog.txt \
+            --release-url "${{ steps.metadata.outputs.release_url }}" \
+            --workflow-url "${{ steps.metadata.outputs.workflow_url }}" \
+            --chat-id "@WAXposed" \
+            --thread-id "${{ steps.metadata.outputs.thread_id }}"
+
+      - name: Record successful Telegram publication
+        if: steps.guard.outputs.should_publish == 'true' && steps.telegram_publish.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p telegram-publication-marker
+          {
+            echo "repository=$GITHUB_REPOSITORY"
+            echo "sha=$GITHUB_SHA"
+            echo "channel=${{ steps.metadata.outputs.type }}"
+            echo "topic=${{ steps.metadata.outputs.topic_name }}"
+            echo "thread_id=${{ steps.metadata.outputs.thread_id }}"
+            echo "transport=mtproto-kurigram"
+            echo "announcement_message_id=${{ steps.telegram_publish.outputs.announcement_message_id }}"
+            echo "document_message_id=${{ steps.telegram_publish.outputs.document_message_id }}"
+          } > telegram-publication-marker/published.txt
+
+      - name: Upload Telegram publication marker
+        if: steps.guard.outputs.should_publish == 'true' && steps.telegram_publish.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.metadata.outputs.marker_name }}
+          path: telegram-publication-marker/published.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summarize Telegram publication
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### Telegram distribution"
+            echo
+            echo "- Transport: Direct MTProto / Kurigram 2.2.26"
+            echo "- Group: @WAXposed"
+            echo "- Topic: ${{ steps.metadata.outputs.topic_name || 'not-evaluated' }}"
+            echo "- Topic ID: ${{ steps.metadata.outputs.thread_id || 'n/a' }}"
+            echo "- Duplicate guard: ${{ steps.guard.outputs.should_publish || 'not-evaluated' }}"
+            if [[ "${{ steps.guard.outputs.should_publish }}" == "true" ]]; then
+              echo "- Changelog message: ${{ steps.telegram_publish.outputs.announcement_message_id || 'n/a' }}"
+              echo "- APK message: ${{ steps.telegram_publish.outputs.document_message_id || 'n/a' }}"
+            else
+              echo "- Result: existing publication marker found; Telegram post skipped"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

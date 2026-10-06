@@ -308,7 +308,7 @@ def build() -> dict[str, Any]:
             },
             "business": {
                 "packageName": "com.whatsapp.w4b",
-                "applicationId": "com.wax.module.w4b",
+                "applicationId": "com.wax.module",
                 "declaredVersions": versions["supported_versions_business"],
             },
         },
