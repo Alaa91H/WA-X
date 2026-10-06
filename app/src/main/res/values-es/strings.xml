@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List está ocultando WA X a:</string>
     <string name="diag_hma_disable">Desactiva el bloqueo de WhatsApp/Business en Hide My App List para que WA X funcione correctamente.</string>
     <string name="diag_copied">Línea copiada al portapapeles</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">Configuración por aplicación</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">Estos son los valores predeterminados. Cada aplicación de destino que no tenga un valor propio los utiliza.</string>
+    <string name="scope_target_explainer">%1$d de %2$d ajustes están personalizados para esta aplicación. Los ajustes en «Usar global» siguen el valor global.</string>
+    <string name="search_settings">Buscar ajustes</string>
+    <string name="no_settings_match">Ningún ajuste coincide con esta búsqueda.</string>
+    <string name="tri_state_inherit">Usar global</string>
+    <string name="tri_state_enabled">Activado</string>
+    <string name="tri_state_disabled">Desactivado</string>
+    <string name="default_value">Valor predeterminado para cada aplicación</string>
+    <string name="follows_global">Sigue el valor global</string>
+    <string name="pinned_to">Fijado en: %1$s</string>
+    <string name="pin_global">Fijar</string>
+    <string name="follow_global">Usar global</string>
+    <string name="copy_global_to_target">Copiar todos los valores globales a esta aplicación</string>
+    <string name="reset_this_target">Restablecer esta aplicación</string>
+    <string name="reset_all_targets">Restablecer todas las aplicaciones</string>
+    <string name="edit_on_original_screen">Edita esta opción en la pantalla %1$s.</string>
+    <string name="open_per_target_settings">Configurar WhatsApp y WhatsApp Business por separado</string>
+    <string name="open_per_target_settings_summary">Asigna ajustes propios a WhatsApp y WhatsApp Business, o deja que cada ajuste siga el valor predeterminado global.</string>
+    <string name="reload">Recargar</string>
 </resources>
