@@ -10,10 +10,11 @@
 # Event matrix
 #   pull_request      Verify only. Builds, tests, lints and signs debug APKs,
 #                     but uploads nothing and publishes nothing.
-#   push to master    The same verification, then publishes the signed debug
-#                     APKs as a CI artifact for manual testing. No Release.
-#   push of tag v*    The release path: release-signed APKs, signature and
-#                     manifest verification, then a GitHub Release.
+#   push to master    The same verification, publishes the signed debug APK
+#                     as a CI artifact, then posts it to Telegram Beta Testing.
+#   push of tag v*    The release path: release-signed APK, signature and
+#                     manifest verification, GitHub Release, then Telegram
+#                     Updates & Releases.
 #   workflow_dispatch Same as a master push, or the release path when dispatched
 #                     on an existing tag.
 #
@@ -27,8 +28,8 @@
 #     is signed with the debug key, so a release key never signs an unreleased
 #     artifact and a debug-signed APK never reaches a Release.
 #   * A GitHub Release is created only from a tag, never from a branch push.
-#   * Release assets are exactly two .apk files and nothing else. The staging
-#     directory is rejected if it holds any other file type.
+#   * The release payload is exactly one .apk file. The staging directory is
+#     rejected if it holds any other file type or unexpected APK.
 #   * Release notes come from changelog.txt, which must be present and must
 #     name the released version.
 #
