@@ -71,22 +71,31 @@ class SharedPreferencesSettingsStore(
             // these through SharedPreferences, which throws ClassCastException when a key
             // written as a String is read with getBoolean, so the wrong type here would
             // crash WhatsApp rather than mis-set a preference.
-            when (type ?: ValueType.Text) {
-                ValueType.Flag -> editor.putBoolean(physicalKey, value.toBooleanStrictOrNull() ?: false)
-                ValueType.Whole -> editor.putInt(physicalKey, value.toIntOrNull() ?: 0)
-                ValueType.Real -> editor.putFloat(physicalKey, value.toFloatOrNull() ?: 0f)
-                ValueType.Set ->
-                    editor.putStringSet(
-                        physicalKey,
-                        value.split(SEP).filter { it.isNotEmpty() }.toSet(),
-                    )
-
-                ValueType.Text -> editor.putString(physicalKey, value)
-            }
+            putTyped(editor, physicalKey, value, type ?: ValueType.Text)
             mirror[physicalKey] = value
             types[physicalKey] = type ?: ValueType.Text
         }
         editor.apply()
+    }
+
+    private fun putTyped(
+        editor: SharedPreferences.Editor,
+        physicalKey: String,
+        value: String,
+        type: ValueType,
+    ) {
+        when (type) {
+            ValueType.Flag -> editor.putBoolean(physicalKey, value.toBooleanStrictOrNull() ?: false)
+            ValueType.Whole -> editor.putInt(physicalKey, value.toIntOrNull() ?: 0)
+            ValueType.Real -> editor.putFloat(physicalKey, value.toFloatOrNull() ?: 0f)
+            ValueType.Set ->
+                editor.putStringSet(
+                    physicalKey,
+                    value.split(SEP).filter { it.isNotEmpty() }.toSet(),
+                )
+
+            ValueType.Text -> editor.putString(physicalKey, value)
+        }
     }
 
     override fun readString(
@@ -182,9 +191,18 @@ class SharedPreferencesSettingsStore(
     }
 
     override fun clearScope(scope: SettingsScope) {
-        val prefix = scope.physicalPrefix()
-        val doomed = mirror.keys.filter { it.startsWith(prefix) }
+        val doomed =
+            when (scope) {
+                is SettingsScope.Global ->
+                    mirror.keys.filterNot { SettingsKeys.isOverrideKey(it) }
+
+                is SettingsScope.Target -> {
+                    val prefix = scope.physicalPrefix()
+                    mirror.keys.filter { it.startsWith(prefix) }
+                }
+            }
         if (doomed.isEmpty()) return
+
         val editor = prefs.edit()
         for (key in doomed) {
             editor.remove(key)
@@ -198,19 +216,30 @@ class SharedPreferencesSettingsStore(
         from: SettingsScope,
         to: SettingsScope,
     ) {
+        if (from == to) return
+
+        // Snapshot the logical source keys before clearing the destination. In
+        // particular Global has an empty physical prefix, so prefix matching would
+        // otherwise accidentally include every target override as if it were Global.
+        val source =
+            keysWithOverrides(from).mapNotNull { logicalKey ->
+                val sourceKey = SettingsKeys.physicalKey(from, logicalKey)
+                val value = mirror[sourceKey] ?: return@mapNotNull null
+                val type = types[sourceKey] ?: ValueType.Text
+                Triple(logicalKey, value, type)
+            }
+
         clearScope(to)
-        val fromPrefix = from.physicalPrefix()
+        if (source.isEmpty()) return
+
         val editor = prefs.edit()
-        var wrote = false
-        for ((physicalKey, value) in mirror) {
-            if (!physicalKey.startsWith(fromPrefix)) continue
-            val targetKey = to.physicalPrefix() + physicalKey.removePrefix(fromPrefix)
-            editor.putString(targetKey, value)
+        for ((logicalKey, value, type) in source) {
+            val targetKey = SettingsKeys.physicalKey(to, logicalKey)
+            putTyped(editor, targetKey, value, type)
             mirror[targetKey] = value
-            types[targetKey] = types[physicalKey] ?: ValueType.Text
-            wrote = true
+            types[targetKey] = type
         }
-        if (wrote) editor.apply()
+        editor.apply()
     }
 
     override fun replaceAll(
