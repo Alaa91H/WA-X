@@ -356,6 +356,7 @@ class ProtocolTreeNodeWpp(
                 try {
                     FMessageWpp.UserJid(FMessageWpp.UserJid(fieldJid.get(mInstance)).userRawString)
                 } catch (e: Exception) {
+                    XposedBridge.log(e)
                     null
                 }
             set(value) =
