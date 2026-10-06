@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.core.content.edit
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.wax.module.R
@@ -116,7 +117,7 @@ class FileReaderPreference
                     this.xmlContent = content
                     this.filePath = path
 
-                    sharedPreferences?.edit()?.putString(key, content)?.apply()
+                    sharedPreferences?.edit { putString(key, content) }
                     summary = path
                     Toast.makeText(context, "XML file loaded successfully", Toast.LENGTH_SHORT).show()
                 }

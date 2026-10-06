@@ -186,7 +186,7 @@ class FileSelectPreference :
                 } ?: error("Unable to open the selected file")
 
                 Handler(Looper.getMainLooper()).post {
-                    sharedPreferences!!.edit().putString(key, outFile.absolutePath).apply()
+                    sharedPreferences!!.edit { putString(key, outFile.absolutePath) }
                     summary = outFile.absolutePath
                 }
             } catch (exception: Exception) {

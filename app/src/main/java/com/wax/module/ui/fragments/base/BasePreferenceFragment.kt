@@ -353,7 +353,6 @@ abstract class BasePreferenceFragment :
         }
 
         if (key == AppLanguage.KEY) {
-            prefs.edit().commit()
             // The whole activity is recreated so every string, including the ones behind
             // labels that are already on screen, comes back in the chosen language.
             activity?.recreate()
