@@ -124,7 +124,8 @@ class AntiRevoke(
                     val fStatusKey = FStatusWpp.FStatusKey(param.args[1])
                     val fstatus = fStatusKey.fStatus ?: return
                     val fMessage = fstatus.fMessage ?: return
-                    if (!fStatusKey.isFromMe && handleRevocationAttempt(
+                    if (!fStatusKey.isFromMe &&
+                        handleRevocationAttempt(
                             fMessage,
                             fStatusKey.messageID,
                         ) != 0

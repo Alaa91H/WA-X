@@ -570,7 +570,9 @@ object ModuleRuntime {
             if (str == null) return null
             if (str.contains(".") && str.contains("@") && str.indexOf(".") < str.indexOf("@")) {
                 return str.substring(0, str.indexOf("."))
-            } else if (str.contains("@g.us") || str.contains("@s.whatsapp.net") || str.contains("@broadcast") ||
+            } else if (str.contains("@g.us") ||
+                str.contains("@s.whatsapp.net") ||
+                str.contains("@broadcast") ||
                 str.contains("@lid")
             ) {
                 return str.substring(0, str.indexOf("@"))
@@ -764,7 +766,8 @@ object ModuleRuntime {
     private fun isBridgeConnected(): Boolean {
         val currentClient = client ?: return false
         val service = currentClient.service
-        return service != null && service.asBinder().isBinderAlive &&
+        return service != null &&
+            service.asBinder().isBinderAlive &&
             service
                 .asBinder()
                 .pingBinder()

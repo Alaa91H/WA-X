@@ -52,10 +52,11 @@ class ThemePreference(
         val needsPermission =
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) ||
                 (
-                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R && ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    ) != PackageManager.PERMISSION_GRANTED
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        ) != PackageManager.PERMISSION_GRANTED
                 )
         if (needsPermission) {
             ModuleApplication.showRequestStoragePermission(context as Activity)
