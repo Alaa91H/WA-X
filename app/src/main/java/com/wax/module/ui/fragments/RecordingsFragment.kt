@@ -214,7 +214,7 @@ class RecordingsFragment :
             .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
             .setMessage(recording.file.name)
-            .setPositiveButton(android.R.string.yes) { _, _ ->
+            .setPositiveButton(R.string.yes) { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val deleted = recording.file.delete()
                     withContext(Dispatchers.Main) {
@@ -225,7 +225,7 @@ class RecordingsFragment :
                         }
                     }
                 }
-            }.setNegativeButton(android.R.string.no, null)
+            }.setNegativeButton(R.string.no, null)
             .show()
     }
 
@@ -301,7 +301,7 @@ class RecordingsFragment :
             .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
             .setMessage(getString(R.string.delete_multiple_confirmation, selected.size))
-            .setPositiveButton(android.R.string.yes) { _, _ ->
+            .setPositiveButton(R.string.yes) { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     var deleted = 0
                     for (rec in selected) {
@@ -315,7 +315,7 @@ class RecordingsFragment :
                         loadRecordings()
                     }
                 }
-            }.setNegativeButton(android.R.string.no, null)
+            }.setNegativeButton(R.string.no, null)
             .show()
     }
 
