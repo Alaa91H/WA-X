@@ -269,6 +269,38 @@ jobs:
           python3 tools/compatibility/validate_compatibility.py
           python3 tools/compatibility/sync_generated.py --check
 
+      # Every WA X-owned feature is free. The scanner fails the build if an internal
+      # access gate reappears, and --check-mirror proves the scanner and the runtime
+      # audit still share one definition of what a gate is. The self-test runs first
+      # because a gate that cannot fail is worse than no gate.
+      - name: Enforce the all-features-free access contract
+        run: |
+          set -euo pipefail
+          python3 tools/quality/test_scan_access_gates.py
+          python3 tools/quality/scan_access_gates.py --check-mirror
+
+      # The module is a legacy Xposed API module, and the loader contract behind that
+      # is silent when it breaks: a missing meta-data entry means LSPosed never calls
+      # the module, and adding the modern META-INF/xposed files makes it ignore the
+      # legacy entry point entirely. The self-test runs first so the checker is proven
+      # able to fail before it is trusted to pass.
+      - name: Enforce the LSPosed loader contract
+        run: |
+          set -euo pipefail
+          python3 tools/quality/test_check_lsposed_contract.py
+          python3 tools/quality/check_lsposed_contract.py
+
+      # The update check is the one network request a user sees the failure of, and it
+      # reports every failure the same way: "could not reach the update server". A
+      # mistyped repository slug therefore ships as an orange banner that looks like a
+      # network problem and is retried forever. The self-test runs first because a gate
+      # that cannot fail is worse than no gate.
+      - name: Enforce the update endpoint contract
+        run: |
+          set -euo pipefail
+          python3 tools/quality/test_check_repository_urls.py
+          python3 tools/quality/check_repository_urls.py
+
       - name: Import the WA X update keystore
         if: github.event_name != 'pull_request'
         env:
