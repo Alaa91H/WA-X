@@ -336,6 +336,20 @@ abstract class BasePreferenceFragment :
         val filtergroups = prefs.getBoolean("filtergroups", false)
         setPreferenceState("separategroups", !filtergroups)
 
+        val bootloaderSpooferEnabled = prefs.getBoolean("bootloader_spoofer", false)
+        findPreference<Preference>("bootloader_spoofer_custom")?.isEnabled = bootloaderSpooferEnabled
+        val customKeyBoxEnabled = prefs.getBoolean("bootloader_spoofer_custom", false)
+        findPreference<Preference>("bootloader_spoofer_xml")?.isEnabled =
+            bootloaderSpooferEnabled && customKeyBoxEnabled
+
+        val transcriptionEnabled = prefs.getBoolean("audio_transcription", false)
+        val transcriptionProvider = prefs.getString("transcription_provider", "assemblyai")
+        findPreference<Preference>("transcription_provider")?.isEnabled = transcriptionEnabled
+        findPreference<Preference>("assemblyai_key")?.isEnabled =
+            transcriptionEnabled && transcriptionProvider == "assemblyai"
+        findPreference<Preference>("groq_api_key")?.isEnabled =
+            transcriptionEnabled && transcriptionProvider == "groq"
+
         val callBlockContacts = findPreference<Preference>("call_block_contacts")
         val callWhiteContacts = findPreference<Preference>("call_white_contacts")
         if (callBlockContacts != null && callWhiteContacts != null) {
