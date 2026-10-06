@@ -333,7 +333,13 @@ def main() -> int:
             print(chunk)
         return 0
 
-    document_id, text_id = asyncio.run(publish_mtproto(args, file_bytes))
+    try:
+        import uvloop
+    except ImportError:
+        document_id, text_id = asyncio.run(publish_mtproto(args, file_bytes))
+    else:
+        document_id, text_id = uvloop.run(publish_mtproto(args, file_bytes))
+
     write_github_outputs(document_id, text_id)
     return 0
 
