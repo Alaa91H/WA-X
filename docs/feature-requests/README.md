@@ -1,8 +1,8 @@
 # WA X Feature Request Staging
 
-This directory contains **100 issue-ready feature/work-item specifications** extracted from the WA X feature additions prompt (sections 3–102).
+This directory contains **101 issue-ready feature/work-item specifications** extracted from the WA X feature additions prompt (sections 3–102).
 
-GitHub Issues are currently disabled on `Alaa91H/WA-X`, so these files are staged on the `feature-requests-staging` branch until Issues are enabled. Each file is designed to become one independent GitHub Issue without re-authoring.
+GitHub Issues are enabled on `Alaa91H/WA-X`. This branch remains the issue-specification mirror for the live feature requests.
 
 ## Import rules
 
@@ -115,3 +115,4 @@ GitHub Issues are currently disabled on `Alaa91H/WA-X`, so these files are stage
 - **F100 · P1** — [PRIVACY EVENT TIMELINE](./F100-privacy-event-timeline.md)
 - **F101 · LAB** — [VIDEO NOTE ATTACHMENT](./F101-video-note-attachment.md)
 - **F102 · LAB** — [SILENT SEND](./F102-silent-send.md)
+- **F103 · P1** — [SINGLE-TAP MESSAGE ACTION POPUP](./F103-single-tap-message-action-popup.md)
