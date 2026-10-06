@@ -1086,7 +1086,7 @@ class CustomView(
             height: Int,
         ): Drawable? {
             val file = if (filePath.startsWith("/")) File(filePath) else File(themeDir, filePath)
-            val key = "${file.absolutePath}@${width}:${height}"
+            val key = "${file.absolutePath}@$width:$height"
 
             val cachedDrawable = drawableCache.get(key)
 
@@ -1114,7 +1114,7 @@ class CustomView(
             callback: (Drawable?) -> Unit,
         ) {
             val file = if (filePath.startsWith("/")) File(filePath) else File(themeDir, filePath)
-            val key = "${file.absolutePath}@${width}:${height}"
+            val key = "${file.absolutePath}@$width:$height"
             val cachedSync =
                 drawableCache
                     .get(key)
@@ -1310,35 +1310,35 @@ class CustomView(
 
     object GradientDrawableParser {
         fun parseGradient(
-                angle: Float,
-                colors: IntArray,
-                positions: FloatArray,
-                width: Int,
-                height: Int,
-            ): BitmapDrawable {
-                val lg = createLinearGradient(angle, colors, positions, width, height)
-                val sd = ShapeDrawable(RectShape())
-                sd.intrinsicWidth = width
-                sd.intrinsicHeight = height
-                sd.paint.shader = lg
-                val bitmap = createBitmap(width, height)
-                sd.bounds = android.graphics.Rect(0, 0, width, height)
-                sd.draw(Canvas(bitmap))
-                return bitmap.toDrawable(Utils.application.resources)
-            }
+            angle: Float,
+            colors: IntArray,
+            positions: FloatArray,
+            width: Int,
+            height: Int,
+        ): BitmapDrawable {
+            val lg = createLinearGradient(angle, colors, positions, width, height)
+            val sd = ShapeDrawable(RectShape())
+            sd.intrinsicWidth = width
+            sd.intrinsicHeight = height
+            sd.paint.shader = lg
+            val bitmap = createBitmap(width, height)
+            sd.bounds = android.graphics.Rect(0, 0, width, height)
+            sd.draw(Canvas(bitmap))
+            return bitmap.toDrawable(Utils.application.resources)
+        }
 
         private fun createLinearGradient(
-                angle: Float,
-                colors: IntArray,
-                positions: FloatArray,
-                width: Int,
-                height: Int,
-            ): LinearGradient {
-                val radians = Math.toRadians(angle.toDouble())
-                val x0 = (0.5 * width + 0.5 * width * cos(radians - Math.PI / 2)).toFloat()
-                val y0 = (0.5 * height + 0.5 * height * sin(radians - Math.PI / 2)).toFloat()
-                val x1 = (0.5 * width + 0.5 * width * cos(radians + Math.PI / 2)).toFloat()
-                val y1 = (0.5 * height + 0.5 * height * sin(radians + Math.PI / 2)).toFloat()
+            angle: Float,
+            colors: IntArray,
+            positions: FloatArray,
+            width: Int,
+            height: Int,
+        ): LinearGradient {
+            val radians = Math.toRadians(angle.toDouble())
+            val x0 = (0.5 * width + 0.5 * width * cos(radians - Math.PI / 2)).toFloat()
+            val y0 = (0.5 * height + 0.5 * height * sin(radians - Math.PI / 2)).toFloat()
+            val x1 = (0.5 * width + 0.5 * width * cos(radians + Math.PI / 2)).toFloat()
+            val y1 = (0.5 * height + 0.5 * height * sin(radians + Math.PI / 2)).toFloat()
             return LinearGradient(x0, y0, x1, y1, colors, positions, Shader.TileMode.CLAMP)
         }
     }
