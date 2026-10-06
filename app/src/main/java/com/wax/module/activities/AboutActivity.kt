@@ -31,7 +31,7 @@ class AboutActivity : BaseActivity() {
      */
     private val upstreamCredits =
         listOf(
-            "Dev4Mod" to "https://github.com/Alaa91H",
+            "Dev4Mod / WaEnhancer (upstream)" to UPSTREAM_REPOSITORY,
             "frknkrc44" to "https://github.com/frknkrc44",
             "mubashardev" to "https://github.com/mubashardev",
             "masbentoooredoo" to "https://github.com/masbentoooredoo",
@@ -61,7 +61,8 @@ class AboutActivity : BaseActivity() {
             getString(R.string.wax_version_format, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
 
         binding.btnGithub.setOnClickListener { openUrl(GITHUB_REPOSITORY) }
-        binding.btnTelegram.setOnClickListener { openUrl(TELEGRAM) }
+        binding.btnTelegram.setOnClickListener { openUrl(PERSONAL_TELEGRAM) }
+        binding.btnCommunity.setOnClickListener { openUrl(COMMUNITY) }
         binding.btnProfile.setOnClickListener { openUrl(MAINTAINER_PROFILE) }
         binding.btnEmail.setOnClickListener { openUrl("mailto:$EMAIL") }
         binding.btnSupport.setOnClickListener { openUrl(SUPPORT) }
@@ -102,7 +103,9 @@ class AboutActivity : BaseActivity() {
     private companion object {
         const val GITHUB_REPOSITORY = "https://github.com/Alaa91H/WA-X"
         const val MAINTAINER_PROFILE = "https://github.com/Alaa91H/Alaa91H"
-        const val TELEGRAM = "https://t.me/Alaa91h"
+        const val PERSONAL_TELEGRAM = "https://t.me/Alaa91h"
+        const val COMMUNITY = "https://t.me/WAXposed"
+        const val UPSTREAM_REPOSITORY = "https://github.com/Dev4Mod/WaEnhancer"
         const val EMAIL = "alahus2591@gmail.com"
         const val SUPPORT = "https://ko-fi.com/alaa91h"
     }

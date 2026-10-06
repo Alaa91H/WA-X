@@ -318,3 +318,15 @@ Do not publish an older APK from another workflow run.
 - publish only the APK from the current workflow run;
 - keep Kurigram pinned;
 - do not use third-party Telegram uploader Actions for the secret-bearing step.
+
+
+## Project identity and contact
+
+WA X is a fork and continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer) and is currently developed/maintained by [Alaa](https://github.com/Alaa91H).
+
+- Community: https://t.me/WAXposed
+- Developer Telegram: https://t.me/Alaa91h
+- Email: alahus2591@gmail.com
+- Voluntary support: https://ko-fi.com/alaa91h
+
+The release bot is a distribution tool only. It does not change project licensing, attribution or release provenance.

@@ -46,7 +46,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:scaleType="centerCrop"
-                        android:src="@mipmap/launcher" />
+                        android:src="@mipmap/ic_launcher" />
 
                 </com.google.android.material.card.MaterialCardView>
 
@@ -192,6 +192,18 @@
                         app:icon="@drawable/ic_telegram"
                         app:iconGravity="start"
                         app:iconPadding="@dimen/spacing_small" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCommunity"
+                        style="@style/ModernButton.Outlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_small"
+                        android:text="@string/wax_go_to_community"
+                        app:icon="@drawable/ic_telegram"
+                        app:iconGravity="start"
+                        app:iconPadding="@dimen/spacing_small"
+                        app:strokeColor="?attr/colorPrimary" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnGithub"
