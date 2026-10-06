@@ -9,7 +9,6 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.net.toUri
-import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -96,9 +95,7 @@ class MainActivity : BaseActivity() {
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
-                    binding.navView.menu
-                        [position]
-                        .isChecked = true
+                    binding.navView.menu.getItem(position).isChecked = true
 
                     val scrollKey = pendingScrollToPreference
                     if (pendingScrollToFragment == position && scrollKey != null) {

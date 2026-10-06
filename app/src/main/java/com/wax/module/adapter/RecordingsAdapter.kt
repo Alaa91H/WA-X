@@ -128,7 +128,12 @@ class RecordingsAdapter(
         holder.duration.text = recording.getFormattedDuration()
 
         val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-        holder.details.text = holder.itemView.context.getString(\n            R.string.recording_details_format,\n            recording.getFormattedSize(),\n            dateFormat.format(Date(recording.date)),\n        )
+        holder.details.text =
+            holder.itemView.context.getString(
+                R.string.recording_details_format,
+                recording.getFormattedSize(),
+                dateFormat.format(Date(recording.date)),
+            )
 
         if (isSelectionMode) {
             holder.checkbox.visibility = View.VISIBLE

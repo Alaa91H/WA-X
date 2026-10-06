@@ -395,7 +395,7 @@ internal class GoogleTranslateChatUi(
             .setView(ScrollView(ctx).apply { addView(layout) })
             .setNegativeButton(ctx.getString(R.string.cancel), null)
             .setPositiveButton(ctx.getString(R.string.save)) { _, _ ->
-                settings.edit {
+                settings.edit().apply {
                     if (chat != null && inherit.isChecked) {
                         remove(key(chat))
                     } else {
@@ -405,7 +405,7 @@ internal class GoogleTranslateChatUi(
                         )
                     }
                     remove(legacyKey(chat))
-                }
+                }.apply()
                 failures.clear()
                 // Invalidate requests from an older selection, including changes made away from the conversation.
                 bound.clear()

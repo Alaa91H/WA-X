@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Build
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
 
 object StateListDrawableCompact {
     private val drawableClass = StateListDrawable::class.java
