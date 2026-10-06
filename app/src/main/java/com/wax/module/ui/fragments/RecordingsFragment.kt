@@ -101,8 +101,16 @@ class RecordingsFragment :
         }
 
         addBaseDir(dirs, addedPaths, File(Environment.getExternalStorageDirectory(), "WA Call Recordings"))
-        addBaseDir(dirs, addedPaths, File("/sdcard/Android/data/com.whatsapp/files/Recordings"))
-        addBaseDir(dirs, addedPaths, File("/sdcard/Android/data/com.whatsapp.w4b/files/Recordings"))
+        addBaseDir(
+            dirs,
+            addedPaths,
+            File(Environment.getExternalStorageDirectory(), "Android/data/com.whatsapp/files/Recordings"),
+        )
+        addBaseDir(
+            dirs,
+            addedPaths,
+            File(Environment.getExternalStorageDirectory(), "Android/data/com.whatsapp.w4b/files/Recordings"),
+        )
         addBaseDir(dirs, addedPaths, File(Environment.getExternalStorageDirectory(), "Music/WA X/Recordings"))
         return dirs
     }
