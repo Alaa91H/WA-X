@@ -557,4 +557,8 @@
     <string name="enable_custom_keybox_sum">Use a custom keybox.xml file for bootloader spoofing.</string>
     <string name="use_custom_keybox_file">Use custom keybox.xml file</string>
     <string name="no_file_selected">No file selected</string>
+    <string name="developer_warning_title">Development build</string>
+    <string name="developer_warning_summary">This build contains development changes and may be less stable.</string>
+    <string name="system_info">System info</string>
+    <string name="edit">Edit</string>
 </resources>

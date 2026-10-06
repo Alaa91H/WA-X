@@ -46,7 +46,7 @@
                 android:paddingEnd="8dp"
                 android:paddingBottom="4dp"
                 android:textColor="@android:color/white"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 tools:text="PRIVACY" />
 
