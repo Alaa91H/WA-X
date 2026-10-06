@@ -70,26 +70,29 @@ class FileSelectPreference :
     }
 
     override fun onPreferenceClick(preference: Preference): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                showAlertPermission()
-                return true
-            }
-        } else {
-            val readDenied =
-                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) !=
-                    PackageManager.PERMISSION_GRANTED
-            val writeDenied =
-                ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                    PackageManager.PERMISSION_GRANTED
-            if (readDenied || writeDenied) {
-                ModuleApplication.showRequestStoragePermission(context as Activity)
-                return true
-            }
-        }
-
         FilePicker.setOnFilePickedListener(this)
+
         if (selectDirectory) {
+            // The legacy directory picker works with raw filesystem paths, so it still
+            // needs storage access. Ordinary file/image pickers below use Android's
+            // document/photo picker and receive URI grants instead.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (!Environment.isExternalStorageManager()) {
+                    showAlertPermission()
+                    return true
+                }
+            } else {
+                val readDenied =
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED
+                val writeDenied =
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED
+                if (readDenied || writeDenied) {
+                    ModuleApplication.showRequestStoragePermission(context as Activity)
+                    return true
+                }
+            }
             showSelectDirectoryDialog()
             return true
         }
@@ -104,8 +107,10 @@ class FileSelectPreference :
             )
             return true
         }
+
+        FilePicker.setOnUriPickedListener(this)
         FilePicker.fileCapture.launch(mineTypes)
-        return false
+        return true
     }
 
     private fun showSelectDirectoryDialog() {
