@@ -235,9 +235,9 @@
     <string name="navigation_transparency">Transparencia de la Navegación</string>
     <string name="show_online_last_seen_in_conversation_list">Mostrar en línea/Última vez en la lista de conversaciones</string>
     <string name="show_online_last_seen_in_conversation_list_sum">Mostrar un texto del En Línea o Última Vez en la pantalla de inicio\n(NOTA: Debe activar el en línea para todos en el menú de configuración de privacidad de WhatsApp)</string>
-    <string name="toast_online">%s en linea</string>
+    <string name="toast_online">%s en línea</string>
     <string name="show_toast_on_contact_online">Mostrar una notificación del contacto en línea</string>
-    <string name="show_toast_on_contact_online_sum">Mostrar una notificación cuando un contacto está en linea</string>
+    <string name="show_toast_on_contact_online_sum">Mostrar una notificación cuando un contacto está en línea</string>
     <string name="new_context_menu_ui">Nueva interfaz de menú contextual</string>
     <string name="new_context_menu_ui_sum">Se habilitará el nuevo menú contextual de mensajes estilo iOS.</string>
     <string name="filter_items_by_id">Filtrar elementos por ID</string>
@@ -426,7 +426,7 @@
     <string name="show_contact_info">Mostrar en la información de contacto</string>
     <string name="show_contact_info_menu">Mostrar en el menú de información de contactos</string>
     <string name="block_call">Bloquear llamada</string>
-    <string name="always_online">Siempre en linea</string>
+    <string name="always_online">Siempre en línea</string>
     <string name="always_online_sum">Mostrar \'en línea\' incluso si minimizas WhatsApp (no funciona si lo eliminas de los recientes)</string>
     <string name="additional_call_information">Información adicional de llamada</string>
     <string name="additional_call_information_sum">Recibir una notificación con información adicional después de que finalice la llamada</string>
