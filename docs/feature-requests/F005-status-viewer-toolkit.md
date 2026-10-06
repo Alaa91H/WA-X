@@ -146,3 +146,151 @@ When closing this issue, report:
 - tests added;
 - known limitations;
 - storage/performance impact where relevant.
+
+
+## Status reply seen-receipt synchronization
+
+Add an optional Status-specific receipt behavior requested by users:
+
+> When the user replies/responds to another person's Status, WA X should send the corresponding native **seen/view receipt** for that exact Status item.
+
+### Goal
+
+A user may normally suppress Status view receipts for privacy, but still want the owner of a Status to receive a seen receipt when the user explicitly replies to that Status.
+
+This must be implemented as a deliberate, user-controlled exception rather than silently changing global read-receipt/privacy behavior.
+
+### Configuration
+
+Add a target/account-aware option such as:
+
+```text
+Send Status seen receipt when replying
+```
+
+Recommended default:
+
+```text
+OFF
+```
+
+When enabled:
+
+```text
+Open Status
+→ user writes/sends a reply
+→ reply send succeeds
+→ resolve the exact Status message/item
+→ request WhatsApp's native Status seen/view receipt for that item
+→ verify/persist result when possible
+```
+
+### Privacy and policy interaction
+
+- This option affects only the specific Status item being replied to.
+- Do not bulk-mark previous/future Status items as seen.
+- Do not change normal chat read receipts.
+- Do not globally re-enable Status view receipts.
+- If another WA X privacy policy suppresses Status view receipts, this explicit option acts as a scoped exception only for replied-to Status items.
+- The UI must clearly explain that enabling this option reveals to the Status owner that the user viewed that Status.
+- If the feature cannot safely resolve the exact Status item, do not send a receipt for a different item.
+
+### Native-only behavior
+
+Use the legitimate native WhatsApp Status-view/read-receipt path for the currently installed version.
+
+Do not:
+- fabricate arbitrary server receipts;
+- mark unrelated Status items as seen;
+- spoof receipts when the native capability is unavailable;
+- report success unless the native request was made successfully or strongly validated.
+
+### Trigger and idempotency
+
+Prefer triggering only after the reply has a stable successful-send result.
+
+The operation must be idempotent:
+
+```text
+same target + account + statusId
+→ at most one effective seen-receipt action
+```
+
+Repeated taps, retries, process recreation, or duplicate reply callbacks must not produce unrelated or duplicated receipt behavior.
+
+### Scope
+
+Support independently where technically possible:
+
+```text
+WhatsApp
+WhatsApp Business
+Account
+```
+
+Do not cross target/account boundaries.
+
+### Failure behavior
+
+Possible diagnostic states:
+
+```text
+Disabled
+Pending
+Receipt sent
+Already seen
+Reply failed — no forced receipt
+Status identity unavailable
+Unsupported WhatsApp version
+Native receipt capability unavailable
+Receipt request failed
+Unknown result
+```
+
+Failures must not block or crash normal Status reply behavior.
+
+### Stock WhatsApp Mode
+
+This behavior is background-only and may remain active in Stock WhatsApp Mode because it does not require injected WhatsApp UI.
+
+Configuration must remain in the standalone WA X manager.
+
+Suggested metadata:
+
+```text
+visualImpact = NONE
+stockModeCompatible = true
+stockModeFallback = manager-side configuration
+```
+
+### Additional tests
+
+Add explicit coverage for:
+
+- option OFF → replying does not force a Status seen receipt;
+- option ON → successful reply triggers native seen receipt for the exact replied-to Status;
+- failed reply does not create an unrelated forced receipt;
+- duplicate reply callbacks are idempotent;
+- exact Status identity routing;
+- WhatsApp target;
+- WhatsApp Business target;
+- account isolation;
+- existing global Status-view privacy behavior remains unchanged for non-replied Status items;
+- conflict with hidden Status-view policy is resolved only for the replied-to item;
+- unsupported version fails safely;
+- resolver failure never crashes Status viewer/reply;
+- Stock WhatsApp Mode keeps the behavior functional without visible WA X UI.
+
+### Acceptance criteria
+
+- [ ] A dedicated toggle exists in WA X manager.
+- [ ] Default state is non-invasive.
+- [ ] Enabling it sends the native seen/view receipt when replying to a Status.
+- [ ] Only the exact replied-to Status item is affected.
+- [ ] Normal chat read receipts are untouched.
+- [ ] Non-replied Status privacy behavior is untouched.
+- [ ] WhatsApp and Business remain isolated.
+- [ ] Duplicate callbacks are idempotent.
+- [ ] Unsupported versions fail safely.
+- [ ] No false success state is shown.
+
