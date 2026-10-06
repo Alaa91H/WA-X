@@ -288,7 +288,10 @@
     <string name="contact_block_list">רשימת אנשי קשר חסומים</string>
     <string name="contact_white_list">רשימת אנשי הקשר מותרים</string>
     <string name="no_contacts_selected">לא נבחרו אנשי קשר</string>
-    <string name="contact_were_selected">נבחרו %d אנשי קשר</string>
+    <plurals name="contact_were_selected">
+        <item quantity="one">נבחר %d איש קשר</item>
+        <item quantity="other">נבחרו %d אנשי קשר</item>
+    </plurals>
     <string name="standard">סטנדרטי</string>
     <string name="audio_note">הערת שמע</string>
     <string name="voice_note">הודעה קולית</string>
