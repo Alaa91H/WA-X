@@ -17,6 +17,7 @@ import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.StateListDrawable
 import android.graphics.drawable.TransitionDrawable
+import androidx.core.graphics.get
 import com.wax.module.xposed.core.devkit.Unobfuscator
 import com.wax.module.xposed.utils.ReflectionUtils
 import com.wax.module.xposed.utils.Utils
@@ -186,7 +187,7 @@ object DrawableColors {
         var maximumCount = 0
         for (x in 0 until bitmap.width) {
             for (y in 0 until bitmap.height) {
-                val color = bitmap.getPixel(x, y)
+                val color = bitmap[x, y]
                 val count = (colorCounts[color] ?: 0) + 1
                 colorCounts[color] = count
                 if (count > maximumCount) {

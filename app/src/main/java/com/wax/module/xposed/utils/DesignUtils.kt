@@ -18,6 +18,11 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.set
+import androidx.core.graphics.get
+import androidx.core.graphics.createBitmap
 import com.wax.module.ModuleEntryPoint
 import com.wax.module.utils.IColors
 import com.wax.module.xposed.core.ModuleRuntime
@@ -128,7 +133,7 @@ object DesignUtils {
             }
 
             else -> {
-                ColorDrawable(Color.BLACK)
+                Color.BLACK.toDrawable()
             }
         }
 
@@ -191,7 +196,7 @@ object DesignUtils {
             val bitmap = drawableToBitmap(drawable)
             val color = getDominantColor(bitmap)
             val newBitmap = replaceColor(bitmap, color, primaryColorInt, 120.0)
-            return BitmapDrawable(Utils.application.resources, newBitmap)
+            return newBitmap.toDrawable(Utils.application.resources)
         }
         return null
     }
@@ -227,13 +232,15 @@ object DesignUtils {
     }
 
     @JvmStatic
-    fun isValidColor(primaryColor: String?): Boolean =
-        try {
-            Color.parseColor(primaryColor)
+    fun isValidColor(primaryColor: String?): Boolean {
+        if (primaryColor == null) return false
+        return try {
+            primaryColor.toColorInt()
             true
-        } catch (_: Exception) {
+        } catch (_: IllegalArgumentException) {
             false
         }
+    }
 
     @JvmStatic
     fun checkSystemColor(color: String?): String {
@@ -270,7 +277,7 @@ object DesignUtils {
             return 0
         }
         return try {
-            Color.parseColor(color)
+            color.toColorInt()
         } catch (_: Exception) {
             0
         }
@@ -282,7 +289,7 @@ object DesignUtils {
             return drawable.bitmap
         }
         val bitmap =
-            Bitmap.createBitmap(
+            createBitmap(
                 drawable.intrinsicWidth,
                 drawable.intrinsicHeight,
                 Bitmap.Config.ARGB_8888,
@@ -298,7 +305,7 @@ object DesignUtils {
         val colorCountMap = HashMap<Int, Int>()
         for (y in 0 until bitmap.height) {
             for (x in 0 until bitmap.width) {
-                val color = bitmap.getPixel(x, y)
+                val color = bitmap[x, y]
                 if (Color.alpha(color) > 0) {
                     colorCountMap[color] = colorCountMap.getOrDefault(color, 0) + 1
                 }
@@ -337,9 +344,9 @@ object DesignUtils {
         val newBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
         for (y in 0 until newBitmap.height) {
             for (x in 0 until newBitmap.width) {
-                val currentColor = newBitmap.getPixel(x, y)
+                val currentColor = newBitmap[x, y]
                 if (colorDistance(currentColor, oldColor) < threshold) {
-                    newBitmap.setPixel(x, y, newColor)
+                    newBitmap[x, y] = newColor
                 }
             }
         }
@@ -356,7 +363,7 @@ object DesignUtils {
         val canvas = Canvas(bitmap)
         icon.setBounds(0, 0, canvas.width, canvas.height)
         icon.draw(canvas)
-        return BitmapDrawable(Utils.application.resources, bitmap)
+        return bitmap.toDrawable(Utils.application.resources)
     }
 
     @JvmStatic
