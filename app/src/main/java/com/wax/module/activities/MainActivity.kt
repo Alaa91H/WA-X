@@ -191,16 +191,6 @@ class MainActivity : BaseActivity() {
         (childFragment as? BasePreferenceFragment)?.scrollToPreference(preferenceKey)
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?,
-    ) {
-        super.onActivityResult(requestCode, resultCode, data)
-        supportFragmentManager.fragments.forEach { it.onActivityResult(requestCode, resultCode, data) }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.header_menu, menu)
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
@@ -242,8 +232,7 @@ class MainActivity : BaseActivity() {
                             action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
                             data = Uri.parse("package:$packageName")
                         }
-                    @Suppress("DEPRECATION")
-                    startActivityForResult(batteryIntent, 0)
+                    startActivity(batteryIntent)
                 }
             }
         }
@@ -251,8 +240,8 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return super.onSupportNavigateUp()
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 
     private class DepthPageTransformer : ViewPager2.PageTransformer {
