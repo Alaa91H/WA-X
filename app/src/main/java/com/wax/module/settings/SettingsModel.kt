@@ -33,7 +33,7 @@ enum class TriState {
 
     companion object {
         /**
-         * The state that produces [value], given the global default.
+         * The explicit state that produces [value].
          *
          * Used when the user picks a concrete state, not when reading one back. An
          * explicit choice that happens to match the global value is still stored as an
@@ -41,10 +41,7 @@ enum class TriState {
          * the next global change the user makes, which is not what choosing a value
          * means.
          */
-        fun fromValue(
-            value: Boolean,
-            global: Boolean,
-        ): TriState = if (value) ENABLED else DISABLED
+        fun fromValue(value: Boolean): TriState = if (value) ENABLED else DISABLED
     }
 }
 
