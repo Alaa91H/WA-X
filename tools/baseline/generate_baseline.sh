@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# WaEnhancer — T00 baseline generator.
+# WA X — T00 baseline generator.
 #
 # Produces a machine-readable baseline (baseline.json) and a human-readable
 # report (BASELINE.md) capturing the metrics we must not regress:
@@ -144,8 +144,8 @@ MIN_SDK="$(grep -m1 -o 'minSdk *= *[0-9]*' "$APP_BUILD_GRADLE" | grep -o '[0-9]*
 # ----------------------------------------------------------------- source ---
 
 KT_MAIN="$(find app/src/main/java -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
-KT_XPOSED="$(find app/src/main/java/com/wmods/wppenhacer/xposed -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
-KT_FEATURES="$(find app/src/main/java/com/wmods/wppenhacer/xposed/features -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
+KT_XPOSED="$(find app/src/main/java/com/wax/module/xposed -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
+KT_FEATURES="$(find app/src/main/java/com/wax/module/xposed/features -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
 JAVA_FILES="$(find app/src/main/java -name '*.java' 2>/dev/null | wc -l | tr -d ' ' || true)"
 TEST_FILES="$(find app/src/test app/src/androidTest -type f -name '*.kt' 2>/dev/null | wc -l | tr -d ' ' || true)"
 TEST_COUNT="$(grep -r -c '@Test' app/src/test app/src/androidTest 2>/dev/null | awk -F: '{s+=$NF} END{print s+0}' || true)"

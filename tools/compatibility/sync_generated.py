@@ -84,6 +84,8 @@ def render(matrix: dict) -> str:
         " single place to look before adding support for a new WhatsApp version."
     )
     add("")
+    add("WA X is a fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), maintained by [Alaa](https://github.com/Alaa91H). Fork provenance does not change the evidence standard used by this matrix.")
+    add("")
 
     add("## Current state")
     add("")
@@ -239,7 +241,7 @@ def render(matrix: dict) -> str:
     add("partial, or lacking a `verifiedAt` timestamp.")
     add("")
     add(
-        "Step 6 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the"
+        "Step 2 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the"
         " runtime version gate and this document can never disagree."
     )
     add("")

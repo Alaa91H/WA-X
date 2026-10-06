@@ -327,7 +327,7 @@
     <string name="developer" translatable="false">Developer &amp; maintainer: Alaa</string>
     <string name="about_info">WA X is an independent open-source Xposed module and a fork/continuation of Dev4Mod/WaEnhancer. This fork is developed and maintained by Alaa. It hooks WhatsApp and WhatsApp Business at runtime; compatibility varies by target version.</string>
     <string name="installation">Installation</string>
-    <string name="installation_desc">1. Install a compatible Xposed environment such as LSPosed.\n2. Download the WA X module APK from GitHub Releases (or Beta Testing for development builds).\n3. Install WA X and enable the module.\n4. Scope WhatsApp and/or WhatsApp Business.\n5. Also scope System Framework for the current legacy bridge implementation.\n6. Restart the target app after changing hook-sensitive settings.</string>
+    <string name="installation_desc">1. Install a compatible Xposed environment such as LSPosed.\n2. Download the WA X module APK from GitHub Releases (or Beta Testing for development builds).\n3. Install WA X and enable the module.\n4. Scope WhatsApp and/or WhatsApp Business.\n5. For the current bridge, also include System Framework (android) and Settings Provider (com.android.providers.settings) when your Xposed manager exposes explicit package scope.\n6. Restart the target app after changing hook-sensitive settings.</string>
     <string name="go_to_telegram">Developer Telegram</string>
     <string name="go_to_github">WA X on GitHub</string>
     <string name="contributors" translatable="false">Open-source notices</string>
