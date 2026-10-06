@@ -24,6 +24,10 @@
         <item name="buttonBarNeutralButtonStyle">@style/Widget.Button.TextButton.Dialog.FullWidth</item>
     </style>
 
+    <style name="DialogShapeAppearance">
+        <item name="cornerSize">@dimen/card_radius_large</item>
+    </style>
+
     <style name="ThemeOverlay.MaterialAlertDialog.FullWidthButtons" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="materialAlertDialogButtonSpacerVisibility">2</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.Button.TextButton.Dialog.FullWidth</item>
