@@ -40,6 +40,17 @@ The mark is intentionally flat and non-3D. Do not add fake 3D bevels, chrome, he
 
 Do not crop away the lower-left chat-bubble tail or the right side of the X. For circular avatars or masked icons, preserve enough safe area for the complete mark.
 
+## Project ownership and contact
+
+- **Original upstream:** [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer)
+- **Current developer / maintainer:** [Alaa](https://github.com/Alaa91H)
+- **Developer Telegram:** [@Alaa91h](https://t.me/Alaa91h)
+- **WA X Community:** [@WAXposed](https://t.me/WAXposed)
+- **Email:** [alahus2591@gmail.com](mailto:alahus2591@gmail.com)
+- **Voluntary development support:** [Ko-fi](https://ko-fi.com/alaa91h)
+
+Rebranding and maintenance of WA X do not reassign authorship of code inherited from the upstream project.
+
 ## Independence
 
 The WA X mark represents an independent open-source Xposed module. It must not be presented as an official WhatsApp/Meta logo or in a way that implies sponsorship or endorsement.
