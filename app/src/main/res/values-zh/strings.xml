@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">关闭</string>
     <string name="tri_state_enabled">开启</string>
     <string name="tri_state_inherit">全局</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">启用自定义 KeyBox</string>
+    <string name="enable_custom_keybox_sum">使用自定义 keybox.xml 文件进行 Bootloader 伪装。</string>
+    <string name="use_custom_keybox_file">使用自定义 keybox.xml 文件</string>
+    <string name="no_file_selected">未选择文件</string>
 </resources>
