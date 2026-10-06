@@ -47,7 +47,7 @@ class NewChat(
                     }
 
                     if (action) {
-                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                     }
 
                     item.setOnMenuItemClickListener {
