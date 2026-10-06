@@ -29,6 +29,7 @@ import com.wax.module.adapter.LogLineAdapter
 import com.wax.module.compat.TargetVersions
 import com.wax.module.compat.UpdateOffer
 import com.wax.module.compat.UpdateReleaseClient
+import com.wax.module.compat.VersionStatusTone
 import com.wax.module.config.BackupEntry
 import com.wax.module.config.ConfigBackupSchema
 import com.wax.module.config.ConfigValue
@@ -204,12 +205,21 @@ class HomeFragment : BaseFragment() {
         binding.statusTitle3.setText(R.string.business_in_background)
         val version = intent.getStringExtra("VERSION")
         val supportedList = context.resources.getStringArray(R.array.supported_versions_business).toList()
-        if (isSupportedVersion(version, supportedList)) {
-            binding.statusSummary3.text = getString(R.string.version_s, version)
-            binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
-        } else {
-            binding.statusSummary3.text = getString(R.string.version_s_not_listed, version)
-            binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
+        when (versionTone(version, supportedList)) {
+            VersionStatusTone.SUPPORTED -> {
+                binding.statusSummary3.text = getString(R.string.version_s, version)
+                binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
+            }
+
+            VersionStatusTone.UNVERIFIED -> {
+                binding.statusSummary3.text = getString(R.string.version_s_unverified, version)
+                binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
+            }
+
+            VersionStatusTone.UNSUPPORTED -> {
+                binding.statusSummary3.text = getString(R.string.version_s_not_listed, version)
+                binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
+            }
         }
         binding.rebootBtn2.visibility = View.VISIBLE
         binding.statusSummary3.visibility = View.VISIBLE
@@ -224,12 +234,21 @@ class HomeFragment : BaseFragment() {
         val version = intent.getStringExtra("VERSION")
         val supportedList = context.resources.getStringArray(R.array.supported_versions_wpp).toList()
 
-        if (isSupportedVersion(version, supportedList)) {
-            binding.statusSummary1.text = getString(R.string.version_s, version)
-            binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
-        } else {
-            binding.statusSummary1.text = getString(R.string.version_s_not_listed, version)
-            binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
+        when (versionTone(version, supportedList)) {
+            VersionStatusTone.SUPPORTED -> {
+                binding.statusSummary1.text = getString(R.string.version_s, version)
+                binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
+            }
+
+            VersionStatusTone.UNVERIFIED -> {
+                binding.statusSummary1.text = getString(R.string.version_s_unverified, version)
+                binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
+            }
+
+            VersionStatusTone.UNSUPPORTED -> {
+                binding.statusSummary1.text = getString(R.string.version_s_not_listed, version)
+                binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
+            }
         }
         binding.rebootBtn.visibility = View.VISIBLE
         binding.statusSummary1.visibility = View.VISIBLE
@@ -444,14 +463,22 @@ class HomeFragment : BaseFragment() {
             return
         }
 
-        val supported = isSupportedVersion(version, supportedVersions)
+        val tone = versionTone(version, supportedVersions)
         summary.text =
             getString(
-                if (supported) R.string.app_version_s_supported else R.string.app_version_s_unsupported,
+                when (tone) {
+                    VersionStatusTone.SUPPORTED -> R.string.app_version_s_supported
+                    VersionStatusTone.UNVERIFIED -> R.string.version_s_unverified
+                    VersionStatusTone.UNSUPPORTED -> R.string.app_version_s_unsupported
+                },
                 version,
             )
         icon.setImageResource(
-            if (supported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+            if (tone == VersionStatusTone.SUPPORTED) {
+                R.drawable.ic_round_check_circle_24
+            } else {
+                R.drawable.ic_round_warning_24
+            },
         )
     }
 
@@ -463,10 +490,10 @@ class HomeFragment : BaseFragment() {
             false
         }
 
-    private fun isSupportedVersion(
+    private fun versionTone(
         version: String?,
         supportedVersions: List<String>,
-    ): Boolean = TargetVersions.isSupported(version, supportedVersions)
+    ): VersionStatusTone = TargetVersions.assess(version, supportedVersions).tone
 
     private fun disableBusiness() {
         binding.statusIcon3.setImageResource(R.drawable.ic_round_error_outline_24)
