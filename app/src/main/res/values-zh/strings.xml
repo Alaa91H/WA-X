@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List 正在向以下对象隐藏 WA X：</string>
     <string name="diag_hma_disable">请在 Hide My App List 中取消对 WhatsApp/Business 的屏蔽，以便 WA X 正常工作。</string>
     <string name="diag_copied">已复制该行到剪贴板</string>
+
+    <!-- Per-app settings -->
+    <string name="per_target_settings">按应用设置</string>
+    <string name="scope_global">全局</string>
+    <string name="scope_global_explainer">这些是默认值。未单独设置值的每个目标应用都会使用它们。</string>
+    <string name="scope_target_explainer">此应用已覆盖 %2$d 项设置中的 %1$d 项。保持“使用全局设置”的项目会使用全局值。</string>
+    <string name="search_settings">搜索设置</string>
+    <string name="no_settings_match">没有与此次搜索匹配的设置。</string>
+    <string name="tri_state_inherit">使用全局设置</string>
+    <string name="tri_state_enabled">开启</string>
+    <string name="tri_state_disabled">关闭</string>
+    <string name="default_value">所有应用的默认值</string>
+    <string name="follows_global">使用全局设置</string>
+    <string name="pinned_to">固定为：%1$s</string>
+    <string name="pin_global">固定</string>
+    <string name="follow_global">使用全局设置</string>
+    <string name="copy_global_to_target">将所有全局值复制到此应用</string>
+    <string name="reset_this_target">重置此应用</string>
+    <string name="reset_all_targets">重置所有应用</string>
+    <string name="edit_on_original_screen">请在 %1$s 页面编辑此设置。</string>
+    <string name="open_per_target_settings">分别配置 WhatsApp 和 WhatsApp Business</string>
+    <string name="open_per_target_settings_summary">为 WhatsApp 和 WhatsApp Business 分别设置独立选项，或让设置继续使用全局默认值。</string>
+    <string name="reload">重新加载</string>
 </resources>
