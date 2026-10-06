@@ -155,13 +155,14 @@ android {
         checkDependencies = true
     }
 
-    // T09: static analysis. The baseline records the debt that already exists so the
-    // check is useful immediately; unlike the lint gate this one starts in report mode
-    // and is tightened as the debt is paid down.
+    // Static analysis is fail-closed: there is no baseline and even Info-severity
+    // findings fail CI. The configuration only disables rules that are structurally
+    // inappropriate for Android/Xposed code, never individual findings.
     detekt {
         buildUponDefaultConfig = true
         allRules = false
         ignoreFailures = false
+        failOnSeverity = dev.detekt.gradle.extensions.FailOnSeverity.Info
         config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     }
 

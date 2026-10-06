@@ -9,9 +9,6 @@
 # that would mechanically expand Android/Xposed code without improving correctness stay
 # disabled by design.
 
-build:
-  maxIssues: 0
-
 config:
   validation: true
   warningsAsErrors: true
@@ -22,14 +19,14 @@ complexity:
   # bury real findings.
   LongMethod:
     active: true
-    threshold: 60
+    allowedLines: 60
   TooManyFunctions:
     active: true
-    thresholdInFiles: 20
-    thresholdInClasses: 20
-    thresholdInObjects: 20
-    thresholdInInterfaces: 20
-    thresholdInEnums: 20
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerClass: 20
+    allowedFunctionsPerObject: 20
+    allowedFunctionsPerInterface: 20
+    allowedFunctionsPerEnum: 20
 
 exceptions:
   # Xposed hooks legitimately throw from callbacks, and a swallowed throwable is the
@@ -69,5 +66,5 @@ naming:
     active: true
     # Hook callbacks mirror Xposed's own method names.
     ignoreAnnotated:
-      - 'com.wax.module.xposed.core.Feature'
-      - 'androidx.compose.runtime.Composable'
+      - 'Feature'
+      - 'Composable'
