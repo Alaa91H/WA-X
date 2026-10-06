@@ -68,7 +68,7 @@ object Unobfuscator {
         resolver: String,
         hint: String,
         found: Class<*>?,
-    ): Class<*> = found ?: throw Exception("$resolver: no class matched [$hint] on this WhatsApp build")
+    ): Class<*> = found ?: throw ClassNotFoundException("$resolver: no class matched [$hint] on this WhatsApp build")
 
     /**
      * The method counterpart of [requireClass].
@@ -81,7 +81,7 @@ object Unobfuscator {
         resolver: String,
         hint: String,
         found: Method?,
-    ): Method = found ?: throw Exception("$resolver: no method matched [$hint] on this WhatsApp build")
+    ): Method = found ?: throw NoSuchMethodException("$resolver: no method matched [$hint] on this WhatsApp build")
 
     @JvmStatic
     fun initWithPath(path: String): Boolean =
@@ -148,7 +148,7 @@ object Unobfuscator {
      * `NoSuchMethodException` with no detail is what made the previous HD Status
      * breakage undiagnosable from a logcat.
      */
-    @Throws(Exception::class)
+    @Throws(NoSuchMethodException::class)
     @JvmStatic
     fun requireMethodByAnyAnchor(
         resolver: String,
@@ -158,10 +158,10 @@ object Unobfuscator {
         returnType: Class<*>? = null,
     ): Method =
         findMethodByAnyAnchor(classLoader, type, candidates, returnType)?.value
-            ?: throw Exception("$resolver: no method matched any of ${candidates.joinToString(", ")}")
+            ?: throw NoSuchMethodException("$resolver: no method matched any of ${candidates.joinToString(", ")}")
 
     /** The [requireMethodByAnyAnchor] counterpart for classes. */
-    @Throws(Exception::class)
+    @Throws(ClassNotFoundException::class)
     @JvmStatic
     fun requireClassByAnyAnchor(
         resolver: String,
@@ -170,7 +170,7 @@ object Unobfuscator {
         candidates: List<String>,
     ): Class<*> =
         findClassByAnyAnchor(classLoader, type, candidates)?.value
-            ?: throw Exception("$resolver: no class matched any of ${candidates.joinToString(", ")}")
+            ?: throw ClassNotFoundException("$resolver: no class matched any of ${candidates.joinToString(", ")}")
 
     @JvmStatic
     fun findFirstMethodUsingStrings(
@@ -3038,7 +3038,7 @@ object Unobfuscator {
             val methodString = method.returnType.getDeclaredMethod("toString")
             val methodData =
                 bridge.getMethodData(methodString)
-                    ?: throw Exception("loadMediaQualityVideoFields: no dexkit data for the return type")
+                    ?: error("loadMediaQualityVideoFields: no dexkit data for the return type")
             val usingFields = methodData.usingFields
             val usingStrings = methodData.usingStrings
             val result = HashMap<String, Field>()
