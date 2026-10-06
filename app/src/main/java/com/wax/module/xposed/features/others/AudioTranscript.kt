@@ -19,6 +19,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.io.IOException
 import java.io.File
 
 class AudioTranscript(
@@ -197,7 +198,7 @@ class AudioTranscript(
         val apiKey = prefs.getString(PREF_ASSEMBLY_AI_KEY, "").orEmpty()
 
         if (TextUtils.isEmpty(apiKey)) {
-            throw Exception("API key not provided")
+            throw IllegalStateException("API key not provided")
         }
 
         val uploadResult = uploadAudioToAssemblyAI(fileOpus, apiKey)
@@ -226,7 +227,7 @@ class AudioTranscript(
 
         httpClient.newCall(uploadRequest).execute().use { response ->
             if (!response.isSuccessful) {
-                throw Exception("Failed to upload audio: ${response.code}")
+                throw IOException("Failed to upload audio: ${response.code}")
             }
 
             return JSONObject(response.body.string())
@@ -259,7 +260,7 @@ class AudioTranscript(
 
         httpClient.newCall(transcribeRequest).execute().use { response ->
             if (!response.isSuccessful) {
-                throw Exception("Failed to start transcription: ${response.code}")
+                throw IOException("Failed to start transcription: ${response.code}")
             }
 
             return JSONObject(response.body.string())
@@ -286,12 +287,12 @@ class AudioTranscript(
 
                 STATUS_ERROR -> {
                     val error = checkResult.optString(JSON_ERROR, "Unknown error")
-                    throw Exception("Transcription error: $error")
+                    throw IOException("Transcription error: $error")
                 }
             }
         }
 
-        throw Exception("Transcription failed")
+        throw IOException("Transcription failed")
     }
 
     @Throws(Exception::class)
@@ -308,7 +309,7 @@ class AudioTranscript(
 
         httpClient.newCall(checkRequest).execute().use { response ->
             if (!response.isSuccessful) {
-                throw Exception("Failed to check transcription status: ${response.code}")
+                throw IOException("Failed to check transcription status: ${response.code}")
             }
 
             return JSONObject(response.body.string())
@@ -320,7 +321,7 @@ class AudioTranscript(
         val apiKey = prefs.getString(PREF_GROQ_API_KEY, "").orEmpty()
 
         if (TextUtils.isEmpty(apiKey)) {
-            throw Exception("Groq API key not provided")
+            throw IllegalStateException("Groq API key not provided")
         }
 
         val requestBody =
@@ -347,7 +348,7 @@ class AudioTranscript(
 
         httpClient.newCall(transcribeRequest).execute().use { response ->
             if (!response.isSuccessful) {
-                throw Exception(
+                throw IOException(
                     "Failed to transcribe audio: ${response.code} - ${response.message}",
                 )
             }
