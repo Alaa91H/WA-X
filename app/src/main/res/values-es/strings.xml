@@ -288,7 +288,10 @@
     <string name="contact_block_list">Lista de contactos bloqueados</string>
     <string name="contact_white_list">Lista de contactos permitidos</string>
     <string name="no_contacts_selected">Ningún contacto seleccionado</string>
-    <string name="contact_were_selected">%d contacto(s) seleccionado(s)</string>
+    <plurals name="contact_were_selected">
+        <item quantity="one">%d contacto seleccionado</item>
+        <item quantity="other">%d contactos seleccionados</item>
+    </plurals>
     <string name="standard">Estándar</string>
     <string name="audio_note">Nota de audio</string>
     <string name="voice_note">Nota de voz</string>
