@@ -18,7 +18,11 @@ Measured, not estimated:
 
 - Debug APK: 37.03 MiB -> 57.81 MiB (+56.13%). The increase is dex; resources, assets and
   native libraries are unchanged to within a rounding error.
-- Release APK, which is what a user downloads: 8.99 MiB -> 13.38 MiB.
+- Release APK, which is what a user downloads: 8.99 MiB -> 13.38 MiB. It is recorded
+  here rather than in the gate because CI builds only the debug APK on a verification
+  run, and a baseline entry for an artifact a run does not produce is a gate failure that
+  teaches the reader nothing. The release figure is measured on a local ssembleRelease
+  and stated above, so the number users see is on the record.
 - Before accepting the step, `androidx.compose.material:material-icons-extended` was
   removed. It had been pulled in for two icons and added 30 MiB of vector drawables to the
   debug build on its own, taking that build from 57.8 MiB to 87.6 MiB. The remaining
