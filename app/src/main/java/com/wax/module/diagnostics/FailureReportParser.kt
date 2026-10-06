@@ -228,16 +228,19 @@ object FailureReportParser {
                 ?: throw ParseException("not an integral number")
         }
 
+        private fun requiredString(
+            fields: Map<String, Any?>,
+            key: String,
+        ): String = fields[key] as? String ?: throw ParseException("missing $key")
+
+        private fun parseFailureCode(name: String): FailureCode =
+            FailureCode.entries.firstOrNull { it.name == name }
+                ?: throw ParseException("unknown code")
+
         private fun build(fields: Map<String, Any?>): FeatureFailureReport {
-            val feature =
-                fields["feature"] as? String
-                    ?: throw ParseException("missing feature")
-            val codeName =
-                fields["code"] as? String
-                    ?: throw ParseException("missing code")
-            val code =
-                FailureCode.entries.firstOrNull { it.name == codeName }
-                    ?: throw ParseException("unknown code")
+            val feature = requiredString(fields, "feature")
+            val codeName = requiredString(fields, "code")
+            val code = parseFailureCode(codeName)
             val frames = (fields["frames"] as? List<*>).orEmpty().mapNotNull { it as? String }
             return FeatureFailureReport(
                 featureId = feature,
