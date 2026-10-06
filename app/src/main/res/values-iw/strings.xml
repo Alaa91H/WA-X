@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">כבוי</string>
     <string name="tri_state_enabled">פועל</string>
     <string name="tri_state_inherit">גלובלי</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">הפעלת KeyBox מותאמת אישית</string>
+    <string name="enable_custom_keybox_sum">שימוש בקובץ keybox.xml מותאם אישית לזיוף ה-Bootloader.</string>
+    <string name="use_custom_keybox_file">שימוש בקובץ keybox.xml מותאם אישית</string>
+    <string name="no_file_selected">לא נבחר קובץ</string>
 </resources>
