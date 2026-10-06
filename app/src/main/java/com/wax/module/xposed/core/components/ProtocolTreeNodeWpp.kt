@@ -10,7 +10,7 @@ class ProtocolTreeNodeWpp(
     val mInstance: Any,
 ) {
     init {
-        if (!type.isInstance(mInstance)) throw RuntimeException("object is not a ProtocolTreeNode")
+        if (!type.isInstance(mInstance)) error("object is not a ProtocolTreeNode")
     }
 
     companion object {
@@ -272,7 +272,7 @@ class ProtocolTreeNodeWpp(
         val mInstance: Any,
     ) {
         init {
-            if (!type.isInstance(mInstance)) throw RuntimeException("object is not a KeyValue")
+            if (!type.isInstance(mInstance)) error("object is not a KeyValue")
         }
 
         companion object {
