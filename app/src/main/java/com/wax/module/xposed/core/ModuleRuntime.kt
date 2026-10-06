@@ -266,7 +266,7 @@ object ModuleRuntime {
             prefsCacheHooks.edit { putInt("preferredOrder", newPreferredOrder) }
             return
         }
-        throw Exception(context.getString(R.string.bridge_error))
+        error(context.getString(R.string.bridge_error))
     }
 
     @JvmStatic
@@ -745,18 +745,13 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    @Throws(Exception::class)
     fun getClientBridge(): WaeIIFace? {
         if (!isBridgeConnected()) {
             synchronized(ModuleRuntime::class.java) {
                 if (!isBridgeConnected()) {
-                    if (client == null) {
-                        throw Exception("Bridge client not initialized")
-                    }
-                    client?.tryReconnect()
-                    if (!isBridgeConnected()) {
-                        throw Exception("Failed connect to Bridge")
-                    }
+                    val currentClient = checkNotNull(client) { "Bridge client not initialized" }
+                    currentClient.tryReconnect()
+                    check(isBridgeConnected()) { "Failed to connect to Bridge" }
                 }
             }
         }
