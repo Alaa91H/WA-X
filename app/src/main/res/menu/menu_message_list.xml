@@ -5,5 +5,5 @@
         android:id="@+id/action_info"
         android:icon="@android:drawable/ic_dialog_info"
         android:title="Info"
-        app:showAsAction="ifRoom" />
+        android:showAsAction="ifRoom" />
 </menu>
