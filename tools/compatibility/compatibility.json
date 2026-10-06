@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "title": "WaEnhancer compatibility matrix",
-  "purpose": "Single source of truth for target compatibility decisions. Replaces relying on res/values/arrays.xml alone. The curated sections below (matrix, evidence) are hand maintained; the derived section is regenerated from the source tree by tools/compatibility/extract_features.py and must never be edited by hand.",
+  "title": "WA X compatibility matrix",
+  "purpose": "Single source of truth for WA X target compatibility decisions. Declared target versions are not resolver evidence. Curated matrix/evidence data is maintained manually; derived data is regenerated from the source tree.",
   "statusVocabulary": {
     "supported": "Every resolver this feature depends on was observed to resolve on this exact target, at runtime, with evidence recorded under evidence.",
     "degraded": "The feature loads, but at least one required resolver failed and the feature fell back to a legacy or partial path.",
@@ -47,7 +47,7 @@
   "packages": {
     "whatsapp": {
       "packageName": "com.whatsapp",
-      "applicationId": "com.wmods.wppenhacer",
+      "applicationId": "com.wax.module",
       "declaredVersions": [
         "2.26.32.xx",
         "2.26.34.xx",
@@ -64,7 +64,7 @@
     },
     "business": {
       "packageName": "com.whatsapp.w4b",
-      "applicationId": "com.wmods.wppenhacer.w4b",
+      "applicationId": "com.wax.module",
       "declaredVersions": [
         "2.26.32.xx",
         "2.26.34.xx",

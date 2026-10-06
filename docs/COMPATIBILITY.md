@@ -1,10 +1,12 @@
-# WaEnhancer compatibility matrix
+# WA X compatibility matrix
 
 <!-- GENERATED FILE - do not edit by hand. -->
 <!-- Source: tools/compatibility/compatibility.json -->
-<!-- Regenerate: python3 tools/compatibility/generate_compatibility_md.py -->
+<!-- Regenerate: python3 tools/compatibility/sync_generated.py -->
 
-This document is the human readable view of the compatibility matrix. It is the single place to look before adding support for a new WhatsApp version.
+This document is the human-readable view of the WA X compatibility matrix. It is the single place to look before adding support for a new WhatsApp version.
+
+WA X is a fork/continuation of [Dev4Mod/WaEnhancer](https://github.com/Dev4Mod/WaEnhancer), maintained by [Alaa](https://github.com/Alaa91H). Fork provenance does not change the evidence standard used by this matrix.
 
 ## Current state
 
@@ -236,12 +238,12 @@ These features call DexKit resolvers directly. Each one needs a recorded `verifi
 
 When adding a new WhatsApp version:
 
-1. Add the version prefix to `app/src/main/res/values/arrays.xml`.
-2. Mirror it in `packages.<target>.declaredVersions` in `compatibility.json`.
-3. Run `python3 tools/compatibility/validate_compatibility.py` to confirm sync.
-4. Record resolver evidence under `evidence.<FeatureId>.resolvers`.
+1. Add the version prefix to `packages.<target>.declaredVersions` in `compatibility.json`.
+2. Run `python3 tools/compatibility/sync_generated.py` to regenerate this document and `arrays.xml`.
+3. Run `python3 tools/compatibility/validate_compatibility.py` and `sync_generated.py --check`.
+4. Record real runtime resolver evidence under `evidence.<FeatureId>.resolvers`.
 5. Only then set cells to `supported`.
-6. Run `python3 tools/compatibility/sync_generated.py`.
+6. Re-run validation and commit the source-of-truth and generated artifacts together.
 
 The validator refuses any `supported` cell whose resolver evidence is missing,
 partial, or lacking a `verifiedAt` timestamp.
