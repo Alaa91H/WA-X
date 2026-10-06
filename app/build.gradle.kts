@@ -2,6 +2,8 @@ import com.diffplug.spotless.LineEnding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -100,6 +102,8 @@ android {
     buildTypes {
 
         debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
             isMinifyEnabled = project.hasProperty("minify") && project.findProperty("minify").toString().toBoolean()
             //noinspection NotShrinkingResources
             isShrinkResources = false
@@ -138,10 +142,16 @@ android {
         resValues = true
     }
 
+    testCoverage {
+        jacocoVersion = "0.8.15"
+    }
+
     lint {
         disable += "SelectedPhotoAccess"
         warning += "MissingTranslation"
-        baseline = file("lint-baseline.xml")
+        warningsAsErrors = true
+        abortOnError = true
+        checkDependencies = true
     }
 
     // T09: static analysis. The baseline records the debt that already exists so the
@@ -149,9 +159,8 @@ android {
     // and is tightened as the debt is paid down.
     detekt {
         buildUponDefaultConfig = true
-        allRules = false
-        ignoreFailures = true
-        baseline = file("detekt-baseline.xml")
+        allRules = true
+        ignoreFailures = false
         config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     }
 
@@ -202,6 +211,7 @@ androidComponents {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+        allWarningsAsErrors.set(true)
     }
 }
 
@@ -218,6 +228,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     implementation(libs.colorpicker)
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
@@ -253,6 +267,18 @@ configurations.all {
     exclude("androidx.appcompat", "appcompat")
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
+}
+
+tasks.withType<Test>().configureEach {
+    if (providers.gradleProperty("strictCollectAll").isPresent) {
+        // Strict CI parses the XML results and emits one final verdict after every
+        // independent gate has run. Keep producing coverage even when a test fails.
+        ignoreFailures = true
+    }
 }
 
 tasks.configureEach {

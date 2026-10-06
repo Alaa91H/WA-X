@@ -13,7 +13,7 @@ build:
 
 config:
   validation: true
-  warningsAsErrors: false
+  warningsAsErrors: true
 
 complexity:
   # The feature layer intentionally groups many small hook installers per file. T71
@@ -21,14 +21,14 @@ complexity:
   # bury real findings.
   LongMethod:
     active: true
-    threshold: 120
+    threshold: 60
   TooManyFunctions:
     active: true
-    thresholdInFiles: 40
-    thresholdInClasses: 40
-    thresholdInObjects: 40
-    thresholdInInterfaces: 40
-    thresholdInEnums: 40
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+    thresholdInObjects: 20
+    thresholdInInterfaces: 20
+    thresholdInEnums: 20
 
 exceptions:
   # Xposed hooks legitimately throw from callbacks, and a swallowed throwable is the
@@ -51,11 +51,11 @@ style:
   # The codebase predates these rules by years; they are part of the T05–T08 cleanup
   # backlog rather than something to enforce today.
   MagicNumber:
-    active: false
+    active: true
   ReturnCount:
-    active: false
+    active: true
   ForbiddenComment:
-    active: false
+    active: true
   MaxLineLength:
     active: true
     maxLineLength: 140

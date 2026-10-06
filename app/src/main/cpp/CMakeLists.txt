@@ -41,6 +41,17 @@ add_library(
     AudioOpusConverter.cpp
 )
 
+target_compile_options(
+    audio_opus_converter
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wconversion
+    -Wshadow
+    -Werror
+)
+
 target_link_libraries(
     audio_opus_converter
     opusenc
