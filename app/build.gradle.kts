@@ -155,6 +155,10 @@ android {
 
     lint {
         disable += "SelectedPhotoAccess"
+        // Kotlin 2.4.20 is fully supported through Gradle 9.7.0. Lint's generic
+        // version suggestion currently asks for Gradle 9.8.0, which is newer but
+        // outside Kotlin's fully supported range; keep the compatibility pin explicit.
+        disable += "AndroidGradlePluginVersion"
         warning += "MissingTranslation"
         warningsAsErrors = true
         abortOnError = true
