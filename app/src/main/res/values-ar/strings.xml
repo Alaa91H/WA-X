@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">مفعّل</string>
     <string name="tri_state_enabled">مفعّل</string>
     <string name="tri_state_inherit">استخدام العام</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">تفعيل KeyBox مخصّص</string>
+    <string name="enable_custom_keybox_sum">استخدم ملف keybox.xml مخصّصًا مع ميزة تخفّي محمّل الإقلاع.</string>
+    <string name="use_custom_keybox_file">استخدام ملف keybox.xml مخصّص</string>
+    <string name="no_file_selected">لم يتم اختيار ملف</string>
 </resources>
