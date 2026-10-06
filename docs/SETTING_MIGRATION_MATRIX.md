@@ -4,11 +4,11 @@
 
 | Metric | Count |
 |---|---|
-| Keys declared in settings XML | 142 |
-| Keys only referenced in code | 29 |
-| Keys read by the Xposed runtime | 156 |
-| Keys that can carry a per-target override | 153 |
-| **Total user-facing keys** | **171** |
+| Keys declared in settings XML | 143 |
+| Keys only referenced in code | 30 |
+| Keys read by the Xposed runtime | 157 |
+| Keys that can carry a per-target override | 155 |
+| **Total user-facing keys** | **173** |
 
 | Old key | Old location | Read by hooks | New category | Target model | Status |
 |---|---|---|---|---|---|
@@ -127,6 +127,7 @@
 | `oldstatus` | fragment_customization | yes | Appearance & Interface / Status / Advanced | GLOBAL+TARGET | MIGRATED |
 | `online` | _(code only)_ | yes | Unclassified | GLOBAL+TARGET | MIGRATED |
 | `open_wae` | preference_general_homescreen | yes | Messaging & Chats | MANAGER | MIGRATED |
+| `per_target_settings` | preference_general_home | no | Appearance & Interface / Advanced / Automation | GLOBAL+TARGET | MIGRATED |
 | `ph` | _(code only)_ | yes | Unclassified | GLOBAL+TARGET | MIGRATED |
 | `pinnedlimit` | preference_general_conversation | no | Privacy & Presence / Messaging / Automation | GLOBAL+TARGET | MIGRATED |
 | `preferredOrder` | _(code only)_ | yes | Unclassified | GLOBAL+TARGET | MIGRATED |
@@ -149,6 +150,7 @@
 | `shownamehome` | preference_general_homescreen | yes | Messaging & Chats | GLOBAL+TARGET | MIGRATED |
 | `showonline` | preference_general_conversation | yes | Privacy & Presence / Messaging / Automation | GLOBAL+TARGET | MIGRATED |
 | `showonlinetext` | preference_general_homescreen | yes | Messaging & Chats | GLOBAL+TARGET | MIGRATED |
+| `somekey` | _(code only)_ | yes | Unclassified | GLOBAL+TARGET | MIGRATED |
 | `stamp_copied_message` | preference_general_conversation | yes | Privacy & Presence / Messaging / Automation | GLOBAL+TARGET | MIGRATED |
 | `status_style` | fragment_customization | yes | Appearance & Interface / Status / Advanced | GLOBAL+TARGET | MIGRATED |
 | `statuscomposer` | fragment_customization | yes | Appearance & Interface / Status / Advanced | GLOBAL+TARGET | MIGRATED |
@@ -183,3 +185,25 @@
 | `wallpaper_alpha_toolbar` | fragment_customization | yes | Appearance & Interface / Status / Advanced | GLOBAL+TARGET | MIGRATED |
 | `wallpaper_file` | fragment_customization | yes | Appearance & Interface / Status / Advanced | GLOBAL | MIGRATED |
 | `widthPx` | _(code only)_ | yes | Unclassified | GLOBAL+TARGET | MIGRATED |
+
+## Implementation status
+
+This table lists every user-facing key and whether it can carry a per-target override.
+What it does not say is whether an override actually reaches the feature, so that is
+recorded here.
+
+| Stage | State |
+|---|---|
+| Global values readable at their original keys | Live since 1.0.0 |
+| Override storage, namespaced under `waxtarget.<code>.` | Live |
+| Override read path inside a hooked WhatsApp process | Live since 1.1.0 |
+| Per-target interface | Live since 1.1.0, `TargetSettingsActivity` |
+| Overrideable key list used by the interface | Generated from the preference screens by `tools/settings/generate_target_registry.py` |
+
+Keys marked `GLOBAL` are deliberately not offered per target: they configure WA X itself
+rather than a WhatsApp feature, or they hold a credential or a file path where a second
+copy would only create a second place to change it.
+
+A note on how this table was counted: the preference screens in this project declare keys
+as `app:key`, not `android:key`. A reader that only knows the android namespace sees four
+keys in total and reports success, which is why the generator checks both.
