@@ -106,7 +106,7 @@ private fun TargetSettingsScreen(viewModel: TargetSettingsViewModel = viewModel(
             ScopeSelector(
                 scope = state.scope,
                 overrideCount = state.overrideCount,
-                totalOverrideCount = state.totalOverrideCount,
+                totalSettingCount = state.totalSettingCount,
                 onSelect = {
                     query = ""
                     viewModel.selectScope(it)
@@ -181,7 +181,7 @@ private fun TargetSettingsScreen(viewModel: TargetSettingsViewModel = viewModel(
 private fun ScopeSelector(
     scope: SettingsScope,
     overrideCount: Int,
-    totalOverrideCount: Int,
+    totalSettingCount: Int,
     onSelect: (SettingsScope) -> Unit,
 ) {
     val scopes = remember { listOf(SettingsScope.Global) + TargetApp.entries.map { SettingsScope.Target(it) } }
@@ -210,7 +210,7 @@ private fun ScopeSelector(
                 if (scope is SettingsScope.Global) {
                     stringResource(R.string.scope_global_explainer)
                 } else {
-                    stringResource(R.string.scope_target_explainer, overrideCount, totalOverrideCount)
+                    stringResource(R.string.scope_target_explainer, overrideCount, totalSettingCount)
                 },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
