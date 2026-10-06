@@ -1,0 +1,709 @@
+{
+  "repository": "Alaa91H/WA-X",
+  "source": "WA-X-Feature-Additions-Only-Prompt-v5-All-Features-Free.md",
+  "issue_count": 100,
+  "generated_from_sections": "3-102",
+  "issues_enabled": false,
+  "requests": [
+    {
+      "feature_id": "F003",
+      "section": 3,
+      "priority": "P0",
+      "title": "[P0][F003] STATUS AUDIO STUDIO",
+      "path": "docs/feature-requests/F003-status-audio-studio.md"
+    },
+    {
+      "feature_id": "F004",
+      "section": 4,
+      "priority": "P0",
+      "title": "[P0][F004] STATUS VIDEO TOOLKIT",
+      "path": "docs/feature-requests/F004-status-video-toolkit.md"
+    },
+    {
+      "feature_id": "F005",
+      "section": 5,
+      "priority": "P0",
+      "title": "[P0][F005] STATUS VIEWER TOOLKIT",
+      "path": "docs/feature-requests/F005-status-viewer-toolkit.md"
+    },
+    {
+      "feature_id": "F006",
+      "section": 6,
+      "priority": "P1",
+      "title": "[P1][F006] STATUS DRAFTS",
+      "path": "docs/feature-requests/F006-status-drafts.md"
+    },
+    {
+      "feature_id": "F007",
+      "section": 7,
+      "priority": "LAB",
+      "title": "[LAB][F007] SCHEDULED STATUS",
+      "path": "docs/feature-requests/F007-scheduled-status.md"
+    },
+    {
+      "feature_id": "F008",
+      "section": 8,
+      "priority": "P0",
+      "title": "[P0][F008] ADVANCED MESSAGE SCHEDULER",
+      "path": "docs/feature-requests/F008-advanced-message-scheduler.md"
+    },
+    {
+      "feature_id": "F009",
+      "section": 9,
+      "priority": "CORE",
+      "title": "[CORE][F009] SCHEDULER SAFETY",
+      "path": "docs/feature-requests/F009-scheduler-safety.md"
+    },
+    {
+      "feature_id": "F010",
+      "section": 10,
+      "priority": "P0",
+      "title": "[P0][F010] TIMED AUTO DELETE FOR EVERYONE",
+      "path": "docs/feature-requests/F010-timed-auto-delete-for-everyone.md"
+    },
+    {
+      "feature_id": "F011",
+      "section": 11,
+      "priority": "P0",
+      "title": "[P0][F011] AUTOMATIC VIEW-ONCE MEDIA POLICY",
+      "path": "docs/feature-requests/F011-automatic-view-once-media-policy.md"
+    },
+    {
+      "feature_id": "F012",
+      "section": 12,
+      "priority": "P1",
+      "title": "[P1][F012] MESSAGE REMINDERS / SNOOZE",
+      "path": "docs/feature-requests/F012-message-reminders-snooze.md"
+    },
+    {
+      "feature_id": "F013",
+      "section": 13,
+      "priority": "P1",
+      "title": "[P1][F013] SMART DRAFTS",
+      "path": "docs/feature-requests/F013-smart-drafts.md"
+    },
+    {
+      "feature_id": "F014",
+      "section": 14,
+      "priority": "P1",
+      "title": "[P1][F014] MESSAGE TEMPLATES / SNIPPETS",
+      "path": "docs/feature-requests/F014-message-templates-snippets.md"
+    },
+    {
+      "feature_id": "F015",
+      "section": 15,
+      "priority": "P1",
+      "title": "[P1][F015] SAFE AUTO REPLY",
+      "path": "docs/feature-requests/F015-safe-auto-reply.md"
+    },
+    {
+      "feature_id": "F016",
+      "section": 16,
+      "priority": "P2",
+      "title": "[P2][F016] UNIFIED AUTOMATION RULE ENGINE",
+      "path": "docs/feature-requests/F016-unified-automation-rule-engine.md"
+    },
+    {
+      "feature_id": "F017",
+      "section": 17,
+      "priority": "P1",
+      "title": "[P1][F017] TASKER V2",
+      "path": "docs/feature-requests/F017-tasker-v2.md"
+    },
+    {
+      "feature_id": "F018",
+      "section": 18,
+      "priority": "P1",
+      "title": "[P1][F018] QUICK SETTINGS TILES",
+      "path": "docs/feature-requests/F018-quick-settings-tiles.md"
+    },
+    {
+      "feature_id": "F019",
+      "section": 19,
+      "priority": "P1",
+      "title": "[P1][F019] HOME-SCREEN SHORTCUTS",
+      "path": "docs/feature-requests/F019-home-screen-shortcuts.md"
+    },
+    {
+      "feature_id": "F020",
+      "section": 20,
+      "priority": "P0",
+      "title": "[P0][F020] PER-CHAT / PER-GROUP MEDIA POLICY",
+      "path": "docs/feature-requests/F020-per-chat-per-group-media-policy.md"
+    },
+    {
+      "feature_id": "F021",
+      "section": 21,
+      "priority": "P1",
+      "title": "[P1][F021] MEDIA RETENTION",
+      "path": "docs/feature-requests/F021-media-retention.md"
+    },
+    {
+      "feature_id": "F022",
+      "section": 22,
+      "priority": "P0",
+      "title": "[P0][F022] ANDROID PHOTO PICKER DIRECT MODE",
+      "path": "docs/feature-requests/F022-android-photo-picker-direct-mode.md"
+    },
+    {
+      "feature_id": "F023",
+      "section": 23,
+      "priority": "P1",
+      "title": "[P1][F023] EXIF / METADATA CLEANER",
+      "path": "docs/feature-requests/F023-exif-metadata-cleaner.md"
+    },
+    {
+      "feature_id": "F024",
+      "section": 24,
+      "priority": "P1",
+      "title": "[P1][F024] LINK TRACKING CLEANER",
+      "path": "docs/feature-requests/F024-link-tracking-cleaner.md"
+    },
+    {
+      "feature_id": "F025",
+      "section": 25,
+      "priority": "P1",
+      "title": "[P1][F025] DUPLICATE MEDIA FINDER",
+      "path": "docs/feature-requests/F025-duplicate-media-finder.md"
+    },
+    {
+      "feature_id": "F026",
+      "section": 26,
+      "priority": "P1",
+      "title": "[P1][F026] SMART STORAGE MANAGER",
+      "path": "docs/feature-requests/F026-smart-storage-manager.md"
+    },
+    {
+      "feature_id": "F027",
+      "section": 27,
+      "priority": "P0",
+      "title": "[P0][F027] VOICE NOTE CONTROL CENTER",
+      "path": "docs/feature-requests/F027-voice-note-control-center.md"
+    },
+    {
+      "feature_id": "F028",
+      "section": 28,
+      "priority": "P0",
+      "title": "[P0][F028] VOICE NOTE TRANSCRIPTION RULES",
+      "path": "docs/feature-requests/F028-voice-note-transcription-rules.md"
+    },
+    {
+      "feature_id": "F029",
+      "section": 29,
+      "priority": "P1",
+      "title": "[P1][F029] VOICE NOTE SUMMARY",
+      "path": "docs/feature-requests/F029-voice-note-summary.md"
+    },
+    {
+      "feature_id": "F030",
+      "section": 30,
+      "priority": "P1",
+      "title": "[P1][F030] VOICE NOTE BROWSER",
+      "path": "docs/feature-requests/F030-voice-note-browser.md"
+    },
+    {
+      "feature_id": "F031",
+      "section": 31,
+      "priority": "P1",
+      "title": "[P1][F031] VOICE NOTE PROCESSING",
+      "path": "docs/feature-requests/F031-voice-note-processing.md"
+    },
+    {
+      "feature_id": "F032",
+      "section": 32,
+      "priority": "P0",
+      "title": "[P0][F032] NOTIFICATION COOLDOWN / BURST CONTROL",
+      "path": "docs/feature-requests/F032-notification-cooldown-burst-control.md"
+    },
+    {
+      "feature_id": "F033",
+      "section": 33,
+      "priority": "P1",
+      "title": "[P1][F033] NOTIFICATION DIGEST",
+      "path": "docs/feature-requests/F033-notification-digest.md"
+    },
+    {
+      "feature_id": "F034",
+      "section": 34,
+      "priority": "P1",
+      "title": "[P1][F034] NOTIFICATION PRESENTATION CONTROLS",
+      "path": "docs/feature-requests/F034-notification-presentation-controls.md"
+    },
+    {
+      "feature_id": "F035",
+      "section": 35,
+      "priority": "P1",
+      "title": "[P1][F035] FOCUS / QUIET SCHEDULES",
+      "path": "docs/feature-requests/F035-focus-quiet-schedules.md"
+    },
+    {
+      "feature_id": "F036",
+      "section": 36,
+      "priority": "P1",
+      "title": "[P1][F036] CALL BLOCKING SCHEDULE",
+      "path": "docs/feature-requests/F036-call-blocking-schedule.md"
+    },
+    {
+      "feature_id": "F037",
+      "section": 37,
+      "priority": "P1",
+      "title": "[P1][F037] MANUAL CALL RECORDING",
+      "path": "docs/feature-requests/F037-manual-call-recording.md"
+    },
+    {
+      "feature_id": "F038",
+      "section": 38,
+      "priority": "P1",
+      "title": "[P1][F038] POST-CALL NOTES",
+      "path": "docs/feature-requests/F038-post-call-notes.md"
+    },
+    {
+      "feature_id": "F039",
+      "section": 39,
+      "priority": "P1",
+      "title": "[P1][F039] MISSED CALL REMINDERS",
+      "path": "docs/feature-requests/F039-missed-call-reminders.md"
+    },
+    {
+      "feature_id": "F040",
+      "section": 40,
+      "priority": "P1",
+      "title": "[P1][F040] NATIVE LISTS+",
+      "path": "docs/feature-requests/F040-native-lists.md"
+    },
+    {
+      "feature_id": "F041",
+      "section": 41,
+      "priority": "P1",
+      "title": "[P1][F041] PER-CHAT PRIVACY PROFILES",
+      "path": "docs/feature-requests/F041-per-chat-privacy-profiles.md"
+    },
+    {
+      "feature_id": "F042",
+      "section": 42,
+      "priority": "P1",
+      "title": "[P1][F042] TEMPORARY STEALTH MODE",
+      "path": "docs/feature-requests/F042-temporary-stealth-mode.md"
+    },
+    {
+      "feature_id": "F043",
+      "section": 43,
+      "priority": "P1",
+      "title": "[P1][F043] PANIC PRIVACY MODE",
+      "path": "docs/feature-requests/F043-panic-privacy-mode.md"
+    },
+    {
+      "feature_id": "F044",
+      "section": 44,
+      "priority": "P1",
+      "title": "[P1][F044] CLIPBOARD AUTO-CLEAR",
+      "path": "docs/feature-requests/F044-clipboard-auto-clear.md"
+    },
+    {
+      "feature_id": "F045",
+      "section": 45,
+      "priority": "P1",
+      "title": "[P1][F045] RECENTS SCREEN PRIVACY",
+      "path": "docs/feature-requests/F045-recents-screen-privacy.md"
+    },
+    {
+      "feature_id": "F046",
+      "section": 46,
+      "priority": "P1",
+      "title": "[P1][F046] BIOMETRIC LOCK FOR WA X",
+      "path": "docs/feature-requests/F046-biometric-lock-for-wa-x.md"
+    },
+    {
+      "feature_id": "F047",
+      "section": 47,
+      "priority": "P1",
+      "title": "[P1][F047] CONTACT NOTES / NICKNAMES",
+      "path": "docs/feature-requests/F047-contact-notes-nicknames.md"
+    },
+    {
+      "feature_id": "F048",
+      "section": 48,
+      "priority": "P1",
+      "title": "[P1][F048] CONTACT TAGS",
+      "path": "docs/feature-requests/F048-contact-tags.md"
+    },
+    {
+      "feature_id": "F049",
+      "section": 49,
+      "priority": "P1",
+      "title": "[P1][F049] ADVANCED MESSAGE SEARCH",
+      "path": "docs/feature-requests/F049-advanced-message-search.md"
+    },
+    {
+      "feature_id": "F050",
+      "section": 50,
+      "priority": "P1",
+      "title": "[P1][F050] JUMP TO DATE",
+      "path": "docs/feature-requests/F050-jump-to-date.md"
+    },
+    {
+      "feature_id": "F051",
+      "section": 51,
+      "priority": "P1",
+      "title": "[P1][F051] LOCAL MESSAGE BOOKMARKS",
+      "path": "docs/feature-requests/F051-local-message-bookmarks.md"
+    },
+    {
+      "feature_id": "F052",
+      "section": 52,
+      "priority": "P1",
+      "title": "[P1][F052] FOLLOW-UP FLAG",
+      "path": "docs/feature-requests/F052-follow-up-flag.md"
+    },
+    {
+      "feature_id": "F053",
+      "section": 53,
+      "priority": "P1",
+      "title": "[P1][F053] EDITED MESSAGE DIFF VIEWER",
+      "path": "docs/feature-requests/F053-edited-message-diff-viewer.md"
+    },
+    {
+      "feature_id": "F054",
+      "section": 54,
+      "priority": "P1",
+      "title": "[P1][F054] ARCHIVE ENHANCEMENTS",
+      "path": "docs/feature-requests/F054-archive-enhancements.md"
+    },
+    {
+      "feature_id": "F055",
+      "section": 55,
+      "priority": "P2",
+      "title": "[P2][F055] CONVERSATION INTELLIGENCE",
+      "path": "docs/feature-requests/F055-conversation-intelligence.md"
+    },
+    {
+      "feature_id": "F056",
+      "section": 56,
+      "priority": "P2",
+      "title": "[P2][F056] OPTIONAL LOCAL AI PACK",
+      "path": "docs/feature-requests/F056-optional-local-ai-pack.md"
+    },
+    {
+      "feature_id": "F057",
+      "section": 57,
+      "priority": "P1",
+      "title": "[P1][F057] BUSINESS WORKSPACE",
+      "path": "docs/feature-requests/F057-business-workspace.md"
+    },
+    {
+      "feature_id": "F058",
+      "section": 58,
+      "priority": "P1",
+      "title": "[P1][F058] SLA / RESPONSE TIMER",
+      "path": "docs/feature-requests/F058-sla-response-timer.md"
+    },
+    {
+      "feature_id": "F059",
+      "section": 59,
+      "priority": "P1",
+      "title": "[P1][F059] WORKING HOURS PROFILE",
+      "path": "docs/feature-requests/F059-working-hours-profile.md"
+    },
+    {
+      "feature_id": "F060",
+      "section": 60,
+      "priority": "P1",
+      "title": "[P1][F060] DISTRACTION-FREE MODE",
+      "path": "docs/feature-requests/F060-distraction-free-mode.md"
+    },
+    {
+      "feature_id": "F061",
+      "section": 61,
+      "priority": "P1",
+      "title": "[P1][F061] WA X MINI CONTROL CENTER INSIDE WHATSAPP",
+      "path": "docs/feature-requests/F061-wa-x-mini-control-center-inside-whatsapp.md"
+    },
+    {
+      "feature_id": "F062",
+      "section": 62,
+      "priority": "P1",
+      "title": "[P1][F062] VERSION GUARDIAN",
+      "path": "docs/feature-requests/F062-version-guardian.md"
+    },
+    {
+      "feature_id": "F063",
+      "section": 63,
+      "priority": "P1",
+      "title": "[P1][F063] FEATURE-LEVEL AUTO DISABLE",
+      "path": "docs/feature-requests/F063-feature-level-auto-disable.md"
+    },
+    {
+      "feature_id": "F064",
+      "section": 64,
+      "priority": "P1",
+      "title": "[P1][F064] SAFE MODE ENHANCEMENTS",
+      "path": "docs/feature-requests/F064-safe-mode-enhancements.md"
+    },
+    {
+      "feature_id": "F065",
+      "section": 65,
+      "priority": "P1",
+      "title": "[P1][F065] SELECTIVE BACKUP",
+      "path": "docs/feature-requests/F065-selective-backup.md"
+    },
+    {
+      "feature_id": "F066",
+      "section": 66,
+      "priority": "P1",
+      "title": "[P1][F066] ENCRYPTED LOCAL BACKUP",
+      "path": "docs/feature-requests/F066-encrypted-local-backup.md"
+    },
+    {
+      "feature_id": "F067",
+      "section": 67,
+      "priority": "P1",
+      "title": "[P1][F067] BACKUP VERIFICATION",
+      "path": "docs/feature-requests/F067-backup-verification.md"
+    },
+    {
+      "feature_id": "F068",
+      "section": 68,
+      "priority": "P1",
+      "title": "[P1][F068] SELECTIVE RESTORE",
+      "path": "docs/feature-requests/F068-selective-restore.md"
+    },
+    {
+      "feature_id": "F069",
+      "section": 69,
+      "priority": "LAB",
+      "title": "[LAB][F069] MULTIPLE MSGSTORE / DATABASE IMPORT",
+      "path": "docs/feature-requests/F069-multiple-msgstore-database-import.md"
+    },
+    {
+      "feature_id": "F070",
+      "section": 70,
+      "priority": "P1",
+      "title": "[P1][F070] PROFILE PICTURE DOWNLOAD",
+      "path": "docs/feature-requests/F070-profile-picture-download.md"
+    },
+    {
+      "feature_id": "F071",
+      "section": 71,
+      "priority": "P2",
+      "title": "[P2][F071] FORWARDED LABEL CONTROL",
+      "path": "docs/feature-requests/F071-forwarded-label-control.md"
+    },
+    {
+      "feature_id": "F072",
+      "section": 72,
+      "priority": "P1",
+      "title": "[P1][F072] TICK COLOR ACCESSIBILITY",
+      "path": "docs/feature-requests/F072-tick-color-accessibility.md"
+    },
+    {
+      "feature_id": "F073",
+      "section": 73,
+      "priority": "P1",
+      "title": "[P1][F073] ACCESSIBILITY PROFILES",
+      "path": "docs/feature-requests/F073-accessibility-profiles.md"
+    },
+    {
+      "feature_id": "F074",
+      "section": 74,
+      "priority": "P1",
+      "title": "[P1][F074] PROFILE COMPOSITION",
+      "path": "docs/feature-requests/F074-profile-composition.md"
+    },
+    {
+      "feature_id": "F075",
+      "section": 75,
+      "priority": "P1",
+      "title": "[P1][F075] ACCOUNT-AWARE AUTOMATION",
+      "path": "docs/feature-requests/F075-account-aware-automation.md"
+    },
+    {
+      "feature_id": "F076",
+      "section": 76,
+      "priority": "P1",
+      "title": "[P1][F076] CROSS-TARGET / CROSS-ACCOUNT COPY",
+      "path": "docs/feature-requests/F076-cross-target-cross-account-copy.md"
+    },
+    {
+      "feature_id": "F077",
+      "section": 77,
+      "priority": "P0",
+      "title": "[P0][F077] PRIVACY & SECURITY CENTER",
+      "path": "docs/feature-requests/F077-privacy-and-security-center.md"
+    },
+    {
+      "feature_id": "F078",
+      "section": 78,
+      "priority": "P0",
+      "title": "[P0][F078] SENSITIVE CHAT MODE",
+      "path": "docs/feature-requests/F078-sensitive-chat-mode.md"
+    },
+    {
+      "feature_id": "F079",
+      "section": 79,
+      "priority": "P0",
+      "title": "[P0][F079] UNTRUSTED SENDER FIREWALL",
+      "path": "docs/feature-requests/F079-untrusted-sender-firewall.md"
+    },
+    {
+      "feature_id": "F080",
+      "section": 80,
+      "priority": "P0",
+      "title": "[P0][F080] SENSITIVE DATA LEAK PREVENTION",
+      "path": "docs/feature-requests/F080-sensitive-data-leak-prevention.md"
+    },
+    {
+      "feature_id": "F081",
+      "section": 81,
+      "priority": "P0",
+      "title": "[P0][F081] WRONG-RECIPIENT & FORWARDING GUARD",
+      "path": "docs/feature-requests/F081-wrong-recipient-and-forwarding-guard.md"
+    },
+    {
+      "feature_id": "F082",
+      "section": 82,
+      "priority": "P1",
+      "title": "[P1][F082] SCREEN CAPTURE & SCREEN-SHARING SHIELD",
+      "path": "docs/feature-requests/F082-screen-capture-and-screen-sharing-shield.md"
+    },
+    {
+      "feature_id": "F083",
+      "section": 83,
+      "priority": "P1",
+      "title": "[P1][F083] INCOGNITO KEYBOARD / NO-LEARNING MODE",
+      "path": "docs/feature-requests/F083-incognito-keyboard-no-learning-mode.md"
+    },
+    {
+      "feature_id": "F084",
+      "section": 84,
+      "priority": "P1",
+      "title": "[P1][F084] SECURE LINK GUARD",
+      "path": "docs/feature-requests/F084-secure-link-guard.md"
+    },
+    {
+      "feature_id": "F085",
+      "section": 85,
+      "priority": "P1",
+      "title": "[P1][F085] ATTACHMENT FIREWALL & QUARANTINE",
+      "path": "docs/feature-requests/F085-attachment-firewall-and-quarantine.md"
+    },
+    {
+      "feature_id": "F086",
+      "section": 86,
+      "priority": "P1",
+      "title": "[P1][F086] HIDDEN CHAT FOOTPRINT SUPPRESSION",
+      "path": "docs/feature-requests/F086-hidden-chat-footprint-suppression.md"
+    },
+    {
+      "feature_id": "F087",
+      "section": 87,
+      "priority": "P1",
+      "title": "[P1][F087] CONTACT IDENTITY MASK / LOCAL ALIAS",
+      "path": "docs/feature-requests/F087-contact-identity-mask-local-alias.md"
+    },
+    {
+      "feature_id": "F088",
+      "section": 88,
+      "priority": "P1",
+      "title": "[P1][F088] LINKED DEVICE WATCH",
+      "path": "docs/feature-requests/F088-linked-device-watch.md"
+    },
+    {
+      "feature_id": "F089",
+      "section": 89,
+      "priority": "P1",
+      "title": "[P1][F089] SECURITY CODE / ENCRYPTION IDENTITY CHANGE MONITOR",
+      "path": "docs/feature-requests/F089-security-code-encryption-identity-change-monitor.md"
+    },
+    {
+      "feature_id": "F090",
+      "section": 90,
+      "priority": "P1",
+      "title": "[P1][F090] ENCRYPTED LOCAL PRIVACY DATA",
+      "path": "docs/feature-requests/F090-encrypted-local-privacy-data.md"
+    },
+    {
+      "feature_id": "F091",
+      "section": 91,
+      "priority": "P1",
+      "title": "[P1][F091] CONFIDENTIAL CHAT SESSION",
+      "path": "docs/feature-requests/F091-confidential-chat-session.md"
+    },
+    {
+      "feature_id": "F092",
+      "section": 92,
+      "priority": "P2",
+      "title": "[P2][F092] OVERLAY / TAPJACKING GUARD",
+      "path": "docs/feature-requests/F092-overlay-tapjacking-guard.md"
+    },
+    {
+      "feature_id": "F093",
+      "section": 93,
+      "priority": "P0",
+      "title": "[P0][F093] STOCK WHATSAPP / ZERO-VISIBLE-MODIFICATION MODE",
+      "path": "docs/feature-requests/F093-stock-whatsapp-zero-visible-modification-mode.md"
+    },
+    {
+      "feature_id": "F094",
+      "section": 94,
+      "priority": "P0",
+      "title": "[P0][F094] ACCOUNT TAKEOVER GUARDIAN",
+      "path": "docs/feature-requests/F094-account-takeover-guardian.md"
+    },
+    {
+      "feature_id": "F095",
+      "section": 95,
+      "priority": "P1",
+      "title": "[P1][F095] USERNAME & PHONE-NUMBER PRIVACY MANAGER",
+      "path": "docs/feature-requests/F095-username-and-phone-number-privacy-manager.md"
+    },
+    {
+      "feature_id": "F096",
+      "section": 96,
+      "priority": "P1",
+      "title": "[P1][F096] ENCRYPTED PRIVATE MEDIA VAULT",
+      "path": "docs/feature-requests/F096-encrypted-private-media-vault.md"
+    },
+    {
+      "feature_id": "F097",
+      "section": 97,
+      "priority": "P1",
+      "title": "[P1][F097] PERMISSION & SENSOR PRIVACY MONITOR",
+      "path": "docs/feature-requests/F097-permission-and-sensor-privacy-monitor.md"
+    },
+    {
+      "feature_id": "F098",
+      "section": 98,
+      "priority": "P1",
+      "title": "[P1][F098] GROUP SECURITY CHANGE ALERTS",
+      "path": "docs/feature-requests/F098-group-security-change-alerts.md"
+    },
+    {
+      "feature_id": "F099",
+      "section": 99,
+      "priority": "P1",
+      "title": "[P1][F099] SECURE MEDIA EXPORT",
+      "path": "docs/feature-requests/F099-secure-media-export.md"
+    },
+    {
+      "feature_id": "F100",
+      "section": 100,
+      "priority": "P1",
+      "title": "[P1][F100] PRIVACY EVENT TIMELINE",
+      "path": "docs/feature-requests/F100-privacy-event-timeline.md"
+    },
+    {
+      "feature_id": "F101",
+      "section": 101,
+      "priority": "LAB",
+      "title": "[LAB][F101] VIDEO NOTE ATTACHMENT",
+      "path": "docs/feature-requests/F101-video-note-attachment.md"
+    },
+    {
+      "feature_id": "F102",
+      "section": 102,
+      "priority": "LAB",
+      "title": "[LAB][F102] SILENT SEND",
+      "path": "docs/feature-requests/F102-silent-send.md"
+    }
+  ]
+}
