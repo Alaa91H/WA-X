@@ -63,7 +63,10 @@ object UpdateOffer {
     fun isUpdateAvailable(
         releaseVersion: String?,
         currentVersion: String?,
-    ): Boolean = (compareVersions(releaseVersion, currentVersion) ?: return false) > 0
+    ): Boolean {
+        val comparison = compareVersions(releaseVersion, currentVersion) ?: return false
+        return comparison > 0
+    }
 
     /**
      * Decides whether an update dialog should be shown.
