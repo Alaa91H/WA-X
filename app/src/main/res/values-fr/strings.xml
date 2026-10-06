@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">Désactivé</string>
     <string name="tri_state_enabled">Activé</string>
     <string name="tri_state_inherit">Global</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Activer une KeyBox personnalisée</string>
+    <string name="enable_custom_keybox_sum">Utiliser un fichier keybox.xml personnalisé pour l’usurpation du chargeur de démarrage.</string>
+    <string name="use_custom_keybox_file">Utiliser un fichier keybox.xml personnalisé</string>
+    <string name="no_file_selected">Aucun fichier sélectionné</string>
 </resources>
