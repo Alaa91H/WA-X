@@ -550,4 +550,27 @@
     <string name="diag_hma_blocked">Hide My App List masque WA X à :</string>
     <string name="diag_hma_disable">Désactivez le blocage de WhatsApp/Business dans Hide My App List pour que WA X fonctionne correctement.</string>
     <string name="diag_copied">Ligne copiée dans le presse-papiers</string>
+
+    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
+    <string name="per_target_settings">Paramètres par application</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">Ce sont les valeurs par défaut. Chaque application cible sans valeur propre les utilise.</string>
+    <string name="scope_target_explainer">%1$d paramètres sur %2$d sont personnalisés pour cette application. Les paramètres sur « Utiliser les valeurs globales » suivent la valeur globale.</string>
+    <string name="search_settings">Rechercher dans les paramètres</string>
+    <string name="no_settings_match">Aucun paramètre ne correspond à cette recherche.</string>
+    <string name="tri_state_inherit">Utiliser les valeurs globales</string>
+    <string name="tri_state_enabled">Activé</string>
+    <string name="tri_state_disabled">Désactivé</string>
+    <string name="default_value">Valeur par défaut pour chaque application</string>
+    <string name="follows_global">Suit les valeurs globales</string>
+    <string name="pinned_to">Fixé à : %1$s</string>
+    <string name="pin_global">Fixer</string>
+    <string name="follow_global">Utiliser les valeurs globales</string>
+    <string name="copy_global_to_target">Copier toutes les valeurs globales vers cette application</string>
+    <string name="reset_this_target">Réinitialiser cette application</string>
+    <string name="reset_all_targets">Réinitialiser toutes les applications</string>
+    <string name="edit_on_original_screen">Modifiez ce réglage sur l’écran %1$s.</string>
+    <string name="open_per_target_settings">Configurer WhatsApp et WhatsApp Business séparément</string>
+    <string name="open_per_target_settings_summary">Attribuez des paramètres propres à WhatsApp et à WhatsApp Business, ou laissez un paramètre suivre la valeur globale par défaut.</string>
+    <string name="reload">Recharger</string>
 </resources>
