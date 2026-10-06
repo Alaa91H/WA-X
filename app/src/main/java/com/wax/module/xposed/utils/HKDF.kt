@@ -17,10 +17,10 @@ abstract class HKDF {
     }
 
     fun deriveSecrets(
-        arr_b: ByteArray,
-        arr_b1: ByteArray,
-        v: Int,
-    ): ByteArray = deriveSecrets(arr_b, ByteArray(0x20), arr_b1, v)
+        inputKeyMaterial: ByteArray,
+        info: ByteArray,
+        outputLength: Int,
+    ): ByteArray = deriveSecrets(inputKeyMaterial, ByteArray(0x20), info, outputLength)
 
     fun deriveSecrets(
         inputKeyMaterial: ByteArray,
