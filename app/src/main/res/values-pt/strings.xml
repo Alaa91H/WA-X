@@ -572,4 +572,10 @@
     <string name="tri_state_disabled">Desativado</string>
     <string name="tri_state_enabled">Ativado</string>
     <string name="tri_state_inherit">Global</string>
+
+    <!-- Custom KeyBox -->
+    <string name="enable_custom_keybox">Ativar KeyBox personalizada</string>
+    <string name="enable_custom_keybox_sum">Use um arquivo keybox.xml personalizado para falsificação do bootloader.</string>
+    <string name="use_custom_keybox_file">Usar arquivo keybox.xml personalizado</string>
+    <string name="no_file_selected">Nenhum arquivo selecionado</string>
 </resources>
