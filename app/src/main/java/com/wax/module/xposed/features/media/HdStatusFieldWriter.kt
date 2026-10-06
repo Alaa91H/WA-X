@@ -95,7 +95,7 @@ class HdStatusFieldWriter(
             applied++
             true
         } catch (t: Throwable) {
-            recordFailure(aliases, field, t)
+            recordFailure(field, t)
             false
         }
     }
@@ -133,7 +133,7 @@ class HdStatusFieldWriter(
             applied++
             true
         } catch (t: Throwable) {
-            recordFailure(aliases, field, t)
+            recordFailure(field, t)
             false
         }
     }
@@ -163,7 +163,7 @@ class HdStatusFieldWriter(
             applied++
             true
         } catch (t: Throwable) {
-            recordFailure(aliases, field, t)
+            recordFailure(field, t)
             false
         }
     }
@@ -203,7 +203,6 @@ class HdStatusFieldWriter(
     }
 
     private fun recordFailure(
-        aliases: List<String>,
         field: Field,
         t: Throwable,
     ): Boolean {
