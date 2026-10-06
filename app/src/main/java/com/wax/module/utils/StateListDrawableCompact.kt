@@ -14,11 +14,10 @@ object StateListDrawableCompact {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return stateListDrawable.stateCount
         return try {
             val method =
-                XposedHelpers.findMethodBestMatch(
-                    drawableClass,
-                    "getStateCount",
-                )
-            val result = method?.invoke(stateListDrawable)
+                drawableClass.getDeclaredMethod("getStateCount").apply {
+                    isAccessible = true
+                }
+            val result = method.invoke(stateListDrawable)
             result as? Int ?: 0
         } catch (exception: Exception) {
             XposedBridge.log(exception)
