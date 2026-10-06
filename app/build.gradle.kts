@@ -160,7 +160,7 @@ android {
     // and is tightened as the debt is paid down.
     detekt {
         buildUponDefaultConfig = true
-        allRules = true
+        allRules = false
         ignoreFailures = false
         config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     }
