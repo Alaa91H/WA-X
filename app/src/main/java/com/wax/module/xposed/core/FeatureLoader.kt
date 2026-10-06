@@ -551,7 +551,7 @@ class FeatureLoader {
             ProtocolTreeNodeWpp.initialize(loader)
             AlertDialogWpp.initDialog(loader)
             WaContactWpp.initialize(loader)
-            ModuleRuntime.initialize(loader, pref)
+            ModuleRuntime.initialize(loader)
             DesignUtils.setPrefs(pref)
             Utils.init()
 
