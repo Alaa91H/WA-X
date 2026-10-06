@@ -115,7 +115,7 @@ def collect():
 # as a per-target override: a path or an API key is the same for both installs of the app,
 # and duplicating it invites two places to change it.
 EXCLUDED = {
-    "thememode", "wae_color_mode", "wae_color_preset", "update_check", "enablelogs",
+    "app_language", "thememode", "wae_color_mode", "wae_color_preset", "update_check", "enablelogs",
     "restartbutton", "open_wae", "bootsloader_placeholder", "bootloader_spoofer",
     "bootloader_spoofer_custom", "bootloader_spoofer_xml",
     "groq_api_key", "transcription_provider", "css_theme", "wallpaper_file",

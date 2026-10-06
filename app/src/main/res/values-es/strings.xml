@@ -2,7 +2,7 @@
 <resources>
     <string name="force_restore_backup">Forzar restauración de copia de seguridad</string>
     <string name="force_restore_backup_summary">Inicie la pantalla de restauración de copia de seguridad manualmente. Use esto si omitió la restauración durante la configuración.</string>
-    <string name="app_desc">Un módulo Xposed para personalizar tu WhatsApp.</string>
+    <string name="app_desc">Módulo Xposed avanzado para WhatsApp</string>
     <string name="antirevoke">Anti-Eliminar Mensajes</string>
     <string name="antirevoke_sum">Cuando está activo, evita que los mensajes sean eliminados</string>
     <string name="ghostmode">Ocultar \"escribiendo\"</string>
@@ -318,7 +318,6 @@
     <string name="viewed_your_message">%s ha visto tu mensaje</string>
     <string name="old_statuses">Estados antiguos</string>
     <string name="old_statuses_sum">Cambiar a la interfaz de estados antiguos verticalmente y sin canales (NOTA: Puede causar lag en la interfaz)</string>
-    <string name="force_english">Forzar idioma inglés en WA X</string>
     <string name="select_status_type">Seleccionar tipo de estado</string>
     <string name="open_camera">Abrir cámara</string>
     <string name="edit_text">Editar texto</string>
@@ -327,7 +326,7 @@
     <string name="installation_desc">1. Asegúrese de que su dispositivo está rooteado.\n2. Instale el Xposed Framework en su dispositivo.\n3. Descarga el WA X desde la sección Acciones.\n4. Instala el APK de WA X.\n5. Activa el módulo WA X en la aplicación Xposed Installer.</string>
     <string name="go_to_telegram">Ir a Telegram</string>
     <string name="go_to_github">Ir a GitHub</string>
-    <string name="contributors">Colaboradores</string>
+    <string name="contributors">Avisos de código abierto</string>
     <string name="support">Soporte</string>
     <string name="support_desc">Si encuentras algún problema o tienes preguntas sobre WA X, por favor visita Telegram.</string>
     <string name="license">Licencia</string>
@@ -408,8 +407,8 @@
     <string name="select_all">Seleccionar Todo</string>
     <string name="custom_colors_for_text_status">Personalizar colores de los textos en los estados</string>
     <string name="custom_colors_for_text_status_sum">Mantén pulsado el selector de color en el estado para personalizar los colores</string>
-    <string name="enable_wa_enhancer_button">Habilitar botón WA X</string>
-    <string name="enable_wa_enhancer_button_sum">Añadir botón en la pantalla de inicio para abrir WA X</string>
+    <string name="enable_wax_button">Habilitar botón WA X</string>
+    <string name="enable_wax_button_sum">Añadir botón en la pantalla de inicio para abrir WA X</string>
     <string name="custom_privacy">Privacidad personalizada</string>
     <string name="custom_privacy_sum">Habilitar/deshabilitar privacidad personalizada</string>
     <string name="custom_privacy_per_contact">Privacidad personalizada por contacto</string>
@@ -550,27 +549,27 @@
     <string name="diag_hma_blocked">Hide My App List está ocultando WA X a:</string>
     <string name="diag_hma_disable">Desactiva el bloqueo de WhatsApp/Business en Hide My App List para que WA X funcione correctamente.</string>
     <string name="diag_copied">Línea copiada al portapapeles</string>
-
-    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
-    <string name="per_target_settings">Configuración por aplicación</string>
-    <string name="scope_global">Global</string>
-    <string name="scope_global_explainer">Estos son los valores predeterminados. Cada aplicación de destino que no tenga un valor propio los utiliza.</string>
-    <string name="scope_target_explainer">%1$d de %2$d ajustes están personalizados para esta aplicación. Los ajustes en «Usar global» siguen el valor global.</string>
-    <string name="search_settings">Buscar ajustes</string>
-    <string name="no_settings_match">Ningún ajuste coincide con esta búsqueda.</string>
-    <string name="tri_state_inherit">Usar global</string>
-    <string name="tri_state_enabled">Activado</string>
-    <string name="tri_state_disabled">Desactivado</string>
-    <string name="default_value">Valor predeterminado para cada aplicación</string>
+    <string name="app_language">Idioma</string>
+    <string name="copy_global_to_target">Copiar todos los valores globales a este objetivo</string>
+    <string name="default_value">Valor predeterminado para todos los objetivos</string>
+    <string name="edit_on_original_screen">Edítalo en la pantalla %1$s.</string>
+    <string name="follow_global">Usar el valor global</string>
     <string name="follows_global">Sigue el valor global</string>
-    <string name="pinned_to">Fijado en: %1$s</string>
+    <string name="language_system_default">Idioma del sistema</string>
+    <string name="no_settings_match">Ningún ajuste coincide con esa búsqueda.</string>
+    <string name="open_per_target_settings">Configurar WhatsApp y Business por separado</string>
+    <string name="open_per_target_settings_summary">Da a cada versión de WhatsApp sus propios ajustes, o deja un ajuste siguiendo el valor global.</string>
+    <string name="per_target_settings">Ajustes por objetivo</string>
     <string name="pin_global">Fijar</string>
-    <string name="follow_global">Usar global</string>
-    <string name="copy_global_to_target">Copiar todos los valores globales a esta aplicación</string>
-    <string name="reset_this_target">Restablecer esta aplicación</string>
-    <string name="reset_all_targets">Restablecer todas las aplicaciones</string>
-    <string name="edit_on_original_screen">Edita esta opción en la pantalla %1$s.</string>
-    <string name="open_per_target_settings">Configurar WhatsApp y WhatsApp Business por separado</string>
-    <string name="open_per_target_settings_summary">Asigna ajustes propios a WhatsApp y WhatsApp Business, o deja que cada ajuste siga el valor predeterminado global.</string>
+    <string name="pinned_to">Fijado en: %1$s</string>
     <string name="reload">Recargar</string>
+    <string name="reset_all_targets">Restablecer todos los objetivos</string>
+    <string name="reset_this_target">Restablecer este objetivo</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">Estos son los valores predeterminados. Todo objetivo sin valor propio los utiliza.</string>
+    <string name="scope_target_explainer">%1$d de %2$d anulaciones en este objetivo. Los ajustes en «Global» siguen el valor global.</string>
+    <string name="search_settings">Buscar ajustes</string>
+    <string name="tri_state_disabled">Desactivado</string>
+    <string name="tri_state_enabled">Activado</string>
+    <string name="tri_state_inherit">Global</string>
 </resources>

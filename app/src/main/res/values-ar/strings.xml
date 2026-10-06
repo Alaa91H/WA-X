@@ -2,7 +2,7 @@
 <resources>
     <string name="force_restore_backup">استعادة النسخة الاحتياطية بالقوة</string>
     <string name="force_restore_backup_summary">تشغيل استعادة شاشة النسخ الاحتياطي يدوياً. استخدم هذا إذا قمت بتخطي الاستعادة أثناء الإعداد.</string>
-    <string name="app_desc">أداة تخصيص WhatsApp</string>
+    <string name="app_desc">وحدة Xposed متقدمة لواتساب</string>
     <string name="antirevoke">منع حذف الرسائل</string>
     <string name="antirevoke_sum">لن تُحذف الرسائل نيابةً عنك</string>
     <string name="ghostmode">إخفاء مؤشر الكتابة</string>
@@ -318,7 +318,6 @@
     <string name="viewed_your_message">%s شاهد رسالتك</string>
     <string name="old_statuses">الحالات القديمة</string>
     <string name="old_statuses_sum">التغيير إلى صفحة الحالات القديمة عموديًا وبدون قنوات (ملاحظة: قد يتسبب ذلك في حدوث بطء في الواجهة)</string>
-    <string name="force_english">فرض اللغة الإنجليزية في WA X</string>
     <string name="select_status_type">تحديد نوع الحالة</string>
     <string name="open_camera">فتح الكاميرا</string>
     <string name="edit_text">تحرير النص</string>
@@ -327,7 +326,7 @@
     <string name="installation_desc">1. تأكد من أن جهازك مُجذّر (روت).\n2. ثبّت إطار عمل Xposed Framework على جهازك.\n3. نزّل WA X من قسم الإصدارات.\n4. ثبّت ملف WA X APK.\n5. فعّل وحدة WA X في تطبيق Xposed Installer.</string>
     <string name="go_to_telegram">الذهاب إلى تيليجرام</string>
     <string name="go_to_github">الذهاب إلى GitHub</string>
-    <string name="contributors">المساهمون</string>
+    <string name="contributors">إشعارات المصدر المفتوح</string>
     <string name="support">الدعم</string>
     <string name="support_desc">إذا واجهت أي مشكلات أو لديك أسئلة حول WA X، يرجى زيارة Telegram.</string>
     <string name="license">الترخيص</string>
@@ -408,8 +407,8 @@
     <string name="select_all">تحديد الكل</string>
     <string name="custom_colors_for_text_status">ألوان مخصصة لحالة النص</string>
     <string name="custom_colors_for_text_status_sum">اضغط باستمرار على منتقي الألوان في الحالة لتخصيصه</string>
-    <string name="enable_wa_enhancer_button">تمكين أيقونة لفتح إعدادات الوحدة</string>
-    <string name="enable_wa_enhancer_button_sum">إظهار الأيقونة في الشاشة الرئيسية</string>
+    <string name="enable_wax_button">تمكين أيقونة لفتح إعدادات الوحدة</string>
+    <string name="enable_wax_button_sum">إظهار الأيقونة في الشاشة الرئيسية</string>
     <string name="custom_privacy">الخصوصية(المخصصة)</string>
     <string name="custom_privacy_sum">تمكين/تعطيل الخصوصية المخصصة</string>
     <string name="custom_privacy_per_contact">خصوصية مخصصة لكل جهة اتصال</string>
@@ -550,27 +549,27 @@
     <string name="diag_hma_blocked">Hide My App List يخفي WA X عن:</string>
     <string name="diag_hma_disable">عطّل الحجب عن واتساب/واتساب للأعمال في Hide My App List حتى يعمل WA X بشكل صحيح.</string>
     <string name="diag_copied">تم نسخ السطر إلى الحافظة</string>
-
-    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
-    <string name="per_target_settings">إعدادات مخصّصة لكل تطبيق</string>
-    <string name="scope_global">عام</string>
-    <string name="scope_global_explainer">هذه هي الإعدادات الافتراضية. يستخدمها كل تطبيق مستهدف لم يتم تعيين قيمة خاصة به.</string>
-    <string name="scope_target_explainer">يوجد %1$d من أصل %2$d إعدادات مخصّصة لهذا التطبيق. الإعدادات المضبوطة على «استخدام الإعداد العام» تتبع القيمة العامة.</string>
-    <string name="search_settings">البحث في الإعدادات</string>
-    <string name="no_settings_match">لا توجد إعدادات تطابق هذا البحث.</string>
-    <string name="tri_state_inherit">استخدام الإعداد العام</string>
-    <string name="tri_state_enabled">تشغيل</string>
-    <string name="tri_state_disabled">إيقاف</string>
-    <string name="default_value">الافتراضي لكل تطبيق</string>
-    <string name="follows_global">يتبع الإعداد العام</string>
-    <string name="pinned_to">مثبّت على: %1$s</string>
+    <string name="app_language">لغة الواجهة</string>
+    <string name="copy_global_to_target">نسخ كل القيم العامة إلى هذا الهدف</string>
+    <string name="default_value">القيمة الافتراضية لكل هدف</string>
+    <string name="edit_on_original_screen">عدّل هذا في شاشة %1$s.</string>
+    <string name="follow_global">استخدام العام</string>
+    <string name="follows_global">يتبع العام</string>
+    <string name="language_system_default">لغة النظام</string>
+    <string name="no_settings_match">لا يوجد إعداد يطابق هذا البحث.</string>
+    <string name="open_per_target_settings">إعداد واتساب للأعمال بشكل منفصل</string>
+    <string name="open_per_target_settings_summary">امنح كل نسخة من واتساب إعداداتها، أو اترك الإعداد يتبع القيمة العامة.</string>
+    <string name="per_target_settings">الإعدادات حسب الهدف</string>
     <string name="pin_global">تثبيت</string>
-    <string name="follow_global">استخدام الإعداد العام</string>
-    <string name="copy_global_to_target">نسخ جميع القيم العامة إلى هذا التطبيق</string>
-    <string name="reset_this_target">إعادة ضبط هذا التطبيق</string>
-    <string name="reset_all_targets">إعادة ضبط جميع التطبيقات</string>
-    <string name="edit_on_original_screen">عدّل هذا الخيار في شاشة %1$s.</string>
-    <string name="open_per_target_settings">إعداد واتساب وواتساب للأعمال بشكل منفصل</string>
-    <string name="open_per_target_settings_summary">امنح واتساب وواتساب للأعمال إعدادات مستقلة لكل منهما، أو اترك الإعداد يتبع الإعداد الافتراضي العام.</string>
-    <string name="reload">إعادة تحميل</string>
+    <string name="pinned_to">مثبَّت على: %1$s</string>
+    <string name="reload">إعادة التحميل</string>
+    <string name="reset_all_targets">إعادة تعيين كل الأهداف</string>
+    <string name="reset_this_target">إعادة تعيين هذا الهدف</string>
+    <string name="scope_global">عام</string>
+    <string name="scope_global_explainer">هذه هي القيم الافتراضية. يستخدمها كل هدف لم تُحدَّد له قيمة خاصة.</string>
+    <string name="scope_target_explainer">%1$d من %2$d تعديلات على هذا الهدف. الإعدادات المتروكة على «استخدام العام» تتبع القيمة العامة.</string>
+    <string name="search_settings">البحث في الإعدادات</string>
+    <string name="tri_state_disabled">مفعّل</string>
+    <string name="tri_state_enabled">مفعّل</string>
+    <string name="tri_state_inherit">استخدام العام</string>
 </resources>

@@ -2,7 +2,7 @@
 <resources>
     <string name="force_restore_backup">Paksa Pulihkan Cadangan</string>
     <string name="force_restore_backup_summary">Luncurkan layar pemulihan cadangan secara manual. Gunakan ini jika Anda melewatkan pemulihan selama pencadangan</string>
-    <string name="app_desc">Modul LSPosed untuk menyesuaikan WhatsApp Anda</string>
+    <string name="app_desc">Modul Xposed Cadvanced untuk WhatsApp</string>
     <string name="antirevoke">Anti Hapus Pesan</string>
     <string name="antirevoke_sum">Pesan tidak akan dihapus untuk Anda</string>
     <string name="ghostmode">Sembunyikan mengetik...</string>
@@ -318,7 +318,6 @@
     <string name="viewed_your_message">%s membaca pesan Anda</string>
     <string name="old_statuses">Status Lama</string>
     <string name="old_statuses_sum">Ubah ke halaman status lama secara vertikal dan tanpa saluran\n(CATATAN: Dapat menyebabkan kelambatan pada antarmuka)</string>
-    <string name="force_english">Paksa Bahasa Inggris di WA X</string>
     <string name="select_status_type">Pilih jenis status</string>
     <string name="open_camera">Buka Kamera</string>
     <string name="edit_text">Edit Teks</string>
@@ -327,7 +326,7 @@
     <string name="installation_desc">1. Pastikan perangkat Anda telah di-root.\n2. Instal Xposed Framework di perangkat Anda.\n3. Unduh WA X dari bagian Tindakan.\n4. Instal APK WA X.\n5. Aktifkan modul WA X di aplikasi Xpose Installer.</string>
     <string name="go_to_telegram">Buka Telegram</string>
     <string name="go_to_github">Buka GitHub</string>
-    <string name="contributors">Kontribusi</string>
+    <string name="contributors">Pemberitahuan sumber terbuka</string>
     <string name="support">Dukungan</string>
     <string name="support_desc">Jika Anda mengalami masalah apa pun atau memiliki pertanyaan tentang WA X, silahkan kunjungi Telegram.</string>
     <string name="license">Lisensi</string>
@@ -408,8 +407,8 @@
     <string name="select_all">Pilih semua</string>
     <string name="custom_colors_for_text_status">Warna Khusus Untuk Status Teks</string>
     <string name="custom_colors_for_text_status_sum">Tekan dan tahan pemilih warna dalam status untuk menyesuaikannya</string>
-    <string name="enable_wa_enhancer_button">Tombol WA X</string>
-    <string name="enable_wa_enhancer_button_sum">Tampilkan tombol di Layar Beranda untuk membuka WA X</string>
+    <string name="enable_wax_button">Tombol WA X</string>
+    <string name="enable_wax_button_sum">Tampilkan tombol di Layar Beranda untuk membuka WA X</string>
     <string name="custom_privacy">Privasi Kustom</string>
     <string name="custom_privacy_sum">Aktifkan/Nonaktifkan Privasi Kustom</string>
     <string name="custom_privacy_per_contact">Privasi Khusus per Kontak</string>
@@ -550,27 +549,27 @@
     <string name="diag_hma_blocked">Hide My App List menyembunyikan WA X dari:</string>
     <string name="diag_hma_disable">Nonaktifkan pemblokiran untuk WhatsApp/Business di Hide My App List agar WA X berfungsi dengan benar.</string>
     <string name="diag_copied">Baris disalin ke papan klip</string>
-
-    <!-- Per-app settings: Global / WhatsApp / WhatsApp Business -->
-    <string name="per_target_settings">Pengaturan per aplikasi</string>
-    <string name="scope_global">Global</string>
-    <string name="scope_global_explainer">Ini adalah nilai default. Setiap aplikasi target yang belum diberi nilai sendiri akan menggunakannya.</string>
-    <string name="scope_target_explainer">%1$d dari %2$d pengaturan diubah khusus untuk aplikasi ini. Pengaturan yang dibiarkan pada “Gunakan Global” mengikuti nilai global.</string>
-    <string name="search_settings">Cari pengaturan</string>
-    <string name="no_settings_match">Tidak ada pengaturan yang cocok dengan pencarian ini.</string>
-    <string name="tri_state_inherit">Gunakan Global</string>
-    <string name="tri_state_enabled">Aktif</string>
-    <string name="tri_state_disabled">Nonaktif</string>
-    <string name="default_value">Nilai default untuk setiap aplikasi</string>
+    <string name="app_language">Bahasa</string>
+    <string name="copy_global_to_target">Salin semua nilai global ke target ini</string>
+    <string name="default_value">Nilai bawaan untuk semua target</string>
+    <string name="edit_on_original_screen">Ubah di layar %1$s.</string>
+    <string name="follow_global">Ikuti Global</string>
     <string name="follows_global">Mengikuti Global</string>
-    <string name="pinned_to">Ditetapkan ke: %1$s</string>
-    <string name="pin_global">Tetapkan</string>
-    <string name="follow_global">Gunakan Global</string>
-    <string name="copy_global_to_target">Salin semua nilai Global ke aplikasi ini</string>
-    <string name="reset_this_target">Reset aplikasi ini</string>
-    <string name="reset_all_targets">Reset semua aplikasi</string>
-    <string name="edit_on_original_screen">Edit pengaturan ini di layar %1$s.</string>
-    <string name="open_per_target_settings">Atur WhatsApp dan WhatsApp Business secara terpisah</string>
-    <string name="open_per_target_settings_summary">Berikan pengaturan tersendiri untuk WhatsApp dan WhatsApp Business, atau biarkan pengaturan mengikuti nilai default global.</string>
+    <string name="language_system_default">Bahasa sistem</string>
+    <string name="no_settings_match">Tidak ada pengaturan yang cocok dengan pencarian itu.</string>
+    <string name="open_per_target_settings">Atur WhatsApp dan Business secara terpisah</string>
+    <string name="open_per_target_settings_summary">Berikan setiap versi WhatsApp pengaturan sendiri, atau biarkan pengaturan mengikuti nilai global.</string>
+    <string name="per_target_settings">Pengaturan per target</string>
+    <string name="pin_global">Sematkan</string>
+    <string name="pinned_to">Dipatok ke %1$s</string>
     <string name="reload">Muat ulang</string>
+    <string name="reset_all_targets">Atur ulang semua target</string>
+    <string name="reset_this_target">Atur ulang target ini</string>
+    <string name="scope_global">Global</string>
+    <string name="scope_global_explainer">Ini adalah nilai bawaan. Semua target yang belum memiliki nilai sendiri akan memakainya.</string>
+    <string name="scope_target_explainer">%1$d dari %2$d penggantian pada target ini. Pengaturan yang dibiarkan „Global“ mengikuti nilai global.</string>
+    <string name="search_settings">Cari pengaturan</string>
+    <string name="tri_state_disabled">Nonaktif</string>
+    <string name="tri_state_enabled">Aktif</string>
+    <string name="tri_state_inherit">Ikuti Global</string>
 </resources>

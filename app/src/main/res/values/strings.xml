@@ -320,7 +320,6 @@
     <string name="viewed_your_message">%s viewed your message</string>
     <string name="old_statuses">Old Statuses</string>
     <string name="old_statuses_sum">Change to the old statuses page vertically and without channels (NOTE: May cause lag in the interface)</string>
-    <string name="force_english">Force English WA X</string>
     <string name="select_status_type">Select status type</string>
     <string name="open_camera">Open Camera</string>
     <string name="edit_text">Edit Text</string>
@@ -330,7 +329,7 @@
     <string name="installation_desc">1. Install a compatible Xposed environment such as LSPosed.\n2. Download the WA X module APK from GitHub Releases (or Beta Testing for development builds).\n3. Install WA X and enable the module.\n4. Scope WhatsApp and/or WhatsApp Business.\n5. For the current bridge, also include System Framework (android) and Settings Provider (com.android.providers.settings) when your Xposed manager exposes explicit package scope.\n6. Restart the target app after changing hook-sensitive settings.</string>
     <string name="go_to_telegram">Developer Telegram</string>
     <string name="go_to_github">WA X on GitHub</string>
-    <string name="contributors" translatable="false">Open-source notices</string>
+    <string name="contributors">Open-source notices</string>
     <string name="support">Support</string>
     <string name="support_desc">Community support: @WAXposed. Report reproducible bugs through GitHub Issues. Direct contact: @Alaa91h or alahus2591@gmail.com. Development support is voluntary through Ko-fi.</string>
     <string name="license">License</string>
@@ -411,8 +410,8 @@
     <string name="select_all">Select All</string>
     <string name="custom_colors_for_text_status">Custom colors for text status</string>
     <string name="custom_colors_for_text_status_sum">Press and hold on the color selector in the status to customize it</string>
-    <string name="enable_wa_enhancer_button">Enable WA X Button</string>
-    <string name="enable_wa_enhancer_button_sum">Add button in Home Screen to open WA X</string>
+    <string name="enable_wax_button">Enable WA X Button</string>
+    <string name="enable_wax_button_sum">Add button in Home Screen to open WA X</string>
     <string name="custom_privacy">Custom Privacy</string>
     <string name="custom_privacy_sum">Enable/Disable Custom Privacy</string>
     <string name="custom_privacy_per_contact">Custom Privacy per contact</string>
@@ -602,4 +601,6 @@
     <string name="open_per_target_settings">Configure WhatsApp and Business separately</string>
     <string name="open_per_target_settings_summary">Give each WhatsApp build its own settings, or leave a setting following the global default.</string>
     <string name="reload">Reload</string>
+    <string name="app_language">Language</string>
+    <string name="language_system_default">System default</string>
 </resources>
