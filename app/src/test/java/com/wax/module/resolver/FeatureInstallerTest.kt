@@ -8,7 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-private class TestResolverFailure(message: String) : TestResolverFailure(message)
+private class TestResolverFailure(message: String) : RuntimeException(message)
 
 class FeatureInstallerTest {
     @Before
