@@ -4,6 +4,7 @@
 
 WA X uses one module APK with Global, WhatsApp and WhatsApp Business settings contexts.
 Fork provenance is documented in [PROJECT_PROVENANCE.md](PROJECT_PROVENANCE.md).
+Current developer/maintainer: [Alaa](https://github.com/Alaa91H) · Telegram: [@Alaa91h](https://t.me/Alaa91h) · Community: [@WAXposed](https://t.me/WAXposed) · Email: [alahus2591@gmail.com](mailto:alahus2591@gmail.com) · Support: [Ko-fi](https://ko-fi.com/alaa91h)
 
 ## Current inventory (auto-generated)
 
