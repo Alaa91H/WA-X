@@ -1,9 +1,9 @@
 {
   "repository": "Alaa91H/WA-X",
   "source": "WA-X-Feature-Additions-Only-Prompt-v5-All-Features-Free.md",
-  "issue_count": 100,
-  "generated_from_sections": "3-102",
-  "issues_enabled": false,
+  "issue_count": 101,
+  "generated_from_sections": "3-102 + user-requested F103",
+  "issues_enabled": true,
   "requests": [
     {
       "feature_id": "F003",
@@ -704,6 +704,14 @@
       "priority": "LAB",
       "title": "[LAB][F102] SILENT SEND",
       "path": "docs/feature-requests/F102-silent-send.md"
+    },
+    {
+      "feature_id": "F103",
+      "section": 103,
+      "priority": "P1",
+      "title": "[P1][F103] SINGLE-TAP MESSAGE ACTION POPUP",
+      "path": "docs/feature-requests/F103-single-tap-message-action-popup.md"
     }
-  ]
+  ],
+  "last_synced_issue_number": 112
 }
