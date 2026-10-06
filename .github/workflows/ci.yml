@@ -532,6 +532,8 @@ jobs:
 
   strict-static:
     name: Strict atomic static quality
+    if: always()
+    needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
@@ -572,17 +574,6 @@ jobs:
           }
           chmod +x gradlew
 
-          # Produce a complete formatter patch for remediation without validating a
-          # working tree that differs from the committed source.
-          ./gradlew --no-daemon :app:spotlessApply >build/strict-quality/static/spotless-apply.log 2>&1
-          spotless_apply_rc=$?
-          git diff --binary > build/strict-quality/spotless.patch
-          git restore --worktree --staged .
-          if [[ "$spotless_apply_rc" -ne 0 ]]; then
-            failures=$((failures + 1))
-            echo "::error::spotlessApply failed with exit code $spotless_apply_rc"
-          fi
-
           run_gate gradle-static ./gradlew --no-daemon --stacktrace --continue --warning-mode=fail spotlessCheck detekt lintDebug
           run_gate compatibility-selftest python3 tools/compatibility/test_validator.py
           run_gate compatibility python3 tools/compatibility/validate_compatibility.py
@@ -612,6 +603,8 @@ jobs:
 
   strict-unit:
     name: Strict 100% unit coverage
+    if: always()
+    needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
@@ -667,6 +660,8 @@ jobs:
 
   strict-e2e:
     name: Strict 100% Android E2E coverage
+    if: always()
+    needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     permissions:
