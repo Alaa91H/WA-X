@@ -2,6 +2,12 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
+        app:key="per_target_settings"
+        app:iconSpaceReserved="false"
+        app:summary="@string/open_per_target_settings_summary"
+        app:title="@string/open_per_target_settings" />
+
+    <Preference
         app:fragment="com.wax.module.ui.fragments.GeneralFragment$HomeGeneralPreference"
         app:iconSpaceReserved="false"
         app:title="@string/general" />
