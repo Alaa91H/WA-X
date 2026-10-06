@@ -285,8 +285,11 @@ class UnobfuscatorCache private constructor(
         val methodName = getKeyName()
         val value =
             sPrefsCacheHooks.getString(methodName, null) ?: try {
-                val result = functionCall.call() ?: throw NoSuchMethodException("Methods is null")
-                if (result.isEmpty()) throw NoSuchMethodException("Methods is empty")
+                val result =
+                    functionCall
+                        .call()
+                        ?.takeIf { it.isNotEmpty() }
+                        ?: throw NoSuchMethodException("Methods are missing or empty")
                 saveMethods(methodName, result)
                 return result
             } catch (e: Exception) {
