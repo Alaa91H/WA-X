@@ -195,9 +195,12 @@ class TargetScopedPreferences(
         s: String?,
         set: MutableSet<String?>?,
     ): MutableSet<String?>? {
-        @Suppress("UNCHECKED_CAST")
-        val value = override(s) { it is Set<*> } as Set<String>?
-        return if (value != null) value.toMutableSet() as MutableSet<String?> else delegate.getStringSet(s, set)
+        val value = override(s) { candidate -> candidate is Set<*> && candidate.all { it is String } } as? Set<*>
+        return if (value != null) {
+            value.mapTo(linkedSetOf<String?>()) { it as String }
+        } else {
+            delegate.getStringSet(s, set)
+        }
     }
 
     override fun getInt(
