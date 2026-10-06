@@ -36,7 +36,12 @@ def main() -> int:
                 issues.append({"type":"disabled","key":key,"file":filename,"message":f"{filename}: {key} is a visible disabled placeholder"})
             for field in ("title", "summary", "dialogTitle"):
                 value = attr(node, field)
-                if value and not value.startswith("@") and not value.startswith("?"):
+                if (
+                    value
+                    and value != "%s"
+                    and not value.startswith("@")
+                    and not value.startswith("?")
+                ):
                     issues.append({"type":"hardcoded-text","key":key,"file":filename,"message":f"{filename}: {key} has hardcoded {field}: {value!r}"})
 
     for key, locations in sorted(keys.items()):
