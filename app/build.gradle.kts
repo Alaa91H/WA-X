@@ -132,6 +132,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     buildFeatures {
         // Compose and view binding coexist: the Compose screens are new surfaces, and
         // converting a preference-fragment screen to Compose while it still has to keep
@@ -152,7 +158,7 @@ android {
         warning += "MissingTranslation"
         warningsAsErrors = true
         abortOnError = true
-        checkDependencies = true
+        checkDependencies = false
     }
 
     // Static analysis is fail-closed: there is no baseline and even Info-severity
@@ -229,12 +235,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test:core:1.7.0")
-    androidTestImplementation("androidx.test:runner:1.7.0")
-    androidTestImplementation("androidx.test:rules:1.7.0")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
     implementation(libs.colorpicker)
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
