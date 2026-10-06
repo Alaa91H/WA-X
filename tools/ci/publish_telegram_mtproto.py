@@ -79,7 +79,7 @@ def split_text(text: str, limit: int = TEXT_CHUNK_LIMIT) -> list[str]:
 def title_for(args: PublishArgs) -> str:
     if args.publish_type == "stable":
         return f"🚀 WA X v{args.version}"
-    return "🧪 WA X Development Build"
+    return "🧪 WA X Beta Testing Build"
 
 
 def build_caption(args: PublishArgs) -> str:
