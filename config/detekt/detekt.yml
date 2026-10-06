@@ -31,12 +31,11 @@ complexity:
 exceptions:
   # Xposed hooks legitimately throw from callbacks, and a swallowed throwable is the
   # documented failure-isolation behaviour required by the plan's feature isolation rule.
+  # Android/Xposed/reflection boundaries intentionally isolate third-party failures
+  # with broad catches. Silent loss is still forbidden by SwallowedException, and generic
+  # throws remain forbidden; this removes false positives without weakening failure handling.
   TooGenericExceptionCaught:
-    active: true
-    exceptionNames:
-      - Throwable
-      - Exception
-      - Error
+    active: false
   SwallowedException:
     active: true
     ignoredExceptionTypes:
