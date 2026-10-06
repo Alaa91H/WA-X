@@ -537,4 +537,25 @@
     <string name="developer_warning_summary">Эта сборка содержит изменения в разработке и может быть менее стабильной.</string>
     <string name="system_info">Сведения о системе</string>
     <string name="edit">Изменить</string>
+
+    <!-- Google Translate -->
+    <string name="gt_name">Google Translate</string>
+    <string name="gt_use_global_settings">Использовать общие настройки</string>
+    <string name="gt_auto_translate">Автоматически переводить входящие сообщения</string>
+    <string name="gt_from_format">С: %1$s</string>
+    <string name="gt_to_format">На: %1$s</string>
+    <string name="gt_privacy_notice">Для перевода текст сообщения отправляется в Google. Исходные сообщения остаются видимыми.</string>
+    <string name="gt_global_title">Google Translate · Общие</string>
+    <string name="gt_message_too_long">Это сообщение слишком длинное для перевода.</string>
+    <string name="gt_close">Закрыть</string>
+    <string name="gt_translating">Перевод…</string>
+    <string name="gt_translator">Переводчик</string>
+    <string name="gt_unavailable">Перевод недоступен. Проверьте подключение или выберите другой язык.</string>
+    <string name="gt_detect_language">Определить язык</string>
+    <string name="gt_automatic_off">Автоматический перевод выключен</string>
+    <string name="gt_global_default_format">Общее значение · %1$s</string>
+    <string name="gt_search_languages">Поиск языков</string>
+    <string name="gt_translate_from">Переводить с</string>
+    <string name="gt_translate_to">Переводить на</string>
+    <string name="gt_translate_action">Перевести</string>
 </resources>

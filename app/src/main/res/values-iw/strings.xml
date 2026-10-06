@@ -537,4 +537,25 @@
     <string name="developer_warning_summary">גרסה זו כוללת שינויים בפיתוח ועלולה להיות פחות יציבה.</string>
     <string name="system_info">מידע מערכת</string>
     <string name="edit">עריכה</string>
+
+    <!-- Google Translate -->
+    <string name="gt_name">Google Translate</string>
+    <string name="gt_use_global_settings">שימוש בהגדרות הגלובליות</string>
+    <string name="gt_auto_translate">תרגום אוטומטי של הודעות נכנסות</string>
+    <string name="gt_from_format">מ־%1$s</string>
+    <string name="gt_to_format">אל: %1$s</string>
+    <string name="gt_privacy_notice">התרגום שולח את טקסט ההודעה ל-Google. ההודעות המקוריות נשארות גלויות.</string>
+    <string name="gt_global_title">Google Translate · גלובלי</string>
+    <string name="gt_message_too_long">ההודעה ארוכה מדי לתרגום.</string>
+    <string name="gt_close">סגירה</string>
+    <string name="gt_translating">מתרגם…</string>
+    <string name="gt_translator">מתרגם</string>
+    <string name="gt_unavailable">התרגום אינו זמין. בדוק את החיבור או נסה שפה אחרת.</string>
+    <string name="gt_detect_language">זיהוי שפה</string>
+    <string name="gt_automatic_off">תרגום אוטומטי כבוי</string>
+    <string name="gt_global_default_format">ברירת מחדל גלובלית · %1$s</string>
+    <string name="gt_search_languages">חיפוש שפות</string>
+    <string name="gt_translate_from">תרגום מ־</string>
+    <string name="gt_translate_to">תרגום אל</string>
+    <string name="gt_translate_action">תרגום</string>
 </resources>
