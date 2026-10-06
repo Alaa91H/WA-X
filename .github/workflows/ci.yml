@@ -440,6 +440,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Only the APKs are inspected as the payload; notes.md is generated below and
+          # is not part of what gets published.
           if find dist -type f ! -name '*.apk' -print -quit | grep -q .; then
             echo "::error::The release payload contains a file that is not an APK"
             find dist -type f -print
@@ -464,8 +466,23 @@ jobs:
             exit 1
           fi
 
-          if ! grep -qF "WA X $VERSION" changelog.txt; then
+          # The changelog is the single source of truth, but it accumulates: posting the
+          # whole file would put every previous release on this release's page. The
+          # notes are the first section of the changelog, taken as everything before the
+          # next version heading.
+          awk '
+            NR == 1 { first = 1 }
+            first && /^[A-Za-z][^ ]* [0-9]+\.[0-9]+\.[0-9]+/ && seen { exit }
+            first { seen = 1; print }
+          ' changelog.txt > notes.md
+
+          if [[ ! -s notes.md ]]; then
+            echo "::error::Could not extract the release notes from changelog.txt"
+            exit 1
+          fi
+          if ! grep -qF "WA X $VERSION" notes.md; then
             echo "::error::changelog.txt does not announce WA X $VERSION"
+            head -n 3 changelog.txt
             exit 1
           fi
 
@@ -481,7 +498,7 @@ jobs:
           gh release create "$TAG" dist/*.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "WA X $VERSION" \
-            --notes-file changelog.txt \
+            --notes-file notes.md \
             --verify-tag \
             --latest
 
