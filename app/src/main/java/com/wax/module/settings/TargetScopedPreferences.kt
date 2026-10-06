@@ -78,24 +78,45 @@ class TargetScopedPreferences(
         if (key == null || overrides.isEmpty()) return current
         if (!overrides.containsKey(key)) return current
         val value = overrides[key] ?: return current
-        // Keep the type WhatsApp asked for: a set read as a boolean must not be handed
-        // over as a boolean, and the caller's own value is safer than a wrong one.
-        return if (current == null || expectedTypeMatches(current, value)) value else current
-    }
+        if (current == null) return value
 
-    private fun expectedTypeMatches(
-        current: Any,
-        value: Any,
-    ): Boolean =
-        when (current) {
-            is Boolean -> value is Boolean || value is String
-            is Int -> value is Number
-            is Long -> value is Number
-            is Float -> value is Number
-            is String -> value is String
-            is Set<*> -> value is Set<*>
-            else -> true
+        // Match the exact type the hooked preference read expects. Older builds could
+        // leave target overrides as strings after a scope copy, so recover those values
+        // rather than handing a String to a Boolean/Int hook or silently ignoring it.
+        return when (current) {
+            is Boolean ->
+                when (value) {
+                    is Boolean -> value
+                    is String -> value.toBooleanStrictOrNull() ?: current
+                    else -> current
+                }
+
+            is Int ->
+                when (value) {
+                    is Number -> value.toInt()
+                    is String -> value.toIntOrNull() ?: current
+                    else -> current
+                }
+
+            is Long ->
+                when (value) {
+                    is Number -> value.toLong()
+                    is String -> value.toLongOrNull() ?: current
+                    else -> current
+                }
+
+            is Float ->
+                when (value) {
+                    is Number -> value.toFloat()
+                    is String -> value.toFloatOrNull() ?: current
+                    else -> current
+                }
+
+            is String -> value as? String ?: current
+            is Set<*> -> value as? Set<*> ?: current
+            else -> if (current::class.java.isInstance(value)) value else current
         }
+    }
 
     private fun decode(
         store: SharedPreferencesSettingsStore,
@@ -104,12 +125,30 @@ class TargetScopedPreferences(
         raw: Any,
     ): Any? {
         val scope = SettingsScope.Target(target)
-        return when (store.typeOf(physicalKey) ?: ValueType.of(raw)) {
-            ValueType.Flag -> store.readBoolean(scope, key)
-            ValueType.Whole -> store.readInt(scope, key)
-            ValueType.Real -> store.readFloat(scope, key)
-            ValueType.Set -> store.readStringSet(scope, key)
-            ValueType.Text -> raw.toString()
+        val declaredKind = SettingKeyRegistry.find(key)?.kind
+
+        // The XML contract is authoritative for WA X settings. It also repairs values
+        // written by older builds with the wrong SharedPreferences type.
+        return when (declaredKind) {
+            SettingKeyRegistry.Kind.BOOLEAN -> store.readBoolean(scope, key)
+            SettingKeyRegistry.Kind.INT -> store.readInt(scope, key)
+            SettingKeyRegistry.Kind.FLOAT -> store.readFloat(scope, key)
+            SettingKeyRegistry.Kind.SET ->
+                store.readStringSet(scope, key)
+                    ?: store.readString(scope, key)
+                        ?.split(LEGACY_SET_SEPARATOR)
+                        ?.filter { it.isNotEmpty() }
+                        ?.toSet()
+
+            SettingKeyRegistry.Kind.TEXT -> store.readString(scope, key)
+            null ->
+                when (store.typeOf(physicalKey) ?: ValueType.of(raw)) {
+                    ValueType.Flag -> store.readBoolean(scope, key)
+                    ValueType.Whole -> store.readInt(scope, key)
+                    ValueType.Real -> store.readFloat(scope, key)
+                    ValueType.Set -> store.readStringSet(scope, key)
+                    ValueType.Text -> raw.toString()
+                }
         }
     }
 
@@ -277,6 +316,8 @@ class TargetScopedPreferences(
     }
 
     companion object {
+        private const val LEGACY_SET_SEPARATOR: String = "\u0001"
+
         /**
          * Wraps [delegate] when a target is attached, and returns it untouched otherwise.
          *
