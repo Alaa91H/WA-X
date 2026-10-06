@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Usa un file keybox.xml personalizzato per lo spoofing del bootloader.</string>
     <string name="use_custom_keybox_file">Usa un file keybox.xml personalizzato</string>
     <string name="no_file_selected">Nessun file selezionato</string>
+    <string name="developer_warning_title">Build di sviluppo</string>
+    <string name="developer_warning_summary">Questa build contiene modifiche in fase di sviluppo e potrebbe essere meno stabile.</string>
+    <string name="system_info">Informazioni di sistema</string>
+    <string name="edit">Modifica</string>
 </resources>

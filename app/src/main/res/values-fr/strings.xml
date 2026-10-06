@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Utiliser un fichier keybox.xml personnalisé pour l’usurpation du chargeur de démarrage.</string>
     <string name="use_custom_keybox_file">Utiliser un fichier keybox.xml personnalisé</string>
     <string name="no_file_selected">Aucun fichier sélectionné</string>
+    <string name="developer_warning_title">Version de développement</string>
+    <string name="developer_warning_summary">Cette version contient des modifications en cours de développement et peut être moins stable.</string>
+    <string name="system_info">Informations système</string>
+    <string name="edit">Modifier</string>
 </resources>

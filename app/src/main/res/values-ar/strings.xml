@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">استخدم ملف keybox.xml مخصّصًا مع ميزة تخفّي محمّل الإقلاع.</string>
     <string name="use_custom_keybox_file">استخدام ملف keybox.xml مخصّص</string>
     <string name="no_file_selected">لم يتم اختيار ملف</string>
+    <string name="developer_warning_title">إصدار تطويري</string>
+    <string name="developer_warning_summary">يتضمن هذا الإصدار تغييرات قيد التطوير وقد يكون أقل استقرارًا.</string>
+    <string name="system_info">معلومات النظام</string>
+    <string name="edit">تعديل</string>
 </resources>

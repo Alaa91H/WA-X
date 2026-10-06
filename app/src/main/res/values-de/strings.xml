@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Eine benutzerdefinierte keybox.xml für den Bootloader-Spoofer verwenden.</string>
     <string name="use_custom_keybox_file">Benutzerdefinierte keybox.xml verwenden</string>
     <string name="no_file_selected">Keine Datei ausgewählt</string>
+    <string name="developer_warning_title">Entwicklungsversion</string>
+    <string name="developer_warning_summary">Dieser Build enthält Änderungen in Entwicklung und kann weniger stabil sein.</string>
+    <string name="system_info">Systeminformationen</string>
+    <string name="edit">Bearbeiten</string>
 </resources>

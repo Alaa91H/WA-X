@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Gunakan file keybox.xml khusus untuk pemalsuan bootloader.</string>
     <string name="use_custom_keybox_file">Gunakan file keybox.xml khusus</string>
     <string name="no_file_selected">Tidak ada file yang dipilih</string>
+    <string name="developer_warning_title">Build pengembangan</string>
+    <string name="developer_warning_summary">Build ini berisi perubahan yang masih dikembangkan dan mungkin kurang stabil.</string>
+    <string name="system_info">Informasi sistem</string>
+    <string name="edit">Edit</string>
 </resources>

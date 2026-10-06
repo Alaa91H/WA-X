@@ -533,4 +533,8 @@
     <string name="enable_custom_keybox_sum">Usa un archivo keybox.xml personalizado para la suplantación del bootloader.</string>
     <string name="use_custom_keybox_file">Usar archivo keybox.xml personalizado</string>
     <string name="no_file_selected">Ningún archivo seleccionado</string>
+    <string name="developer_warning_title">Compilación de desarrollo</string>
+    <string name="developer_warning_summary">Esta compilación contiene cambios en desarrollo y puede ser menos estable.</string>
+    <string name="system_info">Información del sistema</string>
+    <string name="edit">Editar</string>
 </resources>
