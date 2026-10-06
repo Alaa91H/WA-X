@@ -557,7 +557,7 @@
     <string name="follows_global">Geneli izliyor</string>
     <string name="language_system_default">Sistem dili</string>
     <string name="no_settings_match">Bu aramayla eşleşen ayar yok.</string>
-    <string name="open_per_target_settings">WhatsApp ve Business’i ayrı ayrı yapılandırın</string>
+    <string name="open_per_target_settings">WhatsApp ile Business’i birbirinden bağımsız yapılandırın</string>
     <string name="open_per_target_settings_summary">Her WhatsApp sürümüne kendi ayarlarını verin veya bir ayarın genel değeri izlemesine izin verin.</string>
     <string name="per_target_settings">Hedef başına ayarlar</string>
     <string name="pin_global">Sabitle</string>
