@@ -39,7 +39,7 @@ object ReflectionUtils {
         className: String?,
         classLoader: ClassLoader,
     ): Class<*> {
-        if (className == null) throw RuntimeException("Class name is null")
+        if (className == null) error("Class name is null")
         val primitive = primitiveClasses[className]
         if (primitive != null) return primitive
         return XposedHelpers.findClass(className, classLoader)
@@ -57,7 +57,7 @@ object ReflectionUtils {
             }
             current = current.superclass
         }
-        throw RuntimeException("Method not found")
+        error("Method not found")
     }
 
     @JvmStatic
@@ -71,7 +71,7 @@ object ReflectionUtils {
             if (results.isNotEmpty()) return results.toTypedArray()
             current = current.superclass
         }
-        throw RuntimeException("Method not found")
+        error("Method not found")
     }
 
     @JvmStatic
@@ -86,7 +86,7 @@ object ReflectionUtils {
             }
             current = current.superclass
         }
-        throw RuntimeException("Field not found")
+        error("Field not found")
     }
 
     @JvmStatic
@@ -115,7 +115,7 @@ object ReflectionUtils {
             }
             current = current.superclass
         }
-        throw RuntimeException("Constructor not found")
+        error("Constructor not found")
     }
 
     @JvmStatic
