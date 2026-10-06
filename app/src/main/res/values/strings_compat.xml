@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The one string the compatibility status has to be able to say and the existing set cannot.
+
+  A build the compatibility declaration does not cover is loaded and marked unverified. Calling it
+  "supported" would claim a verification this project has not done, and calling it "not listed"
+  would read as "refused", which it is not: the module does load. Both status surfaces — the
+  installed-app card and the running-app broadcast line — say the same words, so they share one
+  string rather than two that could drift apart.
+-->
+<resources>
+    <string name="version_s_unverified">Version %1$s · unverified build</string>
+</resources>

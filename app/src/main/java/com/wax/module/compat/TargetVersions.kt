@@ -43,6 +43,34 @@ object TargetVersions {
     }
 
     /**
+     * Assesses [versionName] against [supportedVersions], tolerance included.
+     *
+     * [isSupported] answers "is this build declared"; this answers "should the module load on
+     * this build", which is the wider question the startup gate and the settings screen actually
+     * have. The two are separate on purpose: the strict match stays the definition of a declared
+     * build, and the tolerance rules are an explicit, testable addition on top of it.
+     */
+    fun assess(
+        versionName: String?,
+        supportedVersions: List<String>,
+        channel: VersionChannel = VersionChannel.UNKNOWN,
+        policy: VersionTolerancePolicy = VersionTolerancePolicy(),
+    ): VersionAssessment = ChannelAwareVersionGate.assess(versionName, supportedVersions, channel, policy)
+
+    /**
+     * Whether the module should load on [versionName].
+     *
+     * True for a declared build, and for a tolerated undeclared one under the default policy.
+     * An unreadable build number is always false.
+     */
+    fun accepts(
+        versionName: String?,
+        supportedVersions: List<String>,
+        channel: VersionChannel = VersionChannel.UNKNOWN,
+        policy: VersionTolerancePolicy = VersionTolerancePolicy(),
+    ): Boolean = assess(versionName, supportedVersions, channel, policy).accepted
+
+    /**
      * Drops blank declarations and duplicates while preserving declaration order.
      *
      * Used to normalise whatever source the version list came from before matching.

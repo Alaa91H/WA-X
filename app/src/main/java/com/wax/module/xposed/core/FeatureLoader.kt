@@ -261,22 +261,28 @@ class FeatureLoader {
                             SharedPreferencesWrapper.hookInit(application.classLoader)
                             ReflectionUtils.initCache(application)
 
-                            val isSupported =
-                                TargetVersions.isSupported(
+                            val assessment =
+                                TargetVersions.assess(
                                     packageInfo.versionName,
                                     supportedVersions,
                                 )
 
-                            if (!isSupported) {
+                            if (!assessment.accepted) {
                                 disableExpirationVersion(application.classLoader)
                                 if (!pref.getBoolean("bypass_version_check", false)) {
                                     val errorMsg =
                                         """
                                         Unsupported version: ${packageInfo.versionName}
                                         Only the function of ignoring the expiration of the WhatsApp version has been applied!
+                                        ${assessment.explanation}
                                         """.trimIndent()
                                     throw Exception(errorMsg)
                                 }
+                            } else if (assessment.isExperimental) {
+                                // A tolerated build is loaded, but the log records that it was
+                                // tolerated rather than verified, so a report from it is triaged
+                                // as unverified instead of as a regression.
+                                XposedBridge.log("WA X: ${assessment.explanation}")
                             }
 
                             initComponents(loader, pref)
