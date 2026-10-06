@@ -124,9 +124,9 @@ EXCLUDED = {
     "bootloader_spoofer_custom", "bootloader_spoofer_xml",
     "groq_api_key", "assemblyai_key", "transcription_provider", "css_theme", "wallpaper_file",
     "call_recording_path", "tasker_auth_token",
-    # Navigation/action rows and intentionally disabled placeholders do not hold a
-    # target-specific value and must never appear as fake settings in the scope editor.
-    "per_target_settings", "call_recording_settings", "video_call_screen_rec",
+    # Navigation/action rows do not hold a target-specific value and must never
+    # appear as fake settings in the scope editor.
+    "per_target_settings", "call_recording_settings",
 }
 
 
