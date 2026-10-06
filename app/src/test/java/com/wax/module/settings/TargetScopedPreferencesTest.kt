@@ -28,7 +28,7 @@ class TargetScopedPreferencesTest {
         prefs = FakePreferences()
         val store = SharedPreferencesSettingsStore(prefs)
         val global = SettingsScope.Global
-        store.writeBoolean(global, "antirevoke", true)
+        store.writeBoolean(global, "showonline", true)
         store.writeString(global, "thememode", "dark")
         store.writeString(global, "whatsapp_only_unrelated", "value")
     }
@@ -44,13 +44,23 @@ class TargetScopedPreferencesTest {
 
     @Test
     fun `with no override the global value is returned`() {
-        assertTrue(scoped(wa).getBoolean("antirevoke", false))
+        assertTrue(scoped(wa).getBoolean("showonline", false))
     }
 
     @Test
     fun `an override wins over global`() {
-        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
-        assertFalse(scoped(wa).getBoolean("antirevoke", true))
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "showonline", false)
+        assertFalse(scoped(wa).getBoolean("showonline", true))
+    }
+
+    @Test
+    fun `a list preference override stays text`() {
+        val store = SharedPreferencesSettingsStore(prefs)
+        store.writeString(SettingsScope.Global, "antirevoke", "0")
+        store.writeString(SettingsScope.Target(wa), "antirevoke", "2")
+
+        assertEquals("2", scoped(wa).getString("antirevoke", "0"))
+        assertEquals("0", scoped(business).getString("antirevoke", "0"))
     }
 
     @Test
@@ -62,35 +72,35 @@ class TargetScopedPreferencesTest {
     @Test
     fun `removing the override makes the target follow global again`() {
         val store = SharedPreferencesSettingsStore(prefs)
-        store.writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
-        assertFalse(scoped(wa).getBoolean("antirevoke", true))
+        store.writeBoolean(SettingsScope.Target(wa), "showonline", false)
+        assertFalse(scoped(wa).getBoolean("showonline", true))
 
-        store.writeBoolean(SettingsScope.Target(wa), "antirevoke", null)
-        assertTrue(scoped(wa).getBoolean("antirevoke", false))
+        store.writeBoolean(SettingsScope.Target(wa), "showonline", null)
+        assertTrue(scoped(wa).getBoolean("showonline", false))
     }
 
     // --- isolation between the two processes -------------------------------------
 
     @Test
     fun `a whatsapp override never reaches the business process`() {
-        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
-        assertTrue(scoped(business).getBoolean("antirevoke", false))
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "showonline", false)
+        assertTrue(scoped(business).getBoolean("showonline", false))
     }
 
     @Test
     fun `a business override never reaches the whatsapp process`() {
-        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "antirevoke", false)
-        assertTrue(scoped(wa).getBoolean("antirevoke", false))
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "showonline", false)
+        assertTrue(scoped(wa).getBoolean("showonline", false))
     }
 
     @Test
     fun `each process sees its own override`() {
         val store = SharedPreferencesSettingsStore(prefs)
-        store.writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
-        store.writeBoolean(SettingsScope.Target(business), "antirevoke", true)
+        store.writeBoolean(SettingsScope.Target(wa), "showonline", false)
+        store.writeBoolean(SettingsScope.Target(business), "showonline", true)
 
-        assertFalse(scoped(wa).getBoolean("antirevoke", true))
-        assertTrue(scoped(business).getBoolean("antirevoke", false))
+        assertFalse(scoped(wa).getBoolean("showonline", true))
+        assertTrue(scoped(business).getBoolean("showonline", false))
     }
 
     // --- keys that are not ours --------------------------------------------------
@@ -115,7 +125,7 @@ class TargetScopedPreferencesTest {
 
     @Test
     fun `a global key is never treated as an override`() {
-        assertNull(scoped(wa).overrideForHook("antirevoke", "original").let { if (it == "original") null else it })
+        assertNull(scoped(wa).overrideForHook("showonline", "original").let { if (it == "original") null else it })
     }
 
     // --- types -------------------------------------------------------------------
@@ -146,18 +156,18 @@ class TargetScopedPreferencesTest {
 
     @Test
     fun `getAll reports the merged view`() {
-        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "showonline", false)
         val all = scoped(wa).getAll()!!
-        assertEquals(false, all["antirevoke"])
+        assertEquals(false, all["showonline"])
         assertEquals("dark", all["thememode"])
     }
 
     @Test
     fun `getAll leaves the other target's override out`() {
-        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "antirevoke", false)
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(business), "showonline", false)
         val all = scoped(wa).getAll()!!
-        assertEquals(true, all["antirevoke"])
-        assertFalse(all.containsKey("waxtarget.business.antirevoke"))
+        assertEquals(true, all["showonline"])
+        assertFalse(all.containsKey("waxtarget.business.showonline"))
     }
 
     @Test
@@ -280,9 +290,9 @@ class TargetScopedPreferencesTest {
     @Test
     fun `a refresh picks up a change made by the interface`() {
         val target = scoped(wa)
-        assertTrue(target.getBoolean("antirevoke", false))
-        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "antirevoke", false)
+        assertTrue(target.getBoolean("showonline", false))
+        SharedPreferencesSettingsStore(prefs).writeBoolean(SettingsScope.Target(wa), "showonline", false)
         target.refresh(SharedPreferencesSettingsStore(prefs))
-        assertFalse(target.getBoolean("antirevoke", true))
+        assertFalse(target.getBoolean("showonline", true))
     }
 }
