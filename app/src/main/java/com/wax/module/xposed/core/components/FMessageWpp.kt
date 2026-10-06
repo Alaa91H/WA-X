@@ -93,9 +93,9 @@ class FMessageWpp(
     private val fmessage: Any
 
     init {
-        if (fMessage == null) throw RuntimeException("Object fMessage is null")
+        if (fMessage == null) error("Object fMessage is null")
         if (!type.isInstance(fMessage)) {
-            throw RuntimeException("Object fMessage is not a FMessage Instance")
+            error("Object fMessage is not a FMessage Instance")
         }
         this.fmessage = fMessage
     }
