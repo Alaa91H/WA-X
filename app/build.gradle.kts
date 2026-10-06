@@ -28,6 +28,7 @@ val baseVersionName = providers.gradleProperty("waxVersionName").get()
 val baseVersionCode = providers.gradleProperty("waxVersionCode").get().toInt()
 val releaseTag = providers.gradleProperty("releaseTag").orNull
 val releaseVersion = releaseTag?.removePrefix("v")
+val debugPackageName = providers.gradleProperty("debug_package_name")
 
 if (releaseTag != null && releaseTag != "v$baseVersionName") {
     throw GradleException("Release tag $releaseTag does not match configured version v$baseVersionName")
@@ -297,29 +298,34 @@ afterEvaluate {
     // generic: it reads `debug_package_name`, which is set per install target.
     listOf("installDebug").forEach { taskName ->
         tasks.findByName(taskName)?.doLast {
-            runCatching {
-                val injected = project.objects.newInstance<InjectedExecOps>()
-                runBlocking {
-                    delay(1000.milliseconds)
-                    injected.execOps.exec {
-                        commandLine(
-                            "adb",
-                            "shell",
-                            "am",
-                            "force-stop",
-                            project.properties["debug_package_name"]?.toString(),
-                        )
-                    }
-                    delay(3000.milliseconds)
-                    injected.execOps.exec {
-                        commandLine(
-                            "adb",
-                            "shell",
-                            "am",
-                            "start",
-                            "-n",
-                            "$(cmd package resolve-activity --brief ${project.properties["debug_package_name"]} | tail -n 1)",
-                        )
+            val packageName = debugPackageName.orNull
+            if (!packageName.isNullOrBlank()) {
+                runCatching {
+                    val injected = project.objects.newInstance<InjectedExecOps>()
+                    runBlocking {
+                        delay(1000.milliseconds)
+                        injected.execOps.exec {
+                            commandLine(
+                                "adb",
+                                "shell",
+                                "am",
+                                "force-stop",
+                                packageName,
+                            )
+                        }
+                        delay(3000.milliseconds)
+                        injected.execOps.exec {
+                            commandLine(
+                                "adb",
+                                "shell",
+                                "monkey",
+                                "-p",
+                                packageName,
+                                "-c",
+                                "android.intent.category.LAUNCHER",
+                                "1",
+                            )
+                        }
                     }
                 }
             }
