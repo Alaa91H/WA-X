@@ -448,7 +448,7 @@ data class RecordingEntry(
  * Organises call recordings that already exist on the device.
  *
  * The library only names and annotates files it is told about; it never records anything
- * itself and never decides where a recording is stored. [legalNotice] is part of the API
+ * itself and never decides where a recording is stored. [LEGAL_NOTICE] is part of the API
  * because T142 requires the UI to remind users that recording laws vary — making the string
  * impossible to forget is better than remembering to add it to a screen.
  */
@@ -582,7 +582,7 @@ class RecordingLibrary(
         const val MAX_FILE_NAME_LENGTH: Int = 128
 
         /** The reminder T142 requires before any recording feature is offered. */
-        fun legalNotice(): String =
+        const val LEGAL_NOTICE: String =
             "Call recording laws vary by jurisdiction. Make sure recording calls is legal where you are before using this feature."
     }
 }
