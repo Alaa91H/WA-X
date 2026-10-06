@@ -165,6 +165,25 @@ class TargetScopedPreferencesTest {
         assertFalse(scoped(business).contains("only_here"))
     }
 
+    @Test
+    fun `legacy string boolean override is recovered as a boolean`() {
+        prefs.put("waxtarget.whatsapp.showonline", "true")
+
+        val target = scoped(wa)
+
+        assertTrue(target.getBoolean("showonline", false))
+        assertEquals(true, target.overrideForHook("showonline", false))
+    }
+
+    @Test
+    fun `legacy string set override is recovered as a set`() {
+        prefs.put("waxtarget.whatsapp.hidetabs", "1\u00012")
+
+        val target = scoped(wa)
+
+        assertEquals(setOf("1", "2"), target.getStringSet("hidetabs", null)?.toSet())
+    }
+
     // --- writes ------------------------------------------------------------------
 
     @Test
