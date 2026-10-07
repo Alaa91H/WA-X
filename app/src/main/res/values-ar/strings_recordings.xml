@@ -3,12 +3,16 @@
     <string name="recordings_manager">التسجيلات</string>
     <string name="no_recordings_found">لا توجد تسجيلات</string>
     <string name="delete_confirmation">هل أنت متأكد من حذف هذا التسجيل؟</string>
-    <string name="delete_multiple_confirmation">هل أنت متأكد من حذف %d تسجيلات؟</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="zero">هل أنت متأكد من حذف أي تسجيلات؟</item>
+    <item quantity="one">هل أنت متأكد من حذف تسجيل واحد؟</item>
+    <item quantity="two">هل أنت متأكد من حذف تسجيلين؟</item>
+    <item quantity="few">هل أنت متأكد من حذف %d تسجيلات؟</item>
+    <item quantity="many">هل أنت متأكد من حذف %d تسجيلاً؟</item>
+    <item quantity="other">هل أنت متأكد من حذف %d تسجيل؟</item>
+</plurals>
     <string name="share_recording">مشاركة التسجيل</string>
     <string name="share_recordings">مشاركة التسجيلات</string>
-    <string name="permission_required">الإذن مطلوب</string>
-    <string name="permission_required_desc">يلزم منح صلاحية الوصول الكامل للملفات لإدارة التسجيلات المحفوظة في المجلد الجذري.</string>
-    <string name="grant">منح</string>
     <string name="sort_by">الترتيب حسب</string>
     <string name="sort_name">الاسم</string>
     <string name="sort_date">التاريخ</string>
@@ -16,12 +20,15 @@
     <string name="sort_contact">جهة الاتصال</string>
     <string name="list_view">قائمة</string>
     <string name="group_by_contact">حسب جهة الاتصال</string>
-    <string name="selected_count">تم تحديد %d</string>
-    <string name="recordings_select_all">تحديد الكل</string>
-    <string name="recordings_for">تسجيلات %s</string>
-    <string name="recording_count">%d تسجيل</string>
+    <plurals name="selected_count">
+    <item quantity="zero">لم يتم تحديد أي عنصر</item>
+    <item quantity="one">تم تحديد عنصر واحد</item>
+    <item quantity="two">تم تحديد عنصرين</item>
+    <item quantity="few">تم تحديد %d عناصر</item>
+    <item quantity="many">تم تحديد %d عنصراً</item>
+    <item quantity="other">تم تحديد %d عنصر</item>
+</plurals>
     <string name="play">تشغيل</string>
-    <string name="pause">إيقاف مؤقت</string>
     <string name="play_pause">تشغيل/إيقاف مؤقت</string>
     <string name="close">إغلاق</string>
     <string name="share">مشاركة</string>

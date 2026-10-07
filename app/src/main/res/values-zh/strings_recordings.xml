@@ -3,12 +3,11 @@
     <string name="recordings_manager">录音</string>
     <string name="no_recordings_found">未找到录音</string>
     <string name="delete_confirmation">确定要删除此录音吗？</string>
-    <string name="delete_multiple_confirmation">确定要删除 %d 条录音吗？</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="other">确定要删除 %d 条录音吗？</item>
+</plurals>
     <string name="share_recording">分享录音</string>
     <string name="share_recordings">分享录音</string>
-    <string name="permission_required">需要权限</string>
-    <string name="permission_required_desc">管理存储在根目录中的录音需要完整的文件访问权限。</string>
-    <string name="grant">授予</string>
     <string name="sort_by">排序方式</string>
     <string name="sort_name">名称</string>
     <string name="sort_date">日期</string>
@@ -16,12 +15,10 @@
     <string name="sort_contact">联系人</string>
     <string name="list_view">列表</string>
     <string name="group_by_contact">按联系人</string>
-    <string name="selected_count">已选择 %d 项</string>
-    <string name="recordings_select_all">全选</string>
-    <string name="recordings_for">%s 的录音</string>
-    <string name="recording_count">%d 条录音</string>
+    <plurals name="selected_count">
+    <item quantity="other">已选择 %d 项</item>
+</plurals>
     <string name="play">播放</string>
-    <string name="pause">暂停</string>
     <string name="play_pause">播放/暂停</string>
     <string name="close">关闭</string>
     <string name="share">分享</string>

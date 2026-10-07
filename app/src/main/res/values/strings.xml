@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="force_restore_backup">Force Restore Backup</string>
     <string name="force_restore_backup_summary">Launch the restore backup screen manually. Use this if you skipped restoration during setup.</string>
     <string name="app_name" translatable="false">WA X</string>
@@ -287,6 +287,7 @@
     <string name="search_contacts">Search contacts</string>
     <string name="contact_block_list">List of blocked contacts</string>
     <string name="contact_white_list">List of allowed contacts</string>
+    <string name="select_whatsapp_app">Select WhatsApp app</string>
     <string name="no_contacts_selected">No contacts selected</string>
     <plurals name="contact_were_selected">
         <item quantity="one">%d contact was selected</item>
@@ -534,7 +535,13 @@
     <string name="per_target_settings">Per-target settings</string>
     <string name="scope_global">Global</string>
     <string name="scope_global_explainer">These are the defaults. Every target that has not been given its own value uses them.</string>
-    <string name="scope_target_explainer">%1$d of %2$d overrides on this target. Settings left on Use Global follow the value on the left.</string>
+    <!--
+      Two independent counters, so no noun in the sentence agrees with either of them and
+      a plural would have to choose one. Lint's PluralsCandidate fires on the first %d
+      regardless; the suppression names this line rather than the whole file, and the text
+      stays a string for exactly that reason.
+    -->
+    <string name="scope_target_explainer" tools:ignore="PluralsCandidate">%1$d of %2$d overrides on this target. Settings left on Use Global follow the value on the left.</string>
     <string name="search_settings">Search settings</string>
     <string name="no_settings_match">No setting matches that search.</string>
     <string name="tri_state_inherit">Use Global</string>

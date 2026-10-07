@@ -32,9 +32,19 @@
         <attr name="maxLength" format="integer" />
     </declare-styleable>
 
+    <!--
+      Both summaries are references rather than strings so a screen can point
+      summaryOn at a @plurals resource: a `format="string"` attribute is inlined as a
+      literal at compile time, which cannot express "1 contact" against "3 contacts".
+
+      The names are prefixed rather than reused from Material Components. `summaryOff`
+      and `summaryOn` are already declared by that library in the app namespace, so
+      redeclaring them only compiled because the two declarations happened to carry the
+      same format; changing either one turns the pair into a duplicate-resource error.
+    -->
     <declare-styleable name="ContactPickerPreference">
-        <attr name="summaryOff" format="string" />
-        <attr name="summaryOn" format="string" />
+        <attr name="contactPickerSummaryOff" format="reference" />
+        <attr name="contactPickerSummaryOn" format="reference" />
     </declare-styleable>
 
 

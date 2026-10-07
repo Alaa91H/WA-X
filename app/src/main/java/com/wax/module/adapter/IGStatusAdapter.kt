@@ -269,7 +269,8 @@ class IGStatusAdapter(
         private fun bindContactStatus(item: Any) {
             runCatching {
                 val statusInfo =
-                    XposedHelpers.getObjectField(item, "A01")
+                    XposedHelpers
+                        .getObjectField(item, "A01")
                         .takeUnless { it is Number }
                         ?: XposedHelpers.getObjectField(item, "A02")
                 val targetClassLoader = statusInfoClazz.classLoader ?: return
@@ -367,13 +368,14 @@ class IGStatusAdapter(
         RelativeLayout(context).apply {
             setBackgroundColor(Color.TRANSPARENT)
             layoutParams =
-                RelativeLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                ).apply {
-                    addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
-                    addRule(RelativeLayout.ALIGN_PARENT_END)
-                }
+                RelativeLayout
+                    .LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ).apply {
+                        addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                        addRule(RelativeLayout.ALIGN_PARENT_END)
+                    }
             visibility = View.GONE
             addView(
                 ImageView(context).apply {

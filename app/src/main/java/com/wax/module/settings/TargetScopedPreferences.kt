@@ -354,7 +354,14 @@ class TargetScopedPreferences(
     }
 
     companion object {
-        private const val LEGACY_SET_SEPARATOR: String = "\u0001"
+        /**
+         * The separator an earlier release used for a string set held in one value.
+         *
+         * Pinned to [SettingsKeys.SET_SEPARATOR] rather than repeating the literal: a set
+         * written by that release has to keep decoding, so this can never become an
+         * independent choice.
+         */
+        private const val LEGACY_SET_SEPARATOR: String = SettingsKeys.SET_SEPARATOR
 
         /**
          * Wraps [delegate] when a target is attached, and returns it untouched otherwise.

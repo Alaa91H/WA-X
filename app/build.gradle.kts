@@ -159,10 +159,22 @@ android {
         // version suggestion currently asks for Gradle 9.8.0, which is newer but
         // outside Kotlin's fully supported range; keep the compatibility pin explicit.
         disable += "AndroidGradlePluginVersion"
+        // Fires inside org.bouncycastle:bcpkix, which the backup signer depends on, and
+        // reports an empty checkServerTrusted in the library's own code. WA X implements
+        // no trust manager, so there is nothing to fix here and the finding cannot be
+        // resolved by any change to this repository.
+        disable += "TrustAllX509TrustManager"
         warning += "MissingTranslation"
         warningsAsErrors = true
         abortOnError = true
         checkDependencies = false
+        // Named explicitly because the Android Gradle Plugin no longer discovers
+        // lint-baseline.xml on its own. Left implicit it is simply not applied: the file
+        // kept looking authoritative to tools/baseline/check_baseline.py while lint ignored
+        // it entirely, so the "baseline must not grow" ratchet was measuring a document
+        // that had no effect on the build. Four entries, all VectorPath on artwork this
+        // change does not own; every other finding is fixed rather than baselined.
+        baseline = file("lint-baseline.xml")
     }
 
     // Static analysis is fail-closed: there is no baseline and even Info-severity

@@ -3,12 +3,13 @@
     <string name="recordings_manager">הקלטות</string>
     <string name="no_recordings_found">לא נמצאו הקלטות</string>
     <string name="delete_confirmation">האם אתה בטוח שברצונך למחוק הקלטה זו?</string>
-    <string name="delete_multiple_confirmation">האם אתה בטוח שברצונך למחוק %d הקלטות?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">האם אתה בטוח שברצונך למחוק הקלטה אחת?</item>
+    <item quantity="two">האם אתה בטוח שברצונך למחוק שתי הקלטות?</item>
+    <item quantity="other">האם אתה בטוח שברצונך למחוק %d הקלטות?</item>
+</plurals>
     <string name="share_recording">שתף הקלטה</string>
     <string name="share_recordings">שתף הקלטות</string>
-    <string name="permission_required">נדרשת הרשאה</string>
-    <string name="permission_required_desc">נדרשת גישה מלאה לקבצים כדי לנהל הקלטות המאוחסנות בתיקייה הראשית.</string>
-    <string name="grant">אשר</string>
     <string name="sort_by">מיין לפי</string>
     <string name="sort_name">שם</string>
     <string name="sort_date">תאריך</string>
@@ -16,12 +17,12 @@
     <string name="sort_contact">איש קשר</string>
     <string name="list_view">רשימה</string>
     <string name="group_by_contact">לפי איש קשר</string>
-    <string name="selected_count">%d נבחרו</string>
-    <string name="recordings_select_all">בחר הכול</string>
-    <string name="recordings_for">הקלטות של %s</string>
-    <string name="recording_count">%d הקלטות</string>
+    <plurals name="selected_count">
+    <item quantity="one">פריט אחד נבחר</item>
+    <item quantity="two">שני פריטים נבחרו</item>
+    <item quantity="other">%d פריטים נבחרו</item>
+</plurals>
     <string name="play">נגן</string>
-    <string name="pause">השהה</string>
     <string name="play_pause">נגן/השהה</string>
     <string name="close">סגור</string>
     <string name="share">שתף</string>

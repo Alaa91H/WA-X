@@ -3,12 +3,12 @@
     <string name="recordings_manager">Aufnahmen</string>
     <string name="no_recordings_found">Keine Aufnahmen gefunden</string>
     <string name="delete_confirmation">Möchten Sie diese Aufnahme wirklich löschen?</string>
-    <string name="delete_multiple_confirmation">Möchten Sie %d Aufnahmen wirklich löschen?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">Möchten Sie %d Aufnahme wirklich löschen?</item>
+    <item quantity="other">Möchten Sie %d Aufnahmen wirklich löschen?</item>
+</plurals>
     <string name="share_recording">Aufnahme teilen</string>
     <string name="share_recordings">Aufnahmen teilen</string>
-    <string name="permission_required">Berechtigung erforderlich</string>
-    <string name="permission_required_desc">Für die Verwaltung von Aufnahmen im Stammordner ist voller Dateizugriff erforderlich.</string>
-    <string name="grant">Erlauben</string>
     <string name="sort_by">Sortieren nach</string>
     <string name="sort_name">Name</string>
     <string name="sort_date">Datum</string>
@@ -16,12 +16,11 @@
     <string name="sort_contact">Kontakt</string>
     <string name="list_view">Liste</string>
     <string name="group_by_contact">Nach Kontakt</string>
-    <string name="selected_count">%d ausgewählt</string>
-    <string name="recordings_select_all">Alle auswählen</string>
-    <string name="recordings_for">Aufnahmen für %s</string>
-    <string name="recording_count">%d Aufnahme(n)</string>
+    <plurals name="selected_count">
+    <item quantity="one">%d ausgewählt</item>
+    <item quantity="other">%d ausgewählt</item>
+</plurals>
     <string name="play">Wiedergeben</string>
-    <string name="pause">Pause</string>
     <string name="play_pause">Wiedergabe/Pause</string>
     <string name="close">Schließen</string>
     <string name="share">Teilen</string>

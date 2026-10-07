@@ -3,12 +3,13 @@
     <string name="recordings_manager">Grabaciones</string>
     <string name="no_recordings_found">No se encontraron grabaciones</string>
     <string name="delete_confirmation">¿Seguro que quieres eliminar esta grabación?</string>
-    <string name="delete_multiple_confirmation">¿Seguro que quieres eliminar %d grabaciones?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">¿Seguro que quieres eliminar %d grabación?</item>
+    <item quantity="many">¿Seguro que quieres eliminar %d grabaciones?</item>
+    <item quantity="other">¿Seguro que quieres eliminar %d grabaciones?</item>
+</plurals>
     <string name="share_recording">Compartir grabación</string>
     <string name="share_recordings">Compartir grabaciones</string>
-    <string name="permission_required">Permiso necesario</string>
-    <string name="permission_required_desc">Se requiere acceso completo a los archivos para gestionar las grabaciones guardadas en la carpeta raíz.</string>
-    <string name="grant">Conceder</string>
     <string name="sort_by">Ordenar por</string>
     <string name="sort_name">Nombre</string>
     <string name="sort_date">Fecha</string>
@@ -16,12 +17,12 @@
     <string name="sort_contact">Contacto</string>
     <string name="list_view">Lista</string>
     <string name="group_by_contact">Por contacto</string>
-    <string name="selected_count">%d seleccionados</string>
-    <string name="recordings_select_all">Seleccionar todo</string>
-    <string name="recordings_for">Grabaciones de %s</string>
-    <string name="recording_count">%d grabación(es)</string>
+    <plurals name="selected_count">
+    <item quantity="one">%d seleccionado</item>
+    <item quantity="many">%d seleccionados</item>
+    <item quantity="other">%d seleccionados</item>
+</plurals>
     <string name="play">Reproducir</string>
-    <string name="pause">Pausar</string>
     <string name="play_pause">Reproducir/Pausar</string>
     <string name="close">Cerrar</string>
     <string name="share">Compartir</string>

@@ -3,12 +3,13 @@
     <string name="recordings_manager">Enregistrements</string>
     <string name="no_recordings_found">Aucun enregistrement trouvé</string>
     <string name="delete_confirmation">Voulez-vous vraiment supprimer cet enregistrement ?</string>
-    <string name="delete_multiple_confirmation">Voulez-vous vraiment supprimer %d enregistrements ?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">Voulez-vous vraiment supprimer %d enregistrement ?</item>
+    <item quantity="many">Voulez-vous vraiment supprimer %d enregistrements ?</item>
+    <item quantity="other">Voulez-vous vraiment supprimer %d enregistrements ?</item>
+</plurals>
     <string name="share_recording">Partager l\'enregistrement</string>
     <string name="share_recordings">Partager les enregistrements</string>
-    <string name="permission_required">Autorisation requise</string>
-    <string name="permission_required_desc">L\'accès complet aux fichiers est nécessaire pour gérer les enregistrements stockés dans le dossier racine.</string>
-    <string name="grant">Accorder</string>
     <string name="sort_by">Trier par</string>
     <string name="sort_name">Nom</string>
     <string name="sort_date">Date</string>
@@ -16,12 +17,12 @@
     <string name="sort_contact">Contact</string>
     <string name="list_view">Liste</string>
     <string name="group_by_contact">Par contact</string>
-    <string name="selected_count">%d sélectionné(s)</string>
-    <string name="recordings_select_all">Tout sélectionner</string>
-    <string name="recordings_for">Enregistrements de %s</string>
-    <string name="recording_count">%d enregistrement(s)</string>
+    <plurals name="selected_count">
+    <item quantity="one">%d sélectionné</item>
+    <item quantity="many">%d sélectionnés</item>
+    <item quantity="other">%d sélectionnés</item>
+</plurals>
     <string name="play">Lire</string>
-    <string name="pause">Pause</string>
     <string name="play_pause">Lire/Pause</string>
     <string name="close">Fermer</string>
     <string name="share">Partager</string>

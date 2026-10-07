@@ -60,7 +60,8 @@ class RecordingsFragment :
         adapter.setSelectionChangeListener { count ->
             if (count > 0) {
                 binding.selectionBar.visibility = View.VISIBLE
-                binding.tvSelectionCount.text = getString(R.string.selected_count, count)
+                binding.tvSelectionCount.text =
+                    resources.getQuantityString(R.plurals.selected_count, count, count)
             } else {
                 binding.selectionBar.visibility = View.GONE
             }
@@ -308,8 +309,13 @@ class RecordingsFragment :
         AlertDialog
             .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
-            .setMessage(getString(R.string.delete_multiple_confirmation, selected.size))
-            .setPositiveButton(R.string.yes) { _, _ ->
+            .setMessage(
+                resources.getQuantityString(
+                    R.plurals.delete_multiple_confirmation,
+                    selected.size,
+                    selected.size,
+                ),
+            ).setPositiveButton(R.string.yes) { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     var deleted = 0
                     for (rec in selected) {

@@ -17,6 +17,21 @@
 *.cfg text eol=lf
 *.properties text eol=lf
 *.toml text eol=lf
+*.aidl text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.cpp text eol=lf
+*.cmake text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.html text eol=lf
+*.svg text eol=lf
+
+# Extensionless files still need a stated ending, or they follow whichever of
+# core.autocrlf / core.eol the contributor happens to have.
+.editorconfig text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
 
 # gradlew and gradlew.bat are left alone on purpose: the shell script and the
 # batch file each need their own ending in the worktree, and their committed

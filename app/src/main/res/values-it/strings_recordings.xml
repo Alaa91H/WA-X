@@ -3,12 +3,13 @@
     <string name="recordings_manager">Registrazioni</string>
     <string name="no_recordings_found">Nessuna registrazione trovata</string>
     <string name="delete_confirmation">Vuoi davvero eliminare questa registrazione?</string>
-    <string name="delete_multiple_confirmation">Vuoi davvero eliminare %d registrazioni?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">Vuoi davvero eliminare %d registrazione?</item>
+    <item quantity="many">Vuoi davvero eliminare %d registrazioni?</item>
+    <item quantity="other">Vuoi davvero eliminare %d registrazioni?</item>
+</plurals>
     <string name="share_recording">Condividi registrazione</string>
     <string name="share_recordings">Condividi registrazioni</string>
-    <string name="permission_required">Autorizzazione richiesta</string>
-    <string name="permission_required_desc">Per gestire le registrazioni salvate nella cartella principale è necessario l\'accesso completo ai file.</string>
-    <string name="grant">Concedi</string>
     <string name="sort_by">Ordina per</string>
     <string name="sort_name">Nome</string>
     <string name="sort_date">Data</string>
@@ -16,12 +17,12 @@
     <string name="sort_contact">Contatto</string>
     <string name="list_view">Elenco</string>
     <string name="group_by_contact">Per contatto</string>
-    <string name="selected_count">%d selezionati</string>
-    <string name="recordings_select_all">Seleziona tutto</string>
-    <string name="recordings_for">Registrazioni di %s</string>
-    <string name="recording_count">%d registrazione/i</string>
+    <plurals name="selected_count">
+    <item quantity="one">%d selezionato</item>
+    <item quantity="many">%d selezionati</item>
+    <item quantity="other">%d selezionati</item>
+</plurals>
     <string name="play">Riproduci</string>
-    <string name="pause">Pausa</string>
     <string name="play_pause">Riproduci/Pausa</string>
     <string name="close">Chiudi</string>
     <string name="share">Condividi</string>

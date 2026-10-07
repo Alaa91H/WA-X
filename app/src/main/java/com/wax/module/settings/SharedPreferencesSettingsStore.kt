@@ -43,7 +43,7 @@ class SharedPreferencesSettingsStore(
 
     private fun encode(value: Any): String =
         when (value) {
-            is Set<*> -> value.filterNotNull().joinToString(SEP) { it.toString() }
+            is Set<*> -> value.filterNotNull().joinToString(SettingsKeys.SET_SEPARATOR) { it.toString() }
             else -> value.toString()
         }
 
@@ -101,7 +101,7 @@ class SharedPreferencesSettingsStore(
             ValueType.Set -> {
                 editor.putStringSet(
                     physicalKey,
-                    value.split(SEP).filter { it.isNotEmpty() }.toSet(),
+                    value.split(SettingsKeys.SET_SEPARATOR).filter { it.isNotEmpty() }.toSet(),
                 )
             }
 
@@ -185,14 +185,14 @@ class SharedPreferencesSettingsStore(
         // Only a value written as a set is a set. Reading a plain string as one hands the
         // caller a single-element set that no feature asked for.
         if (type != ValueType.Set) return null
-        return raw.split(SEP).filter { it.isNotEmpty() }.toSet()
+        return raw.split(SettingsKeys.SET_SEPARATOR).filter { it.isNotEmpty() }.toSet()
     }
 
     override fun writeStringSet(
         scope: SettingsScope,
         key: String,
         value: Set<String>?,
-    ) = writeRaw(scope, key, value?.sorted()?.joinToString(SEP), ValueType.Set)
+    ) = writeRaw(scope, key, value?.sorted()?.joinToString(SettingsKeys.SET_SEPARATOR), ValueType.Set)
 
     override fun keysWithOverrides(scope: SettingsScope): Set<String> {
         val prefix = scope.physicalPrefix()
@@ -264,16 +264,30 @@ class SharedPreferencesSettingsStore(
         global: Map<String, String>,
         targets: Map<TargetApp, Map<String, String>>,
     ) {
-        // Everything is staged first. A restore that fails half way through would
-        // otherwise leave the user with a mix of two configurations.
-        val staged = LinkedHashMap<String, String>()
-        global.forEach { (key, value) -> staged[key] = value }
+        // Everything is staged first, with the type each key is declared with, because a
+        // restore that fails half way through would otherwise leave the user with a mix of
+        // two configurations.
+        //
+        // The backup format stores one string per key, so the type has to be re-applied
+        // from the registry here. Persisting the raw string instead would turn every
+        // boolean, integer, float and set into a String, and the hooked process - which
+        // reads these through `SharedPreferences.getBoolean` and friends - would then
+        // throw `ClassCastException` in WhatsApp rather than use the restored setting.
+        val staged = LinkedHashMap<String, Pair<String, ValueType>>()
+        global.forEach { (key, value) ->
+            staged[key] = value to ValueType.forKey(key)
+        }
         targets.forEach { (target, values) ->
-            values.forEach { (key, value) -> staged[SettingsKeys.physicalKey(SettingsScope.Target(target), key)] = value }
+            values.forEach { (key, value) ->
+                val physicalKey = SettingsKeys.physicalKey(SettingsScope.Target(target), key)
+                staged[physicalKey] = value to ValueType.forKey(key)
+            }
         }
         prefs.edit {
             clear()
-            staged.forEach { (key, value) -> putString(key, value) }
+            staged.forEach { (physicalKey, entry) ->
+                putTyped(this, physicalKey, entry.first, entry.second)
+            }
         }
         reload()
     }
@@ -289,11 +303,6 @@ class SharedPreferencesSettingsStore(
             is SettingsScope.Global -> ""
             is SettingsScope.Target -> SettingsKeys.TARGET_PREFIX + app.code + "."
         }
-
-    private companion object {
-        /** Separator for string sets; not a legal character in a preference value. */
-        const val SEP = "\u0001"
-    }
 }
 
 /**
@@ -320,6 +329,24 @@ enum class ValueType {
                 is Float -> Real
                 is Set<*> -> Set
                 else -> Text
+            }
+
+        /**
+         * The type the preference screen declares [key] to hold.
+         *
+         * Read from the generated [SettingKeyRegistry] rather than remembered per write,
+         * so a value that arrives as text - from a backup restore, or from a copy between
+         * scopes - still lands in `SharedPreferences` under the type the feature reads it
+         * with. A key the registry does not know is text, because no feature reads an
+         * unknown key through a typed accessor and guessing a type would only invent one.
+         */
+        fun forKey(key: String): ValueType =
+            when (SettingKeyRegistry.find(key)?.kind) {
+                SettingKeyRegistry.Kind.BOOLEAN -> Flag
+                SettingKeyRegistry.Kind.INT -> Whole
+                SettingKeyRegistry.Kind.FLOAT -> Real
+                SettingKeyRegistry.Kind.SET -> Set
+                SettingKeyRegistry.Kind.TEXT, null -> Text
             }
     }
 }

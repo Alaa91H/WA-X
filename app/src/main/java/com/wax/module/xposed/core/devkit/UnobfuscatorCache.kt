@@ -461,11 +461,10 @@ class UnobfuscatorCache private constructor(
         sPrefsCacheHooks.edit { putString(key, values.toString()) }
     }
 
-    private fun fieldToJson(field: Field): JSONObject {
-        return JSONObject()
+    private fun fieldToJson(field: Field): JSONObject =
+        JSONObject()
             .put("class", field.declaringClass.name)
             .put("name", field.name)
-    }
 
     private fun getFieldFromJson(
         loader: ClassLoader,
@@ -475,12 +474,11 @@ class UnobfuscatorCache private constructor(
         return XposedHelpers.findField(cls, value.getString("name"))
     }
 
-    private fun methodToJson(method: Method): JSONObject {
-        return JSONObject()
+    private fun methodToJson(method: Method): JSONObject =
+        JSONObject()
             .put("class", method.declaringClass.name)
             .put("name", method.name)
             .put("params", classArrayToJson(method.parameterTypes))
-    }
 
     private fun getMethodFromJson(
         loader: ClassLoader,
@@ -491,9 +489,7 @@ class UnobfuscatorCache private constructor(
         return XposedHelpers.findMethodExact(cls, value.getString("name"), *paramTypes)
     }
 
-    private fun classToJson(cls: Class<*>): JSONObject {
-        return JSONObject().put("class", cls.name)
-    }
+    private fun classToJson(cls: Class<*>): JSONObject = JSONObject().put("class", cls.name)
 
     private fun getClassFromJson(
         loader: ClassLoader,

@@ -27,6 +27,16 @@ object TargetScopedBackup {
     /** The section id for a target's overrides. */
     fun sectionFor(app: TargetApp): String = app.code
 
+    /**
+     * Separator between the members of a string set inside the backup document.
+     *
+     * U+0001 cannot occur in a preference value, so the encoding is unambiguous. It is
+     * declared here rather than reused from [SettingsKeys] on purpose: that constant
+     * belongs to the preference file's own encoding, and the two documents have
+     * independent compatibility lifetimes, so one must not move when the other does.
+     */
+    private const val SET_SEPARATOR: String = "\u0001"
+
     /** Every section id a current document should carry. */
     fun sectionIds(): List<String> = listOf(GLOBAL_SECTION) + TargetApp.entries.map { it.code }
 
@@ -78,14 +88,11 @@ object TargetScopedBackup {
         val parsed = parse(document)
         if (parsed is RestoreResult.Rejected) return parsed
 
-        val (global, targets) =
-            (parsed as RestoreResult.Valid).let {
-                it.global to it.targets
-            }
-        store.replaceAll(global, targets)
+        val valid = parsed as RestoreResult.Valid
+        store.replaceAll(valid.global, valid.targets)
         return RestoreResult.Restored(
-            globalKeys = global.size,
-            perTargetKeys = targets.mapValues { it.value.size },
+            globalKeys = valid.global.size,
+            perTargetKeys = valid.targets.mapValues { it.value.size },
         )
     }
 
@@ -163,10 +170,30 @@ object TargetScopedBackup {
         keys: Collection<String>,
     ): JsonValue =
         JsonValue.Obj(
-            keys.sorted().associateWith { key ->
-                JsonValue.Str(store.readString(scope, key) ?: "")
-            },
+            keys.sorted().associateWith { key -> JsonValue.Str(encodeValue(store, scope, key)) },
         )
+
+    /**
+     * Renders one stored value as the single text form the backup format carries.
+     *
+     * Every value is read through the accessor its declared type uses. Reading everything
+     * as text looked simpler, but `readString` answers null for an integer, a float and a
+     * string set - it refuses to hand back a value the caller would misread - so a backup
+     * taken that way stored an empty string for every one of them and a restore silently
+     * reset those settings to their defaults.
+     */
+    private fun encodeValue(
+        store: SettingsStore,
+        scope: SettingsScope,
+        key: String,
+    ): String =
+        when (ValueType.forKey(key)) {
+            ValueType.Flag -> store.readBoolean(scope, key)?.toString() ?: ""
+            ValueType.Whole -> store.readInt(scope, key)?.toString() ?: ""
+            ValueType.Real -> store.readFloat(scope, key)?.toString() ?: ""
+            ValueType.Set -> store.readStringSet(scope, key)?.sorted()?.joinToString(SET_SEPARATOR) ?: ""
+            ValueType.Text -> store.readString(scope, key) ?: ""
+        }
 
     /** Encodes [store] as a backup JSON string. */
     fun encode(

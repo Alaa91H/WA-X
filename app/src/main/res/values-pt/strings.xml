@@ -287,11 +287,12 @@
     <string name="search_contacts">Selecionar contatos</string>
     <string name="contact_block_list">Bloquear somente…</string>
     <string name="contact_white_list">Bloquear contatos, exceto…</string>
+    <string name="select_whatsapp_app">Selecionar aplicativo do WhatsApp</string>
     <string name="no_contacts_selected">Nenhum contato selecionado</string>
     <plurals name="contact_were_selected">
         <item quantity="one">%d contato selecionado</item>
-        <item quantity="other">%d contatos selecionados</item>
-    </plurals>
+        <item quantity="many">%d contatos selecionados</item>
+        <item quantity="other">%d contatos selecionados</item></plurals>
     <string name="standard">Padrão</string>
     <string name="audio_note">Nota de áudio</string>
     <string name="voice_note">Nota de voz</string>

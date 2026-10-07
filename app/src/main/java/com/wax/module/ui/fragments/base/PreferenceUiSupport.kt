@@ -59,8 +59,7 @@ internal object PreferenceIconResolver {
         value: String,
         rules: List<Rule>,
         fallback: Int,
-    ): Int =
-        rules.firstOrNull { rule -> rule.keywords.any(value::contains) }?.icon ?: fallback
+    ): Int = rules.firstOrNull { rule -> rule.keywords.any(value::contains) }?.icon ?: fallback
 
     private fun normalize(value: CharSequence?): String =
         value

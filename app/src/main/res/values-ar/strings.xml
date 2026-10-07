@@ -287,11 +287,15 @@
     <string name="search_contacts">البحث عن جهات الاتصال</string>
     <string name="contact_block_list">قائمة جهات الاتصال المحظورة</string>
     <string name="contact_white_list">قائمة جهات الاتصال المسموح بها</string>
+    <string name="select_whatsapp_app">اختر تطبيق واتساب</string>
     <string name="no_contacts_selected">لم يتم تحديد أي جهات اتصال</string>
     <plurals name="contact_were_selected">
+        <item quantity="zero">لم يتم تحديد أي جهة اتصال</item>
         <item quantity="one">تم تحديد %d جهة اتصال</item>
-        <item quantity="other">تم تحديد %d جهة اتصال</item>
-    </plurals>
+        <item quantity="two">تم تحديد %d جهة اتصال</item>
+        <item quantity="few">تم تحديد %d جهات اتصال</item>
+        <item quantity="many">تم تحديد %d جهة اتصال</item>
+        <item quantity="other">تم تحديد %d جهة اتصال</item></plurals>
     <string name="standard">أساسي</string>
     <string name="audio_note">مقطع صوتي</string>
     <string name="voice_note">رسالة صوتية</string>

@@ -29,11 +29,12 @@ APP = "{http://schemas.android.com/apk/res-auto}"
 def attr(node, name):
     """Read an attribute under either namespace.
 
-    The preference screens in this project declare keys as pp:key, not ndroid:key,
+    The preference screens in this project declare keys as app:key, not android:key,
     which a reader that only knows the android namespace silently misses: the whole
     screen then looks empty instead of failing.
     """
     return node.get(ANDROID + name) or node.get(APP + name)
+
 
 # Element name -> value kind. Anything not listed is TEXT, which is the safe default:
 # a target override of an unknown type is still stored and still resolves.
@@ -63,7 +64,7 @@ def element_kind(tag: str) -> str:
     return KIND_BY_ELEMENT.get(simple, "TEXT")
 
 
-def title_of(node, titles):
+def title_of(node):
     """The title of a preference, resolved through the app's string resources."""
     ref = attr(node, "title")
     if not ref:
@@ -85,14 +86,20 @@ def collect():
 
         category_stack = []
 
-        def walk(node, path):
+        def walk(node):
             for child in node:
                 tag = child.tag
                 key = attr(child, "key")
                 if tag == "PreferenceCategory":
-                    title = title_of(child, None)
-                    category_stack.append(title or category_stack[-1] if category_stack else (title or "Other"))
-                    walk(child, path)
+                    # A category with no title of its own belongs to the one above it, so
+                    # its settings keep that category instead of collapsing into "Other".
+                    # Spelled out rather than written as one expression: `a or b if c
+                    # else d` parses as `a or (b if c else d)`, which is correct by
+                    # accident and unreadable on purpose.
+                    title = title_of(child)
+                    inherited = category_stack[-1] if category_stack else None
+                    category_stack.append(title or inherited or "Other")
+                    walk(child)
                     category_stack.pop()
                     continue
                 if key:
@@ -106,12 +113,12 @@ def collect():
                             "kind": kind,
                             "category": category,
                             "screen": screen,
-                            "title": title_of(child, None),
+                            "title": title_of(child),
                         },
                     )
-                walk(child, path)
+                walk(child)
 
-        walk(tree.getroot(), [])
+        walk(tree.getroot())
     return entries
 
 

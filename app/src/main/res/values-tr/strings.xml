@@ -287,6 +287,7 @@
     <string name="search_contacts">Kişileri ara</string>
     <string name="contact_block_list">Engellenen kişiler listesi</string>
     <string name="contact_white_list">İzin verilen kişiler listesi</string>
+    <string name="select_whatsapp_app">WhatsApp uygulamasını seçin</string>
     <string name="no_contacts_selected">Hiç kişi seçilmedi</string>
     <plurals name="contact_were_selected">
         <item quantity="one">%d kişi seçildi</item>

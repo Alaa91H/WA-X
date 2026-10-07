@@ -18,6 +18,7 @@ import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.content.edit
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
@@ -407,19 +408,17 @@ internal class GoogleTranslateChatUi(
             .setView(ScrollView(ctx).apply { addView(layout) })
             .setNegativeButton(ctx.getString(R.string.cancel), null)
             .setPositiveButton(ctx.getString(R.string.save)) { _, _ ->
-                settings
-                    .edit()
-                    .apply {
-                        if (chat != null && inherit.isChecked) {
-                            remove(key(chat))
-                        } else {
-                            putString(
-                                key(chat),
-                                draft.encode(),
-                            )
-                        }
-                        remove(legacyKey(chat))
-                    }.apply()
+                settings.edit {
+                    if (chat != null && inherit.isChecked) {
+                        remove(key(chat))
+                    } else {
+                        putString(
+                            key(chat),
+                            draft.encode(),
+                        )
+                    }
+                    remove(legacyKey(chat))
+                }
                 failures.clear()
                 // Invalidate requests from an older selection, including changes made away from the conversation.
                 bound.clear()

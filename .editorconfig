@@ -1,5 +1,31 @@
 root = true
 
+[*]
+# Stated for every file because these two are the only editor settings that must agree
+# across every contributor: they are what `.gitattributes` already enforces for the
+# tracked text types, and a file edited on Windows must not come back with CRLF or no
+# terminating newline. Submodule sources are excluded - they are upstream files, and
+# reformatting them is not ours to do.
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[app/src/main/cpp/opus/**]
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+[app/src/main/cpp/ogg/**]
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+[app/src/main/cpp/libopusenc/**]
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
 [*.{kt,kts}]
 # Compose names composable functions in PascalCase. That is the convention the Compose
 # compiler follows and the one every Compose codebase uses, and it conflicts with the

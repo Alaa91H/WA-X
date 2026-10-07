@@ -30,7 +30,7 @@ class TargetScopedBackupTest {
         store.writeString(global, "status_style", "2")
         store.writeBoolean(wa, "showonline", false)
         store.writeString(wa, "status_style", "1")
-        store.writeBoolean(business, "voicenote_speed", true)
+        store.writeFloat(business, "voicenote_speed", 1.5f)
         return store
     }
 
@@ -46,9 +46,9 @@ class TargetScopedBackupTest {
         assertEquals("2", restored.readString(global, "status_style"))
         assertEquals(false, restored.readBoolean(wa, "showonline"))
         assertEquals("1", restored.readString(wa, "status_style"))
-        assertEquals(true, restored.readBoolean(business, "voicenote_speed"))
+        assertEquals(1.5f, restored.readFloat(business, "voicenote_speed"))
         // WhatsApp must not have gained Business's key, and vice versa.
-        assertEquals(null, restored.readBoolean(wa, "voicenote_speed"))
+        assertEquals(null, restored.readFloat(wa, "voicenote_speed"))
         assertEquals(null, restored.readString(business, "status_style"))
     }
 
@@ -131,5 +131,59 @@ class TargetScopedBackupTest {
         TargetScopedBackup.restore(target, TargetScopedBackup.toDocument(populated(), "1.0.0", 0L))
 
         assertFalse(target.keysWithOverrides(SettingsScope.Target(TargetApp.WHATSAPP)).contains("stale_key"))
+    }
+
+    /**
+     * The typed path, which is the one that matters.
+     *
+     * The backup document carries one string per key, so both halves have to put the type
+     * back: the writer must read an integer as an integer instead of getting `null` and
+     * storing an empty string, and the store must persist a restored boolean as a boolean.
+     * Read back through the real preference store, because the hooked process calls
+     * `SharedPreferences.getBoolean` on the physical value and throws `ClassCastException`
+     * when it finds a string there.
+     */
+    @Test
+    fun `a round trip through the preference store keeps every declared type`() {
+        val source = FakePreferences()
+        val before = SharedPreferencesSettingsStore(source)
+        before.writeBoolean(global, "showonline", true)
+        before.writeString(global, "status_style", "2")
+        before.writeInt(wa, "floating_bottom_bar_radius", 7)
+        before.writeFloat(wa, "voicenote_speed", 1.5f)
+        before.writeStringSet(business, "hidetabs", setOf("1", "2"))
+
+        val document = TargetScopedBackup.toDocument(before, "1.1.0", 0L)
+        val destination = FakePreferences()
+        val result = TargetScopedBackup.restore(SharedPreferencesSettingsStore(destination), document)
+
+        assertTrue(result is TargetScopedBackup.RestoreResult.Restored)
+
+        val restored = destination.snapshot()
+        assertEquals(true, restored["showonline"])
+        assertEquals("2", restored["status_style"])
+        assertEquals(7, restored["waxtarget.whatsapp.floating_bottom_bar_radius"])
+        assertEquals(1.5f, restored["waxtarget.whatsapp.voicenote_speed"])
+        assertEquals(setOf("1", "2"), restored["waxtarget.business.hidetabs"])
+    }
+
+    @Test
+    fun `a restored value is still readable through the typed preference facade`() {
+        val source = FakePreferences()
+        SharedPreferencesSettingsStore(source).writeInt(wa, "floating_bottom_bar_radius", 9)
+        SharedPreferencesSettingsStore(source).writeBoolean(wa, "showonline", false)
+
+        val document = TargetScopedBackup.toDocument(SharedPreferencesSettingsStore(source), "1.1.0", 0L)
+        val destination = FakePreferences()
+        SharedPreferencesSettingsStore(destination).also {
+            TargetScopedBackup.restore(it, document)
+        }
+
+        val scoped =
+            TargetScopedPreferences.wrap(destination, TargetApp.WHATSAPP) as TargetScopedPreferences
+        scoped.refresh(SharedPreferencesSettingsStore(destination))
+
+        assertEquals(9, scoped.getInt("floating_bottom_bar_radius", 0))
+        assertEquals(false, scoped.getBoolean("showonline", true))
     }
 }

@@ -150,14 +150,14 @@
         <com.wax.module.preference.ContactPickerPreference
             android:key="call_block_contacts"
             android:title="@string/contact_block_list"
-            app:summaryOff="@string/no_contacts_selected"
-            app:summaryOn="@string/contact_were_selected" />
+            app:contactPickerSummaryOff="@string/no_contacts_selected"
+            app:contactPickerSummaryOn="@plurals/contact_were_selected" />
 
         <com.wax.module.preference.ContactPickerPreference
             android:key="call_white_contacts"
             android:title="@string/contact_white_list"
-            app:summaryOff="@string/no_contacts_selected"
-            app:summaryOn="@string/contact_were_selected" />
+            app:contactPickerSummaryOff="@string/no_contacts_selected"
+            app:contactPickerSummaryOn="@plurals/contact_were_selected" />
 
     </PreferenceCategory>
 

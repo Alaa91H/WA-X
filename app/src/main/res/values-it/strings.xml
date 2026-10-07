@@ -287,11 +287,12 @@
     <string name="search_contacts">Cerca contatti</string>
     <string name="contact_block_list">Elenco dei contatti bloccati</string>
     <string name="contact_white_list">Elenco dei contatti consentiti</string>
+    <string name="select_whatsapp_app">Seleziona l’app WhatsApp</string>
     <string name="no_contacts_selected">Nessun contatto selezionato</string>
     <plurals name="contact_were_selected">
         <item quantity="one">%d contatto selezionato</item>
-        <item quantity="other">%d contatti selezionati</item>
-    </plurals>
+        <item quantity="many">%d contatti selezionati</item>
+        <item quantity="other">%d contatti selezionati</item></plurals>
     <string name="standard">Predefinito</string>
     <string name="audio_note">Nota audio</string>
     <string name="voice_note">Nota vocale</string>

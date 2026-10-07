@@ -416,7 +416,7 @@ object ReflectionUtils {
             require(fragment.trim().isNotEmpty()) { "Stack trace fragments must not be blank." }
         }
 
-        val trace = Throwable().stackTrace
+        val trace = currentStackTrace()
         val limit = minOf(trace.size, 20)
 
         for (i in 2 until limit) {
@@ -457,7 +457,7 @@ object ReflectionUtils {
     @JvmStatic
     fun isCalledFromClass(cls: Class<*>?): Boolean {
         val className = cls?.name ?: return false
-        val stacks = Throwable().stackTrace
+        val stacks = currentStackTrace()
 
         for (i in 2 until stacks.size) {
             if (stacks[i].className == className) {
@@ -473,7 +473,7 @@ object ReflectionUtils {
         if (method == null) return false
         val declaringClassName = method.declaringClass.name
         val methodName = method.name
-        val stacks = Throwable().stackTrace
+        val stacks = currentStackTrace()
 
         for (i in 2 until stacks.size) {
             if (stacks[i].className == declaringClassName && stacks[i].methodName == methodName) {
@@ -496,4 +496,15 @@ object ReflectionUtils {
         } catch (_: Exception) {
         }
     }
+
+    /**
+     * The current thread's frames, for the call-site checks above.
+     *
+     * `Throwable().stackTrace` was the previous way to ask the same question, but it
+     * allocates an exception purely to read a stack and constructs one with no message,
+     * which reads as a bug to any reader - and to detekt's
+     * `ThrowingExceptionsWithoutMessageOrCause`. `Thread.currentThread().stackTrace`
+     * answers the same question without either.
+     */
+    private fun currentStackTrace(): Array<StackTraceElement> = Thread.currentThread().stackTrace
 }

@@ -3,12 +3,14 @@
     <string name="recordings_manager">Записи</string>
     <string name="no_recordings_found">Записи не найдены</string>
     <string name="delete_confirmation">Вы уверены, что хотите удалить эту запись?</string>
-    <string name="delete_multiple_confirmation">Вы уверены, что хотите удалить %d записей?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">Вы уверены, что хотите удалить %d запись?</item>
+    <item quantity="few">Вы уверены, что хотите удалить %d записи?</item>
+    <item quantity="many">Вы уверены, что хотите удалить %d записей?</item>
+    <item quantity="other">Вы уверены, что хотите удалить %d записи?</item>
+</plurals>
     <string name="share_recording">Поделиться записью</string>
     <string name="share_recordings">Поделиться записями</string>
-    <string name="permission_required">Требуется разрешение</string>
-    <string name="permission_required_desc">Для управления записями в корневой папке требуется полный доступ к файлам.</string>
-    <string name="grant">Разрешить</string>
     <string name="sort_by">Сортировать по</string>
     <string name="sort_name">Имени</string>
     <string name="sort_date">Дате</string>
@@ -16,12 +18,13 @@
     <string name="sort_contact">Контакт</string>
     <string name="list_view">Список</string>
     <string name="group_by_contact">По контактам</string>
-    <string name="selected_count">Выбрано: %d</string>
-    <string name="recordings_select_all">Выбрать все</string>
-    <string name="recordings_for">Записи %s</string>
-    <string name="recording_count">Записей: %d</string>
+    <plurals name="selected_count">
+    <item quantity="one">Выбран %d элемент</item>
+    <item quantity="few">Выбрано %d элемента</item>
+    <item quantity="many">Выбрано %d элементов</item>
+    <item quantity="other">Выбрано %d элементов</item>
+</plurals>
     <string name="play">Воспроизвести</string>
-    <string name="pause">Пауза</string>
     <string name="play_pause">Воспроизведение/пауза</string>
     <string name="close">Закрыть</string>
     <string name="share">Поделиться</string>
