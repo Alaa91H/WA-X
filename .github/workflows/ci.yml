@@ -10,13 +10,13 @@
 # Event matrix
 #   pull_request      Verify only. Builds/tests the debug variant, imports no
 #                     production signing material, and publishes nothing.
-#   push to master    Verifies with debug tasks, then builds an optimized
+#   push to main    Verifies with debug tasks, then builds an optimized
 #                     release-type Beta APK signed with the WA X update key,
 #                     uploads it as an artifact and posts it to Beta Testing.
 #   push of tag v*    Builds the optimized release variant with the same WA X
 #                     update key, validates it, creates the GitHub Release,
 #                     then publishes it to Updates & Releases.
-#   workflow_dispatch Same as a master push, or the release path when dispatched
+#   workflow_dispatch Same as a main push, or the release path when dispatched
 #                     on an existing tag.
 #
 # Release contract (enforced, not documented-only)
@@ -45,10 +45,10 @@ name: Android CI
 on:
   pull_request:
     branches:
-      - master
+      - main
   push:
     branches:
-      - master
+      - main
       - ci/telegram-release-publisher-test
     tags:
       - 'v*'
@@ -963,7 +963,7 @@ jobs:
         (needs.release.result == 'success' || needs.release.result == 'skipped') &&
         (
           startsWith(github.ref, 'refs/tags/v') ||
-          github.ref_name == 'master' ||
+          github.ref_name == 'main' ||
           github.ref_name == 'ci/telegram-release-publisher-test'
         ) &&
         (github.event_name != 'workflow_dispatch' || inputs.publish_to_telegram)
