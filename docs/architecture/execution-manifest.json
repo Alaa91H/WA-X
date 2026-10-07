@@ -1,0 +1,202 @@
+{
+  "repository": "Alaa91H/WA-X",
+  "generated_at": "2026-10-07",
+  "branch": "priority/architecture-sustainability",
+  "epic": {
+    "id": "A000",
+    "issue": 333,
+    "url": "https://github.com/Alaa91H/WA-X/issues/333"
+  },
+  "priority_model": {
+    "P0-A": "Runtime architecture foundations; integrate with M00-M08",
+    "P0-B": "Enforced boundaries/settings/testing/security/supply-chain; required before M13 completion",
+    "P1": "Manager/data/UI modernization after runtime stability",
+    "P2": "Optional domain modularization only with measured benefit"
+  },
+  "phases": [
+    {
+      "id": "A00",
+      "issue": 334,
+      "priority": "P0-A",
+      "relation": "M00",
+      "url": "https://github.com/Alaa91H/WA-X/issues/334"
+    },
+    {
+      "id": "A01",
+      "issue": 335,
+      "priority": "P0-A",
+      "relation": "M01-M03",
+      "url": "https://github.com/Alaa91H/WA-X/issues/335"
+    },
+    {
+      "id": "A02",
+      "issue": 336,
+      "priority": "P0-A",
+      "relation": "M02-M03",
+      "url": "https://github.com/Alaa91H/WA-X/issues/336"
+    },
+    {
+      "id": "A03",
+      "issue": 337,
+      "priority": "P0-A",
+      "relation": "M03",
+      "url": "https://github.com/Alaa91H/WA-X/issues/337"
+    },
+    {
+      "id": "A04",
+      "issue": 338,
+      "priority": "P0-A",
+      "relation": "M08",
+      "url": "https://github.com/Alaa91H/WA-X/issues/338"
+    },
+    {
+      "id": "A05",
+      "issue": 339,
+      "priority": "P0-A",
+      "relation": "M03+M12",
+      "url": "https://github.com/Alaa91H/WA-X/issues/339"
+    },
+    {
+      "id": "A06",
+      "issue": 340,
+      "priority": "P0-A",
+      "relation": "M02+M06+M10",
+      "url": "https://github.com/Alaa91H/WA-X/issues/340"
+    },
+    {
+      "id": "A07",
+      "issue": 341,
+      "priority": "P0-B",
+      "relation": "after M04",
+      "url": "https://github.com/Alaa91H/WA-X/issues/341"
+    },
+    {
+      "id": "A08",
+      "issue": 342,
+      "priority": "P0-B",
+      "relation": "M06",
+      "url": "https://github.com/Alaa91H/WA-X/issues/342"
+    },
+    {
+      "id": "A09",
+      "issue": 343,
+      "priority": "P1",
+      "relation": "after A08",
+      "url": "https://github.com/Alaa91H/WA-X/issues/343"
+    },
+    {
+      "id": "A10",
+      "issue": 344,
+      "priority": "P1",
+      "relation": "after A09",
+      "url": "https://github.com/Alaa91H/WA-X/issues/344"
+    },
+    {
+      "id": "A11",
+      "issue": 345,
+      "priority": "P1",
+      "relation": "after A10",
+      "url": "https://github.com/Alaa91H/WA-X/issues/345"
+    },
+    {
+      "id": "A12",
+      "issue": 346,
+      "priority": "P1",
+      "relation": "M11",
+      "url": "https://github.com/Alaa91H/WA-X/issues/346"
+    },
+    {
+      "id": "A13",
+      "issue": 347,
+      "priority": "P0-B",
+      "relation": "M11",
+      "url": "https://github.com/Alaa91H/WA-X/issues/347"
+    },
+    {
+      "id": "A14",
+      "issue": 348,
+      "priority": "P0-B",
+      "relation": "before M13",
+      "url": "https://github.com/Alaa91H/WA-X/issues/348"
+    },
+    {
+      "id": "A15",
+      "issue": 349,
+      "priority": "P1",
+      "relation": "after runtime stabilization",
+      "url": "https://github.com/Alaa91H/WA-X/issues/349"
+    },
+    {
+      "id": "A16",
+      "issue": 350,
+      "priority": "P0-B",
+      "relation": "before M13",
+      "url": "https://github.com/Alaa91H/WA-X/issues/350"
+    },
+    {
+      "id": "A17",
+      "issue": 351,
+      "priority": "P0-B",
+      "relation": "M11",
+      "url": "https://github.com/Alaa91H/WA-X/issues/351"
+    },
+    {
+      "id": "A18",
+      "issue": 352,
+      "priority": "P1",
+      "relation": "after boundaries stabilize",
+      "url": "https://github.com/Alaa91H/WA-X/issues/352"
+    },
+    {
+      "id": "A19",
+      "issue": 353,
+      "priority": "P0",
+      "relation": "M00-M13 integration",
+      "url": "https://github.com/Alaa91H/WA-X/issues/353"
+    },
+    {
+      "id": "A20",
+      "issue": 354,
+      "priority": "P2",
+      "relation": "after A15 metrics",
+      "url": "https://github.com/Alaa91H/WA-X/issues/354"
+    }
+  ],
+  "source_phase_coverage": {
+    "P00": "A00+M00",
+    "P01": "A07",
+    "P02": "A07",
+    "P03": "A08",
+    "P04": "A01",
+    "P05": "A06",
+    "P06": "A02",
+    "P07": "A03",
+    "P08": "A03",
+    "P09": "A04",
+    "P10": "A04",
+    "P11": "A05",
+    "P12": "M01-M03",
+    "P13": "M06",
+    "P14": "M06+M13",
+    "P15": "A08",
+    "P16": "A08",
+    "P17": "A08",
+    "P18": "A09",
+    "P19": "A10",
+    "P20": "A11",
+    "P21": "A11",
+    "P22": "A10",
+    "P23": "A12+M11",
+    "P24": "A13+M11",
+    "P25": "A14",
+    "P26": "M13",
+    "P27": "A15",
+    "P28": "A16",
+    "P29": "A17+M11",
+    "P30": "M09",
+    "P31": "M10",
+    "P32": "M10+M13",
+    "P33": "M13",
+    "P34": "A20"
+  }
+}

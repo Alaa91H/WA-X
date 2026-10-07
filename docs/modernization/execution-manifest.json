@@ -1,0 +1,113 @@
+{
+  "repository": "Alaa91H/WA-X",
+  "program": "LSPosed Modernization & Stability",
+  "priority": "BLOCKER/P0",
+  "source_date": "2026-10-07",
+  "branch": "priority/lsposed-modernization",
+  "master_epic": {
+    "id": "M000",
+    "issue": 318,
+    "url": "https://github.com/Alaa91H/WA-X/issues/318"
+  },
+  "execution_order": [
+    {
+      "id": "M00",
+      "issue": 319,
+      "gate": "M00"
+    },
+    {
+      "id": "M01",
+      "issue": 320,
+      "gate": "M01"
+    },
+    {
+      "id": "M02",
+      "issue": 321,
+      "gate": "A"
+    },
+    {
+      "id": "M03",
+      "issue": 322,
+      "gate": "bootstrap"
+    },
+    {
+      "id": "M04",
+      "issue": 323,
+      "gate": "B"
+    },
+    {
+      "id": "M05",
+      "issue": 324,
+      "gate": "packaging"
+    },
+    {
+      "id": "M06",
+      "issue": 325,
+      "gate": "C"
+    },
+    {
+      "id": "M07",
+      "issue": 326,
+      "gate": "D"
+    },
+    {
+      "id": "M08",
+      "issue": 327,
+      "gate": "E"
+    },
+    {
+      "id": "M09",
+      "issue": 328,
+      "gate": "F"
+    },
+    {
+      "id": "M10",
+      "issue": 329,
+      "gate": "G"
+    },
+    {
+      "id": "M11",
+      "issue": 330,
+      "gate": "H"
+    },
+    {
+      "id": "M12",
+      "issue": 331,
+      "gate": "I"
+    },
+    {
+      "id": "M13",
+      "issue": 332,
+      "gate": "FINAL"
+    }
+  ],
+  "freeze_policy": {
+    "feature_backlog": "F003-F254",
+    "frozen_until": "M13 FINAL gate",
+    "exceptions": [
+      "critical security fixes",
+      "CI/release blockers",
+      "stable regressions",
+      "modernization-required changes"
+    ]
+  },
+  "audit_findings": [
+    "ModuleApplication.isXposedEnabled is a false placeholder whose result is replaced by self-hook",
+    "ModuleEntryPoint remains legacy Xposed and uses XSharedPreferences/world-readable compatibility",
+    "FeatureLoader exits early if DexKit init fails",
+    "packaging currently excludes META-INF/**",
+    "DexKit is bundled as a local AAR",
+    "compileSdk=37 while targetSdk=34",
+    "AGP=9.3.1 and Kotlin=2.4.10",
+    "manifest/checker policy is legacy API 93 while version catalog pins xposed-legacy 82",
+    "LSPosed contract checker currently validates coordinate presence but not actual dependency version"
+  ],
+  "verified_targets": {
+    "agp": "9.4.0",
+    "kotlin": "2.4.20",
+    "libxposed_api": "102.0.0",
+    "libxposed_service": "102.0.0 when required",
+    "dexkit": "2.3.0",
+    "targetSdk": "37 after gates M00-M09"
+  }
+}
