@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "90dac2ad31b1664c62a4fbbfe7a8e0bf57a854a95a06a85188952bf629bb893f",
+      "ci.yml": "4485d9f2381be4b2fb2b64a064c607fc75eac1a768c0e11c44be2fc2d3fd34f2",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -317,8 +317,8 @@
       "org/**"
     ],
     "target_sdk": 34,
-    "version_code": "110",
-    "version_name": "1.1.0"
+    "version_code": "111",
+    "version_name": "1.2.0-beta.1"
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",

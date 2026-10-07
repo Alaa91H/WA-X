@@ -1,3 +1,105 @@
+WA X 1.2.0-beta.1
+Release date: 2026-10-07
+
+Development package 1 of the architecture and LSPosed-modernization program: the
+M00 evidence lock and the A00 architecture law. This is a beta for testing, and
+the honest summary is that almost nothing you can see has changed — what changed
+is what the project is able to prove about itself before it starts moving code.
+
+Two facts about this build are worth stating plainly. It is built with the
+release build type (R8 enabled) and signed with the WA X update key, so it
+installs over the previous stable release as an update. And no runtime behaviour
+was intentionally altered: the activation banner, scope handling, DexKit
+initialisation, resolvers and hooks behave exactly as they did before.
+
+M00 — EVIDENCE LOCK AND FALSE-GREEN GATE REPAIR
+- The modernization now has a baseline that is derived rather than typed: module
+  version and code, SDK and NDK levels, toolchain versions, the loader contract,
+  source counts, the strict-gate policy and the hashes of the CI workflows and
+  the files they hold to. `--check` re-derives all of it and fails when the
+  committed copy no longer matches the tree.
+- The loader policy mismatch the plan recorded does not exist, and the check that
+  was supposed to catch it never looked at the pinned version. The manifest's
+  runtime API level and the Maven artifact's version number are two different
+  numbering spaces; both values are correct. Lowering the manifest to match the
+  artifact would have changed preference semantics inside the hooked process at
+  runtime without failing a single build. What was actually broken was the gate:
+  it verified that the dependency existed, not which version was pinned. It now
+  reads the pinned version.
+- The loader checker has negative fixtures that prove it fails on a wrong API
+  version, a missing entry point, a wrong entry class, missing legacy metadata, a
+  broken scope declaration, accidental modern metadata and a mixed legacy/modern
+  package. A gate nobody has ever seen fail is not yet a gate.
+- The legacy mechanism inventory and the runtime-surface inventory are recorded
+  with the counts the later phases size their work against, so "that phase
+  finished" becomes measurable instead of asserted.
+- The release and device test matrix is locked: Android levels, framework builds,
+  both WhatsApp builds and the nine lifecycle scenarios, every cell starting
+  unverified.
+- The five runtime defects M00 confirmed are pinned by characterization tests
+  that run today and fail the moment the owning phase fixes them. That is the
+  point: a defect recorded in a document is a paragraph, and a paragraph cannot
+  fail.
+
+A00 — ARCHITECTURE BASELINE AND DEPENDENCY LAW
+- The dependency graph is measured, not assumed: 284 first-party source files,
+  64,290 lines and 58 layers, with the first-party and external imports of each.
+- Six forbidden edges are now machine-checked. Each carries a limit equal to the
+  count measured in the tree, an owner issue and the phase that removes it:
+  a feature must not reach the unobfuscator (72 files today, directly or
+  transitively), a feature must not touch preferences directly (64), the manager
+  must not import the injected framework API or DexKit (3), DexKit must be
+  reached only through the resolver layer (21), a shared layer must not depend on
+  the injected runtime (30), and the activation signal must not be a self-hook
+  (3).
+- The gate does not pass because there are no violations. It passes because 193
+  files of debt are counted, owned by a named phase, and may only fall. That is
+  the difference between a gate and a green tick.
+- Two measurements contradicted the plan, and both directions matter. The
+  manager-UI dependency on the framework is a three-file problem, not a systemic
+  one, so re-architecting the manager's data layer to fix three imports would be
+  the wrong move. And the feature-to-unobfuscator dependency is worse than an
+  import list shows: 58 files import it, 72 reach it, because a feature that
+  reaches it through another layer never names it. A gate that counted imports
+  would have reported the edge as absent.
+- Two bugs in the new tool were found by its own self-test and fixed at source.
+  Two of the six rules were scoped to a package that is not a layer, so they
+  resolved to nothing and reported zero against a tree with 58 and 64 violating
+  files while the checker printed that the law held. And the test's own fixture
+  writer escaped its sandbox and planted eight stray probe files inside the real
+  source tree. Both are now locked down by regression assertions.
+
+WHAT THIS BETA DOES NOT PROVE
+- No runtime evidence. Nothing here was measured on a device, and no compatibility
+  claim is made: every cell of the compatibility matrix is still unverified.
+- The five recorded runtime defects are still present. This beta does not change
+  them, and it does not claim the activation banner is now accurate.
+- The architecture law is structural, not semantic. It works on reachability
+  between layers, so a forbidden symbol reached without an import is invisible to
+  it.
+
+TESTING STATUS
+- Every required CI gate is green on the commit this beta is built from:
+  preflight and the release contract, the debug compile, the strict parallel
+  static gates, the strict unit suite with its coverage floor, the baseline
+  regression fan-in, the support-claim runtime gate, and the signed release
+  packaging with signature and version verification.
+- The architecture law runs 15 cases of its own before it checks the tree, and the
+  modernization evidence gates re-derive their baselines from the tree.
+
+KNOWN LIMITATIONS
+- 193 files of recorded architectural debt remain. Each is owned by the phase
+  named in the law, and the next packages in this program are what reduce them.
+- The release-notes extraction in the pipeline cut at the wrong boundary, so a
+  second entry in this changelog would have been published together with the
+  previous release's notes. Fixed in this package; the beta you are reading is the
+  first one extracted by the corrected rule.
+
+MIGRATION AND ROLLBACK
+- No settings, on-disk format or preference key changed. Nothing to migrate.
+- Rollback is installing the previous stable build; the update key is unchanged,
+  so that downgrade installs normally.
+
 WA X 1.1.0
 Release date: 2026-10-06
 
