@@ -1,0 +1,353 @@
+{
+  "ci": {
+    "branch_filters": [
+      "ci/telegram-release-publisher-test",
+      "main"
+    ],
+    "gradle_wrapper": "9.7.0",
+    "jvm_version": "21",
+    "workflows_sha256": {
+      "ci.yml": "0b07314fc3d8a2aabe7437104ec1a090cd158781bcec68b266802820d60f0a22",
+      "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
+    }
+  },
+  "compatibility": {
+    "declared_version_targets": {
+      "supported_versions_business": [
+        "2.26.32.xx",
+        "2.26.34.xx",
+        "2.26.35.xx",
+        "2.26.36.xx",
+        "2.26.37.xx",
+        "2.26.38.xx",
+        "2.26.39.xx"
+      ],
+      "supported_versions_wpp": [
+        "2.26.32.xx",
+        "2.26.34.xx",
+        "2.26.35.xx",
+        "2.26.36.xx",
+        "2.26.37.xx",
+        "2.26.38.xx",
+        "2.26.39.xx",
+        "2.26.40.xx"
+      ]
+    },
+    "matrix": "docs/COMPATIBILITY.md",
+    "matrix_sha256": "aa15f6816e7ff173e309a1a96ea927d5919693a070b52bfb21b852a20bf279fb"
+  },
+  "dependencies": {
+    "androidx-activity": {
+      "module": "androidx.activity:activity",
+      "version": "1.13.0"
+    },
+    "androidx-activity-compose": {
+      "module": "androidx.activity:activity-compose",
+      "version": {
+        "ref": "activityCompose"
+      }
+    },
+    "androidx-compose-bom": {
+      "module": "androidx.compose:compose-bom",
+      "version": {
+        "ref": "composeBom"
+      }
+    },
+    "androidx-compose-material-icons-core": {
+      "module": "androidx.compose.material:material-icons-core"
+    },
+    "androidx-compose-material-icons-extended": {
+      "module": "androidx.compose.material:material-icons-extended"
+    },
+    "androidx-compose-material3": {
+      "module": "androidx.compose.material3:material3",
+      "version": {
+        "ref": "composeMaterial3"
+      }
+    },
+    "androidx-compose-ui": {
+      "module": "androidx.compose.ui:ui"
+    },
+    "androidx-compose-ui-graphics": {
+      "module": "androidx.compose.ui:ui-graphics"
+    },
+    "androidx-compose-ui-tooling": {
+      "module": "androidx.compose.ui:ui-tooling"
+    },
+    "androidx-compose-ui-tooling-preview": {
+      "module": "androidx.compose.ui:ui-tooling-preview"
+    },
+    "androidx-constraintlayout": {
+      "module": "androidx.constraintlayout:constraintlayout",
+      "version": "2.2.2"
+    },
+    "androidx-documentfile": {
+      "module": "androidx.documentfile:documentfile",
+      "version": {
+        "ref": "documentfile"
+      }
+    },
+    "androidx-fragment": {
+      "module": "androidx.fragment:fragment",
+      "version": "1.9.1"
+    },
+    "androidx-lifecycle-runtime-compose": {
+      "module": "androidx.lifecycle:lifecycle-runtime-compose",
+      "version": {
+        "ref": "lifecycleRuntimeCompose"
+      }
+    },
+    "androidx-lifecycle-viewmodel-compose": {
+      "module": "androidx.lifecycle:lifecycle-viewmodel-compose",
+      "version": {
+        "ref": "lifecycleViewmodelCompose"
+      }
+    },
+    "androidx-navigation-fragment": {
+      "group": "androidx.navigation",
+      "name": "navigation-fragment",
+      "version": {
+        "ref": "nav"
+      }
+    },
+    "androidx-navigation-ui": {
+      "group": "androidx.navigation",
+      "name": "navigation-ui",
+      "version": {
+        "ref": "nav"
+      }
+    },
+    "androidx-preference": {
+      "module": "androidx.preference:preference",
+      "version": "1.2.1"
+    },
+    "androidx-room-compiler": {
+      "module": "androidx.room:room-compiler",
+      "version": {
+        "ref": "roomRuntime"
+      }
+    },
+    "androidx-room-runtime": {
+      "module": "androidx.room:room-runtime",
+      "version": {
+        "ref": "roomRuntime"
+      }
+    },
+    "androidx-test-core": {
+      "module": "androidx.test:core",
+      "version": {
+        "ref": "androidxTestCore"
+      }
+    },
+    "androidx-test-espresso-core": {
+      "module": "androidx.test.espresso:espresso-core",
+      "version": {
+        "ref": "espressoCore"
+      }
+    },
+    "androidx-test-ext-junit": {
+      "module": "androidx.test.ext:junit",
+      "version": {
+        "ref": "androidxTestExtJunit"
+      }
+    },
+    "androidx-test-rules": {
+      "module": "androidx.test:rules",
+      "version": {
+        "ref": "androidxTestRules"
+      }
+    },
+    "androidx-test-runner": {
+      "module": "androidx.test:runner",
+      "version": {
+        "ref": "androidxTestRunner"
+      }
+    },
+    "arscblamer": {
+      "module": "com.github.DavidArsene:arscblamer",
+      "version": {
+        "ref": "arscblamer"
+      }
+    },
+    "bcpkix-jdk18on": {
+      "module": "org.bouncycastle:bcpkix-jdk18on",
+      "version": {
+        "ref": "bcpkix-jdk18on"
+      }
+    },
+    "betterypermissionhelper": {
+      "module": "com.waseemsabir:betterypermissionhelper",
+      "version": {
+        "ref": "betterypermissionhelper"
+      }
+    },
+    "colorpicker": {
+      "module": "com.jaredrummler:colorpicker",
+      "version": {
+        "ref": "colorpicker"
+      }
+    },
+    "core": {
+      "module": "com.github.topjohnwu.libsu:core",
+      "version": {
+        "ref": "core"
+      }
+    },
+    "filepicker": {
+      "module": "io.github.tutorialsandroid:filepicker",
+      "version": {
+        "ref": "filepicker"
+      }
+    },
+    "flatbuffers": {
+      "module": "com.google.flatbuffers:flatbuffers-java",
+      "version": {
+        "ref": "flatbuffers"
+      }
+    },
+    "jstyleparser": {
+      "module": "net.sf.cssbox:jstyleparser",
+      "version": {
+        "ref": "jstyleparser"
+      }
+    },
+    "junit": {
+      "module": "junit:junit",
+      "version": {
+        "ref": "junit"
+      }
+    },
+    "libxposed-legacy": {
+      "group": "de.robv.android.xposed",
+      "name": "api",
+      "version": {
+        "ref": "xposed-legacy"
+      }
+    },
+    "markwon-core": {
+      "module": "io.noties.markwon:core",
+      "version": {
+        "ref": "markwon"
+      }
+    },
+    "material": {
+      "module": "com.google.android.material:material",
+      "version": "1.14.0"
+    },
+    "okhttp": {
+      "module": "com.squareup.okhttp3:okhttp",
+      "version": {
+        "ref": "okhttp"
+      }
+    },
+    "remote-preferences": {
+      "module": "com.crossbowffs.remotepreferences:remotepreferences",
+      "version": {
+        "ref": "remotePreferences"
+      }
+    },
+    "rikkax-appcompat": {
+      "module": "dev.rikka.rikkax.appcompat:appcompat",
+      "version": "1.6.1"
+    },
+    "rikkax-core": {
+      "module": "dev.rikka.rikkax.core:core",
+      "version": "1.4.1"
+    },
+    "rikkax-material": {
+      "module": "dev.rikka.rikkax.material:material",
+      "version": "2.7.2"
+    },
+    "rikkax-material-preference": {
+      "module": "dev.rikka.rikkax.material:material-preference",
+      "version": "2.0.0"
+    },
+    "rikkax-widget-borderview": {
+      "module": "dev.rikka.rikkax.widget:borderview",
+      "version": "1.1.0"
+    }
+  },
+  "loader_contract": {
+    "catalog_alias": "libxposed-legacy",
+    "entry_point": "com.wax.module.ModuleEntryPoint",
+    "legacy_api_coordinate": "de.robv.android.xposed:api",
+    "manifest_xposedminversion": 93,
+    "modern_metadata_directories": [],
+    "note": "xposedminversion is a runtime Xposed API level; xposed-legacy is a Maven artifact version. They are different numbering spaces, 93 and 82 are both correct, and the two must never be made equal. See docs/modernization/M00_EVIDENCE_LOCK.md.",
+    "pinned_artifact_version": "82",
+    "published_artifact_versions": [
+      "53",
+      "81",
+      "82"
+    ],
+    "published_artifact_versions_source": "https://api.xposed.info/de/robv/android/xposed/api/maven-metadata.xml"
+  },
+  "module": {
+    "abi_filters": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "application_id": "com.wax.module",
+    "compile_sdk": 37,
+    "detekt": {
+      "build_upon_default_config": true,
+      "fail_on_severity": "dev.detekt.gradle.extensions.FailOnSeverity.Info",
+      "ignore_failures": false
+    },
+    "jvm_target": "JVM_17",
+    "kotlin_all_warnings_as_errors": true,
+    "lint": {
+      "abort_on_error": true,
+      "baseline": "lint-baseline.xml",
+      "disabled_rules": [
+        "AndroidGradlePluginVersion",
+        "SelectedPhotoAccess",
+        "TrustAllX509TrustManager"
+      ],
+      "warnings_as_errors": true
+    },
+    "min_sdk": 28,
+    "ndk_version": "28.2.13676358",
+    "packages_excluded_from_packaging": [
+      "**.bin",
+      "**.properties",
+      "META-INF/**",
+      "kotlin/**",
+      "okhttp3/**",
+      "org/**"
+    ],
+    "target_sdk": 34,
+    "version_code": "110",
+    "version_name": "1.1.0"
+  },
+  "program_evidence": {
+    "defect_registry": "docs/modernization/known-runtime-defects.json",
+    "defect_registry_sha256": "f34fdf71399cd54b8f3302d3c40d1ecd0c2a4e923678c525e9fb0cbba8231efd",
+    "test_matrix": "docs/modernization/test-matrix.json",
+    "test_matrix_sha256": "a7a5221c8cdd8a8a9c124ff23546e4128accc6a831fceceeff8fb25f1f291dee"
+  },
+  "repository": "https://github.com/Alaa91H/WA-X",
+  "schema": "wax.m00.baseline/1",
+  "source_counts": {
+    "android_tests": 1,
+    "cpp": 425,
+    "java": 3,
+    "kotlin": 345,
+    "unit_tests": 63
+  },
+  "static_analysis": {
+    "detekt_config_sha256": "128b3810bf95a08589a52c5dd9f2a986ffd1aaeb8d7c44025b0f3c0a05c0329e",
+    "lint_baseline_sha256": "3b059750b30ab46986d3c37a0f2b5343e5903b2f557a8b71bd644768d39a1125",
+    "strict_policy_sha256": "6baded2ff84fc81ef1bafd1825de255ef6ee34bd0d6ffd65dda11ad88e031dff"
+  },
+  "toolchain": {
+    "agp": "9.4.1",
+    "composeBom": "2026.09.00",
+    "composeMaterial3": "1.4.0",
+    "detekt": "2.0.0-alpha.6",
+    "kotlin": "2.4.20",
+    "ksp": "2.3.12",
+    "spotless": "8.10.3",
+    "xposed-legacy": "82"
+  }
+}
