@@ -49,17 +49,35 @@ enum class FailureCode {
 
     companion object {
         /**
+         * Text that identifies a failure to start the resolution engine itself.
+         *
+         * Matched against the caller's stage hint and the throwable's own message, because
+         * neither alone is sufficient: the loader knows the stage it was running, and the
+         * engine's message is the only thing that names the engine when the failure is
+         * raised from inside it.
+         */
+        private val RESOLVER_INIT_HINTS: List<String> = listOf("dexkit", "unobfuscator", "initwithpath")
+
+        /**
          * Classifies a throwable by its type alone.
          *
          * [featureMessage] lets a caller supply a stronger signal from context — for
          * instance the loader knows a failure happened while resolving rather than while
          * hooking — without duplicating the type inspection here.
+         *
+         * A failure to initialise the engine is checked before the generic timeout and
+         * ambiguity hints, because "the engine never started" is the more precise claim
+         * when both are true: a DexKit initialisation that timed out is a resolver-init
+         * failure that took too long, and describing it as a timeout loses the part a user
+         * can act on.
          */
         fun classify(
             throwable: Throwable,
             featureMessage: String? = null,
         ): FailureCode {
             val hint = featureMessage?.lowercase().orEmpty()
+            val text = hint + " " + throwable.message?.lowercase().orEmpty()
+            if (RESOLVER_INIT_HINTS.any { text.contains(it) }) return RESOLVER_INIT_FAILED
             if (hint.contains("ambiguous")) return RESOLVER_AMBIGUOUS
             if (hint.contains("timeout") || hint.contains("timed out")) return TIMEOUT
 

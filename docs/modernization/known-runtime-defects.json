@@ -1,13 +1,21 @@
 {
   "schema": "wax.m00.known-runtime-defects/1",
-  "purpose": "Defects M00 confirmed and reproduced, each with a characterization test that runs today and fails when the defect is fixed. Fixing one of these without updating this file makes the corresponding test fail, which is the point: the fix has to be a deliberate act, not a drift nobody notices.",
-  "note": "These are characterisation tests, not specifications. Each asserts the CURRENT, broken behaviour. Read the entry's owner field before changing a test - a failing test here usually means the phase named in owner has landed and the registry needs updating, not that something regressed.",
+  "purpose": "Defects M00 confirmed and reproduced, each with a test that runs on every build. An open defect is characterised by a test asserting the CURRENT, broken behaviour; a fixed defect keeps the same test asserting the fix, so the defect cannot quietly come back. Fixing one without updating this file makes the corresponding test fail, which is the point: the fix has to be a deliberate act, not a drift nobody notices.",
+  "note": "Read the entry's status and owner fields before changing a test. A failing test here means one of three things, and the failure message says which: the phase named in owner has landed and this registry needs updating, a fixed defect has regressed, or an untouched defect changed behaviour.",
+  "statusVocabulary": [
+    "open - the defect is present; its test asserts the broken behaviour and fails when the defect is fixed",
+    "fixed - the defect is gone; its test asserts the correct behaviour and fails if the defect returns",
+    "partially fixed - the specified half is fixed and the rest is owned by another phase; the entry says which half"
+  ],
   "source": "docs/modernization/M00_RUNTIME_TRUTH_SIGNALS.md",
   "defects": [
     {
       "id": "M00-DEF-01",
       "title": "FailureCode.RESOLVER_INIT_FAILED is declared, translated for the user, and unreachable",
       "severity": "high",
+      "status": "fixed",
+      "fixedBy": "#320 M01",
+      "fixedIn": "the resolver-init branch of FailureCode.classify, matching the engine's own name in the stage hint or the throwable message",
       "owner": "#320 M01",
       "locations": [
         "app/src/main/java/com/wax/module/diagnostics/FailureCode.kt:43",
@@ -18,14 +26,19 @@
       "symptom": "The one failure mode the code was written for - the module could not initialise DexKit - is never reported. UserExplanation has a sentence for it that can never be shown.",
       "root_cause": "FeatureLoader.start() runs before Instrumentation.callApplicationOnCreate, so FailureReportStore has no Application to attach to. The failure is logged to the Xposed log and start() returns with zero hooks installed.",
       "characterized_by": [
-        "resolverInitFailureCodeIsDeclaredButNeverProduced"
-      ]
+        "aDexKitInitialisationFailureClassifiesAsAResolverInitFailure"
+      ],
+      "fixedWording": "The test now asserts the fix from both sides: the function must contain a path that returns RESOLVER_INIT_FAILED, and one concrete DexKit-style failure must classify as it, while a failure that names neither the engine nor the stage still reports UNEXPECTED rather than being attributed to the engine."
     },
     {
       "id": "M00-DEF-02",
       "title": "DexKit initialisation failure installs zero hooks and reports nothing",
       "severity": "high",
-      "owner": "#320 M01",
+      "status": "partially fixed",
+      "fixedBy": "#320 M01",
+      "fixedHalf": "The failure is no longer silent. Health exists before the engine is asked to initialise, the stage is opened, and the failure is recorded against the DEXKIT subsystem with RuntimeFailureCode.DEXKIT_INIT_FAILED instead of only being logged. The ordering is asserted, not just the presence: the record has to exist before the step that can fail.",
+      "remainingHalf": "The early return is deliberately unchanged, so this failure still stops the bootstrap and installs nothing. What should happen instead of returning - which stages are safe to continue with - is #322 M03's decision, and it needs the record to exist first. The same is true of the persistence: the record is in-process because nothing has a usable data directory this early, and the manager-visible surface arrives with the stage runner.",
+      "owner": "#320 M01 / #322 M03",
       "locations": [
         "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt:218",
         "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt:87"
@@ -34,8 +47,9 @@
       "symptom": "WhatsApp starts with no WA X behaviour at all, nothing on any surface the user can read, and the WA X app still shows \"Module enabled\" with a version number because the self-hook fired in a different process.",
       "root_cause": "Same as M00-DEF-01: no reporting channel exists before Application.onCreate.",
       "characterized_by": [
-        "dexKitInitFailureInstallsNothingAndReportsNothing"
-      ]
+        "dexKitInitFailureIsRecordedBeforeTheBootstrapStops"
+      ],
+      "fixedWording": "The test asserts both halves: the failure is recorded with DEXKIT_INIT_FAILED, and the early return is still there so that removing it without a decision reads as a failure naming M03 rather than as a silent behaviour change."
     },
     {
       "id": "M00-DEF-03",

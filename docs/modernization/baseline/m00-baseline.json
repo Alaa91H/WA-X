@@ -322,7 +322,7 @@
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",
-    "defect_registry_sha256": "f34fdf71399cd54b8f3302d3c40d1ecd0c2a4e923678c525e9fb0cbba8231efd",
+    "defect_registry_sha256": "55d59e1141d6e917ff413f29ea8f35c1a5e9e44d90c7ce992615998e2f2ec7bd",
     "test_matrix": "docs/modernization/test-matrix.json",
     "test_matrix_sha256": "a7a5221c8cdd8a8a9c124ff23546e4128accc6a831fceceeff8fb25f1f291dee"
   },
@@ -332,8 +332,8 @@
     "android_tests": 1,
     "cpp": 425,
     "java": 3,
-    "kotlin": 345,
-    "unit_tests": 63
+    "kotlin": 364,
+    "unit_tests": 68
   },
   "static_analysis": {
     "detekt_config_sha256": "128b3810bf95a08589a52c5dd9f2a986ffd1aaeb8d7c44025b0f3c0a05c0329e",
