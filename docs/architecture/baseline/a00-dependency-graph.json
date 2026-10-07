@@ -1,0 +1,767 @@
+{
+  "layers": {
+    "<root>": {
+      "external": [
+        "com",
+        "io",
+        "platform",
+        "rikka",
+        "xposed"
+      ],
+      "files": 5,
+      "first_party": [
+        "activities",
+        "compat",
+        "platform",
+        "settings",
+        "xposed",
+        "xposed.bridge",
+        "xposed.core",
+        "xposed.core.components",
+        "xposed.downgrade",
+        "xposed.utils"
+      ]
+    },
+    "activities": {
+      "external": [
+        "com",
+        "platform",
+        "rikka"
+      ],
+      "files": 7,
+      "first_party": [
+        "<root>",
+        "activities.base",
+        "adapter",
+        "databinding",
+        "model",
+        "preference",
+        "ui.fragments",
+        "ui.fragments.base",
+        "utils",
+        "xposed.core",
+        "xposed.utils"
+      ]
+    },
+    "activities.base": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": [
+        "<root>"
+      ]
+    },
+    "adapter": {
+      "external": [
+        "com",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 7,
+      "first_party": [
+        "<root>",
+        "databinding",
+        "model",
+        "ui.fragments",
+        "utils",
+        "views.dialog",
+        "xposed.core",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components",
+        "xposed.core.components.FMessageWpp",
+        "xposed.core.db",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.core.devkit.UnobfuscatorCache.Companion",
+        "xposed.features.customization",
+        "xposed.utils",
+        "xposed.utils.DesignUtils",
+        "xposed.utils.ReflectionUtils",
+        "xposed.utils.Utils"
+      ]
+    },
+    "automation": {
+      "external": [
+        "platform"
+      ],
+      "files": 3,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "compat": {
+      "external": [
+        "okhttp3",
+        "org",
+        "platform"
+      ],
+      "files": 4,
+      "first_party": []
+    },
+    "config": {
+      "external": [],
+      "files": 2,
+      "first_party": []
+    },
+    "diagnostics": {
+      "external": [
+        "platform"
+      ],
+      "files": 6,
+      "first_party": []
+    },
+    "history": {
+      "external": [
+        "platform"
+      ],
+      "files": 3,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "intelligence": {
+      "external": [
+        "platform"
+      ],
+      "files": 4,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "listeners": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": []
+    },
+    "media": {
+      "external": [],
+      "files": 6,
+      "first_party": [
+        "outgoing",
+        "platform"
+      ]
+    },
+    "model": {
+      "external": [
+        "platform"
+      ],
+      "files": 4,
+      "first_party": []
+    },
+    "multipackage": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "notifications": {
+      "external": [
+        "platform"
+      ],
+      "files": 3,
+      "first_party": [
+        "outgoing",
+        "platform"
+      ]
+    },
+    "outgoing": {
+      "external": [],
+      "files": 5,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "platform": {
+      "external": [],
+      "files": 17,
+      "first_party": [
+        "compat",
+        "resolver"
+      ]
+    },
+    "preference": {
+      "external": [
+        "com",
+        "org",
+        "platform"
+      ],
+      "files": 7,
+      "first_party": [
+        "<root>",
+        "activities",
+        "utils",
+        "xposed.utils"
+      ]
+    },
+    "presence": {
+      "external": [],
+      "files": 6,
+      "first_party": [
+        "notifications",
+        "outgoing",
+        "platform"
+      ]
+    },
+    "privacy": {
+      "external": [
+        "platform"
+      ],
+      "files": 4,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "provider": {
+      "external": [
+        "com",
+        "platform"
+      ],
+      "files": 1,
+      "first_party": [
+        "<root>",
+        "xposed.core"
+      ]
+    },
+    "receivers": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": []
+    },
+    "resolver": {
+      "external": [
+        "platform"
+      ],
+      "files": 11,
+      "first_party": [
+        "diagnostics"
+      ]
+    },
+    "scheduler": {
+      "external": [
+        "platform"
+      ],
+      "files": 3,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "settings": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 10,
+      "first_party": [
+        "platform",
+        "storage",
+        "xposed.core.components",
+        "xposed.utils"
+      ]
+    },
+    "status": {
+      "external": [],
+      "files": 1,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "stockmode": {
+      "external": [],
+      "files": 1,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "storage": {
+      "external": [
+        "platform"
+      ],
+      "files": 4,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "theme": {
+      "external": [],
+      "files": 3,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "ui.dialogs": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": [
+        "<root>"
+      ]
+    },
+    "ui.fragments": {
+      "external": [
+        "com",
+        "org",
+        "platform",
+        "rikka"
+      ],
+      "files": 6,
+      "first_party": [
+        "<root>",
+        "activities",
+        "adapter",
+        "compat",
+        "config",
+        "databinding",
+        "model",
+        "preference",
+        "ui.dialogs",
+        "ui.fragments.base",
+        "ui.targets",
+        "utils",
+        "xposed.core",
+        "xposed.utils"
+      ]
+    },
+    "ui.fragments.base": {
+      "external": [
+        "com",
+        "platform",
+        "rikka"
+      ],
+      "files": 3,
+      "first_party": [
+        "<root>",
+        "databinding",
+        "preference"
+      ]
+    },
+    "ui.targets": {
+      "external": [
+        "platform"
+      ],
+      "files": 2,
+      "first_party": [
+        "<root>",
+        "platform",
+        "settings",
+        "ui.theme"
+      ]
+    },
+    "ui.theme": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": []
+    },
+    "utils": {
+      "external": [
+        "com",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 9,
+      "first_party": [
+        "<root>",
+        "model",
+        "platform",
+        "settings",
+        "xposed.core.devkit",
+        "xposed.utils"
+      ]
+    },
+    "views": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 4,
+      "first_party": [
+        "adapter",
+        "preference",
+        "xposed.core",
+        "xposed.utils"
+      ]
+    },
+    "views.dialog": {
+      "external": [
+        "platform"
+      ],
+      "files": 3,
+      "first_party": [
+        "<root>",
+        "xposed.core.components",
+        "xposed.utils"
+      ]
+    },
+    "xposed": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 1,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "xposed.bridge": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 2,
+      "first_party": [
+        "<root>",
+        "platform",
+        "xposed.utils"
+      ]
+    },
+    "xposed.bridge.client": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 3,
+      "first_party": [
+        "<root>",
+        "activities",
+        "xposed.bridge",
+        "xposed.bridge.service",
+        "xposed.core",
+        "xposed.utils"
+      ]
+    },
+    "xposed.bridge.providers": {
+      "external": [
+        "platform"
+      ],
+      "files": 1,
+      "first_party": [
+        "<root>",
+        "xposed.bridge",
+        "xposed.bridge.service"
+      ]
+    },
+    "xposed.bridge.service": {
+      "external": [
+        "platform"
+      ],
+      "files": 2,
+      "first_party": [
+        "<root>",
+        "xposed.bridge"
+      ]
+    },
+    "xposed.core": {
+      "external": [
+        "com",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 5,
+      "first_party": [
+        "<root>",
+        "activities",
+        "compat",
+        "diagnostics",
+        "platform",
+        "settings",
+        "views.dialog",
+        "xposed.bridge",
+        "xposed.bridge.client",
+        "xposed.core.ActivityStateRegistry",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components",
+        "xposed.core.devkit",
+        "xposed.features.customization",
+        "xposed.features.general",
+        "xposed.features.listeners",
+        "xposed.features.media",
+        "xposed.features.others",
+        "xposed.features.privacy",
+        "xposed.features.providers",
+        "xposed.spoofer",
+        "xposed.utils"
+      ]
+    },
+    "xposed.core.components": {
+      "external": [
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 8,
+      "first_party": [
+        "xposed.core",
+        "xposed.core.db",
+        "xposed.core.devkit",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.utils"
+      ]
+    },
+    "xposed.core.db": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 5,
+      "first_party": [
+        "xposed.core.components",
+        "xposed.core.db.dao",
+        "xposed.core.db.entity",
+        "xposed.utils"
+      ]
+    },
+    "xposed.core.db.dao": {
+      "external": [
+        "platform"
+      ],
+      "files": 4,
+      "first_party": [
+        "xposed.core.db.entity"
+      ]
+    },
+    "xposed.core.db.entity": {
+      "external": [
+        "platform"
+      ],
+      "files": 4,
+      "first_party": []
+    },
+    "xposed.core.devkit": {
+      "external": [
+        "com",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 2,
+      "first_party": [
+        "<root>",
+        "xposed.core",
+        "xposed.core.components",
+        "xposed.utils"
+      ]
+    },
+    "xposed.downgrade": {
+      "external": [
+        "platform",
+        "static",
+        "xposed"
+      ],
+      "files": 1,
+      "first_party": [
+        "platform"
+      ]
+    },
+    "xposed.features.customization": {
+      "external": [
+        "cz",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 14,
+      "first_party": [
+        "<root>",
+        "adapter",
+        "listeners",
+        "preference",
+        "utils",
+        "utils.ColorReplacement",
+        "utils.DrawableColors",
+        "views",
+        "xposed.core",
+        "xposed.core.components",
+        "xposed.core.db",
+        "xposed.core.devkit",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.features.general",
+        "xposed.features.listeners",
+        "xposed.utils"
+      ]
+    },
+    "xposed.features.general": {
+      "external": [
+        "okhttp3",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 13,
+      "first_party": [
+        "<root>",
+        "adapter",
+        "listeners",
+        "model",
+        "utils",
+        "views",
+        "xposed.core",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components",
+        "xposed.core.db",
+        "xposed.core.db.MessageHistoryStore",
+        "xposed.core.db.MessageStore.Companion",
+        "xposed.core.devkit",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.features.listeners",
+        "xposed.features.listeners.ConversationItemListener",
+        "xposed.features.providers",
+        "xposed.utils"
+      ]
+    },
+    "xposed.features.listeners": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 2,
+      "first_party": [
+        "xposed.core",
+        "xposed.core.components",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.utils"
+      ]
+    },
+    "xposed.features.media": {
+      "external": [
+        "okhttp3",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 11,
+      "first_party": [
+        "<root>",
+        "xposed.bridge",
+        "xposed.core",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components",
+        "xposed.core.components.FMessageWpp",
+        "xposed.core.db",
+        "xposed.core.devkit",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.features.general",
+        "xposed.features.providers",
+        "xposed.utils"
+      ]
+    },
+    "xposed.features.others": {
+      "external": [
+        "com",
+        "okhttp3",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 19,
+      "first_party": [
+        "<root>",
+        "model",
+        "preference",
+        "utils",
+        "views.dialog",
+        "xposed.core",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components",
+        "xposed.core.components.FMessageWpp",
+        "xposed.core.components.WaContactWpp.Companion",
+        "xposed.core.db.MessageStore.Companion",
+        "xposed.core.devkit",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.features.general",
+        "xposed.features.listeners",
+        "xposed.features.providers",
+        "xposed.utils"
+      ]
+    },
+    "xposed.features.privacy": {
+      "external": [
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 11,
+      "first_party": [
+        "<root>",
+        "adapter",
+        "xposed.core",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components",
+        "xposed.core.components.FMessageWpp",
+        "xposed.core.db",
+        "xposed.core.devkit",
+        "xposed.core.devkit.Unobfuscator",
+        "xposed.features.general",
+        "xposed.features.listeners",
+        "xposed.features.listeners.ConversationItemListener",
+        "xposed.features.others",
+        "xposed.utils"
+      ]
+    },
+    "xposed.features.providers": {
+      "external": [
+        "com",
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 2,
+      "first_party": [
+        "xposed.core",
+        "xposed.core.components",
+        "xposed.core.devkit",
+        "xposed.utils"
+      ]
+    },
+    "xposed.spoofer": {
+      "external": [
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 1,
+      "first_party": [
+        "xposed.utils"
+      ]
+    },
+    "xposed.utils": {
+      "external": [
+        "org",
+        "platform",
+        "xposed"
+      ],
+      "files": 13,
+      "first_party": [
+        "<root>",
+        "utils",
+        "xposed.core",
+        "xposed.core.ModuleRuntime",
+        "xposed.core.components.FMessageWpp"
+      ]
+    }
+  },
+  "measurements": {
+    "dexkit_outside_resolver": 21,
+    "feature_shared_preferences": 64,
+    "feature_unobfuscator": 72,
+    "self_hook_references": 3,
+    "shared_layer_imports_runtime": 30,
+    "ui_xposed_direct": 3
+  },
+  "schema": "wax.a00.dependency-graph/1",
+  "totals": {
+    "files": 284,
+    "lines": 64290
+  }
+}

@@ -339,6 +339,13 @@ jobs:
               # the only thing it proves is that nothing claims support it has not earned.
               python3 tools/modernization/test_validate_test_matrix.py || failures=$((failures + 1))
               python3 tools/modernization/validate_test_matrix.py --check || failures=$((failures + 1))
+              # The A00 architecture law. Every forbidden edge carries a limit measured from the
+              # tree rather than typed, so the gate fails when a count rises and says which phase
+              # owns removing it when it does. The self-test runs first for the same reason as
+              # every other one here: during A00 two rules reported zero against 58 and 64
+              # violating files, because their scopes matched no real layer.
+              python3 tools/architecture/test_check_architecture.py || failures=$((failures + 1))
+              python3 tools/architecture/check_architecture.py --check || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
       - name: Upload complete static diagnostics
         if: ${{ !cancelled() }}
