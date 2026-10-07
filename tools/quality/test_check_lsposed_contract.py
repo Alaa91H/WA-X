@@ -65,6 +65,15 @@ ENTRY = "com.example.hook.EntryPoint\n"
 
 SOURCE = "package com.example.hook\n\nobject EntryPoint\n"
 
+# The keep rule without which a release build removes the entry point, and with it the whole
+# injected runtime: R8 does not read assets/xposed_init, so this rule is the only thing that
+# holds the class against the shrinker.
+PROGUARD = """# fixture rules
+-keep class com.example.hook.EntryPoint { *; }
+-keep class com.example.R { *; }
+-keepclassmembers class com.example.R$* { public static <fields>; }
+"""
+
 # A version catalog that satisfies the contract: the coordinate is declared, the version is
 # resolved through a `version.ref` rather than pattern-matched, and the value is the one the
 # published artifact set actually contains.
@@ -138,6 +147,9 @@ def fixture(root: str, **overrides: object) -> None:
 
     if overrides.get("entry") is not False:
         write(os.path.join(root, "app/src/main/assets/xposed_init"), str(overrides.get("entry", ENTRY)))
+
+    if overrides.get("proguard") is not False:
+        write(os.path.join(root, CHECKER.PROGUARD_RULES), str(overrides.get("proguard", PROGUARD)))
     if overrides.get("source") is not False:
         source = str(overrides.get("source", SOURCE))
         if overrides.get("legacy_imports") is not False:
@@ -428,6 +440,91 @@ def main() -> int:
     else:
         failed += 1
 
+    # The keep rule is the only thing that holds the entry point against R8, which does not read
+    # assets/xposed_init. Every case here is a way to lose it while the source, the manifest, the
+    # declared API level and the scope array all still look perfect - which is exactly the state
+    # every release APK shipped in until it was measured.
+    keep_cases = [
+        (
+            "a keep rule covering the entry point is required",
+            "entry.keep",
+            {"proguard": "# no rules at all\n-keep class com.example.other.Thing { *; }\n"},
+        ),
+        (
+            "a rule that keeps a different class does not cover the entry point",
+            "entry.keep",
+            {"proguard": "-keep class com.example.hook.OtherEntry { *; }\n"},
+        ),
+        (
+            "a keepclassmembers rule does not hold the class itself",
+            "entry.keep",
+            {"proguard": "-keepclassmembers class com.example.hook.EntryPoint { *; }\n"},
+        ),
+        (
+            "a keepnames rule does not stop the shrinker removing the class",
+            "entry.keep",
+            {"proguard": "-keepnames class com.example.hook.EntryPoint\n"},
+        ),
+        (
+            "a keep rule that allows shrinking does not keep the class",
+            "entry.keep",
+            {"proguard": "-keep,allowshrinking class com.example.hook.EntryPoint { *; }\n"},
+        ),
+        (
+            "the keep rule has to be a directive, not a comment",
+            "entry.keep",
+            {"proguard": "# -keep class com.example.hook.EntryPoint { *; }\n-keep class com.example.R { *; }\n"},
+        ),
+        (
+            "a missing ProGuard file is a violation, not a skip",
+            "entry.keep",
+            {"proguard": False},
+        ),
+        (
+            "a single-star wildcard does not cross a package separator",
+            "entry.keep",
+            {"proguard": "-keep class com.example.* { *; }\n"},
+        ),
+    ]
+    for name, expected_check, overrides in keep_cases:
+        if case(name, expected_check, **overrides):
+            print("[pass] %s" % name)
+        else:
+            failed += 1
+
+    # And the rule that does hold it must be accepted, or the check above proves nothing.
+    if case(
+        "a keep rule naming the entry point directly is accepted",
+        None,
+        proguard="-keep class com.example.hook.EntryPoint { *; }\n",
+    ):
+        print("[pass] a keep rule naming the entry point directly is accepted")
+    else:
+        failed += 1
+
+    # A keep rule with an unrelated modifier still keeps: allowobfuscation does not let the
+    # shrinker remove the class, and refusing it would make the check fire on correct rules.
+    if case(
+        "a keep rule with an unrelated modifier is accepted",
+        None,
+        proguard="-keep,allowobfuscation class com.example.hook.EntryPoint { *; }\n",
+    ):
+        print("[pass] a keep rule with an unrelated modifier is accepted")
+    else:
+        failed += 1
+
+    # A double star does cross separators, so a package-level rule covers the entry point. This is
+    # the positive counterpart of the single-star case above: together they prove the wildcard
+    # handling is ProGuard's, not a substring match that would accept anything.
+    if case(
+        "a double-star wildcard covers the entry point",
+        None,
+        proguard="-keep class com.example.** { *; }\n",
+    ):
+        print("[pass] a double-star wildcard covers the entry point")
+    else:
+        failed += 1
+
     # --verify-artifact must fail, not skip, when there is nothing to inspect. A gate that
     # degrades to "nothing to say" is how the version blind spot got here in the first place.
     root = tempfile.mkdtemp(prefix="lsposed-contract-absent-")
@@ -450,7 +547,7 @@ def main() -> int:
         print("[fail] the real repository violates the contract: %s" % violations)
         failed += 1
 
-    total = len(cases) + 7
+    total = len(cases) + len(keep_cases) + 11
     if failed:
         print("%d of %d contract cases failed" % (failed, total), file=sys.stderr)
         return 1

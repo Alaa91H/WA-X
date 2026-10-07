@@ -79,6 +79,7 @@ ANDROID = "{%s}" % ANDROID_NS
 MANIFEST = "app/src/main/AndroidManifest.xml"
 ARRAYS = "app/src/main/res/values/arrays.xml"
 ENTRY_FILE = "app/src/main/assets/xposed_init"
+PROGUARD_RULES = "app/proguard-rules.pro"
 SOURCE_ROOT = "app/src/main/java"
 SOURCE_DIRS = (
     "app/src/main/java",
@@ -354,7 +355,8 @@ def check_manifest(root: str, report: Report) -> dict[str, list[tuple[str | None
     return metadata
 
 
-def check_entry_point(root: str, report: Report) -> None:
+def check_entry_point(root: str, report: Report) -> str | None:
+    """Check the declared entry point, and return its class name when there is exactly one."""
     path = os.path.join(root, ENTRY_FILE)
     content = read(path)
     if content is None:
@@ -362,24 +364,24 @@ def check_entry_point(root: str, report: Report) -> None:
             "entry.file",
             "%s is missing, so LSPosed has no class to load" % ENTRY_FILE,
         )
-        return
+        return None
 
     lines = [line.strip() for line in content.splitlines() if line.strip() and not line.strip().startswith("#")]
     if not lines:
         report.fail("entry.single", "%s names no class" % ENTRY_FILE)
-        return
+        return None
     if len(lines) > 1:
         report.fail(
             "entry.single",
             "%s names %d classes (%s); the legacy loader expects exactly one entry point"
             % (ENTRY_FILE, len(lines), ", ".join(lines)),
         )
-        return
+        return None
 
     entry = lines[0]
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+", entry):
         report.fail("entry.class", "%r is not a fully qualified class name" % entry)
-        return
+        return None
 
     package, _, simple_name = entry.rpartition(".")
     relative = package.replace(".", os.sep)
@@ -393,12 +395,118 @@ def check_entry_point(root: str, report: Report) -> None:
                 "entry.class",
                 "%s does not declare a class or object named %s" % (candidate, simple_name),
             )
-        return
+        return entry
 
     report.fail(
         "entry.class",
         "%s names %s, but no %s.kt or %s.java exists under %s"
         % (ENTRY_FILE, entry, simple_name, simple_name, SOURCE_ROOT),
+    )
+    return None
+
+
+# The keep keywords this checker understands, and whether each one actually holds a class
+# against the shrinker. `-keepclassmembers` and `-keepnames` do not: the first only keeps
+# members *of a class that is otherwise kept*, and the second renames nothing but still lets the
+# shrinker remove the class. Accepting either as protection is how a check like this one ends up
+# satisfied by the line that causes the defect.
+KEEP_KEYWORDS = (
+    ("-keepclasseswithmembernames", False),
+    ("-keepclasseswithmembers", True),
+    ("-keepclassmembers", False),
+    ("-keepnames", False),
+    ("-keep", True),
+)
+
+
+def keep_rules(root: str) -> list[tuple[bool, str]]:
+    """Every keep directive in the module's ProGuard file, as (keeps, class pattern) pairs.
+
+    Modifiers are read rather than ignored: ``-keep,allowshrinking class X`` lets the shrinker
+    remove X, so it is recorded as not keeping anything.
+    """
+    content = read(os.path.join(root, PROGUARD_RULES))
+    if content is None:
+        return []
+    rules = []
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("-"):
+            continue
+        for keyword, keeps in KEEP_KEYWORDS:
+            if not stripped.startswith(keyword):
+                continue
+            rest = stripped[len(keyword) :]
+            modifiers = ""
+            if rest.startswith(","):
+                modifiers, _, rest = rest[1:].partition(" ")
+            if "allowshrinking" in [modifier.strip() for modifier in modifiers.split(",") if modifier.strip()]:
+                keeps = False
+            class_matches = re.search(r"\bclass\s+([^\s{]+)", rest)
+            if class_matches:
+                rules.append((keeps, class_matches.group(1)))
+            break
+    return rules
+
+
+def pattern_covers(pattern: str, class_name: str) -> bool:
+    """Whether a rule's class pattern names `class_name`, wildcards included."""
+    expression = ""
+    index = 0
+    while index < len(pattern):
+        character = pattern[index]
+        if character == "*":
+            if pattern[index : index + 2] == "**":
+                expression += ".*"
+                index += 2
+                continue
+            expression += "[^.]*"
+        elif character == "?":
+            expression += "."
+        else:
+            expression += re.escape(character)
+        index += 1
+    return re.fullmatch(expression, class_name) is not None
+
+
+def check_entry_keep(root: str, report: Report, entry: str | None) -> None:
+    """Assert the declared entry point is held by a keep rule, because nothing else holds it.
+
+    R8 does not read ``assets/xposed_init``. The entry point's only reference in the whole APK is
+    the class name written in that file, so with no keep rule it is unreachable from every root
+    R8 knows about, and a release build removes the class - together with the entire injected
+    runtime reachable only through it. The APK still installs, still declares ``xposedmodule``
+    and still names the class, so the failure surfaces only on a device.
+
+    This check is the source-level half. The artifact-level half is
+    ``tools/quality/check_apk_loader_contract.py``, which reads a built APK and fails when the
+    class it declares is not defined in its dex; neither half is sufficient alone, because this
+    one proves the rule that should protect the class and that one proves the class in the file
+    that will be installed.
+    """
+    if entry is None:
+        return
+
+    rules = keep_rules(root)
+    if not rules:
+        report.fail(
+            "entry.keep",
+            "%s declares no -keep rule at all. The entry point %s is referenced only from %s, "
+            "which R8 does not read, so a release build removes it and the whole injected "
+            "runtime with it" % (PROGUARD_RULES, entry, ENTRY_FILE),
+        )
+        return
+
+    keeping = [pattern for keeps, pattern in rules if keeps]
+    if any(pattern_covers(pattern, entry) for pattern in keeping):
+        return
+
+    report.fail(
+        "entry.keep",
+        "no -keep rule in %s covers the entry point %s (rules that keep a class: %s). Without "
+        "one, a release build ships an APK whose %s names a class that is not in it, so LSPosed "
+        "lists the module and loads nothing"
+        % (PROGUARD_RULES, entry, ", ".join(keeping) or "none", ENTRY_FILE),
     )
 
 
@@ -768,7 +876,8 @@ def main(argv: list[str]) -> int:
 
     report = Report()
     check_manifest(root, report)
-    check_entry_point(root, report)
+    entry = check_entry_point(root, report)
+    check_entry_keep(root, report, entry)
     check_modern_api_files(root, report)
     check_api_dependency(root, report, verify_artifact=args.verify_artifact, artifact=args.artifact)
     return report.emit(args.format)

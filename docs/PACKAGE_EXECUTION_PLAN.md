@@ -96,45 +96,55 @@ recorded as `unverified runtime evidence` with the exact matrix cell that would 
 | --- | --- | --- | --- | --- |
 | 1 | Evidence lock + architecture law | #319 M00, #334 A00 | M00 gate, A00 | — |
 | 2 | Structured runtime health | #320 M01 | Gate M01 | 1 |
-| 3 | Activation, scope truth, heartbeat | #321 M02 | Gate A | 2 |
-| 4 | Atomic bootstrap, failure isolation | #322 M03 | Gate M03 | 2, 3 |
-| 5 | Explicit Manager/Runtime contracts | #335 A01 | AE-03/AE-05/AE-06 ownership | 1, 3 |
-| 6 | Legacy path stabilization | #323 M04 | Gate B | 3, 4, 5 |
-| 7 | Packaging & R8 transition readiness | #324 M05 | Gate M05 | 4 |
-| 8 | Modern libxposed API 102 | #325 M06 | Gate C | 6, 7 |
-| 9 | ResourceBridge / Android 17-safe resources | #326 M07 | Gate D | 8 |
-| 10 | RuntimeGraph & global-state containment | #336 A02 | A02 | 5 |
-| 11 | Unified + generated feature registry | #337 A03 | A03 | 10 |
-| 12 | Capability-driven resolver boundary | #338 A04 | AE-01/AE-04 ownership | 10, 11 |
-| 13 | DexKit 2.3.0 & resolver architecture | #327 M08 | Gate E | 8, 12 |
-| 14 | Typed settings, snapshots, secret store | #342 A08 | AE-02 ownership | 13 |
-| 15 | FeatureInstaller v2, health, circuit breaker | #339 A05 | A05 | 13, 14 |
-| 16 | Versioned Manager ↔ Runtime bridge & IPC | #340 A06 | A06 | 14, 15 |
-| 17 | Build logic & first module extraction | #341 A07 | A07 | 16 |
-| 18 | Data layer & repositories | #343 A09 | A09 | 17 |
-| 19 | Architecture tests & quality ratchet | #347 A13 | A13 | 17 |
-| 20 | Instrumentation + synthetic runtime testing | #348 A14 | A14 | 19 |
-| 21 | Security boundary audit | #350 A16 | A16 | 16 |
-| 22 | Dependency verification, SBOM, provenance | #351 A17 | A17 | 17 |
-| 23 | Toolchain upgrades as atomic PRs | #328 M09 | Gate F | 22 |
-| 24 | targetSdk 37 hardening | #329 M10 | Gate G | 23 |
-| 25 | Strict qualityGate & releaseGate | #330 M11 | Gate H | 19, 22, 24 |
-| 26 | Compatibility registry, kill switches, watchdog | #331 M12 | Gate I | 25 |
-| 27 | Full matrix, rollback drill, rollout, legacy removal | #332 M13 | FINAL gate | 25, 26 |
-| 28 | Manager modernization (repos, UDF, Compose) | #343–#345 A09–A11 | P1 | 27 |
-| 29 | R8 hardening, performance, ADRs | #346, #349, #352 A12/A15/A18 | P1 | 27 |
-| 30 | LSPosed modernization integration gate | #353 A19 | P0-A | 27 |
-| 31 | Optional feature-domain modularization | #354 A20 | P2, measurement-gated | 30 |
+| 3 | LSPosed loader integrity (blocker insert) | #324 M05 R8 entry preservation, #361 | Release blocker | 2 |
+| 4 | Activation, scope truth, heartbeat | #321 M02 | Gate A | 2 |
+| 5 | Atomic bootstrap, failure isolation | #322 M03 | Gate M03 | 2, 4 |
+| 6 | Explicit Manager/Runtime contracts | #335 A01 | AE-03/AE-05/AE-06 ownership | 1, 4 |
+| 7 | Legacy path stabilization | #323 M04 | Gate B | 4, 5, 6 |
+| 8 | Packaging & R8 transition readiness | #324 M05 | Gate M05 | 5 |
+| 9 | Modern libxposed API 102 | #325 M06 | Gate C | 7, 8 |
+| 10 | ResourceBridge / Android 17-safe resources | #326 M07 | Gate D | 9 |
+| 11 | RuntimeGraph & global-state containment | #336 A02 | A02 | 6 |
+| 12 | Unified + generated feature registry | #337 A03 | A03 | 11 |
+| 13 | Capability-driven resolver boundary | #338 A04 | AE-01/AE-04 ownership | 11, 12 |
+| 14 | DexKit 2.3.0 & resolver architecture | #327 M08 | Gate E | 9, 13 |
+| 15 | Typed settings, snapshots, secret store | #342 A08 | AE-02 ownership | 14 |
+| 16 | FeatureInstaller v2, health, circuit breaker | #339 A05 | A05 | 14, 15 |
+| 17 | Versioned Manager ↔ Runtime bridge & IPC | #340 A06 | A06 | 15, 16 |
+| 18 | Build logic & first module extraction | #341 A07 | A07 | 17 |
+| 19 | Data layer & repositories | #343 A09 | A09 | 18 |
+| 20 | Architecture tests & quality ratchet | #347 A13 | A13 | 18 |
+| 21 | Instrumentation + synthetic runtime testing | #348 A14 | A14 | 20 |
+| 22 | Security boundary audit | #350 A16 | A16 | 17 |
+| 23 | Dependency verification, SBOM, provenance | #351 A17 | A17 | 18 |
+| 24 | Toolchain upgrades as atomic PRs | #328 M09 | Gate F | 23 |
+| 25 | targetSdk 37 hardening | #329 M10 | Gate G | 24 |
+| 26 | Strict qualityGate & releaseGate | #330 M11 | Gate H | 20, 23, 25 |
+| 27 | Compatibility registry, kill switches, watchdog | #331 M12 | Gate I | 26 |
+| 28 | Full matrix, rollback drill, rollout, legacy removal | #332 M13 | FINAL gate | 26, 27 |
+| 29 | Manager modernization (repos, UDF, Compose) | #343–#345 A09–A11 | P1 | 28 |
+| 30 | R8 hardening, performance, ADRs | #346, #349, #352 A12/A15/A18 | P1 | 28 |
+| 31 | LSPosed modernization integration gate | #353 A19 | P0-A | 28 |
+| 32 | Optional feature-domain modularization | #354 A20 | P2, measurement-gated | 31 |
 
-Package 30 exists to prove the two programs are *integrated* rather than merely both finished; F003–F254 stay frozen until
+Package 31 exists to prove the two programs are *integrated* rather than merely both finished; F003–F254 stay frozen until
 it closes.
+
+Package 3 is an inserted blocker, not a program phase. It exists because verifying the package-2 Beta artifact produced a
+measurement no gate could have produced: R8 removes the class `assets/xposed_init` names from every release build, along
+with the entire injected runtime reachable only through it, so no published WA X APK can be loaded as an LSPosed module.
+It is a release blocker and a stable regression (WaEnhancer 1.8.0 shipped its runtime), both of which the program's freeze
+policy permits fixing out of phase order, and #324 M05 owns the part of it that is program work. Inserting it before the
+activation phase is deliberate: M02, M03 and M04 need the legacy entry to run in the injected process on a device, and no
+Beta released before this package could provide that. The measurements are on #324 and #318.
 
 ## 5. Package status
 
 | # | Package | Beta | State |
 | --- | --- | --- | --- |
-| 1 | Evidence lock + architecture law (M00, A00) | `v1.2.0-beta.1` | merged to `main`; Beta release in progress |
-| 2 | Structured runtime health (M01) | `v1.2.0-beta.2` | not started |
+| 1 | Evidence lock + architecture law (M00, A00) | `v1.2.0-beta.1` | merged to `main`; Beta published; #319, #334 closed |
+| 2 | Structured runtime health (M01) | `v1.2.0-beta.2` | merged to `main`; Beta published; #320 closed with its runtime observability blocked on package 3 |
+| 3 | LSPosed loader integrity (blocker insert) | `v1.2.0-beta.3` | in progress: the fix, the two new gates and #361 |
 
 ## 6. What a package records when it closes
 

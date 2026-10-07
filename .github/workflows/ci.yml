@@ -244,6 +244,22 @@ jobs:
           fi
           python3 tools/quality/check_lsposed_contract.py --verify-artifact --artifact "$JAR"
 
+      # The artifact-level half of the loader contract, on the build this job actually produced:
+      # the class named in the APK's own assets/xposed_init must be a class definition in its dex.
+      # This is the debug variant, which is not shrunk, so it cannot catch a keep-rule mistake -
+      # that is what the release step checks. What it does catch is the other silent failure: an
+      # entry point renamed, moved or mistyped so that the file and the code no longer agree.
+      - name: Prove the built APK declares an entry point it actually contains
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
+          if [[ -z "$APK" ]]; then
+            echo "::error::assembleDebug produced no APK to verify"
+            exit 1
+          fi
+          python3 tools/quality/check_apk_loader_contract.py --apk "$APK"
+
       - name: Upload baseline APK input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -310,6 +326,11 @@ jobs:
               python3 tools/quality/scan_access_gates.py --check-mirror || failures=$((failures + 1))
               python3 tools/quality/test_check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_lsposed_contract.py || failures=$((failures + 1))
+              # The keep rule is what holds the entry point against R8, which never reads
+              # assets/xposed_init. The source-level checker above asserts the rule exists; the
+              # artifact-level check that reads a built APK runs in the build and release steps,
+              # because a gate that only reads the tree is how the entry point was lost.
+              python3 tools/quality/test_check_apk_loader_contract.py || failures=$((failures + 1))
               python3 tools/quality/test_check_repository_urls.py || failures=$((failures + 1))
               python3 tools/quality/check_repository_urls.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
@@ -786,6 +807,24 @@ jobs:
 
           ls -l dist
 
+      # The gate that would have caught this before it shipped, and the reason it exists: R8 does
+      # not read assets/xposed_init, so a release build silently removed the entry point - and the
+      # whole injected runtime with it - while the APK still installed, still declared
+      # xposedmodule and still named the class. No other gate in this repository builds the release
+      # variant, so every one of them passed. This runs on the staged APK, before it is published,
+      # and it fails rather than skipping.
+      - name: Prove the release APK can be loaded as a legacy LSPosed module
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/quality/test_check_apk_loader_contract.py
+          for apk in dist/*.apk; do
+            python3 tools/quality/check_apk_loader_contract.py \
+              --apk "$apk" \
+              --expect-class com.wax.module.xposed.core.FeatureLoader
+          done
+
       - name: Verify the APK signatures and update certificate
         if: github.event_name != 'pull_request'
         shell: bash
@@ -1029,16 +1068,28 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Whether this is a pre-release is decided by the version, not by the person cutting
+          # it: a testing build must not become the repository's Latest release and demote the
+          # last stable one. The rule and its cases live in the tool, which this step trusts
+          # rather than re-deriving.
+          python3 tools/ci/test_release_publication.py
+          mapfile -t PUBLICATION < <(python3 tools/ci/release_publication.py --version "$VERSION")
+          if [[ "${#PUBLICATION[@]}" -ne 1 ]]; then
+            echo "::error::The publication flags for $VERSION are ambiguous: ${PUBLICATION[*]}"
+            exit 1
+          fi
+
           gh release create "$TAG" dist/*.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "WA X $VERSION" \
             --notes-file notes.md \
             --verify-tag \
-            --latest
+            "${PUBLICATION[@]}"
 
           echo "### Release published" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- Tag: \`$TAG\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Publication: ${PUBLICATION[*]} (a version with a pre-release suffix is never \`--latest\`)" >> "$GITHUB_STEP_SUMMARY"
           echo "- Assets: $(ls -1 dist | tr '\n' ' ')" >> "$GITHUB_STEP_SUMMARY"
           echo "- URL: https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
   telegram:
