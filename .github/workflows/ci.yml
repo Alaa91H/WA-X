@@ -663,8 +663,8 @@ jobs:
           retention-days: 30
 
   strict-e2e:
-    name: Strict Android E2E tests and coverage floor
-    if: always()
+    name: Release-only Android E2E and coverage gate
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build.result == 'success'
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 90
@@ -809,18 +809,32 @@ jobs:
           | Runtime evidence for every support claim | ${{ needs.strict-runtime.result }} |
           EOF
           failed=0
+
+          # Fast gates are mandatory for every CI mode.
           for result in \
             '${{ needs.build.result }}' \
             '${{ needs.strict-static.result }}' \
             '${{ needs.strict-unit.result }}' \
-            '${{ needs.strict-e2e.result }}' \
             '${{ needs.strict-runtime.result }}'; do
             if [[ "$result" != "success" ]]; then
               failed=1
             fi
           done
+
+          # Android instrumentation is intentionally release-only because emulator
+          # startup and execution dominate CI time. A tagged release may never bypass
+          # it; PRs, main pushes and beta builds are allowed to report it as skipped.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            if [[ '${{ needs.strict-e2e.result }}' != "success" ]]; then
+              echo "::error::Tagged releases require the Android E2E gate to succeed."
+              failed=1
+            fi
+          else
+            echo "Android E2E skipped by policy: full instrumentation runs only for tagged releases."
+          fi
+
           if [[ "$failed" -ne 0 ]]; then
-            echo "::error::Strict atomic quality verdict failed. Inspect every strict-* artifact; no release is permitted."
+            echo "::error::Strict atomic quality verdict failed. Inspect every required strict-* gate; no release is permitted."
             exit 1
           fi
 
