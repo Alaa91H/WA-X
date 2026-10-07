@@ -144,7 +144,7 @@ Beta released before this package could provide that. The measurements are on #3
 | --- | --- | --- | --- |
 | 1 | Evidence lock + architecture law (M00, A00) | `v1.2.0-beta.1` | merged to `main`; Beta published; #319, #334 closed |
 | 2 | Structured runtime health (M01) | `v1.2.0-beta.2` | merged to `main`; Beta published; #320 closed with its runtime observability blocked on package 3 |
-| 3 | LSPosed loader integrity (blocker insert) | `v1.2.0-beta.3` | in progress: the fix, the two new gates and #361 |
+| 3 | LSPosed loader integrity (blocker insert) | `v1.2.0-beta.3` | fix, keep rule, source-level and release-APK gates merged; #324, #361 closed. Beta published from this commit |
 
 ## 6. What a package records when it closes
 
