@@ -78,7 +78,7 @@ No Telegram
 No GitHub Release
 ```
 
-### Push to master
+### Push to main
 
 ```text
 Build
@@ -96,7 +96,7 @@ ci/telegram-release-publisher-test
 → Beta Testing / topic 18
 ```
 
-This allows live Telegram validation without touching `master`.
+This allows live Telegram validation without touching `main`.
 
 ### Version tag
 
