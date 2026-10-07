@@ -1,0 +1,77 @@
+{
+  "edges": {
+    "AE-01": {
+      "limit": 72,
+      "measure": "feature_unobfuscator",
+      "owner": "#327 M08 / #338 A04",
+      "rationale": "A feature that calls a resolver itself cannot be isolated when resolution fails, and cannot be reasoned about without reading DexKit output. The dependency the program wants is Feature -> Capability -> Resolver -> DexKit.",
+      "removalPhase": "M08/A04 - DexEngine and the capability boundary",
+      "title": "A feature must not reach Unobfuscator, directly or transitively"
+    },
+    "AE-02": {
+      "limit": 64,
+      "measure": "feature_shared_preferences",
+      "owner": "#342 A08",
+      "rationale": "The runtime reads the manager's preference file from inside another app's process. Every feature that reads it directly is a second, unmanaged path for settings, and settings are the one thing that must not be able to leak across the WhatsApp and Business targets.",
+      "removalPhase": "A08 - typed settings, immutable snapshot, no runtime SharedPreferences",
+      "title": "A feature must not touch SharedPreferences"
+    },
+    "AE-03": {
+      "limit": 3,
+      "measure": "ui_xposed_direct",
+      "owner": "#335 A01 / #343 A09",
+      "rationale": "The Manager runs as an ordinary application. Anything it imports from the injected runtime is either dead code there or a class that will not resolve, and the second case fails at runtime on a device rather than at compile time.",
+      "removalPhase": "A01 - explicit Manager/Runtime contracts",
+      "title": "Manager UI must not import the Xposed API or DexKit"
+    },
+    "AE-04": {
+      "limit": 21,
+      "measure": "dexkit_outside_resolver",
+      "owner": "#327 M08",
+      "rationale": "DexKit needs a resolver engine behind it so a scan cannot be repeated per feature and a failure cannot stop the runtime.",
+      "removalPhase": "M08 - DexEngine behind ResolverRegistry",
+      "title": "DexKit must be reached only through the resolver layer"
+    },
+    "AE-05": {
+      "limit": 30,
+      "measure": "shared_layer_imports_runtime",
+      "owner": "#335 A01 / #336 A02",
+      "rationale": "`utils`, `adapter` and `views` are used by both processes. A shared layer importing the runtime makes the Manager depend on classes the framework only supplies inside a hooked process, which is how a Manager-side NoClassDefFoundError happens.",
+      "removalPhase": "A01/A02 - explicit Manager/Runtime split",
+      "title": "Shared layers must not depend on the injected runtime"
+    },
+    "AE-06": {
+      "limit": 3,
+      "measure": "self_hook_references",
+      "owner": "#320 M01 / #335 A01",
+      "rationale": "`isXposedEnabled` returns a constant installed by a hook into the module's own process, so the module reports itself healthy because it is running. A DexKit or resolver failure can then present as 'LSPosed is disabled'.",
+      "removalPhase": "M01 - runtime health observed from the framework",
+      "title": "The activation signal must not be a self-hook"
+    }
+  },
+  "philosophy": "Every forbidden edge carries a measured limit equal to today's count. The gate fails when a count rises. It does not pass because there are no violations; it passes because the violations are counted, owned and may only fall.",
+  "schema": "wax.a00.architecture-law/1",
+  "scopes": {
+    "feature_layers": [
+      "xposed.features"
+    ],
+    "manager_layers": [
+      "ui",
+      "activities",
+      "adapter",
+      "views",
+      "preference",
+      "settings"
+    ],
+    "runtime_layers": [
+      "xposed"
+    ],
+    "shared_layers": [
+      "utils",
+      "adapter",
+      "views",
+      "model",
+      "preference"
+    ]
+  }
+}
