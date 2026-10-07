@@ -325,6 +325,7 @@ jobs:
               # no longer matches. Every field is derived on purpose, so a failure here means
               # something real moved; note that editing this workflow changes its own recorded
               # hash, so the fix is to re-run with --write and commit both rather than relax it.
+              python3 tools/modernization/test_collect_m00_baseline.py || failures=$((failures + 1))
               python3 tools/modernization/collect_m00_baseline.py --check || failures=$((failures + 1))
               # The runtime-surface inventory: the counts M01-M13 size their work against, so a
               # later phase can tell whether it finished. The self-test runs first because an

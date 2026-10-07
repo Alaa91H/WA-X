@@ -215,6 +215,27 @@ def gradle_block(build: str, name: str) -> str:
     return ""
 
 
+def canonical_remote(url: str | None) -> str | None:
+    """Normalise the origin URL so it describes the repository, not the clone that fetched it.
+
+    This field was originally recorded verbatim and the baseline failed on the first CI run:
+    `actions/checkout` configures the remote as `https://github.com/Alaa91H/WA-X` while a local
+    clone has `...WA-X.git`, so the check reported drift on a tree that had not changed. That is
+    the whole class of bug the "no machine-specific values" rule exists to prevent, found by the
+    gate I had just written - which is the argument for having the gate.
+
+    Three spellings of the same repository are folded together: the `.git` suffix, `ssh://`, and
+    `git@host:path`. What remains is the identity of the repository.
+    """
+    if not url:
+        return None
+    value = url.strip()
+    value = re.sub(r"\.git$", "", value)
+    value = re.sub(r"^git@([^:]+):", r"https://\1/", value)
+    value = re.sub(r"^ssh://(?:git@)?", "https://", value)
+    return value.rstrip("/")
+
+
 def collect() -> dict[str, object]:
     catalog_text = read(os.path.join(REPO_ROOT, CATALOG)) or ""
     build = read(os.path.join(REPO_ROOT, MODULE_BUILD)) or ""
@@ -268,7 +289,7 @@ def collect() -> dict[str, object]:
 
     return {
         "schema": "wax.m00.baseline/1",
-        "repository": git("config", "--get", "remote.origin.url") or "unknown",
+        "repository": canonical_remote(git("config", "--get", "remote.origin.url")),
         # Revision identity is deliberately absent. It changes on every commit and on every
         # machine's clone layout, so putting it in a file that `--check` compares would make the
         # gate fail on every single run and train everyone to ignore it. The commit under test is

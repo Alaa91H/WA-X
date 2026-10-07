@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "781dd5daffd29190ea765275e42992bf6d744d5ca7439a9d9a2a3a701afd28ef",
+      "ci.yml": "7ff5f641c2c289737e2c81846b0e6ab9c9316de23683daf3b3a5c8abdf5c4262",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -326,7 +326,7 @@
     "test_matrix": "docs/modernization/test-matrix.json",
     "test_matrix_sha256": "a7a5221c8cdd8a8a9c124ff23546e4128accc6a831fceceeff8fb25f1f291dee"
   },
-  "repository": "https://github.com/Alaa91H/WA-X.git",
+  "repository": "https://github.com/Alaa91H/WA-X",
   "schema": "wax.m00.baseline/1",
   "source_counts": {
     "android_tests": 1,
