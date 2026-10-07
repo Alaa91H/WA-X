@@ -40,8 +40,6 @@
     <string name="conversation">Conversación - Chat</string>
     <string name="primary_color">Color primario</string>
     <string name="background_color">Color del fondo (Background)</string>
-    <string name="novaconfig">Nuevo estilo del apartado \'Ajustes\'</string>
-    <string name="novaconfig_sum">Habilite el nuevo estilo de Ajustes, con una foto de perfil en la barra de herramientas de inicio</string>
     <string name="novofiltro">Buscar Funciones</string>
     <string name="novofiltro_sum">Elija entre icono de búsqueda, barra de búsqueda o sin búsqueda</string>
     <string name="menuwicon">Iconos de menú</string>
@@ -245,7 +243,6 @@
     <string name="force_disable_emojis_alert_msg">Esta función hará que los emojis sean invisibles en el selector de emojis. Para enviar emojis, usa los de tu teclado.</string>
     <string name="disable_default_emojis">Desactivar Emojis por Defecto</string>
     <string name="theme_mode">Tema oscuro de WA X</string>
-    <string name="theme_mode_sum">Forzar color de la interfaz en WA X</string>
     <string name="wae_color_mode">Modo de color WAE</string>
     <string name="wae_color_preset">Color preestablecido</string>
     <string name="wae_color_mode_preset">Predefinido</string>

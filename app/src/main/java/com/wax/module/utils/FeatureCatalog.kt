@@ -17,16 +17,16 @@ object FeatureCatalog {
 
     private data class ExtraEntry(
         val key: String,
-        @StringRes val titleRes: Int,
-        @StringRes val summaryRes: Int? = null,
+        @field:StringRes val titleRes: Int,
+        @field:StringRes val summaryRes: Int? = null,
         val screen: String,
         val tags: List<String> = emptyList(),
     )
 
     private data class HomeAction(
         val key: String,
-        @StringRes val titleRes: Int,
-        @StringRes val summaryRes: Int? = null,
+        @field:StringRes val titleRes: Int,
+        @field:StringRes val summaryRes: Int? = null,
         val tags: List<String>,
     )
 
@@ -110,12 +110,14 @@ object FeatureCatalog {
         )
 
     private fun keyTags(key: String): List<String> =
-        key.split('_', '-')
+        key
+            .split('_', '-')
             .filter(String::isNotBlank)
             .distinct()
 
     private fun currentLocaleTag(context: Context): String =
-        context.resources.configuration.locales[0].toLanguageTag()
+        context.resources.configuration.locales[0]
+            .toLanguageTag()
 
     private val ROUTES: Map<String, Route> =
         mapOf(

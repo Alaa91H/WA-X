@@ -40,8 +40,6 @@
     <string name="conversation">聊天界面</string>
     <string name="primary_color">主要颜色</string>
     <string name="background_color">背景颜色</string>
-    <string name="novaconfig">新的设置样式</string>
-    <string name="novaconfig_sum">启用新的设置样式，在主页工具栏上显示个人资料照片</string>
     <string name="novofiltro">搜索功能</string>
     <string name="novofiltro_sum">在搜索图标、搜索栏或无搜索之间选择</string>
     <string name="menuwicon">菜单图标</string>
@@ -245,7 +243,6 @@
     <string name="force_disable_emojis_alert_msg">此功能会使表情选择器中的表情不可见。如需发送表情，请使用设备键盘自带的表情。</string>
     <string name="disable_default_emojis">禁用默认表情符号（Emoji）</string>
     <string name="theme_mode">WA X 深色主题</string>
-    <string name="theme_mode_sum">在 Wa Enhance 中强制使用主题模式r</string>
     <string name="wae_color_mode">WAE 颜色模式</string>
     <string name="wae_color_preset">预设颜色</string>
     <string name="wae_color_mode_preset">预设</string>

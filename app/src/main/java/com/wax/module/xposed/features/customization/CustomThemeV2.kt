@@ -60,11 +60,16 @@ class CustomThemeV2(
             val rgb = parseRgb(opaqueColor) ?: return
 
             mapColors.keys.toList().forEach { original ->
+                // Bound once, before the assignment: reading `mapColors[original]` inside
+                // the `when` gives `String?`, which is not what this map holds, and reading
+                // it after the assignment would use the value being written rather than the
+                // one the entry already had.
+                val existing = mapColors[original] ?: return@forEach
                 mapColors[original] =
                     when (original.length) {
-                        9 -> applyOriginalAlpha(opaqueColor, rgb, mapColors[original])
+                        9 -> applyOriginalAlpha(opaqueColor, rgb, existing)
                         7 -> opaqueColor.substring(3)
-                        else -> mapColors[original]
+                        else -> existing
                     }
             }
         }
@@ -96,6 +101,7 @@ class CustomThemeV2(
 
             val alpha = originalValue.substring(1, 3).toIntOrNull(16) ?: return opaqueColor
             val factor = alpha / 255.0f
+
             fun mix(channel: Int): Int =
                 (channel * factor + 255 * (1 - factor))
                     .toInt()
@@ -107,7 +113,6 @@ class CustomThemeV2(
                 mix(rgb.blue),
             )
         }
-
     }
 
     private var wallAlpha: HashMap<String, String>? = null
@@ -189,15 +194,24 @@ class CustomThemeV2(
         )
     }
 
-    private fun canReadWallpaper(activity: Activity): Boolean =
-        ContextCompat.checkSelfPermission(
+    private fun canReadWallpaper(activity: Activity): Boolean {
+        // READ_MEDIA_IMAGES only exists from API 33. `Manifest.permission` values are
+        // compile-time constants, so the older check below would work anyway - but asking a
+        // 28..32 device for a permission it can never grant is a check that always answers
+        // "denied", and saying so is the difference between a guard and a coincidence.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted =
+                ContextCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                ) == PackageManager.PERMISSION_GRANTED
+            if (granted) return true
+        }
+        return ContextCompat.checkSelfPermission(
             activity,
-            Manifest.permission.READ_MEDIA_IMAGES,
-        ) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-            ) == PackageManager.PERMISSION_GRANTED
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
     private fun hookActionModeBackground() {
         val actionModeBarId = Utils.getID("action_mode_bar", "id")

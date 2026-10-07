@@ -41,8 +41,12 @@ class ToastViewer(
 
     private data class ReceiptEvent(
         val rowId: Long,
-        val contactName: String,
-        val rawJid: String,
+        // Both are nullable because the JID is: a contact WhatsApp cannot resolve to a raw
+        // string has no name and no JID, and every consumer of these two already accepts
+        // null - stripJID, showViewedToast and Tasker.sendTaskerEvent are all declared that
+        // way. Stating them as non-null only moved the null check somewhere less obvious.
+        val contactName: String?,
+        val rawJid: String?,
         val options: ViewerOptions,
     )
 
@@ -85,10 +89,11 @@ class ToastViewer(
         val status = FStatusWpp(statusObject)
         if (!status.fStatusKey.isFromMe) return
 
-        val userJid = runCatching { UserJid(param.args[0]) }.getOrElse {
-            XposedBridge.log(it)
-            return
-        }
+        val userJid =
+            runCatching { UserJid(param.args[0]) }.getOrElse {
+                XposedBridge.log(it)
+                return
+            }
         val contactName = getWaContactFromJid(userJid)?.displayName ?: getContactName(userJid)
         val options = currentOptions()
         if (options.statusToast) {
@@ -144,10 +149,11 @@ class ToastViewer(
                 ?.getLong(receipt)
                 ?: return
         val jidField = ReflectionUtils.getFieldByExtendType(receipt.javaClass, jidClass) ?: return
-        val userJid = runCatching { UserJid(jidField.get(receipt)) }.getOrElse {
-            XposedBridge.log(it)
-            return
-        }
+        val userJid =
+            runCatching { UserJid(jidField.get(receipt)) }.getOrElse {
+                XposedBridge.log(it)
+                return
+            }
         val message =
             ReflectionUtils
                 .getFieldByExtendType(receipt.javaClass, FMessageWpp.type)
@@ -226,8 +232,7 @@ class ToastViewer(
         }
     }
 
-    private fun isCurrentUser(rawJid: String): Boolean =
-        getCurrentUserJid()?.phoneRawString == rawJid
+    private fun isCurrentUser(rawJid: String?): Boolean = getCurrentUserJid()?.phoneRawString == rawJid
 
     private fun isDirectChat(
         database: SQLiteDatabase,

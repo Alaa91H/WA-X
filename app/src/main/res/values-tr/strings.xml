@@ -40,8 +40,6 @@
     <string name="conversation">Sohbet ekranı</string>
     <string name="primary_color">Ana renk</string>
     <string name="background_color">Arka plan rengi</string>
-    <string name="novaconfig">Yeni ayarlar stili</string>
-    <string name="novaconfig_sum">Ana ekran araç çubuğunda profil fotoğrafı bulunan yeni ayarlar stilini etkinleştir</string>
     <string name="novofiltro">Arama işlevleri</string>
     <string name="novofiltro_sum">Arama Simgesi, Arama Çubuğu veya Arama Yok arasında seçim yapın</string>
     <string name="menuwicon">Menü simgeleri</string>
@@ -245,7 +243,6 @@
     <string name="force_disable_emojis_alert_msg">Bu özellik emoji seçicideki emojileri görünmez yapacaktır. Emoji göndermek için cihazınızın klavye emojilerini kullanın.</string>
     <string name="disable_default_emojis">Varsayılan Emojileri Devre Dışı Bırak</string>
     <string name="theme_mode">WA X Karanlık Tema</string>
-    <string name="theme_mode_sum">WA X\'da bir tema modunu zorla</string>
     <string name="wae_color_mode">WAE renk modu</string>
     <string name="wae_color_preset">Önayar Rengi</string>
     <string name="wae_color_mode_preset">Önayar</string>

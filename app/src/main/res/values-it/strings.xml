@@ -40,8 +40,6 @@
     <string name="conversation">Conversazione</string>
     <string name="primary_color">Colore primario</string>
     <string name="background_color">Colore di sfondo</string>
-    <string name="novaconfig">Nuovo stile Impostazioni</string>
-    <string name="novaconfig_sum">Abilita il nuovo stile delle impostazioni, con la foto del profilo sulla barra degli strumenti della Home</string>
     <string name="novofiltro">Funzioni di ricerca</string>
     <string name="novofiltro_sum">Scegli tra Icona di Ricerca, Barra di Ricerca o Nessuna Ricerca</string>
     <string name="menuwicon">Icone nel menù</string>
@@ -245,7 +243,6 @@
     <string name="force_disable_emojis_alert_msg">Questa funzione renderà invisibili le emoji nel selettore. Per inviare emoji, usa quelle della tastiera del dispositivo.</string>
     <string name="disable_default_emojis">Disabilita Emoji predefinite</string>
     <string name="theme_mode">Tema Scuro WA X</string>
-    <string name="theme_mode_sum">Forza una modalità tematica in WA X</string>
     <string name="wae_color_mode">Modalità colore WAE</string>
     <string name="wae_color_preset">Colore predefinito</string>
     <string name="wae_color_mode_preset">Preimpostato</string>

@@ -40,8 +40,6 @@
     <string name="conversation">Conversation</string>
     <string name="primary_color">Couleur primaire</string>
     <string name="background_color">Couleur d\'arrière-plan</string>
-    <string name="novaconfig">Please fix it, restart the module, and try again</string>
-    <string name="novaconfig_sum">Activez le nouveau style de réglages, avec la photo de profil dans la barre d\'accueil</string>
     <string name="novofiltro">Fonctions de recherche</string>
     <string name="novofiltro_sum">Choisissez entre l\'icône de recherche, la barre de recherche ou aucune recherche</string>
     <string name="menuwicon">Icônes du menu</string>
@@ -245,7 +243,6 @@
     <string name="force_disable_emojis_alert_msg">Cette fonction rendra les emojis invisibles dans le sélecteur d\'emojis. Pour envoyer des emojis, utilisez ceux du clavier de votre appareil.</string>
     <string name="disable_default_emojis">Désactiver les émojis par défaut</string>
     <string name="theme_mode">Thème sombre de WA X</string>
-    <string name="theme_mode_sum">Forcer un mode thème dans le WA X</string>
     <string name="wae_color_mode">Mode de couleur WAE</string>
     <string name="wae_color_preset">Couleur prédéfinie</string>
     <string name="wae_color_mode_preset">Prédéfini</string>
