@@ -91,7 +91,16 @@ class ModuleEntryPoint :
         if (target != null && lpparam.isFirstApplication) {
             // I believe isFirstApplication may fix the problem when using multiple
             // accounts; not yet tested.
-            FeatureLoader.start(classLoader, lpparam.appInfo.sourceDir)
+            //
+            // The package and process names are passed in rather than re-derived inside the
+            // loader: they are what the health record is keyed by, and the framework's own
+            // callback parameters are the only authoritative source for them.
+            FeatureLoader.start(
+                classLoader,
+                lpparam.appInfo.sourceDir,
+                packageName = lpparam.packageName,
+                processName = lpparam.processName,
+            )
             disableSecureFlag()
         }
     }

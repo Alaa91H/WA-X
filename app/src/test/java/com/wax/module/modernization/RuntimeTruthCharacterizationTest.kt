@@ -2,30 +2,28 @@ package com.wax.module.modernization
 
 import com.wax.module.diagnostics.FailureCode
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Characterization of the defects M00 confirmed, not a specification of what they should become.
+ * The defects M00 confirmed, each pinned by a test with the phase that owns it.
  *
- * Every test here asserts the CURRENT, broken behaviour, and each one is registered in
- * `docs/modernization/known-runtime-defects.json` under an id, an owner phase and the evidence
- * behind it. That is deliberate and it is the reason these tests are written this way:
+ * Every defect is registered in `docs/modernization/known-runtime-defects.json` under an id, an
+ * owner phase, the evidence behind it and its current status, and this class is what keeps that
+ * registry honest in both directions:
  *
- * * If a test asserted the DESIRED behaviour it would fail now and block the gate that M00 exists
- *   to establish.
- * * If these tests were simply absent, the defects would be a paragraph in a document, and a
- *   paragraph cannot fail.
+ * * An **open** defect is characterised: the test asserts the CURRENT, broken behaviour, because a
+ *   test asserting the desired behaviour would fail today and block the gate M00 exists to
+ *   establish, and because a defect recorded only in a document is a paragraph, and a paragraph
+ *   cannot fail. **The forcing function is that fixing the defect breaks its test.**
+ * * A **fixed** defect keeps its test as a regression guard: the same defect, asserted the other way
+ *   round. Deleting the test instead would put the code back where M00 found it with nothing left
+ *   to notice.
  *
- * So the defects are pinned by tests that pass. **The forcing function is that fixing a defect
- * breaks its test.** When [FailureCode.classify] starts returning [FailureCode.RESOLVER_INIT_FAILED],
- * `resolverInitFailureCodeIsDeclaredButNeverProduced` fails, and the failure is a message telling
- * the reader to update the registry rather than a mysterious regression.
- *
- * A failing test in this class therefore means one of two things, and the message says which:
- * the owning phase landed and this registry needs updating, or a genuine regression. Check the
- * `owner` field on the matching entry before treating it as a regression.
+ * A failing test in this class therefore means one of three things, and the message says which: the
+ * owning phase landed and this registry needs updating, a fixed defect has regressed, or an
+ * untouched defect changed behaviour. Check the entry's `owner` and `status` before treating it as
+ * a regression.
  *
  * The invariant that outlives the whole modernization program is
  * `selfHookIsReachableOnlyForTheModuleOwnPackage`: the self-hook must stop being the activation
@@ -53,88 +51,105 @@ class RuntimeTruthCharacterizationTest {
     // ---------------------------------------------------------------- M00-DEF-01
 
     /**
-     * [FailureCode.RESOLVER_INIT_FAILED] is documented, translated in
-     * [com.wax.module.resolver.UserExplanation], and produced by nothing.
+     * A failure to start the resolution engine classifies as an engine failure.
      *
-     * Asserted against the source of `classify` rather than by calling it, and that detail is
-     * load-bearing. An earlier revision of this test called `classify` with a hand-picked throwable
-     * and hint and asserted the result was [FailureCode.UNEXPECTED] - and it still passed after
-     * `classify` had been given a branch that returns [FailureCode.RESOLVER_INIT_FAILED], because
-     * the hand-picked hint did not happen to match it. A characterisation test that cannot fail
-     * when the defect is fixed is worse than no test: it certifies a defect that no longer exists.
+     * M00 recorded the opposite as M00-DEF-01: [FailureCode.RESOLVER_INIT_FAILED] was declared,
+     * translated in [com.wax.module.resolver.UserExplanation], and produced by nothing, so the one
+     * failure mode the code was written for was indistinguishable from an unclassifiable one.
+     * M01 made it reachable, so what was a characterisation of the defect is now a regression test
+     * for the fix - and it asserts the same two things in the same two ways, because the reason the
+     * original test asserted them still holds:
      *
-     * Unreachability is a property of the whole function, not of one input, so it is asserted over
-     * the function's body.
+     * * the function must actually be able to return it (asserted over the source, because
+     *   unreachability is a property of the whole function rather than of one input), and
+     * * one concrete failure must classify correctly.
+     *
+     * Deleting this test would put the code back where M00 found it with nothing to notice.
      */
     @Test
-    fun resolverInitFailureCodeIsDeclaredButNeverProduced() {
-        // It exists and means exactly what the registry says it means.
-        assertEquals(
-            "RESOLVER_INIT_FAILED",
-            FailureCode.RESOLVER_INIT_FAILED.name,
-        )
-
+    fun aDexKitInitialisationFailureClassifiesAsAResolverInitFailure() {
         val source = readSource("java/com/wax/module/diagnostics/FailureCode.kt")
-
-        // The only mention in the whole file must be the declaration itself. Any second mention -
-        // a `return RESOLVER_INIT_FAILED`, an `is` branch in the `when`, a mapping - is the fix.
-        val mentions =
-            Regex("""\bRESOLVER_INIT_FAILED\b""")
-                .findAll(source)
-                .map { it.range.first }
-                .toList()
-        assertEquals(
-            "M01 owns this. FailureCode.kt now mentions RESOLVER_INIT_FAILED $mentions times " +
-                "instead of once, so classify() can produce it and M00-DEF-01 is fixed. Update " +
-                "docs/modernization/known-runtime-defects.json - do not delete this test.",
-            1,
-            mentions.size,
+        assertTrue(
+            "M00-DEF-01 has regressed: no path in classify() returns RESOLVER_INIT_FAILED, so the " +
+                "code is unreachable again and a DexKit failure would report as UNEXPECTED.",
+            Regex("""return\s+RESOLVER_INIT_FAILED""").containsMatchIn(source),
         )
 
-        // And the symptom, stated behaviourally so the intent is on the record: a DexKit-style
-        // failure is currently indistinguishable from any other unclassifiable failure.
-        val actual =
-            FailureCode.classify(
-                RuntimeException("could not init DexKit"),
-                featureMessage = "resolve",
-            )
+        // The engine names itself in its own message, which is the only signal available when the
+        // failure is raised from inside it rather than by the stage that called it.
         assertEquals(
-            "M01 owns this. A DexKit initialisation failure now classifies as $actual rather " +
-                "than UNEXPECTED. Update M00-DEF-01.",
+            FailureCode.RESOLVER_INIT_FAILED,
+            FailureCode.classify(RuntimeException("could not init DexKit"), featureMessage = "resolve"),
+        )
+
+        // A caller that knows the stage but not the message still classifies correctly.
+        assertEquals(
+            FailureCode.RESOLVER_INIT_FAILED,
+            FailureCode.classify(RuntimeException("boo"), featureMessage = "dexkit.init"),
+        )
+
+        // And a failure that names neither is still reported as the honest unknown rather than
+        // being attributed to the engine.
+        assertEquals(
             FailureCode.UNEXPECTED,
-            actual,
+            FailureCode.classify(RuntimeException("something else"), featureMessage = "resolve"),
         )
     }
 
     // ---------------------------------------------------------------- M00-DEF-02
 
     /**
-     * A DexKit initialisation failure installs nothing and reports nothing.
+     * A DexKit initialisation failure stops the bootstrap, and is now recorded before it does.
+     *
+     * M00 recorded M00-DEF-02 as "installs nothing and reports nothing". M01 fixed the second half:
+     * the stage is opened before the engine is asked to initialise, and the failure is recorded
+     * against the DEXKIT subsystem with [com.wax.module.health.RuntimeFailureCode.DEXKIT_INIT_FAILED],
+     * so the failure has one authoritative record instead of a log line.
+     *
+     * The early return is deliberately **unchanged**. What should happen instead of returning -
+     * which paths are safe to continue with, and what the healthy non-DexKit features do meanwhile -
+     * is M03's decision, and it needs this record to exist before that decision can be made. So this
+     * test asserts both halves, and the message on the second assertion names the phase that owns
+     * changing it.
      *
      * Asserted against the source rather than by invoking it: the failure path needs a real
-     * `dex2oat`-loaded dex file and an LSPosed-provided class loader, neither of which exists on
-     * a JVM unit test. What can be asserted off-device is the shape of the failure path, which is
-     * exactly what makes it silent.
+     * `dex2oat`-loaded dex file and an LSPosed-provided class loader, neither of which exists on a
+     * JVM unit test. The record itself is covered behaviourally by the health reporter's own tests.
      */
     @Test
-    fun dexKitInitFailureInstallsNothingAndReportsNothing() {
+    fun dexKitInitFailureIsRecordedBeforeTheBootstrapStops() {
         val loader = readSource("java/com/wax/module/xposed/core/FeatureLoader.kt")
 
         val guard =
             Regex("""if\s*\(\s*!\s*Unobfuscator\.initWithPath\([^)]*\)\s*\)""")
                 .find(loader)
                 ?.range
-                ?: error("M01 owns this. FeatureLoader no longer guards on initWithPath failing. Update M00-DEF-02.")
-        val body = loader.substring(guard.last, minOf(loader.length, guard.last + 400))
+                ?: error("M03 owns this. FeatureLoader no longer guards on initWithPath failing. Update M00-DEF-02.")
+        val body = loader.substring(guard.last, minOf(loader.length, guard.last + 800))
 
         assertTrue(
-            "M01 owns this. The early return after a DexKit failure is gone. Update M00-DEF-02.",
-            Regex("""return\s*$""", RegexOption.MULTILINE).containsMatchIn(body.take(200)),
+            "M03 owns this. The early return after a DexKit failure is gone, so the bootstrap no " +
+                "longer stops. That is M03's fix to make; update M00-DEF-02 rather than re-adding a " +
+                "guard here.",
+            Regex("""return\s*$""", RegexOption.MULTILINE).containsMatchIn(body),
         )
-        assertFalse(
-            "M01 owns this. The DexKit failure path now records a report, so it is no longer " +
-                "silent. This is the fix; update M00-DEF-02 to describe the new behaviour.",
-            Regex("""recordFailure|report|FailureCode\.""").containsMatchIn(body.take(200)),
+        assertTrue(
+            "M01-DEF-02 has regressed: the DexKit failure path records nothing again, so the " +
+                "failure is silent - which is exactly what M00 recorded.",
+            Regex("""RuntimeFailureCode\.DEXKIT_INIT_FAILED""").containsMatchIn(body),
+        )
+
+        // Ordering, not just presence: health must exist before the first thing that can fail,
+        // otherwise a failure recorded during bootstrap has nowhere to go - the root cause M00
+        // identified for this defect.
+        val healthStart = loader.indexOf("RuntimeHealth.beginForTarget")
+        val dexKitInit = loader.indexOf("Unobfuscator.initWithPath")
+        assertTrue("M01 owns this. The DexKit initialisation is not guarded at all.", dexKitInit > 0)
+        assertTrue("M01 owns this. There is no health reporter in the loader.", healthStart > 0)
+        assertTrue(
+            "The health reporter must be created before DexKit is asked to initialise; the defect " +
+                "M00 recorded was precisely that the failure happened first and had nowhere to go.",
+            healthStart < dexKitInit,
         )
     }
 

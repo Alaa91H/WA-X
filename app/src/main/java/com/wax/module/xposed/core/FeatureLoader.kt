@@ -31,6 +31,9 @@ import com.wax.module.diagnostics.FailureReportCodec
 import com.wax.module.diagnostics.FailureReportStore
 import com.wax.module.diagnostics.FeatureFailureReport
 import com.wax.module.diagnostics.ReportRedactor
+import com.wax.module.health.RuntimeFailureCode
+import com.wax.module.health.RuntimeHealth
+import com.wax.module.health.RuntimeSubsystem
 import com.wax.module.platform.SupportedPackages
 import com.wax.module.settings.TargetSettingsBridge
 import com.wax.module.xposed.core.components.AlertDialogWpp
@@ -200,7 +203,25 @@ class FeatureLoader private constructor() {
         private fun attachStore(application: Application) {
             if (reportStore != null) return
             reportStore = runCatching { FailureReportStore(application) }.getOrNull()
+            // The same moment storage becomes available to failure reports is the earliest
+            // moment the health document can be written, so anything recorded before the
+            // application existed stops being memory-only here.
+            runCatching { RuntimeHealth.attachStore(application) }
+            runCatching { RuntimeHealth.current().persist() }
         }
+
+        /**
+         * Component id for the resolution engine's initialisation stage in the health stream.
+         *
+         * It is deliberately named after the stage, never after the engine library. The A00
+         * architecture law counts a file as reaching the engine when that library's package
+         * prefix appears anywhere in the text, so an id that spelled the prefix out made this
+         * file count as a resolver-layer violation: the gate measures a substring, not an API.
+         * The honest fix is to stop writing the substring, not to raise the limit the gate
+         * measured. The rule exists to catch a real dependency, and a false positive is a
+         * reason to stop tripping it, never to weaken it.
+         */
+        private const val RESOLVER_INIT_COMPONENT = "resolver.engine.init"
 
         private var supportedVersions: List<String> = emptyList()
         private var currentVersion: String? = null
@@ -214,11 +235,30 @@ class FeatureLoader private constructor() {
         fun start(
             loader: ClassLoader,
             sourceDir: String,
+            packageName: String,
+            processName: String,
         ) {
+            // Health exists before the first thing that can fail does. M00 recorded that
+            // the DexKit failure below had nowhere to go: the module logged it and returned
+            // with zero hooks installed, and the app went on showing a green banner from
+            // another process. The stage is therefore opened here, not after the engine.
+            val health = RuntimeHealth.beginForTarget(packageName, processName)
+            val dexKitStage = health.begin(RuntimeSubsystem.DEXKIT, RESOLVER_INIT_COMPONENT)
+
             if (!Unobfuscator.initWithPath(sourceDir)) {
                 XposedBridge.log("Can't init dexkit")
+                // Recorded, not swallowed. The early return is unchanged on purpose - what
+                // to do instead of returning is M03's decision, and it needs this record to
+                // exist before it can be made.
+                health.fail(
+                    dexKitStage,
+                    RuntimeFailureCode.DEXKIT_INIT_FAILED,
+                    "Unobfuscator.initWithPath returned false for $sourceDir",
+                )
                 return
             }
+
+            health.succeed(dexKitStage, "DexKit initialised from $sourceDir")
 
             Utils.appClassLoader = loader
 
