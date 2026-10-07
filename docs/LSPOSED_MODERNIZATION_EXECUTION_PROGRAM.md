@@ -19,7 +19,7 @@ Until the final modernization gate closes:
 - do not merge cosmetic or broad refactors unrelated to modernization;
 - do not perform unrelated dependency upgrades;
 - permit only critical security fixes, CI/release blockers, stable regressions, and work required by this program;
-- master must remain buildable, testable, installable and rollback-capable.
+- main must remain buildable, testable, installable and rollback-capable.
 
 Execution order is mandatory:
 
@@ -98,7 +98,7 @@ Goal: establish one trustworthy baseline before runtime changes.
 
 ### M00.01 Baseline marker
 Record:
-- master commit SHA;
+- main commit SHA;
 - module version;
 - Gradle, AGP, Kotlin, JDK, SDK and NDK versions;
 - compatibility declarations;
@@ -769,14 +769,14 @@ Rules:
 - one architectural concern per PR;
 - no drive-by refactors;
 - no unrelated dependency bumps;
-- no direct merge to master;
+- no direct merge to main;
 - no bypassing required checks;
 - loader/runtime PRs attach sanitized runtime snapshots for WhatsApp and Business.
 
 ## 7. Recommended branch sequence
 
 ~~~text
-master
+main
 priority/lsposed-modernization
 modernization/runtime-health
 modernization/activation
