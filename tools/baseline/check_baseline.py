@@ -16,7 +16,7 @@ Reference selection (anti self-exemption):
   from the base revision instead of the change's own copy - a change cannot
   raise the limits it is checked against by editing baseline.json:
 
-      --event-name pull_request --base-ref master [--pr-base-sha SHA]
+      --event-name pull_request --base-ref main [--pr-base-sha SHA]
       --event-name push [--before-sha SHA]
       --base-rev REV
 
