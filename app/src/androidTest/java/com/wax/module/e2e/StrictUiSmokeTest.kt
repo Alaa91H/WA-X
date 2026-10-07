@@ -10,7 +10,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wax.module.R
 import com.wax.module.activities.MainActivity
 import com.wax.module.ui.targets.TargetSettingsActivity
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
 import org.junit.runner.RunWith
 
 /**
@@ -20,6 +22,11 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class StrictUiSmokeTest {
+    // A single UI smoke test must never be able to own the instrumentation process
+    // indefinitely. The outer Gradle watchdog remains the final process-level guard.
+    @get:Rule
+    val perTestTimeout: Timeout = Timeout.seconds(120)
+
     @Test
     fun mainNavigationSurfacesAreRendered() {
         ActivityScenario.launch(MainActivity::class.java).use {

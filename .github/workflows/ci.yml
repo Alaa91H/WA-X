@@ -341,7 +341,7 @@ jobs:
               python3 tools/modernization/validate_test_matrix.py --check || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
       - name: Upload complete static diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-static-${{ github.sha }}
@@ -397,7 +397,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - name: Upload complete unit diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-unit-${{ github.sha }}
@@ -481,22 +481,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') && needs.preflight.result == 'success'
     needs: preflight
     runs-on: *stable_runner
-    timeout-minutes: 90
+    timeout-minutes: 35
     cache-mode: write
     permissions:
       contents: read
     env:
       STRICT_E2E_API: '35'
     steps:
-      - name: Restore the cached emulator image and AVD
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cache/wax-e2e
-            ~/.android/avd
-          key: wax-e2e-${{ runner.os }}-api${{ env.STRICT_E2E_API }}-${{ hashFiles('tools/ci/run_strict_e2e.sh') }}
-          restore-keys: |
-            wax-e2e-${{ runner.os }}-api${{ env.STRICT_E2E_API }}-
       - *checkout_full
       - *setup_java
       - name: Set up Gradle for release E2E
@@ -506,10 +497,11 @@ jobs:
           cache-read-only: false
           cache-cleanup: on-success
           add-job-summary: on-failure
-      # Same floor mechanism as the unit suite. The E2E floor is not recorded yet, so this
+      # Every infrastructure phase is bounded inside run_strict_e2e.sh and this step has an\n      # independent 30-minute ceiling. The E2E floor is not recorded yet, so this
       # run records its measurement instead of failing on a threshold nobody has chosen; it
       # becomes binding the moment someone pins it with --update.
       - name: Run Android instrumentation to completion and enforce the coverage floor
+        timeout-minutes: 30
         shell: bash
         run: |
           set +e
@@ -543,7 +535,7 @@ jobs:
           echo "e2e=$e2e_rc junit=$junit_rc coverage=$coverage_rc"
           [[ "$e2e_rc" -eq 0 && "$junit_rc" -eq 0 && "$coverage_rc" -eq 0 ]]
       - name: Upload complete E2E diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-e2e-${{ github.sha }}
@@ -579,7 +571,7 @@ jobs:
             --commit "$GITHUB_SHA" \
             --out build/strict-quality/runtime/latest-runtime.json
       - name: Upload complete runtime-evidence diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-runtime-${{ github.sha }}
@@ -588,7 +580,7 @@ jobs:
           retention-days: 30
   strict-verdict:
     name: Atomic strict quality verdict
-    if: ${{ always() && github.event_name != 'schedule' }}
+    if: ${{ !cancelled() && github.event_name != 'schedule' }}
     needs:
       - preflight
       - build
@@ -647,7 +639,7 @@ jobs:
     name: Privileged signed release packaging
     if: >-
       ${{
-        always() &&
+        !cancelled() &&
         github.event_name != 'pull_request' &&
         github.event_name != 'schedule' &&
         needs.strict-verdict.result == 'success' &&
@@ -1039,7 +1031,7 @@ jobs:
     name: Publish the validated APK to Telegram
     if: >-
       ${{
-        always() &&
+        !cancelled() &&
         github.event_name != 'pull_request' &&
         needs.package.result == 'success' &&
         needs.strict-verdict.result == 'success' &&
@@ -1313,7 +1305,7 @@ jobs:
           retention-days: 30
 
       - name: Summarize Telegram publication
-        if: always()
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -euo pipefail

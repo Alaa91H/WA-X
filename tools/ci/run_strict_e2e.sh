@@ -1,43 +1,110 @@
 #!/usr/bin/env bash
-# Run the instrumented suite on a hardware-accelerated emulator and leave the result and the
-# diagnostics behind in build/strict-quality.
+# Deterministic, fail-bounded Android instrumentation runner for GitHub-hosted CI.
 #
-# The previous version of this script spent its whole budget re-downloading the system image
-# and its AVD on every run and was killed at the job timeout before the first test executed.
-# Nothing about a GitHub-hosted runner lets the SDK be cached in place, so the image is
-# fetched once into a directory that is cached, and the AVD is cached with it.
+# Every external phase has its own timeout. A stalled SDK download, adb connection,
+# emulator boot, instrumentation process or cleanup therefore has a finite upper bound
+# and cannot hold a GitHub Actions runner indefinitely.
 #
 # Exit codes:
 #   0  the instrumented suite ran to completion
-#   1  it ran and failed, or the emulator could not be brought up
+#   1  setup, emulator boot, instrumentation or cleanup-relevant validation failed
 #   2  the runner cannot host an accelerated emulator, so nothing was attempted
-set -u
+set -Eeuo pipefail
 
 API_LEVEL="${STRICT_E2E_API:-35}"
 AVD_NAME="wax-strict-api${API_LEVEL}"
 IMAGE="system-images;android-${API_LEVEL};google_apis;x86_64"
-LOG_DIR="build/strict-quality"
-CACHE_ROOT="${STRICT_E2E_CACHE:-$HOME/.cache/wax-e2e}"
+LOG_DIR="build/strict-quality/e2e"
 SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Android/Sdk}}"
 SDKMANAGER="${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
 AVDMANAGER="${SDK_ROOT}/cmdline-tools/latest/bin/avdmanager"
 EMULATOR="${SDK_ROOT}/emulator/emulator"
 ADB="${SDK_ROOT}/platform-tools/adb"
+SDK_IMAGE_DIR="${SDK_ROOT}/system-images/android-${API_LEVEL}/google_apis/x86_64"
+ANDROID_AVD_HOME="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
+export ANDROID_AVD_HOME
 
-# A cold boot on a hosted runner is slow but not unbounded. Past this the emulator is not
-# going to appear, and the emulator log is more useful than another ten minutes of waiting.
-BOOT_ATTEMPTS="${STRICT_E2E_BOOT_ATTEMPTS:-300}"
-BOOT_INTERVAL="${STRICT_E2E_BOOT_INTERVAL:-4}"
+SDK_TOOLS_TIMEOUT="${STRICT_E2E_SDK_TOOLS_TIMEOUT:-120}"
+SDK_IMAGE_TIMEOUT="${STRICT_E2E_SDK_IMAGE_TIMEOUT:-480}"
+AVD_CREATE_TIMEOUT="${STRICT_E2E_AVD_CREATE_TIMEOUT:-45}"
+ADB_WAIT_TIMEOUT="${STRICT_E2E_ADB_WAIT_TIMEOUT:-45}"
+BOOT_TIMEOUT="${STRICT_E2E_BOOT_TIMEOUT:-240}"
+TEST_TIMEOUT="${STRICT_E2E_TEST_TIMEOUT:-600}"
+CLEANUP_TIMEOUT="${STRICT_E2E_CLEANUP_TIMEOUT:-15}"
 
-mkdir -p "$LOG_DIR" "$CACHE_ROOT"
+mkdir -p "$LOG_DIR" "$ANDROID_AVD_HOME"
+
+emulator_pid=""
+started_at="$(date +%s)"
+
+phase() {
+  printf '\n==> %s\n' "$1"
+}
+
+run_with_timeout() {
+  local label="$1"
+  local seconds="$2"
+  shift 2
+
+  phase "$label (timeout: ${seconds}s)"
+  if timeout --foreground --signal=TERM --kill-after=20s "${seconds}s" "$@"; then
+    return 0
+  fi
+
+  local rc=$?
+  if [[ "$rc" -eq 124 || "$rc" -eq 137 ]]; then
+    echo "::error::${label} exceeded its ${seconds}s timeout"
+  else
+    echo "::error::${label} failed with exit code ${rc}"
+  fi
+  return "$rc"
+}
+
+dump_emulator_log() {
+  if [[ -f "$LOG_DIR/emulator-api${API_LEVEL}.log" ]]; then
+    echo "::group::Emulator log tail"
+    tail -n 200 "$LOG_DIR/emulator-api${API_LEVEL}.log" || true
+    echo "::endgroup::"
+  fi
+}
 
 cleanup() {
-  "$ADB" -s emulator-5554 emu kill >/dev/null 2>&1 || true
+  local rc=$?
+  trap - EXIT INT TERM
+  set +e
+
+  phase "Cleanup"
+  if [[ -x "$ADB" ]]; then
+    timeout "${CLEANUP_TIMEOUT}s" "$ADB" -s emulator-5554 logcat -d       >"$LOG_DIR/logcat-api${API_LEVEL}.txt" 2>&1 || true
+    timeout "${CLEANUP_TIMEOUT}s" "$ADB" -s emulator-5554 emu kill >/dev/null 2>&1 || true
+  fi
+
+  if [[ -n "$emulator_pid" ]] && kill -0 "$emulator_pid" >/dev/null 2>&1; then
+    kill -TERM "$emulator_pid" >/dev/null 2>&1 || true
+    for _ in $(seq 1 10); do
+      kill -0 "$emulator_pid" >/dev/null 2>&1 || break
+      sleep 1
+    done
+    kill -KILL "$emulator_pid" >/dev/null 2>&1 || true
+  fi
+
+  if [[ -x ./gradlew ]]; then
+    timeout "${CLEANUP_TIMEOUT}s" ./gradlew --stop >/dev/null 2>&1 || true
+  fi
+
+  local elapsed=$(( $(date +%s) - started_at ))
+  echo "E2E wall time: ${elapsed}s"
+  exit "$rc"
 }
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-# A hosted runner without nested virtualization is an infrastructure fact, not a defect in
-# this repository, so it is reported as its own outcome instead of as a failed gate.
+if ! command -v timeout >/dev/null 2>&1; then
+  echo "::error::GNU timeout is required for bounded E2E execution"
+  exit 1
+fi
+
 if [[ ! -e /dev/kvm ]]; then
   echo "::warning::/dev/kvm is unavailable, so no accelerated emulator can run here."
   echo "E2E was not attempted. The gate is binding on a runner that can host an emulator."
@@ -50,24 +117,13 @@ if [[ ! -x "$SDKMANAGER" || ! -x "$AVDMANAGER" ]]; then
   exit 1
 fi
 
-image_zip="${CACHE_ROOT}/$(echo "$IMAGE" | tr ';' '_').zip"
-image_dir="${CACHE_ROOT}/$(echo "$IMAGE" | tr ';' '_')"
+# Accept licenses with a hard bound. A license prompt must never own the runner forever.
+timeout 60s bash -c 'yes | "$1" --licenses >/dev/null 2>&1' _ "$SDKMANAGER" || true
 
-# Unpack once into the SDK. The SDK root is not cacheable, so the zip is what survives
-# between runs; sdkmanager then sees the package already installed and returns immediately
-# instead of downloading gigabytes.
-if [[ -f "$image_zip" ]]; then
-  echo "Restoring the cached system image from $image_zip"
-  mkdir -p "$image_dir"
-  unzip -q -o "$image_zip" -d "$image_dir"
-fi
-
-yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
-"$SDKMANAGER" "platform-tools" "emulator" "$IMAGE" || true
-
-if [[ ! -d "${SDK_ROOT}/${IMAGE//;//}" && -d "$image_dir" ]]; then
-  # sdkmanager failed but the cached image is present: install it from the unpacked copy.
-  cp -R "${image_dir}/${IMAGE//;//}" "${SDK_ROOT}/${IMAGE//;//}" 2>/dev/null || true
+# The hosted image normally carries platform-tools/emulator. Install only when absent,
+# and fail closed if that installation cannot complete within the bounded window.
+if [[ ! -x "$EMULATOR" || ! -x "$ADB" ]]; then
+  run_with_timeout "Install Android emulator host tools" "$SDK_TOOLS_TIMEOUT"     "$SDKMANAGER" "platform-tools" "emulator"
 fi
 
 if [[ ! -x "$EMULATOR" || ! -x "$ADB" ]]; then
@@ -75,39 +131,77 @@ if [[ ! -x "$EMULATOR" || ! -x "$ADB" ]]; then
   exit 1
 fi
 
-# Save the image so the next run starts from it rather than from the network.
-if [[ ! -f "$image_zip" && -d "${SDK_ROOT}/${IMAGE//;//}" ]]; then
-  (cd "$SDK_ROOT/${IMAGE//;//}" && zip -q -r "$image_zip" .) || true
+# Install the system image only when the hosted runner does not already provide it.
+# The previous hand-rolled zip cache was slower than the observed clean download and
+# could not be saved after a failed test, so it added complexity without reducing wall time.
+if [[ ! -f "$SDK_IMAGE_DIR/source.properties" ]]; then
+  run_with_timeout "Install Android API ${API_LEVEL} system image" "$SDK_IMAGE_TIMEOUT" \
+    "$SDKMANAGER" "$IMAGE"
 fi
 
-echo "no" | "$AVDMANAGER" create avd --force --name "$AVD_NAME" --package "$IMAGE" --device "pixel_6"
-
-"$EMULATOR" -avd "$AVD_NAME" -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect \
-  -no-snapshot -wipe-data >"$LOG_DIR/emulator-api${API_LEVEL}.log" 2>&1 &
-emulator_pid=$!
-
-"$ADB" wait-for-device
-booted=""
-for _ in $(seq 1 "$BOOT_ATTEMPTS"); do
-  booted="$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
-  [[ "$booted" == "1" ]] && break
-  sleep "$BOOT_INTERVAL"
-done
-if [[ "$booted" != "1" ]]; then
-  echo "::error::Android emulator did not finish booting after $((BOOT_ATTEMPTS * BOOT_INTERVAL))s"
-  kill "$emulator_pid" >/dev/null 2>&1 || true
+if [[ ! -f "$SDK_IMAGE_DIR/source.properties" ]]; then
+  echo "::error::Android system image installation did not produce $SDK_IMAGE_DIR/source.properties"
   exit 1
 fi
 
-"$ADB" shell settings put global window_animation_scale 0
-"$ADB" shell settings put global transition_animation_scale 0
-"$ADB" shell settings put global animator_duration_scale 0
-"$ADB" shell input keyevent 82 || true
+rm -rf "$ANDROID_AVD_HOME/${AVD_NAME}.avd" "$ANDROID_AVD_HOME/${AVD_NAME}.ini"
+run_with_timeout "Create clean AVD" "$AVD_CREATE_TIMEOUT"   bash -c 'echo no | "$1" create avd --force --name "$2" --package "$3" --device pixel_6'   _ "$AVDMANAGER" "$AVD_NAME" "$IMAGE"
 
-set +e
-./gradlew --no-daemon --stacktrace --continue :app:createDebugAndroidTestCoverageReport
-rc=$?
-set -e
+phase "Verify AVD discovery"
+if ! timeout 15s "$EMULATOR" -list-avds | grep -Fxq "$AVD_NAME"; then
+  echo "::error::Created AVD $AVD_NAME is not discoverable in ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
+  find "$ANDROID_AVD_HOME" -maxdepth 2 -type f -print || true
+  exit 1
+fi
 
-"$ADB" logcat -d >"$LOG_DIR/logcat-api${API_LEVEL}.txt" || true
-exit "$rc"
+phase "Start hardware-accelerated emulator"
+"$EMULATOR"   -avd "$AVD_NAME"   -no-window   -no-audio   -no-boot-anim   -no-snapshot   -wipe-data   -accel on   -cores 2   -memory 2048   -gpu swiftshader_indirect   >"$LOG_DIR/emulator-api${API_LEVEL}.log" 2>&1 &
+emulator_pid=$!
+
+if ! timeout --foreground --signal=TERM --kill-after=10s "${ADB_WAIT_TIMEOUT}s" "$ADB" wait-for-device; then
+  echo "::error::adb did not see the emulator within ${ADB_WAIT_TIMEOUT}s"
+  dump_emulator_log
+  exit 1
+fi
+
+phase "Wait for Android boot (timeout: ${BOOT_TIMEOUT}s)"
+boot_deadline=$((SECONDS + BOOT_TIMEOUT))
+booted=""
+while (( SECONDS < boot_deadline )); do
+  if ! kill -0 "$emulator_pid" >/dev/null 2>&1; then
+    echo "::error::The emulator exited before Android finished booting"
+    dump_emulator_log
+    exit 1
+  fi
+
+  booted="$(timeout 5s "$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+  if [[ "$booted" == "1" ]]; then
+    break
+  fi
+  sleep 2
+done
+
+if [[ "$booted" != "1" ]]; then
+  echo "::error::Android emulator did not finish booting within ${BOOT_TIMEOUT}s"
+  dump_emulator_log
+  exit 1
+fi
+
+timeout 10s "$ADB" shell settings put global window_animation_scale 0 || true
+timeout 10s "$ADB" shell settings put global transition_animation_scale 0 || true
+timeout 10s "$ADB" shell settings put global animator_duration_scale 0 || true
+timeout 10s "$ADB" shell input keyevent 82 || true
+
+phase "Run instrumented tests with a hard ${TEST_TIMEOUT}s ceiling"
+if timeout --foreground --signal=TERM --kill-after=30s "${TEST_TIMEOUT}s"     ./gradlew --no-daemon --stacktrace --continue :app:createDebugAndroidTestCoverageReport; then
+  test_rc=0
+else
+  test_rc=$?
+  if [[ "$test_rc" -eq 124 || "$test_rc" -eq 137 ]]; then
+    echo "::error::Android instrumentation exceeded its ${TEST_TIMEOUT}s timeout"
+  else
+    echo "::error::Android instrumentation failed with exit code ${test_rc}"
+  fi
+fi
+
+exit "$test_rc"
