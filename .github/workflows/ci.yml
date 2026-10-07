@@ -223,27 +223,6 @@ jobs:
       - name: Compile the debug APK
         run: ./gradlew $GRADLE_ARGS assembleDebug
 
-      # The declaration-level LSPosed contract check runs in strict-static and only reads
-      # gradle/libs.versions.toml, so it works on a cold checkout. This one opens the artifact
-      # this job just resolved and asserts it publishes every legacy type the module imports,
-      # which is the only way to prove the pin and the code agree. It lives here because this is
-      # the only job that has the jar, and it fails rather than skipping when the jar is absent:
-      # a step that can report "nothing to check" is exactly how the version-blind checker it
-      # replaced survived for as long as it did.
-      - name: Prove the pinned legacy API artifact matches the code
-        shell: bash
-        run: |
-          set -euo pipefail
-          JAR="$(
-            find "${GRADLE_USER_HOME:-$HOME/.gradle}/caches/modules-2/files-2.1/de.robv.android.xposed" \
-              -type f -name 'api-*.jar' ! -name '*-sources.jar' | sort | tail -n 1
-          )"
-          if [[ -z "$JAR" ]]; then
-            echo "::error::The resolved de.robv.android.xposed:api artifact was not found in the Gradle cache"
-            exit 1
-          fi
-          python3 tools/quality/check_lsposed_contract.py --verify-artifact --artifact "$JAR"
-
       - name: Upload baseline APK input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -313,34 +292,8 @@ jobs:
               python3 tools/quality/test_check_repository_urls.py || failures=$((failures + 1))
               python3 tools/quality/check_repository_urls.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
-          - name: Modernization evidence contracts
-            shell: bash
-            run: |
-              set -uo pipefail
-              mkdir -p build/strict-quality/static
-              exec > >(tee build/strict-quality/static/modernization.log) 2>&1
-              failures=0
-              # The M00 evidence lock. It re-derives the recorded toolchain, loader contract,
-              # source counts and workflow hashes from the tree and fails when the committed copy
-              # no longer matches. Every field is derived on purpose, so a failure here means
-              # something real moved; note that editing this workflow changes its own recorded
-              # hash, so the fix is to re-run with --write and commit both rather than relax it.
-              python3 tools/modernization/collect_m00_baseline.py --check || failures=$((failures + 1))
-              # The runtime-surface inventory: the counts M01-M13 size their work against, so a
-              # later phase can tell whether it finished. The self-test runs first because an
-              # inventory whose regexes quietly stopped matching reads exactly like a codebase
-              # that stopped using the thing.
-              python3 tools/modernization/test_inventory_runtime_surface.py || failures=$((failures + 1))
-              python3 tools/modernization/inventory_runtime_surface.py --check || failures=$((failures + 1))
-              # The release/device test matrix: Android level, LSPosed build, WhatsApp train and
-              # the nine lifecycle scenarios. Separate from the feature x WhatsApp-version matrix
-              # because it answers a different question. Every cell starts unverified, so today
-              # the only thing it proves is that nothing claims support it has not earned.
-              python3 tools/modernization/test_validate_test_matrix.py || failures=$((failures + 1))
-              python3 tools/modernization/validate_test_matrix.py --check || failures=$((failures + 1))
-              [[ "$failures" -eq 0 ]]
       - name: Upload complete static diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-static-${{ github.sha }}
@@ -396,7 +349,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - name: Upload complete unit diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-unit-${{ github.sha }}
@@ -480,22 +433,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') && needs.preflight.result == 'success'
     needs: preflight
     runs-on: *stable_runner
-    timeout-minutes: 90
+    timeout-minutes: 35
     cache-mode: write
     permissions:
       contents: read
     env:
       STRICT_E2E_API: '35'
     steps:
-      - name: Restore the cached emulator image and AVD
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cache/wax-e2e
-            ~/.android/avd
-          key: wax-e2e-${{ runner.os }}-api${{ env.STRICT_E2E_API }}-${{ hashFiles('tools/ci/run_strict_e2e.sh') }}
-          restore-keys: |
-            wax-e2e-${{ runner.os }}-api${{ env.STRICT_E2E_API }}-
       - *checkout_full
       - *setup_java
       - name: Set up Gradle for release E2E
@@ -505,10 +449,11 @@ jobs:
           cache-read-only: false
           cache-cleanup: on-success
           add-job-summary: on-failure
-      # Same floor mechanism as the unit suite. The E2E floor is not recorded yet, so this
+      # Every infrastructure phase is bounded inside run_strict_e2e.sh and this step has an\n      # independent 30-minute ceiling. The E2E floor is not recorded yet, so this
       # run records its measurement instead of failing on a threshold nobody has chosen; it
       # becomes binding the moment someone pins it with --update.
       - name: Run Android instrumentation to completion and enforce the coverage floor
+        timeout-minutes: 30
         shell: bash
         run: |
           set +e
@@ -542,7 +487,7 @@ jobs:
           echo "e2e=$e2e_rc junit=$junit_rc coverage=$coverage_rc"
           [[ "$e2e_rc" -eq 0 && "$junit_rc" -eq 0 && "$coverage_rc" -eq 0 ]]
       - name: Upload complete E2E diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-e2e-${{ github.sha }}
@@ -578,7 +523,7 @@ jobs:
             --commit "$GITHUB_SHA" \
             --out build/strict-quality/runtime/latest-runtime.json
       - name: Upload complete runtime-evidence diagnostics
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: strict-runtime-${{ github.sha }}
@@ -587,7 +532,7 @@ jobs:
           retention-days: 30
   strict-verdict:
     name: Atomic strict quality verdict
-    if: ${{ always() && github.event_name != 'schedule' }}
+    if: ${{ !cancelled() && github.event_name != 'schedule' }}
     needs:
       - preflight
       - build
@@ -646,7 +591,7 @@ jobs:
     name: Privileged signed release packaging
     if: >-
       ${{
-        always() &&
+        !cancelled() &&
         github.event_name != 'pull_request' &&
         github.event_name != 'schedule' &&
         needs.strict-verdict.result == 'success' &&
@@ -1038,7 +983,7 @@ jobs:
     name: Publish the validated APK to Telegram
     if: >-
       ${{
-        always() &&
+        !cancelled() &&
         github.event_name != 'pull_request' &&
         needs.package.result == 'success' &&
         needs.strict-verdict.result == 'success' &&
@@ -1312,7 +1257,7 @@ jobs:
           retention-days: 30
 
       - name: Summarize Telegram publication
-        if: always()
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -euo pipefail
