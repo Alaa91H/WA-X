@@ -98,9 +98,9 @@
     "packaging currently excludes META-INF/**",
     "DexKit is bundled as a local AAR",
     "compileSdk=37 while targetSdk=34",
-    "AGP=9.3.1 and Kotlin=2.4.10",
-    "manifest/checker policy is legacy API 93 while version catalog pins xposed-legacy 82",
-    "LSPosed contract checker currently validates coordinate presence but not actual dependency version"
+    "AGP=9.4.1 and Kotlin=2.4.20 (corrected in M00; this manifest previously said 9.3.1 / 2.4.10, which the version catalog never did)",
+    "xposedminversion=93 and xposed-legacy=82 are two different numbering spaces, not a conflict (resolved in M00; see docs/modernization/M00_EVIDENCE_LOCK.md)",
+    "the LSPosed contract checker validated coordinate presence but not the resolved dependency version (fixed in M00)"
   ],
   "verified_targets": {
     "agp": "9.4.0",
