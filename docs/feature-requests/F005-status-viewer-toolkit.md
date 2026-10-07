@@ -293,4 +293,3 @@ Add explicit coverage for:
 - [ ] Duplicate callbacks are idempotent.
 - [ ] Unsupported versions fail safely.
 - [ ] No false success state is shown.
-
