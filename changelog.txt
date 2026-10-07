@@ -1,3 +1,85 @@
+WA X 1.2.0-beta.2
+Release date: 2026-10-07
+
+Development package 2 of the architecture and LSPosed-modernization program: M01,
+structured runtime health. Like the first beta, this one changes almost nothing you
+can see, and that is the point of the phase — it builds the place where the module
+records what actually failed, before anything is allowed to change which evidence
+wins. Built with the release build type (R8 enabled) and signed with the WA X update
+key, so it installs over any earlier beta of 1.2.0 and over 1.1.0 as an update.
+
+M01 — STRUCTURED RUNTIME HEALTH
+- The module no longer answers "is it working?" with a single boolean. Twelve
+  subsystems now report independently: framework, module, scope, target process,
+  injection, preferences, the resolution engine, resolvers, core components,
+  essential hooks, optional hooks, and the runtime as a whole.
+- The overall verdict is computed from the parts and cannot be reported by a
+  component about itself, so one failing part can no longer be shown as the whole
+  module being broken.
+- There is no healthy/not-healthy flag anywhere in the model. "Nothing reported" is
+  a distinct state, and it is never treated as success.
+- Eighteen failure codes, each bound to the one subsystem it is allowed to describe
+  and to a severity, so "the engine failed" cannot be presented as "LSPosed is
+  disabled". Attaching one subsystem's failure to another is refused by the type.
+- A health record carries the session identities (boot, module session, target
+  session), the package, the process, the module version, the target version and the
+  Android level, and it is keyed by package and process — so WhatsApp and WhatsApp
+  Business can never overwrite each other's health.
+- Every bootstrap stage records start, success, failure or a deliberate skip, with
+  its duration. A failure without a code, and a code on a success, are both refused.
+- The record is written atomically, keeps the current and last-known-good state
+  separately, bounds its own history, quarantines an unreadable document instead of
+  deleting it, and survives a restart: the state and the history come back from disk.
+- Free text is redacted on the way in, not only on the way out. Message bodies,
+  contact names, JIDs, tokens and keys are not stored, in memory or on disk.
+
+The first caller is the resolution-engine bootstrap. Health is now opened *before* the
+engine is asked to initialise, and a failure to start it is recorded against the engine
+subsystem with its own code instead of being written to a log nobody reads. What that
+failure does next is deliberately unchanged in this beta: deciding which stages are safe
+to continue with is the next package's work, and it needs the record to exist first.
+
+DEFECTS FROM THE M00 SURVEY
+- Fixed: the failure code for "the resolution engine could not start" was declared,
+  translated for the user in the interface, and produced by nothing — so the one
+  failure it was written for was indistinguishable from an unclassifiable one. It is
+  reachable now, and the test that used to assert it was unreachable asserts the fix
+  instead, so it cannot go back to being unreachable unnoticed.
+- Half fixed, and the project's defect register says which half: an engine failure
+  used to install nothing and report nothing. It now reports; it still installs
+  nothing, because the decision about continuing belongs to a later package.
+
+VERIFICATION
+- 1211 unit tests run in this build, none failing. The previous release ran 1154.
+- Every coverage counter is above its recorded floor, with more code covered than
+  before, not a lower bar.
+- Formatting, static analysis and Android lint are clean, and the build fails on
+  warnings rather than collecting them. Lint has the same four accepted baseline
+  entries as the previous release.
+- The architecture law still holds at all six recorded limits, and the baseline
+  evidence lock is re-derived in this release rather than adjusted by hand.
+- The release APK is marginally smaller than the previous beta's (14,045,234 bytes
+  against 14,061,582).
+
+KNOWN LIMITATIONS
+- Only the resolution-engine state is written by production code in this beta. The
+  other eleven subsystems exist, are stored and report unknown until the next package
+  supplies the evidence that decides them. That is the intended order of this program.
+- The activation banner still comes from the module's own self-hook in this beta. This
+  package builds the place where framework evidence will be recorded; the package that
+  changes what the banner reads is the next one.
+- No device-lab verification. No cell of the project's release and device test matrix
+  is claimed as tested, because no rooted LSPosed device with both WhatsApp builds was
+  available to this package. Nothing here is asserted about behaviour on a real phone.
+- 193 files of recorded architectural debt remain, unchanged from the previous beta.
+
+MIGRATION AND ROLLBACK
+- No settings, preference key or user-visible feature changed. The health document is
+  new: an existing installation simply has none yet, and an unreadable one is
+  quarantined and rewritten rather than trusted.
+- Rollback is installing the previous build; the update key is unchanged, so the
+  downgrade installs normally.
+
 WA X 1.2.0-beta.1
 Release date: 2026-10-07
 
