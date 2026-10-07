@@ -1,0 +1,92 @@
+{
+  "schema": "wax.m00.known-runtime-defects/1",
+  "purpose": "Defects M00 confirmed and reproduced, each with a characterization test that runs today and fails when the defect is fixed. Fixing one of these without updating this file makes the corresponding test fail, which is the point: the fix has to be a deliberate act, not a drift nobody notices.",
+  "note": "These are characterisation tests, not specifications. Each asserts the CURRENT, broken behaviour. Read the entry's owner field before changing a test - a failing test here usually means the phase named in owner has landed and the registry needs updating, not that something regressed.",
+  "source": "docs/modernization/M00_RUNTIME_TRUTH_SIGNALS.md",
+  "defects": [
+    {
+      "id": "M00-DEF-01",
+      "title": "FailureCode.RESOLVER_INIT_FAILED is declared, translated for the user, and unreachable",
+      "severity": "high",
+      "owner": "#320 M01",
+      "locations": [
+        "app/src/main/java/com/wax/module/diagnostics/FailureCode.kt:43",
+        "app/src/main/java/com/wax/module/diagnostics/FailureCode.kt:58",
+        "app/src/main/java/com/wax/module/resolver/UserExplanation.kt:127"
+      ],
+      "current_behaviour": "FailureCode.classify() returns CLASS_NOT_FOUND, MEMBER_NOT_FOUND, ACCESS_DENIED, TIMEOUT, RESOLVER_AMBIGUOUS or UNEXPECTED. It has no branch returning RESOLVER_INIT_FAILED, and no production code constructs a report with that code.",
+      "symptom": "The one failure mode the code was written for - the module could not initialise DexKit - is never reported. UserExplanation has a sentence for it that can never be shown.",
+      "root_cause": "FeatureLoader.start() runs before Instrumentation.callApplicationOnCreate, so FailureReportStore has no Application to attach to. The failure is logged to the Xposed log and start() returns with zero hooks installed.",
+      "characterized_by": [
+        "resolverInitFailureCodeIsDeclaredButNeverProduced"
+      ]
+    },
+    {
+      "id": "M00-DEF-02",
+      "title": "DexKit initialisation failure installs zero hooks and reports nothing",
+      "severity": "high",
+      "owner": "#320 M01",
+      "locations": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt:218",
+        "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt:87"
+      ],
+      "current_behaviour": "Unobfuscator.initWithPath catches every Exception and returns a bare false. FeatureLoader.start() logs \"Can't init dexkit\" and returns before installing any hook.",
+      "symptom": "WhatsApp starts with no WA X behaviour at all, nothing on any surface the user can read, and the WA X app still shows \"Module enabled\" with a version number because the self-hook fired in a different process.",
+      "root_cause": "Same as M00-DEF-01: no reporting channel exists before Application.onCreate.",
+      "characterized_by": [
+        "dexKitInitFailureInstallsNothingAndReportsNothing"
+      ]
+    },
+    {
+      "id": "M00-DEF-03",
+      "title": "The status banner is the module's opinion of itself, not the runtime's state",
+      "severity": "high",
+      "owner": "#320 M01 / #335 A01",
+      "locations": [
+        "app/src/main/java/com/wax/module/ModuleApplication.kt:84",
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:105",
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:59",
+        "app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt:389"
+      ],
+      "current_behaviour": "isXposedEnabled() is System.currentTimeMillis() == 0L, which is unconditionally false unhooked. Its only true path is a self-hook returning a constant, installed only when LSPosed loads WA X into its own process. HomeFragment.checkStateWpp() branches on it alone.",
+      "symptom": "The banner means \"LSPosed is running and has WA X in its own scope\". It cannot be affected by WhatsApp's scope, the target process, injection, preferences, DexKit, resolvers or any feature.",
+      "root_cause": "Self-hook as an activation signal is circular: the module reports itself healthy because it is running.",
+      "characterized_by": [
+        "activationSignalIsFalseWithoutTheSelfHook",
+        "selfHookIsReachableOnlyForTheModuleOwnPackage"
+      ]
+    },
+    {
+      "id": "M00-DEF-04",
+      "title": "modulePath is passed to XModuleResources.createInstance without a null guard",
+      "severity": "medium",
+      "owner": "#322 M03 / #326 M07",
+      "locations": [
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:27",
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:133",
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:182"
+      ],
+      "current_behaviour": "modulePath is String? and assigned only in initZygote. createInstance's first parameter is a Java platform type, so Kotlin accepts passing null when initZygote has not run.",
+      "symptom": "Resource injection is handed a null module path. The failure mode is not asserted here because it depends on LSPosed callback ordering that cannot be reproduced off-device.",
+      "root_cause": "A nullable field is consumed by a platform-typed Java call with no guard.",
+      "characterized_by": [
+        "modulePathIsOnlyAssignedByInitZygote"
+      ]
+    },
+    {
+      "id": "M00-DEF-05",
+      "title": "Resource injection swallows every exception, so it fails silently",
+      "severity": "medium",
+      "owner": "#322 M03 / #326 M07",
+      "locations": [
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:174"
+      ],
+      "current_behaviour": "The loop that walks R.array, R.string and R.drawable and rewrites their static int fields is wrapped in catch (_: Exception) {} with an empty body.",
+      "symptom": "A failed injection means WA X's resources silently do not apply while the banner reads \"enabled\".",
+      "root_cause": "An empty catch turns a real failure into a missing feature. Counted under silent_catch in the M00.06 inventory.",
+      "characterized_by": [
+        "resourceInjectionSwallowsFailures"
+      ]
+    }
+  ]
+}
