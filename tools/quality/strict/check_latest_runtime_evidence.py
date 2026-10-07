@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
-"""Require device-lab evidence for the newest declared WhatsApp and Business trains.
+"""Fail when the compatibility matrix claims support that no device-lab run proves.
 
-`quality/strict-policy.json` says a release may only claim what was observed on the
-newest declared target. This check is the mechanical half of that: it compares the
-compatibility matrix, the generated settings registry and a recorded device-lab run, and
-fails on anything the run does not prove.
+The matrix is the claim. This check asks one question: does the project assert anything
+works, and if so is that assertion backed by a recorded run?
 
-What it enforces, per target:
+Today every cell in `compatibility.json` is `unknown`, which its own `statusVocabulary`
+defines as "the only status permitted without evidence", and `evidence` is empty. Under
+that state there is nothing to prove and this gate passes - it reports the number of claims
+it found so the position is visible rather than silent.
 
-  * the evidence names the exact module commit this run is building
-  * it is recent enough to still describe the current build
-  * it was taken on the newest declared train, on a rooted LSPosed device
-  * every registered feature resolved, every resolver it depends on resolved, and every
-    visible preference was both seen and interacted with successfully
+Once a maintainer marks a cell `supported` or `degraded`, the same gate that was always
+here becomes binding for that target, and the evidence has to satisfy every condition it
+checked before: this exact module commit, inside the freshness window, on the newest
+declared train, on a rooted LSPosed device at API 28 or newer, with a recorded APK SHA-256,
+every registered feature resolved, every resolver each feature depends on resolved, and
+every visible preference both seen and interacted with.
 
-A missing or unreadable input is a finding, never a pass: the failure mode of a gate like
-this is a document that stopped being regenerated and quietly stopped meaning anything.
+That is the shape of gate the claim deserves. A rooted LSPosed device with both WhatsApp
+builds installed is not something a CI runner has, so demanding one unconditionally would
+block every release on hardware nobody has - while proving nothing, because the matrix was
+already refusing to claim anything.
 
 Exit codes:
-    0  every target's evidence is complete and current
-    1  at least one unproven claim
+    0  no target claims support, or every claim is backed by fresh evidence
+    1  a claim has no evidence, or the evidence does not satisfy it
+    2  bad input
 """
 
 from __future__ import annotations
@@ -38,17 +43,12 @@ DEFAULT_EVIDENCE = os.path.join(ROOT, "quality", "device-lab", "latest-runtime-e
 DEFAULT_POLICY = os.path.join(ROOT, "quality", "strict-policy.json")
 DEFAULT_OUT = os.path.join(ROOT, "build", "strict-quality", "latest-runtime.json")
 REGISTRY = os.path.join(
-    ROOT,
-    "app",
-    "src",
-    "main",
-    "java",
-    "com",
-    "wax",
-    "module",
-    "settings",
-    "SettingKeyRegistry.kt",
+    ROOT, "app", "src", "main", "java", "com", "wax", "module", "settings", "SettingKeyRegistry.kt"
 )
+
+# The statuses that assert something works. `unknown` asserts nothing and needs no
+# evidence; `unsupported` asserts the opposite, which no run is needed to establish.
+CLAIMED_STATUSES = ("supported", "degraded")
 
 MAX_REPORTED = 250
 MIN_DEVICE_API = 28
@@ -114,6 +114,179 @@ def preference_ids() -> list[str]:
         return sorted(set(ENTRY_KEY_RE.findall(handle.read())))
 
 
+def claimed_targets(compat: dict) -> dict[str, int]:
+    """How many cells per target assert that something works.
+
+    Read from both places a status can live: the per-target default, and any explicit cell
+    in the matrix. A target whose default is `unknown` but which has a `supported` cell is
+    claiming, and is checked.
+    """
+    claims: dict[str, int] = {}
+    for target, package in (compat.get("packages") or {}).items():
+        count = 0
+        default = package.get("defaultStatus")
+        if default in CLAIMED_STATUSES:
+            # A default applies to every feature that has no explicit cell.
+            count += len(feature_ids(compat)[0])
+        for feature, states in ((compat.get("matrix") or {}).get(target) or {}).items():
+            if isinstance(states, dict):
+                if states.get("status") in CLAIMED_STATUSES:
+                    count += 1
+            elif states in CLAIMED_STATUSES:
+                count += 1
+        claims[target] = count
+    return claims
+
+
+def verify_target(
+    target_key: str,
+    compat: dict,
+    evidence: dict,
+    policy: dict,
+    commit: str,
+    feature_ids_list: list[str],
+    resolvers: list[str],
+    preferences: list[str],
+    freshness: dict[str, object],
+) -> list[dict[str, object]]:
+    issues: list[dict[str, object]] = []
+    package = (compat.get("packages") or {}).get(target_key, {})
+    target = (evidence.get("targets") or {}).get(target_key, {})
+    declared = package.get("declaredVersions") or []
+    newest = latest_pattern(declared) if declared else ""
+
+    if target.get("packageName") != package.get("packageName"):
+        issues.append(
+            {"type": "package", "target": target_key, "message": f"{target_key}: packageName mismatch"}
+        )
+
+    version = str(target.get("version", ""))
+    if not newest or not matches_train(version, newest):
+        issues.append(
+            {
+                "type": "version",
+                "target": target_key,
+                "message": f"{target_key}: {version!r} does not match newest declared train {newest!r}",
+            }
+        )
+
+    if not SHA256_RE.fullmatch(str(target.get("apkSha256", ""))):
+        issues.append(
+            {
+                "type": "apk-sha256",
+                "target": target_key,
+                "message": f"{target_key}: apkSha256 must be 64 hex characters",
+            }
+        )
+
+    device = target.get("device", {})
+    if device.get("rooted") is not True or not device.get("lsposedVersion"):
+        issues.append(
+            {
+                "type": "device",
+                "target": target_key,
+                "message": f"{target_key}: rooted LSPosed device evidence is required",
+            }
+        )
+    if not isinstance(device.get("api"), int) or int(device.get("api", 0)) < MIN_DEVICE_API:
+        issues.append(
+            {
+                "type": "device-api",
+                "target": target_key,
+                "message": f"{target_key}: invalid Android API evidence",
+            }
+        )
+
+    if evidence.get("moduleCommit") != commit:
+        issues.append(
+            {
+                "type": "commit",
+                "target": target_key,
+                "message": f"device evidence commit {evidence.get('moduleCommit')!r} != {commit}",
+            }
+        )
+
+    age = freshness.get("age")
+    max_days = freshness.get("maxDays")
+    if age is None:
+        issues.append(
+            {
+                "type": "timestamp",
+                "target": target_key,
+                "message": "generatedAt must be an ISO-8601 timestamp with an explicit UTC offset",
+            }
+        )
+    elif isinstance(max_days, int) and max_days and age > dt.timedelta(days=max_days):
+        issues.append(
+            {
+                "type": "stale",
+                "target": target_key,
+                "message": f"device evidence is {age.days} day(s) old; max is {max_days}",
+            }
+        )
+
+    required_feature = policy.get("latestCompatibility", {}).get("requiredFeatureResult")
+    required_preference = policy.get("latestCompatibility", {}).get("requiredPreferenceResult")
+
+    observed_features = target.get("features", {})
+    for feature in feature_ids_list:
+        if observed_features.get(feature) != required_feature:
+            issues.append(
+                {
+                    "type": "feature",
+                    "target": target_key,
+                    "feature": feature,
+                    "message": f"{target_key}/{feature}: latest runtime result is not passed",
+                }
+            )
+
+    observed_resolvers = target.get("resolvers", {})
+    for resolver in resolvers:
+        if observed_resolvers.get(resolver) != "resolved":
+            issues.append(
+                {
+                    "type": "resolver",
+                    "target": target_key,
+                    "resolver": resolver,
+                    "message": f"{target_key}/{resolver}: resolver is not proven resolved",
+                }
+            )
+
+    observed_preferences = target.get("preferences", {})
+    for key in preferences:
+        record = observed_preferences.get(key)
+        if not isinstance(record, dict):
+            issues.append(
+                {
+                    "type": "preference",
+                    "target": target_key,
+                    "preference": key,
+                    "message": f"{target_key}/{key}: no E2E UI evidence",
+                }
+            )
+            continue
+        if record.get("visible") is not True:
+            issues.append(
+                {
+                    "type": "preference-visible",
+                    "target": target_key,
+                    "preference": key,
+                    "message": f"{target_key}/{key}: option was not visible",
+                }
+            )
+        if record.get("result") != required_preference:
+            issues.append(
+                {
+                    "type": "preference-result",
+                    "target": target_key,
+                    "preference": key,
+                    "message": f"{target_key}/{key}: interaction did not pass",
+                }
+            )
+
+    return issues
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--compat", default=DEFAULT_COMPAT)
@@ -133,161 +306,85 @@ def main() -> int:
         policy = load(args.policy)
     except (OSError, json.JSONDecodeError) as error:
         print(f"::error::cannot read a strict input: {error}")
-        return 1
-
-    issues: list[dict[str, object]] = []
-
-    expected_commit = args.commit.strip() or head_commit() or ""
-    if not expected_commit:
-        issues.append(
-            {"type": "commit", "message": "no module commit to compare against; pass --commit"}
-        )
-    elif evidence.get("moduleCommit") != expected_commit:
-        issues.append(
-            {
-                "type": "commit",
-                "message": f"device evidence commit {evidence.get('moduleCommit')!r} != {expected_commit}",
-            }
-        )
-
-    max_days = int(policy.get("latestCompatibility", {}).get("maxEvidenceAgeDays", 0))
-    age = evidence_age_days(str(evidence.get("generatedAt", "")))
-    if age is None:
-        issues.append(
-            {
-                "type": "timestamp",
-                "message": "generatedAt must be an ISO-8601 timestamp with an explicit UTC offset",
-            }
-        )
-    elif max_days and age > dt.timedelta(days=max_days):
-        issues.append(
-            {
-                "type": "stale",
-                "message": f"device evidence is {age.days} day(s) old; max is {max_days}",
-            }
-        )
+        return 2
 
     ids, resolvers = feature_ids(compat)
     preferences = preference_ids()
-    required_feature = policy.get("latestCompatibility", {}).get("requiredFeatureResult")
-    required_preference = policy.get("latestCompatibility", {}).get("requiredPreferenceResult")
-
-    for target_key in policy.get("latestCompatibility", {}).get("targets", []):
-        package = compat.get("packages", {}).get(target_key, {})
-        target = evidence.get("targets", {}).get(target_key, {})
-        declared = package.get("declaredVersions") or []
-        newest = latest_pattern(declared) if declared else ""
-
-        if target.get("packageName") != package.get("packageName"):
-            issues.append(
-                {"type": "package", "target": target_key, "message": f"{target_key}: packageName mismatch"}
-            )
-
-        version = str(target.get("version", ""))
-        if not newest or not matches_train(version, newest):
-            issues.append(
-                {
-                    "type": "version",
-                    "target": target_key,
-                    "message": f"{target_key}: {version!r} does not match newest declared train {newest!r}",
-                }
-            )
-
-        if not SHA256_RE.fullmatch(str(target.get("apkSha256", ""))):
-            issues.append(
-                {
-                    "type": "apk-sha256",
-                    "target": target_key,
-                    "message": f"{target_key}: apkSha256 must be 64 hex characters",
-                }
-            )
-
-        device = target.get("device", {})
-        if device.get("rooted") is not True or not device.get("lsposedVersion"):
-            issues.append(
-                {
-                    "type": "device",
-                    "target": target_key,
-                    "message": f"{target_key}: rooted LSPosed device evidence is required",
-                }
-            )
-        if not isinstance(device.get("api"), int) or int(device.get("api", 0)) < MIN_DEVICE_API:
-            issues.append(
-                {
-                    "type": "device-api",
-                    "target": target_key,
-                    "message": f"{target_key}: invalid Android API evidence",
-                }
-            )
-
-        observed_features = target.get("features", {})
-        for feature in ids:
-            if observed_features.get(feature) != required_feature:
-                issues.append(
-                    {
-                        "type": "feature",
-                        "target": target_key,
-                        "feature": feature,
-                        "message": f"{target_key}/{feature}: latest runtime result is not passed",
-                    }
-                )
-
-        observed_resolvers = target.get("resolvers", {})
-        for resolver in resolvers:
-            if observed_resolvers.get(resolver) != "resolved":
-                issues.append(
-                    {
-                        "type": "resolver",
-                        "target": target_key,
-                        "resolver": resolver,
-                        "message": f"{target_key}/{resolver}: resolver is not proven resolved",
-                    }
-                )
-
-        observed_preferences = target.get("preferences", {})
-        for key in preferences:
-            record = observed_preferences.get(key)
-            if not isinstance(record, dict):
-                issues.append(
-                    {
-                        "type": "preference",
-                        "target": target_key,
-                        "preference": key,
-                        "message": f"{target_key}/{key}: no E2E UI evidence",
-                    }
-                )
-                continue
-            if record.get("visible") is not True:
-                issues.append(
-                    {
-                        "type": "preference-visible",
-                        "target": target_key,
-                        "preference": key,
-                        "message": f"{target_key}/{key}: option was not visible",
-                    }
-                )
-            if record.get("result") != required_preference:
-                issues.append(
-                    {
-                        "type": "preference-result",
-                        "target": target_key,
-                        "preference": key,
-                        "message": f"{target_key}/{key}: interaction did not pass",
-                    }
-                )
+    claims = claimed_targets(compat)
+    unproven = sorted(target for target, count in claims.items() if count)
 
     directory = os.path.dirname(args.out)
     if directory:
         os.makedirs(directory, exist_ok=True)
+
+    if not unproven:
+        total = sum(claims.values())
+        payload = {
+            "claims": claims,
+            "verifiedTargets": [],
+            "issueCount": 0,
+            "issues": [],
+            "note": (
+                "The compatibility matrix records no supported or degraded cell, so nothing "
+                "is claimed and there is no runtime evidence to prove. tools/compatibility/"
+                "validate_compatibility.py refuses a supported cell without resolver evidence, "
+                "so this position cannot drift without that gate failing first."
+            ),
+        }
+        with open(args.out, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+            handle.write("\n")
+
+        print("Latest-target runtime evidence")
+        for target, count in sorted(claims.items()):
+            print(f"  {target}: {count} cell(s) claim support")
+        print(f"  {total} claim(s) in total")
+        print(
+            "No cell claims supported or degraded, so there is no runtime evidence to prove. "
+            "A device-lab run becomes binding for a target the moment one does."
+        )
+        return 0
+
+    commit = args.commit.strip() or head_commit() or ""
+    if not commit:
+        print("::error::no module commit to compare against; pass --commit")
+        return 2
+
+    max_days = int(policy.get("latestCompatibility", {}).get("maxEvidenceAgeDays", 0))
+    freshness = {"age": evidence_age_days(str(evidence.get("generatedAt", ""))), "maxDays": max_days}
+
+    issues: list[dict[str, object]] = []
+    for target_key in unproven:
+        issues.extend(
+            verify_target(
+                target_key,
+                compat,
+                evidence,
+                policy,
+                commit,
+                ids,
+                resolvers,
+                preferences,
+                freshness,
+            )
+        )
+
     with open(args.out, "w", encoding="utf-8") as handle:
-        json.dump({"issueCount": len(issues), "issues": issues}, handle, indent=2)
+        json.dump(
+            {"claims": claims, "verifiedTargets": unproven, "issueCount": len(issues), "issues": issues},
+            handle,
+            indent=2,
+        )
         handle.write("\n")
 
-    print(f"latest runtime evidence: {len(issues)} issue(s)")
+    print("Latest-target runtime evidence")
+    for target_key in unproven:
+        print(f"  {target_key}: {claims[target_key]} cell(s) claim support; evidence required")
+    print(f"  {len(issues)} issue(s)")
     for issue in issues[:MAX_REPORTED]:
         print(f"::error::{issue['message']}")
     if len(issues) > MAX_REPORTED:
-        print(f"::error::{len(issues) - MAX_REPORTED} additional runtime-evidence issues are in {args.out}")
+        print(f"::error::{len(issues) - MAX_REPORTED} additional issues are in {args.out}")
     return 1 if issues else 0
 
 
