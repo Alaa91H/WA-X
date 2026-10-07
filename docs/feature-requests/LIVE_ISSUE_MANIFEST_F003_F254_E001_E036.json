@@ -1,0 +1,1778 @@
+{
+  "repository": "Alaa91H/WA-X",
+  "generated_at": "2026-10-07",
+  "status": "imported",
+  "feature_range": "F003-F254",
+  "extension_range": "E001-E036",
+  "feature_issue_count": 252,
+  "extension_issue_count": 36,
+  "total_open_work_items": 288,
+  "features": [
+    {
+      "id": "F003",
+      "issue_number": 10,
+      "title": "[P0][F003] STATUS AUDIO STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/10"
+    },
+    {
+      "id": "F004",
+      "issue_number": 11,
+      "title": "[P0][F004] STATUS VIDEO TOOLKIT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/11"
+    },
+    {
+      "id": "F005",
+      "issue_number": 12,
+      "title": "[P0][F005] STATUS VIEWER TOOLKIT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/12"
+    },
+    {
+      "id": "F006",
+      "issue_number": 13,
+      "title": "[P1][F006] STATUS DRAFTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/13"
+    },
+    {
+      "id": "F007",
+      "issue_number": 14,
+      "title": "[LAB][F007] SCHEDULED STATUS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/14"
+    },
+    {
+      "id": "F008",
+      "issue_number": 15,
+      "title": "[P0][F008] ADVANCED MESSAGE SCHEDULER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/15"
+    },
+    {
+      "id": "F009",
+      "issue_number": 16,
+      "title": "[CORE][F009] SCHEDULER SAFETY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/16"
+    },
+    {
+      "id": "F010",
+      "issue_number": 17,
+      "title": "[P0][F010] TIMED AUTO DELETE FOR EVERYONE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/17"
+    },
+    {
+      "id": "F011",
+      "issue_number": 18,
+      "title": "[P0][F011] AUTOMATIC VIEW-ONCE MEDIA POLICY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/18"
+    },
+    {
+      "id": "F012",
+      "issue_number": 19,
+      "title": "[P1][F012] MESSAGE REMINDERS / SNOOZE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/19"
+    },
+    {
+      "id": "F013",
+      "issue_number": 20,
+      "title": "[P1][F013] SMART DRAFTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/20"
+    },
+    {
+      "id": "F014",
+      "issue_number": 21,
+      "title": "[P1][F014] MESSAGE TEMPLATES / SNIPPETS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/21"
+    },
+    {
+      "id": "F015",
+      "issue_number": 22,
+      "title": "[P1][F015] SAFE AUTO REPLY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/22"
+    },
+    {
+      "id": "F016",
+      "issue_number": 23,
+      "title": "[P2][F016] UNIFIED AUTOMATION RULE ENGINE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/23"
+    },
+    {
+      "id": "F017",
+      "issue_number": 24,
+      "title": "[P1][F017] TASKER V2",
+      "url": "https://github.com/Alaa91H/WA-X/issues/24"
+    },
+    {
+      "id": "F018",
+      "issue_number": 25,
+      "title": "[P1][F018] QUICK SETTINGS TILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/25"
+    },
+    {
+      "id": "F019",
+      "issue_number": 26,
+      "title": "[P1][F019] HOME-SCREEN SHORTCUTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/26"
+    },
+    {
+      "id": "F020",
+      "issue_number": 27,
+      "title": "[P0][F020] PER-CHAT / PER-GROUP MEDIA POLICY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/27"
+    },
+    {
+      "id": "F021",
+      "issue_number": 28,
+      "title": "[P1][F021] MEDIA RETENTION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/28"
+    },
+    {
+      "id": "F022",
+      "issue_number": 31,
+      "title": "[P0][F022] ANDROID PHOTO PICKER DIRECT MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/31"
+    },
+    {
+      "id": "F023",
+      "issue_number": 32,
+      "title": "[P1][F023] EXIF / METADATA CLEANER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/32"
+    },
+    {
+      "id": "F024",
+      "issue_number": 33,
+      "title": "[P1][F024] LINK TRACKING CLEANER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/33"
+    },
+    {
+      "id": "F025",
+      "issue_number": 34,
+      "title": "[P1][F025] DUPLICATE MEDIA FINDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/34"
+    },
+    {
+      "id": "F026",
+      "issue_number": 35,
+      "title": "[P1][F026] SMART STORAGE MANAGER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/35"
+    },
+    {
+      "id": "F027",
+      "issue_number": 36,
+      "title": "[P0][F027] VOICE NOTE CONTROL CENTER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/36"
+    },
+    {
+      "id": "F028",
+      "issue_number": 37,
+      "title": "[P0][F028] VOICE NOTE TRANSCRIPTION RULES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/37"
+    },
+    {
+      "id": "F029",
+      "issue_number": 38,
+      "title": "[P1][F029] VOICE NOTE SUMMARY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/38"
+    },
+    {
+      "id": "F030",
+      "issue_number": 39,
+      "title": "[P1][F030] VOICE NOTE BROWSER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/39"
+    },
+    {
+      "id": "F031",
+      "issue_number": 40,
+      "title": "[P1][F031] VOICE NOTE PROCESSING",
+      "url": "https://github.com/Alaa91H/WA-X/issues/40"
+    },
+    {
+      "id": "F032",
+      "issue_number": 41,
+      "title": "[P0][F032] NOTIFICATION COOLDOWN / BURST CONTROL",
+      "url": "https://github.com/Alaa91H/WA-X/issues/41"
+    },
+    {
+      "id": "F033",
+      "issue_number": 42,
+      "title": "[P1][F033] NOTIFICATION DIGEST",
+      "url": "https://github.com/Alaa91H/WA-X/issues/42"
+    },
+    {
+      "id": "F034",
+      "issue_number": 43,
+      "title": "[P1][F034] NOTIFICATION PRESENTATION CONTROLS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/43"
+    },
+    {
+      "id": "F035",
+      "issue_number": 44,
+      "title": "[P1][F035] FOCUS / QUIET SCHEDULES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/44"
+    },
+    {
+      "id": "F036",
+      "issue_number": 45,
+      "title": "[P1][F036] CALL BLOCKING SCHEDULE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/45"
+    },
+    {
+      "id": "F037",
+      "issue_number": 46,
+      "title": "[P1][F037] MANUAL CALL RECORDING",
+      "url": "https://github.com/Alaa91H/WA-X/issues/46"
+    },
+    {
+      "id": "F038",
+      "issue_number": 47,
+      "title": "[P1][F038] POST-CALL NOTES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/47"
+    },
+    {
+      "id": "F039",
+      "issue_number": 48,
+      "title": "[P1][F039] MISSED CALL REMINDERS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/48"
+    },
+    {
+      "id": "F040",
+      "issue_number": 49,
+      "title": "[P1][F040] NATIVE LISTS+",
+      "url": "https://github.com/Alaa91H/WA-X/issues/49"
+    },
+    {
+      "id": "F041",
+      "issue_number": 50,
+      "title": "[P1][F041] PER-CHAT PRIVACY PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/50"
+    },
+    {
+      "id": "F042",
+      "issue_number": 51,
+      "title": "[P1][F042] TEMPORARY STEALTH MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/51"
+    },
+    {
+      "id": "F043",
+      "issue_number": 52,
+      "title": "[P1][F043] PANIC PRIVACY MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/52"
+    },
+    {
+      "id": "F044",
+      "issue_number": 53,
+      "title": "[P1][F044] CLIPBOARD AUTO-CLEAR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/53"
+    },
+    {
+      "id": "F045",
+      "issue_number": 54,
+      "title": "[P1][F045] RECENTS SCREEN PRIVACY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/54"
+    },
+    {
+      "id": "F046",
+      "issue_number": 55,
+      "title": "[P1][F046] BIOMETRIC LOCK FOR WA X",
+      "url": "https://github.com/Alaa91H/WA-X/issues/55"
+    },
+    {
+      "id": "F047",
+      "issue_number": 56,
+      "title": "[P1][F047] CONTACT NOTES / NICKNAMES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/56"
+    },
+    {
+      "id": "F048",
+      "issue_number": 57,
+      "title": "[P1][F048] CONTACT TAGS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/57"
+    },
+    {
+      "id": "F049",
+      "issue_number": 58,
+      "title": "[P1][F049] ADVANCED MESSAGE SEARCH",
+      "url": "https://github.com/Alaa91H/WA-X/issues/58"
+    },
+    {
+      "id": "F050",
+      "issue_number": 59,
+      "title": "[P1][F050] JUMP TO DATE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/59"
+    },
+    {
+      "id": "F051",
+      "issue_number": 60,
+      "title": "[P1][F051] LOCAL MESSAGE BOOKMARKS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/60"
+    },
+    {
+      "id": "F052",
+      "issue_number": 61,
+      "title": "[P1][F052] FOLLOW-UP FLAG",
+      "url": "https://github.com/Alaa91H/WA-X/issues/61"
+    },
+    {
+      "id": "F053",
+      "issue_number": 62,
+      "title": "[P1][F053] EDITED MESSAGE DIFF VIEWER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/62"
+    },
+    {
+      "id": "F054",
+      "issue_number": 63,
+      "title": "[P1][F054] ARCHIVE ENHANCEMENTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/63"
+    },
+    {
+      "id": "F055",
+      "issue_number": 64,
+      "title": "[P2][F055] CONVERSATION INTELLIGENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/64"
+    },
+    {
+      "id": "F056",
+      "issue_number": 65,
+      "title": "[P2][F056] OPTIONAL LOCAL AI PACK",
+      "url": "https://github.com/Alaa91H/WA-X/issues/65"
+    },
+    {
+      "id": "F057",
+      "issue_number": 66,
+      "title": "[P1][F057] BUSINESS WORKSPACE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/66"
+    },
+    {
+      "id": "F058",
+      "issue_number": 67,
+      "title": "[P1][F058] SLA / RESPONSE TIMER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/67"
+    },
+    {
+      "id": "F059",
+      "issue_number": 68,
+      "title": "[P1][F059] WORKING HOURS PROFILE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/68"
+    },
+    {
+      "id": "F060",
+      "issue_number": 69,
+      "title": "[P1][F060] DISTRACTION-FREE MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/69"
+    },
+    {
+      "id": "F061",
+      "issue_number": 70,
+      "title": "[P1][F061] WA X MINI CONTROL CENTER INSIDE WHATSAPP",
+      "url": "https://github.com/Alaa91H/WA-X/issues/70"
+    },
+    {
+      "id": "F062",
+      "issue_number": 71,
+      "title": "[P1][F062] VERSION GUARDIAN",
+      "url": "https://github.com/Alaa91H/WA-X/issues/71"
+    },
+    {
+      "id": "F063",
+      "issue_number": 72,
+      "title": "[P1][F063] FEATURE-LEVEL AUTO DISABLE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/72"
+    },
+    {
+      "id": "F064",
+      "issue_number": 73,
+      "title": "[P1][F064] SAFE MODE ENHANCEMENTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/73"
+    },
+    {
+      "id": "F065",
+      "issue_number": 74,
+      "title": "[P1][F065] SELECTIVE BACKUP",
+      "url": "https://github.com/Alaa91H/WA-X/issues/74"
+    },
+    {
+      "id": "F066",
+      "issue_number": 75,
+      "title": "[P1][F066] ENCRYPTED LOCAL BACKUP",
+      "url": "https://github.com/Alaa91H/WA-X/issues/75"
+    },
+    {
+      "id": "F067",
+      "issue_number": 76,
+      "title": "[P1][F067] BACKUP VERIFICATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/76"
+    },
+    {
+      "id": "F068",
+      "issue_number": 77,
+      "title": "[P1][F068] SELECTIVE RESTORE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/77"
+    },
+    {
+      "id": "F069",
+      "issue_number": 78,
+      "title": "[LAB][F069] MULTIPLE MSGSTORE / DATABASE IMPORT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/78"
+    },
+    {
+      "id": "F070",
+      "issue_number": 79,
+      "title": "[P1][F070] PROFILE PICTURE DOWNLOAD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/79"
+    },
+    {
+      "id": "F071",
+      "issue_number": 80,
+      "title": "[P2][F071] FORWARDED LABEL CONTROL",
+      "url": "https://github.com/Alaa91H/WA-X/issues/80"
+    },
+    {
+      "id": "F072",
+      "issue_number": 81,
+      "title": "[P1][F072] TICK COLOR ACCESSIBILITY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/81"
+    },
+    {
+      "id": "F073",
+      "issue_number": 82,
+      "title": "[P1][F073] ACCESSIBILITY PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/82"
+    },
+    {
+      "id": "F074",
+      "issue_number": 83,
+      "title": "[P1][F074] PROFILE COMPOSITION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/83"
+    },
+    {
+      "id": "F075",
+      "issue_number": 84,
+      "title": "[P1][F075] ACCOUNT-AWARE AUTOMATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/84"
+    },
+    {
+      "id": "F076",
+      "issue_number": 85,
+      "title": "[P1][F076] CROSS-TARGET / CROSS-ACCOUNT COPY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/85"
+    },
+    {
+      "id": "F077",
+      "issue_number": 86,
+      "title": "[P0][F077] PRIVACY & SECURITY CENTER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/86"
+    },
+    {
+      "id": "F078",
+      "issue_number": 87,
+      "title": "[P0][F078] SENSITIVE CHAT MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/87"
+    },
+    {
+      "id": "F079",
+      "issue_number": 88,
+      "title": "[P0][F079] UNTRUSTED SENDER FIREWALL",
+      "url": "https://github.com/Alaa91H/WA-X/issues/88"
+    },
+    {
+      "id": "F080",
+      "issue_number": 89,
+      "title": "[P0][F080] SENSITIVE DATA LEAK PREVENTION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/89"
+    },
+    {
+      "id": "F081",
+      "issue_number": 90,
+      "title": "[P0][F081] WRONG-RECIPIENT & FORWARDING GUARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/90"
+    },
+    {
+      "id": "F082",
+      "issue_number": 91,
+      "title": "[P1][F082] SCREEN CAPTURE & SCREEN-SHARING SHIELD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/91"
+    },
+    {
+      "id": "F083",
+      "issue_number": 92,
+      "title": "[P1][F083] INCOGNITO KEYBOARD / NO-LEARNING MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/92"
+    },
+    {
+      "id": "F084",
+      "issue_number": 93,
+      "title": "[P1][F084] SECURE LINK GUARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/93"
+    },
+    {
+      "id": "F085",
+      "issue_number": 94,
+      "title": "[P1][F085] ATTACHMENT FIREWALL & QUARANTINE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/94"
+    },
+    {
+      "id": "F086",
+      "issue_number": 95,
+      "title": "[P1][F086] HIDDEN CHAT FOOTPRINT SUPPRESSION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/95"
+    },
+    {
+      "id": "F087",
+      "issue_number": 96,
+      "title": "[P1][F087] CONTACT IDENTITY MASK / LOCAL ALIAS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/96"
+    },
+    {
+      "id": "F088",
+      "issue_number": 97,
+      "title": "[P1][F088] LINKED DEVICE WATCH",
+      "url": "https://github.com/Alaa91H/WA-X/issues/97"
+    },
+    {
+      "id": "F089",
+      "issue_number": 98,
+      "title": "[P1][F089] SECURITY CODE / ENCRYPTION IDENTITY CHANGE MONITOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/98"
+    },
+    {
+      "id": "F090",
+      "issue_number": 99,
+      "title": "[P1][F090] ENCRYPTED LOCAL PRIVACY DATA",
+      "url": "https://github.com/Alaa91H/WA-X/issues/99"
+    },
+    {
+      "id": "F091",
+      "issue_number": 100,
+      "title": "[P1][F091] CONFIDENTIAL CHAT SESSION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/100"
+    },
+    {
+      "id": "F092",
+      "issue_number": 101,
+      "title": "[P2][F092] OVERLAY / TAPJACKING GUARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/101"
+    },
+    {
+      "id": "F093",
+      "issue_number": 102,
+      "title": "[P0][F093] STOCK WHATSAPP / ZERO-VISIBLE-MODIFICATION MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/102"
+    },
+    {
+      "id": "F094",
+      "issue_number": 103,
+      "title": "[P0][F094] ACCOUNT TAKEOVER GUARDIAN",
+      "url": "https://github.com/Alaa91H/WA-X/issues/103"
+    },
+    {
+      "id": "F095",
+      "issue_number": 104,
+      "title": "[P1][F095] USERNAME & PHONE-NUMBER PRIVACY MANAGER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/104"
+    },
+    {
+      "id": "F096",
+      "issue_number": 105,
+      "title": "[P1][F096] ENCRYPTED PRIVATE MEDIA VAULT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/105"
+    },
+    {
+      "id": "F097",
+      "issue_number": 106,
+      "title": "[P1][F097] PERMISSION & SENSOR PRIVACY MONITOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/106"
+    },
+    {
+      "id": "F098",
+      "issue_number": 107,
+      "title": "[P1][F098] GROUP SECURITY CHANGE ALERTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/107"
+    },
+    {
+      "id": "F099",
+      "issue_number": 108,
+      "title": "[P1][F099] SECURE MEDIA EXPORT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/108"
+    },
+    {
+      "id": "F100",
+      "issue_number": 109,
+      "title": "[P1][F100] PRIVACY EVENT TIMELINE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/109"
+    },
+    {
+      "id": "F101",
+      "issue_number": 110,
+      "title": "[LAB][F101] VIDEO NOTE ATTACHMENT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/110"
+    },
+    {
+      "id": "F102",
+      "issue_number": 111,
+      "title": "[LAB][F102] SILENT SEND",
+      "url": "https://github.com/Alaa91H/WA-X/issues/111"
+    },
+    {
+      "id": "F103",
+      "issue_number": 112,
+      "title": "[P1][F103] SINGLE-TAP MESSAGE ACTION POPUP",
+      "url": "https://github.com/Alaa91H/WA-X/issues/112"
+    },
+    {
+      "id": "F104",
+      "issue_number": 113,
+      "title": "[P0][F104] UNDO SEND BUFFER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/113"
+    },
+    {
+      "id": "F105",
+      "issue_number": 114,
+      "title": "[P0][F105] MULTI-SELECT BATCH MESSAGE ACTIONS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/114"
+    },
+    {
+      "id": "F106",
+      "issue_number": 115,
+      "title": "[P1][F106] REPLY CHAIN / QUOTE NAVIGATOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/115"
+    },
+    {
+      "id": "F107",
+      "issue_number": 116,
+      "title": "[P1][F107] PINNED MESSAGE HUB",
+      "url": "https://github.com/Alaa91H/WA-X/issues/116"
+    },
+    {
+      "id": "F108",
+      "issue_number": 117,
+      "title": "[P1][F108] COMPOSER FORMATTING TOOLBAR & PREVIEW",
+      "url": "https://github.com/Alaa91H/WA-X/issues/117"
+    },
+    {
+      "id": "F109",
+      "issue_number": 118,
+      "title": "[P1][F109] SAVED SEARCHES & SMART FILTERS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/118"
+    },
+    {
+      "id": "F110",
+      "issue_number": 119,
+      "title": "[P1][F110] UNIFIED LOCAL SEARCH HUB",
+      "url": "https://github.com/Alaa91H/WA-X/issues/119"
+    },
+    {
+      "id": "F111",
+      "issue_number": 120,
+      "title": "[P1][F111] MESSAGE NAVIGATION BACKSTACK",
+      "url": "https://github.com/Alaa91H/WA-X/issues/120"
+    },
+    {
+      "id": "F112",
+      "issue_number": 121,
+      "title": "[P0][F112] STATUS AUDIENCE PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/121"
+    },
+    {
+      "id": "F113",
+      "issue_number": 122,
+      "title": "[P1][F113] OWN STATUS ARCHIVE & MEMORIES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/122"
+    },
+    {
+      "id": "F114",
+      "issue_number": 123,
+      "title": "[P1][F114] STATUS FEED FILTERS / FAVORITES / SNOOZE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/123"
+    },
+    {
+      "id": "F115",
+      "issue_number": 129,
+      "title": "[P1][F115] STATUS QUALITY & NETWORK OPTIMIZER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/129"
+    },
+    {
+      "id": "F116",
+      "issue_number": 130,
+      "title": "[P1][F116] STATUS CROSS-POST PRIVACY GUARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/130"
+    },
+    {
+      "id": "F117",
+      "issue_number": 131,
+      "title": "[P2][F117] CHANNEL ORGANIZER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/131"
+    },
+    {
+      "id": "F118",
+      "issue_number": 132,
+      "title": "[P2][F118] CHANNEL DIGEST & KEYWORD ALERTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/132"
+    },
+    {
+      "id": "F119",
+      "issue_number": 133,
+      "title": "[P1][F119] CALL RECORDING TRANSCRIPTION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/133"
+    },
+    {
+      "id": "F120",
+      "issue_number": 134,
+      "title": "[P1][F120] CALL SUMMARY & ACTION ITEMS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/134"
+    },
+    {
+      "id": "F121",
+      "issue_number": 135,
+      "title": "[P1][F121] CALL QUALITY DIAGNOSTICS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/135"
+    },
+    {
+      "id": "F122",
+      "issue_number": 136,
+      "title": "[P1][F122] CALL NETWORK / MEDIA POLICY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/136"
+    },
+    {
+      "id": "F123",
+      "issue_number": 137,
+      "title": "[P2][F123] CALL AUDIO ROUTE PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/137"
+    },
+    {
+      "id": "F124",
+      "issue_number": 138,
+      "title": "[P1][F124] IN-CALL BOOKMARKS / MARKERS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/138"
+    },
+    {
+      "id": "F125",
+      "issue_number": 139,
+      "title": "[P0][F125] MEDIA SEND EDITOR & REDACTION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/139"
+    },
+    {
+      "id": "F126",
+      "issue_number": 140,
+      "title": "[P1][F126] MEDIA COMPATIBILITY CONVERTER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/140"
+    },
+    {
+      "id": "F127",
+      "issue_number": 141,
+      "title": "[P1][F127] SECURE DOCUMENT SCANNER & REDACTOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/141"
+    },
+    {
+      "id": "F128",
+      "issue_number": 142,
+      "title": "[P1][F128] OCR & DOCUMENT CONTENT INDEX",
+      "url": "https://github.com/Alaa91H/WA-X/issues/142"
+    },
+    {
+      "id": "F129",
+      "issue_number": 143,
+      "title": "[P1][F129] STICKER & GIF MANAGER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/143"
+    },
+    {
+      "id": "F130",
+      "issue_number": 144,
+      "title": "[P2][F130] RECIPIENT WATERMARK PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/144"
+    },
+    {
+      "id": "F131",
+      "issue_number": 145,
+      "title": "[P1][F131] ATTACHMENT FILENAME SANITIZER & RENAMER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/145"
+    },
+    {
+      "id": "F132",
+      "issue_number": 146,
+      "title": "[P1][F132] NOTIFICATION ACTION CUSTOMIZER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/146"
+    },
+    {
+      "id": "F133",
+      "issue_number": 147,
+      "title": "[P2][F133] WEAR OS PRIVACY & QUICK ACTIONS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/147"
+    },
+    {
+      "id": "F134",
+      "issue_number": 148,
+      "title": "[P1][F134] ANDROID AUTO / DRIVING PRIVACY MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/148"
+    },
+    {
+      "id": "F135",
+      "issue_number": 149,
+      "title": "[P2][F135] BLUETOOTH / HEADSET PRIVACY & ROUTE RULES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/149"
+    },
+    {
+      "id": "F136",
+      "issue_number": 150,
+      "title": "[P1][F136] GROUP EVENT ↔ CALENDAR SYNC",
+      "url": "https://github.com/Alaa91H/WA-X/issues/150"
+    },
+    {
+      "id": "F137",
+      "issue_number": 151,
+      "title": "[P1][F137] POLL CENTER & TEMPLATES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/151"
+    },
+    {
+      "id": "F138",
+      "issue_number": 152,
+      "title": "[P1][F138] GROUP MEMBER NOTES & LOCAL ROLES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/152"
+    },
+    {
+      "id": "F139",
+      "issue_number": 153,
+      "title": "[P0][F139] GROUP SAFETY ASSISTANT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/153"
+    },
+    {
+      "id": "F140",
+      "issue_number": 154,
+      "title": "[P1][F140] GROUP MENTION CONTROLS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/154"
+    },
+    {
+      "id": "F141",
+      "issue_number": 155,
+      "title": "[P1][F141] COMMUNITY / ANNOUNCEMENT DIGEST",
+      "url": "https://github.com/Alaa91H/WA-X/issues/155"
+    },
+    {
+      "id": "F142",
+      "issue_number": 156,
+      "title": "[P2][F142] LOCAL GROUP TOPIC / SUBFILTER VIEWS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/156"
+    },
+    {
+      "id": "F143",
+      "issue_number": 157,
+      "title": "[P0][F143] UNIFIED TARGET / ACCOUNT DASHBOARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/157"
+    },
+    {
+      "id": "F144",
+      "issue_number": 158,
+      "title": "[P1][F144] CROSS-ACCOUNT UNREAD CENTER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/158"
+    },
+    {
+      "id": "F145",
+      "issue_number": 159,
+      "title": "[P0][F145] E2E WA X SETTINGS SYNC",
+      "url": "https://github.com/Alaa91H/WA-X/issues/159"
+    },
+    {
+      "id": "F146",
+      "issue_number": 161,
+      "title": "[P1][F146] BACKUP DESTINATION PROVIDERS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/161"
+    },
+    {
+      "id": "F147",
+      "issue_number": 162,
+      "title": "[P0][F147] INCREMENTAL / DEDUPLICATED BACKUP",
+      "url": "https://github.com/Alaa91H/WA-X/issues/162"
+    },
+    {
+      "id": "F148",
+      "issue_number": 163,
+      "title": "[P1][F148] BACKUP SNAPSHOT RETENTION & PRUNING",
+      "url": "https://github.com/Alaa91H/WA-X/issues/163"
+    },
+    {
+      "id": "F149",
+      "issue_number": 164,
+      "title": "[P0][F149] RESTORE DRY-RUN & CONFLICT RESOLVER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/164"
+    },
+    {
+      "id": "F150",
+      "issue_number": 165,
+      "title": "[P1][F150] DISASTER RECOVERY WIZARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/165"
+    },
+    {
+      "id": "F151",
+      "issue_number": 166,
+      "title": "[P0][F151] AUTOMATIC PRE-CHANGE CHECKPOINT & ROLLBACK",
+      "url": "https://github.com/Alaa91H/WA-X/issues/166"
+    },
+    {
+      "id": "F152",
+      "issue_number": 167,
+      "title": "[P1][F152] HUMAN-READABLE WA X DATA EXPORT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/167"
+    },
+    {
+      "id": "F153",
+      "issue_number": 168,
+      "title": "[P1][F153] LOCAL DATA RETENTION & TEMPORARY-FILE AUDITOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/168"
+    },
+    {
+      "id": "F154",
+      "issue_number": 169,
+      "title": "[P0][F154] FIRST-RUN CAPABILITY SCANNER & SETUP WIZARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/169"
+    },
+    {
+      "id": "F155",
+      "issue_number": 170,
+      "title": "[P0][F155] RESOLVER SELF-TEST / FEATURE HEALTH CHECK",
+      "url": "https://github.com/Alaa91H/WA-X/issues/170"
+    },
+    {
+      "id": "F156",
+      "issue_number": 174,
+      "title": "[P0][F156] HOOK CONFLICT DETECTOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/174"
+    },
+    {
+      "id": "F157",
+      "issue_number": 175,
+      "title": "[P0][F157] CRASH-LOOP AUTO SAFE MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/175"
+    },
+    {
+      "id": "F158",
+      "issue_number": 176,
+      "title": "[P1][F158] FEATURE PERFORMANCE / BATTERY PROFILER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/176"
+    },
+    {
+      "id": "F159",
+      "issue_number": 177,
+      "title": "[P0][F159] WHATSAPP UPDATE COMPATIBILITY DIFF",
+      "url": "https://github.com/Alaa91H/WA-X/issues/177"
+    },
+    {
+      "id": "F160",
+      "issue_number": 178,
+      "title": "[LAB][F160] SIGNED RESOLVER-METADATA HOTFIX PACKS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/178"
+    },
+    {
+      "id": "F161",
+      "issue_number": 179,
+      "title": "[P0][F161] DIAGNOSTICS BUNDLE & ONE-TAP ISSUE REPORTER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/179"
+    },
+    {
+      "id": "F162",
+      "issue_number": 180,
+      "title": "[P1][F162] UPDATE CHANNEL & RELEASE SIGNATURE VERIFICATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/180"
+    },
+    {
+      "id": "F163",
+      "issue_number": 181,
+      "title": "[P1][F163] SETTINGS CHANGE HISTORY & ROLLBACK",
+      "url": "https://github.com/Alaa91H/WA-X/issues/181"
+    },
+    {
+      "id": "F164",
+      "issue_number": 182,
+      "title": "[P0][F164] FEATURE DEPENDENCY / CONFLICT RESOLVER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/182"
+    },
+    {
+      "id": "F165",
+      "issue_number": 183,
+      "title": "[LAB][F165] OPT-IN SANITIZED COMPATIBILITY TELEMETRY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/183"
+    },
+    {
+      "id": "F166",
+      "issue_number": 184,
+      "title": "[P0][F166] LSPOSED / SCOPE / ROOT HEALTH ASSISTANT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/184"
+    },
+    {
+      "id": "F167",
+      "issue_number": 185,
+      "title": "[P1][F167] LOCAL SEMANTIC SEARCH",
+      "url": "https://github.com/Alaa91H/WA-X/issues/185"
+    },
+    {
+      "id": "F168",
+      "issue_number": 186,
+      "title": "[P2][F168] LOCAL RAG — ASK YOUR ARCHIVE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/186"
+    },
+    {
+      "id": "F169",
+      "issue_number": 187,
+      "title": "[P1][F169] AI RUNTIME & MODEL MANAGER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/187"
+    },
+    {
+      "id": "F170",
+      "issue_number": 188,
+      "title": "[P1][F170] AI PRIVACY ROUTER & PROVIDER CONSENT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/188"
+    },
+    {
+      "id": "F171",
+      "issue_number": 189,
+      "title": "[P1][F171] BUSINESS INBOX TRIAGE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/189"
+    },
+    {
+      "id": "F172",
+      "issue_number": 190,
+      "title": "[P1][F172] CRM PIPELINE & CUSTOMER STAGES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/190"
+    },
+    {
+      "id": "F173",
+      "issue_number": 191,
+      "title": "[P1][F173] CUSTOMER CONSENT / PREFERENCE LOG",
+      "url": "https://github.com/Alaa91H/WA-X/issues/191"
+    },
+    {
+      "id": "F174",
+      "issue_number": 192,
+      "title": "[P1][F174] NATIVE BUSINESS LABELS+ EXTENSIONS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/192"
+    },
+    {
+      "id": "F175",
+      "issue_number": 193,
+      "title": "[P1][F175] RESPONSE ANALYTICS & SLA DASHBOARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/193"
+    },
+    {
+      "id": "F176",
+      "issue_number": 194,
+      "title": "[P1][F176] CUSTOMER TIMEZONE-AWARE SCHEDULER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/194"
+    },
+    {
+      "id": "F177",
+      "issue_number": 195,
+      "title": "[P1][F177] CONVERSATION / CRM HANDOFF EXPORT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/195"
+    },
+    {
+      "id": "F178",
+      "issue_number": 196,
+      "title": "[P1][F178] READ ALOUD / TTS FOR SELECTED MESSAGES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/196"
+    },
+    {
+      "id": "F179",
+      "issue_number": 197,
+      "title": "[P2][F179] HANDS-FREE CONVERSATION MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/197"
+    },
+    {
+      "id": "F180",
+      "issue_number": 198,
+      "title": "[P1][F180] VIDEO / CALL CAPTIONING",
+      "url": "https://github.com/Alaa91H/WA-X/issues/198"
+    },
+    {
+      "id": "F181",
+      "issue_number": 205,
+      "title": "[P1][F181] COMMAND PALETTE & GLOBAL MANAGER SEARCH",
+      "url": "https://github.com/Alaa91H/WA-X/issues/205"
+    },
+    {
+      "id": "F182",
+      "issue_number": 206,
+      "title": "[P1][F182] FAVORITE / RECENT SETTINGS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/206"
+    },
+    {
+      "id": "F183",
+      "issue_number": 207,
+      "title": "[P1][F183] PROFILE SHARE / IMPORT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/207"
+    },
+    {
+      "id": "F184",
+      "issue_number": 208,
+      "title": "[P0][F184] FEATURE TROUBLESHOOTING WIZARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/208"
+    },
+    {
+      "id": "F185",
+      "issue_number": 209,
+      "title": "[P0][F185] QR / DEEP-LINK SECURITY GUARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/209"
+    },
+    {
+      "id": "F186",
+      "issue_number": 210,
+      "title": "[P0][F186] EXTERNAL SHARE-INTENT GUARD",
+      "url": "https://github.com/Alaa91H/WA-X/issues/210"
+    },
+    {
+      "id": "F187",
+      "issue_number": 211,
+      "title": "[P1][F187] ACCOUNTS CENTER / META ACCOUNT PRIVACY AUDITOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/211"
+    },
+    {
+      "id": "F188",
+      "issue_number": 212,
+      "title": "[P1][F188] SECURITY POSTURE DRIFT MONITOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/212"
+    },
+    {
+      "id": "F189",
+      "issue_number": 236,
+      "title": "[P0][F189] UNIFIED VISUAL DESIGN TOKEN ENGINE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/236"
+    },
+    {
+      "id": "F190",
+      "issue_number": 237,
+      "title": "[P0][F190] VISUAL SURFACE REGISTRY & CAPABILITY MAP",
+      "url": "https://github.com/Alaa91H/WA-X/issues/237"
+    },
+    {
+      "id": "F191",
+      "issue_number": 238,
+      "title": "[P0][F191] SCOPED APPEARANCE INHERITANCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/238"
+    },
+    {
+      "id": "F192",
+      "issue_number": 239,
+      "title": "[P1][F192] EFFECTIVE APPEARANCE INSPECTOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/239"
+    },
+    {
+      "id": "F193",
+      "issue_number": 240,
+      "title": "[P0][F193] VISUAL THEME STUDIO / NO-CODE BUILDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/240"
+    },
+    {
+      "id": "F194",
+      "issue_number": 241,
+      "title": "[P0][F194] LIVE PREVIEW, STAGED APPLY & INSTANT REVERT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/241"
+    },
+    {
+      "id": "F195",
+      "issue_number": 242,
+      "title": "[P1][F195] CONDITIONAL THEME SCHEDULER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/242"
+    },
+    {
+      "id": "F196",
+      "issue_number": 243,
+      "title": "[P1][F196] THEME PACKAGE SCHEMA V2",
+      "url": "https://github.com/Alaa91H/WA-X/issues/243"
+    },
+    {
+      "id": "F197",
+      "issue_number": 244,
+      "title": "[P0][F197] SECURE THEME ASSET BUNDLE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/244"
+    },
+    {
+      "id": "F198",
+      "issue_number": 245,
+      "title": "[P0][F198] THEME COMPATIBILITY MIGRATION ENGINE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/245"
+    },
+    {
+      "id": "F199",
+      "issue_number": 246,
+      "title": "[P0][F199] SEMANTIC COLOR ROLE SYSTEM",
+      "url": "https://github.com/Alaa91H/WA-X/issues/246"
+    },
+    {
+      "id": "F200",
+      "issue_number": 247,
+      "title": "[P1][F200] ADVANCED MATERIAL YOU / DYNAMIC COLOR",
+      "url": "https://github.com/Alaa91H/WA-X/issues/247"
+    },
+    {
+      "id": "F201",
+      "issue_number": 248,
+      "title": "[P1][F201] AMOLED & CONTRAST OPTIMIZER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/248"
+    },
+    {
+      "id": "F202",
+      "issue_number": 249,
+      "title": "[P0][F202] ADVANCED TYPOGRAPHY STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/249"
+    },
+    {
+      "id": "F203",
+      "issue_number": 250,
+      "title": "[P1][F203] CUSTOM FONT IMPORTER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/250"
+    },
+    {
+      "id": "F204",
+      "issue_number": 251,
+      "title": "[P0][F204] DENSITY & SPACING STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/251"
+    },
+    {
+      "id": "F205",
+      "issue_number": 252,
+      "title": "[P0][F205] SHAPE & CORNER SYSTEM",
+      "url": "https://github.com/Alaa91H/WA-X/issues/252"
+    },
+    {
+      "id": "F206",
+      "issue_number": 253,
+      "title": "[P1][F206] ICON PACK ENGINE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/253"
+    },
+    {
+      "id": "F207",
+      "issue_number": 254,
+      "title": "[P1][F207] MOTION & ANIMATION STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/254"
+    },
+    {
+      "id": "F208",
+      "issue_number": 255,
+      "title": "[P2][F208] HAPTIC FEEDBACK STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/255"
+    },
+    {
+      "id": "F209",
+      "issue_number": 256,
+      "title": "[P1][F209] WALLPAPER EFFECTS STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/256"
+    },
+    {
+      "id": "F210",
+      "issue_number": 257,
+      "title": "[P0][F210] HOME / CHAT LIST LAYOUT BUILDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/257"
+    },
+    {
+      "id": "F211",
+      "issue_number": 258,
+      "title": "[P0][F211] CHAT ROW DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/258"
+    },
+    {
+      "id": "F212",
+      "issue_number": 259,
+      "title": "[P1][F212] AVATAR / PRESENCE / BADGE DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/259"
+    },
+    {
+      "id": "F213",
+      "issue_number": 260,
+      "title": "[P0][F213] NAVIGATION / TABS / BOTTOM BAR BUILDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/260"
+    },
+    {
+      "id": "F214",
+      "issue_number": 261,
+      "title": "[P0][F214] TOOLBAR / APP BAR DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/261"
+    },
+    {
+      "id": "F215",
+      "issue_number": 262,
+      "title": "[P1][F215] FAB / QUICK ACTION DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/262"
+    },
+    {
+      "id": "F216",
+      "issue_number": 263,
+      "title": "[P1][F216] CHAT FOLDER / FILTER VISUAL DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/263"
+    },
+    {
+      "id": "F217",
+      "issue_number": 264,
+      "title": "[P1][F217] UNREAD / COUNTER / BADGE DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/264"
+    },
+    {
+      "id": "F218",
+      "issue_number": 265,
+      "title": "[P1][F218] SWIPE GESTURE APPEARANCE & ACTION VISUALIZER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/265"
+    },
+    {
+      "id": "F219",
+      "issue_number": 266,
+      "title": "[P0][F219] CONVERSATION LAYOUT BUILDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/266"
+    },
+    {
+      "id": "F220",
+      "issue_number": 267,
+      "title": "[P0][F220] MESSAGE BUBBLE STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/267"
+    },
+    {
+      "id": "F221",
+      "issue_number": 268,
+      "title": "[P0][F221] MESSAGE METADATA / TICKS / TIME DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/268"
+    },
+    {
+      "id": "F222",
+      "issue_number": 269,
+      "title": "[P1][F222] REPLY / QUOTE / REACTIONS DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/269"
+    },
+    {
+      "id": "F223",
+      "issue_number": 270,
+      "title": "[P1][F223] DATE SEPARATOR / SYSTEM MESSAGE DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/270"
+    },
+    {
+      "id": "F224",
+      "issue_number": 271,
+      "title": "[P1][F224] MEDIA CARD DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/271"
+    },
+    {
+      "id": "F225",
+      "issue_number": 272,
+      "title": "[P1][F225] VOICE NOTE UI DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/272"
+    },
+    {
+      "id": "F226",
+      "issue_number": 273,
+      "title": "[P1][F226] DOCUMENT / CONTACT / LOCATION / POLL CARD DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/273"
+    },
+    {
+      "id": "F227",
+      "issue_number": 274,
+      "title": "[P0][F227] COMPOSER / INPUT BAR BUILDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/274"
+    },
+    {
+      "id": "F228",
+      "issue_number": 275,
+      "title": "[P1][F228] ATTACHMENT / CAMERA / EMOJI ACTION STRIP BUILDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/275"
+    },
+    {
+      "id": "F229",
+      "issue_number": 276,
+      "title": "[P1][F229] EMOJI / STICKER / GIF PANEL APPEARANCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/276"
+    },
+    {
+      "id": "F230",
+      "issue_number": 277,
+      "title": "[P1][F230] FINE-GRAINED PER-CHAT VISUAL OVERRIDES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/277"
+    },
+    {
+      "id": "F231",
+      "issue_number": 278,
+      "title": "[P1][F231] CONTACT / GROUP / PROFILE SCREEN DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/278"
+    },
+    {
+      "id": "F232",
+      "issue_number": 279,
+      "title": "[P1][F232] UPDATES / STATUS SCREEN DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/279"
+    },
+    {
+      "id": "F233",
+      "issue_number": 280,
+      "title": "[P1][F233] STATUS VIEWER DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/280"
+    },
+    {
+      "id": "F234",
+      "issue_number": 281,
+      "title": "[P1][F234] CHANNELS SCREEN DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/281"
+    },
+    {
+      "id": "F235",
+      "issue_number": 282,
+      "title": "[P1][F235] CALLS LIST DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/282"
+    },
+    {
+      "id": "F236",
+      "issue_number": 283,
+      "title": "[P1][F236] IN-CALL UI DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/283"
+    },
+    {
+      "id": "F237",
+      "issue_number": 284,
+      "title": "[P1][F237] SETTINGS SCREEN DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/284"
+    },
+    {
+      "id": "F238",
+      "issue_number": 285,
+      "title": "[P1][F238] SEARCH / ARCHIVE / LINKED DEVICES SCREEN DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/285"
+    },
+    {
+      "id": "F239",
+      "issue_number": 286,
+      "title": "[P1][F239] DIALOG / BOTTOM SHEET / MENU DESIGNER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/286"
+    },
+    {
+      "id": "F240",
+      "issue_number": 287,
+      "title": "[P1][F240] NOTIFICATION VISUAL PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/287"
+    },
+    {
+      "id": "F241",
+      "issue_number": 288,
+      "title": "[P1][F241] APP / LAUNCHER IDENTITY CUSTOMIZATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/288"
+    },
+    {
+      "id": "F242",
+      "issue_number": 289,
+      "title": "[P1][F242] ONE-HANDED / REACHABILITY LAYOUT MODE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/289"
+    },
+    {
+      "id": "F243",
+      "issue_number": 290,
+      "title": "[P1][F243] COMPACT / COMFORTABLE / DENSE LAYOUT PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/290"
+    },
+    {
+      "id": "F244",
+      "issue_number": 291,
+      "title": "[P0][F244] LARGE-SCREEN / FOLDABLE ADAPTIVE LAYOUTS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/291"
+    },
+    {
+      "id": "F245",
+      "issue_number": 292,
+      "title": "[P1][F245] ORIENTATION-SPECIFIC LAYOUT PROFILES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/292"
+    },
+    {
+      "id": "F246",
+      "issue_number": 293,
+      "title": "[P1][F246] RTL / BIDIRECTIONAL VISUAL CONTROLS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/293"
+    },
+    {
+      "id": "F247",
+      "issue_number": 294,
+      "title": "[P0][F247] HIGH-CONTRAST / COLOR-BLIND THEME ASSISTANT",
+      "url": "https://github.com/Alaa91H/WA-X/issues/294"
+    },
+    {
+      "id": "F248",
+      "issue_number": 295,
+      "title": "[P1][F248] REDUCED-MOTION / LOW-STIMULATION VISUAL PROFILE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/295"
+    },
+    {
+      "id": "F249",
+      "issue_number": 296,
+      "title": "[P1][F249] WA X MANAGER THEME STUDIO",
+      "url": "https://github.com/Alaa91H/WA-X/issues/296"
+    },
+    {
+      "id": "F250",
+      "issue_number": 297,
+      "title": "[P0][F250] CSS ENGINE V2",
+      "url": "https://github.com/Alaa91H/WA-X/issues/297"
+    },
+    {
+      "id": "F251",
+      "issue_number": 298,
+      "title": "[P0][F251] VISUAL INSPECTOR & SELECTOR RECORDER",
+      "url": "https://github.com/Alaa91H/WA-X/issues/298"
+    },
+    {
+      "id": "F252",
+      "issue_number": 299,
+      "title": "[P0][F252] THEME PERFORMANCE COMPILER & CACHE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/299"
+    },
+    {
+      "id": "F253",
+      "issue_number": 300,
+      "title": "[P1][F253] THEME PRESET / RESET / CLONE TOOLS",
+      "url": "https://github.com/Alaa91H/WA-X/issues/300"
+    },
+    {
+      "id": "F254",
+      "issue_number": 301,
+      "title": "[P1][F254] THEME GALLERY V2",
+      "url": "https://github.com/Alaa91H/WA-X/issues/301"
+    }
+  ],
+  "extensions": [
+    {
+      "id": "E001",
+      "target": "[F003]",
+      "issue_number": 213,
+      "title": "[EXT][E001][F003] STATUS AUDIO STUDIO — NATIVE STATUS FEATURE COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/213"
+    },
+    {
+      "id": "E002",
+      "target": "[F004]",
+      "issue_number": 214,
+      "title": "[EXT][E002][F004] STATUS VIDEO TOOLKIT — NATIVE STATUS FEATURE COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/214"
+    },
+    {
+      "id": "E003",
+      "target": "[F005]",
+      "issue_number": 215,
+      "title": "[EXT][E003][F005] STATUS VIEWER TOOLKIT — NATIVE STATUS FEATURE COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/215"
+    },
+    {
+      "id": "E004",
+      "target": "[F026]",
+      "issue_number": 216,
+      "title": "[EXT][E004][F026] SMART STORAGE MANAGER — NATIVE STORAGE COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/216"
+    },
+    {
+      "id": "E005",
+      "target": "[F036]",
+      "issue_number": 217,
+      "title": "[EXT][E005][F036] CALL BLOCKING SCHEDULE — UNKNOWN-CALLER CONTEXT INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/217"
+    },
+    {
+      "id": "E006",
+      "target": "[F079]",
+      "issue_number": 218,
+      "title": "[EXT][E006][F079] UNTRUSTED SENDER FIREWALL — UNKNOWN-CALLER CONTEXT INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/218"
+    },
+    {
+      "id": "E007",
+      "target": "[F037]",
+      "issue_number": 219,
+      "title": "[EXT][E007][F037] MANUAL CALL RECORDING — MODERN CALL CAPABILITY COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/219"
+    },
+    {
+      "id": "E008",
+      "target": "[F040]",
+      "issue_number": 220,
+      "title": "[EXT][E008][F040] NATIVE LISTS+ — MODERN GROUP/LIST COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/220"
+    },
+    {
+      "id": "E009",
+      "target": "[F055]",
+      "issue_number": 221,
+      "title": "[EXT][E009][F055] CONVERSATION INTELLIGENCE — NATIVE AI COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/221"
+    },
+    {
+      "id": "E010",
+      "target": "[F056]",
+      "issue_number": 222,
+      "title": "[EXT][E010][F056] OPTIONAL LOCAL AI PACK — NATIVE AI COEXISTENCE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/222"
+    },
+    {
+      "id": "E011",
+      "target": "[F065]",
+      "issue_number": 226,
+      "title": "[EXT][E011][F065] SELECTIVE BACKUP — NATIVE ENCRYPTED BACKUP POSTURE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/226"
+    },
+    {
+      "id": "E012",
+      "target": "[F066]",
+      "issue_number": 227,
+      "title": "[EXT][E012][F066] ENCRYPTED LOCAL BACKUP — NATIVE ENCRYPTED BACKUP POSTURE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/227"
+    },
+    {
+      "id": "E013",
+      "target": "[F067]",
+      "issue_number": 228,
+      "title": "[EXT][E013][F067] BACKUP VERIFICATION — NATIVE ENCRYPTED BACKUP POSTURE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/228"
+    },
+    {
+      "id": "E014",
+      "target": "[F068]",
+      "issue_number": 229,
+      "title": "[EXT][E014][F068] SELECTIVE RESTORE — NATIVE ENCRYPTED BACKUP POSTURE",
+      "url": "https://github.com/Alaa91H/WA-X/issues/229"
+    },
+    {
+      "id": "E015",
+      "target": "[F077]",
+      "issue_number": 230,
+      "title": "[EXT][E015][F077] PRIVACY & SECURITY CENTER — STRICT ACCOUNT SETTINGS INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/230"
+    },
+    {
+      "id": "E016",
+      "target": "[F094]",
+      "issue_number": 231,
+      "title": "[EXT][E016][F094] ACCOUNT TAKEOVER GUARDIAN — MODERN ACCOUNT SECURITY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/231"
+    },
+    {
+      "id": "E017",
+      "target": "[F093]",
+      "issue_number": 232,
+      "title": "[EXT][E017][F093] STOCK WHATSAPP MODE — 2026 VISUAL PARITY",
+      "url": "https://github.com/Alaa91H/WA-X/issues/232"
+    },
+    {
+      "id": "E018",
+      "target": "[F103]",
+      "issue_number": 233,
+      "title": "[EXT][E018][F103] SINGLE-TAP MESSAGE ACTION POPUP — NATIVE QUICK-REACTION CONFLICT RULES",
+      "url": "https://github.com/Alaa91H/WA-X/issues/233"
+    },
+    {
+      "id": "E019",
+      "target": "[F097]",
+      "issue_number": 234,
+      "title": "[EXT][E019][F097] PERMISSION & SENSOR PRIVACY MONITOR — META ACCOUNT POSTURE SEPARATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/234"
+    },
+    {
+      "id": "E020",
+      "target": "[F077]",
+      "issue_number": 235,
+      "title": "[EXT][E020][F077] PRIVACY & SECURITY CENTER — META ACCOUNT POSTURE SEPARATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/235"
+    },
+    {
+      "id": "E021",
+      "target": "[THEME-REPOSITORY]",
+      "issue_number": 302,
+      "title": "[EXT][E021][THEME-REPOSITORY] THEMEREPOSITORY / PER-CHAT THEMES — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/302"
+    },
+    {
+      "id": "E022",
+      "target": "[THEME-PACKAGES]",
+      "issue_number": 303,
+      "title": "[EXT][E022][THEME-PACKAGES] THEMEPACKAGES — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/303"
+    },
+    {
+      "id": "E023",
+      "target": "[CUSTOMVIEW-CSS]",
+      "issue_number": 304,
+      "title": "[EXT][E023][CUSTOMVIEW-CSS] CUSTOMVIEW / CSS — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/304"
+    },
+    {
+      "id": "E024",
+      "target": "[F074]",
+      "issue_number": 305,
+      "title": "[EXT][E024][F074] F074 PROFILE COMPOSITION — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/305"
+    },
+    {
+      "id": "E025",
+      "target": "[F072]",
+      "issue_number": 306,
+      "title": "[EXT][E025][F072] F072 TICK COLOR ACCESSIBILITY — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/306"
+    },
+    {
+      "id": "E026",
+      "target": "[F073]",
+      "issue_number": 307,
+      "title": "[EXT][E026][F073] F073 ACCESSIBILITY PROFILES — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/307"
+    },
+    {
+      "id": "E027",
+      "target": "[F093]",
+      "issue_number": 308,
+      "title": "[EXT][E027][F093] F093 STOCK WHATSAPP MODE — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/308"
+    },
+    {
+      "id": "E028",
+      "target": "[F145]",
+      "issue_number": 309,
+      "title": "[EXT][E028][F145] F145 E2E WA X SETTINGS SYNC — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/309"
+    },
+    {
+      "id": "E029",
+      "target": "[F154]",
+      "issue_number": 310,
+      "title": "[EXT][E029][F154] F154 CAPABILITY SCANNER — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/310"
+    },
+    {
+      "id": "E030",
+      "target": "[F159]",
+      "issue_number": 311,
+      "title": "[EXT][E030][F159] F159 WHATSAPP UPDATE COMPATIBILITY DIFF — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/311"
+    },
+    {
+      "id": "E031",
+      "target": "[F160]",
+      "issue_number": 312,
+      "title": "[EXT][E031][F160] F160 SIGNED RESOLVER-METADATA HOTFIX PACKS — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/312"
+    },
+    {
+      "id": "E032",
+      "target": "[F163]",
+      "issue_number": 313,
+      "title": "[EXT][E032][F163] F163 SETTINGS CHANGE HISTORY & ROLLBACK — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/313"
+    },
+    {
+      "id": "E033",
+      "target": "[F164]",
+      "issue_number": 314,
+      "title": "[EXT][E033][F164] F164 FEATURE DEPENDENCY / CONFLICT RESOLVER — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/314"
+    },
+    {
+      "id": "E034",
+      "target": "[F181]",
+      "issue_number": 315,
+      "title": "[EXT][E034][F181] F181 COMMAND PALETTE — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/315"
+    },
+    {
+      "id": "E035",
+      "target": "[F183]",
+      "issue_number": 316,
+      "title": "[EXT][E035][F183] F183 PROFILE SHARE / IMPORT — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/316"
+    },
+    {
+      "id": "E036",
+      "target": "[F146-F147]",
+      "issue_number": 317,
+      "title": "[EXT][E036][F146-F147] F146/F147 BACKUP SYSTEM — COMPLETE CUSTOMIZATION INTEGRATION",
+      "url": "https://github.com/Alaa91H/WA-X/issues/317"
+    }
+  ]
+}
