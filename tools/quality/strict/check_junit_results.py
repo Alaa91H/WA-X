@@ -96,6 +96,12 @@ def main() -> int:
     print(f"{args.suite}: {totals['tests']} test(s), {len(issues)} issue(s)")
     for issue in issues[:MAX_REPORTED]:
         print(f"::error::{issue['message']}")
+        details = str(issue.get("details") or "").strip()
+        if details:
+            # Keep the workflow log self-contained. Multiline stack traces are escaped
+            # so GitHub renders one annotation without corrupting workflow commands.
+            escaped = details.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print(f"::error::{escaped}")
     if len(issues) > MAX_REPORTED:
         print(f"::error::{len(issues) - MAX_REPORTED} additional test failures are in {args.out}")
     return 1 if issues else 0
