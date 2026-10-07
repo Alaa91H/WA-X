@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "title": "WA X release and device test matrix",
+  "purpose": "The dimensions compatibility.json deliberately does not model. compatibility.json is feature x WhatsApp-version and its whole discipline is per-feature resolver evidence. This document is about whether the module loads, survives and recovers: Android level, LSPosed version, WhatsApp train, and lifecycle scenario. Conflating the two would break compatibility.json's freshness check and mix two different evidence models, so they stay separate and cross-reference.",
+  "relationshipToCompatibilityMatrix": {
+    "file": "tools/compatibility/compatibility.json",
+    "covers": "64 features x declared WhatsApp versions, per package, with resolver evidence",
+    "doesNotCover": "Android SDK level, LSPosed version, WhatsApp release train (stable vs beta), or any lifecycle scenario",
+    "enforcedBy": [
+      "tools/compatibility/validate_compatibility.py",
+      "tools/quality/strict/check_latest_runtime_evidence.py"
+    ]
+  },
+  "statusVocabulary": {
+    "unverified": "No run has been recorded for this cell. This is the only status permitted without evidence, and it is the status every cell starts at.",
+    "verified": "A device-lab run on this exact dimension passed. Requires an entry under evidence naming the module commit, the device, the Android level and the LSPosed build.",
+    "known-broken": "A run on this dimension failed. This is a claim too, and it requires evidence; it just points the other way.",
+    "not-applicable": "The dimension cannot apply to this cell (for example a scenario that only exists for Business). Requires a reason, not a run."
+  },
+  "evidencePolicy": {
+    "requiredFor": [
+      "verified",
+      "known-broken"
+    ],
+    "rule": "A cell may not claim verified or known-broken without an evidence entry whose moduleCommit equals the commit under test. Compatibility evidence cannot be reused for a lifecycle cell: proving a resolver matched says nothing about whether the module survives a reboot.",
+    "whyEvidenceIsNotDemandedUnconditionally": "No CI runner has a rooted LSPosed device with both WhatsApp builds installed. Demanding one unconditionally would block every release on hardware nobody has while proving nothing, because every cell here is unverified and unverified asserts nothing. The same trade-off and the same resolution are already in force for tools/quality/strict/check_latest_runtime_evidence.py, and the matrix starting entirely unverified is what makes this gate honest rather than merely quiet."
+  },
+  "androidLevels": [
+    {
+      "label": "Android 14",
+      "api": 34,
+      "required": true,
+      "rationale": "minSdk is 28, but the module's resource injection and world-readable preference path are the parts most sensitive to scoped storage and background restrictions, so the lowest level the program must cover is the one the project actually ships into. 34 is targetSdk, so this is the level WA X is currently written *against*.",
+      "status": "unverified"
+    },
+    {
+      "label": "Android 15",
+      "api": 35,
+      "required": true,
+      "rationale": "Edge-to-edge enforcement and the foreground-service changes land here. targetSdk 34 means WA X opts out of most of them, which is a compatibility fact and not a correctness one.",
+      "status": "unverified"
+    },
+    {
+      "label": "Android 16",
+      "api": 36,
+      "required": true,
+      "rationale": "The first release using the minor-SDK scheme (AndroidVersion.ApiLevel=36 with an extension level). Structural changes to resource handling are the risk, and resource injection is exactly what M07 replaces.",
+      "status": "unverified"
+    },
+    {
+      "label": "Android 17",
+      "api": 37,
+      "required": true,
+      "rationale": "compileSdk is already 37, so the module is built against this level while declaring targetSdk 34. That gap is M10's subject and is recorded below as a blocking coupling.",
+      "status": "unverified"
+    }
+  ],
+  "lsposedBuilds": [
+    {
+      "label": "LSPosed stable (latest release)",
+      "status": "unverified",
+      "rationale": "The baseline. Its reported XposedBridge.getXposedVersion() is what xposedminversion=93 is matched against; a build that reported a different level would change which XSharedPreferences semantics apply."
+    },
+    {
+      "label": "LSPosed from source / Vector fork",
+      "status": "unverified",
+      "rationale": "A second implementation of the legacy loader is the cheapest way to find out whether the module depends on LSPosed-specific behaviour rather than on the Xposed API contract."
+    }
+  ],
+  "targets": [
+    {
+      "package": "com.whatsapp",
+      "label": "WhatsApp",
+      "trains": [
+        {
+          "label": "stable",
+          "status": "unverified",
+          "rationale": "The declared train in supported_versions_wpp. compatibility.json models every declared version individually; this matrix only cares that the train as a whole loads and survives."
+        },
+        {
+          "label": "beta",
+          "status": "unverified",
+          "rationale": "Required by the program directive at compatibility and release phases. A beta that resolves nothing new should degrade to the existing failures, not take the runtime down, which is precisely what M03 has to guarantee and what nothing currently proves."
+        }
+      ]
+    },
+    {
+      "package": "com.whatsapp.w4b",
+      "label": "WhatsApp Business",
+      "trains": [
+        {
+          "label": "stable",
+          "status": "unverified",
+          "rationale": "A separately signed application id with its own process and its own settings. Any cell that is verified for WhatsApp but not for Business is a cell where the two have drifted, and Business support is a hard requirement rather than an optional extra."
+        },
+        {
+          "label": "beta",
+          "status": "unverified",
+          "rationale": "Business trails WhatsApp, so its beta is not the same build as the WhatsApp beta and neither run implies the other."
+        }
+      ]
+    }
+  ],
+  "lifecycleScenarios": [
+    {
+      "id": "clean-install",
+      "label": "Clean install",
+      "status": "unverified",
+      "asserts": "First install on a device with no prior WA X. The module lists in LSPosed, the recommended scope is pre-selected, and no feature requires state that does not exist yet.",
+      "why": "The only scenario where the manager has no history to fall back on. Defaults matter here in a way they never matter again."
+    },
+    {
+      "id": "update",
+      "label": "Update over an existing install",
+      "status": "unverified",
+      "asserts": "Installing a newer APK preserves every setting, both targets' settings stay separate, and no preference is silently reset or retyped.",
+      "why": "The directive forbids destroying user settings. This is the scenario where that is testable, and the settings-readiness work that landed before this program was written because it was needed."
+    },
+    {
+      "id": "process-restart",
+      "label": "Target process restart",
+      "status": "unverified",
+      "asserts": "After force-stopping WhatsApp and relaunching it, hooks reinstall and the manager reflects the new state without a module restart.",
+      "why": "The runtime keeps process-scoped static state (FeatureLoader.mApp, moduleContext, supportedVersions). Whether a restart re-derives all of it or reads a stale copy is not currently observable from outside."
+    },
+    {
+      "id": "device-reboot",
+      "label": "Device reboot",
+      "status": "unverified",
+      "asserts": "After a reboot the module loads into WhatsApp at boot, zygote init runs, and resource injection has a module path.",
+      "why": "initZygote is what assigns modulePath, and handleInitPackageResources consumes it without a null guard (M00-DEF-04). Reboot is the scenario where zygote init ordering actually matters."
+    },
+    {
+      "id": "scope-remove-add",
+      "label": "Scope removed and re-added",
+      "status": "unverified",
+      "asserts": "Removing WhatsApp from scope stops hooks within one restart; re-adding restores them. The status banner reflects the change.",
+      "why": "LSPosed's scope is user-editable, so the manifest scope array is a recommendation rather than a guarantee, and TargetPackageRegistry.isInHookScope is only defence in depth. The banner currently cannot reflect this at all (M00-DEF-03)."
+    },
+    {
+      "id": "module-disable-enable",
+      "label": "Module disabled and re-enabled",
+      "status": "unverified",
+      "asserts": "Disabling the module stops injection; re-enabling restores it without reinstalling or clearing settings.",
+      "why": "The one scenario the current banner claims to cover, and it claims it via a self-hook in the wrong process."
+    },
+    {
+      "id": "safe-mode",
+      "label": "LSPosed Safe Mode / bootloop recovery",
+      "status": "unverified",
+      "asserts": "Disabling WA X in Safe Mode boots the device, and the module leaves no state that prevents a clean boot.",
+      "why": "A module that crashes during resource injection or bootstrap can bootloop the device. Nothing in the current design prevents that, and a bootloop is the worst failure this module can have."
+    },
+    {
+      "id": "corrupted-cache",
+      "label": "Corrupted resolver cache",
+      "status": "unverified",
+      "asserts": "A truncated or unparsable resolver cache is discarded and rebuilt rather than propagated, and the affected features report UNKNOWN or FAILED rather than disappearing.",
+      "why": "UnobfuscatorCache and the resolver cache are rebuilt on every launch and a failure there is currently swallowed. The directive names this case explicitly."
+    },
+    {
+      "id": "rollback",
+      "label": "Rollback to the previous APK",
+      "status": "unverified",
+      "asserts": "Downgrading to the previous version leaves settings usable and does not require a reinstall or a data wipe.",
+      "why": "The release contract keeps every distributed APK signed with the same update key precisely so this is possible. A signed-update claim that has never been exercised is not a claim."
+    }
+  ],
+  "blockingCouplings": [
+    {
+      "id": "COUPLE-01",
+      "between": "compileSdk 37 / targetSdk 34",
+      "consequence": "The module compiles against Android 17 and declares behaviour for Android 14. Every Android 15, 16 and 17 cell above therefore tests a build that has opted out of that platform's behaviour changes.",
+      "owner": "#329 M10",
+      "note": "Recorded rather than fixed here. It is why the Android 15-17 rows are not 'verified by construction': being compiled against a platform is not the same as having been run on it."
+    },
+    {
+      "id": "COUPLE-02",
+      "between": "xposedminversion 93 and the artifact pin 82",
+      "consequence": "xposedminversion selects XSharedPreferences semantics; the artifact pin is the last published version of the legacy API. Nothing in the artifact can be changed to match 93, so the two stay separate numbers and both stay enforced.",
+      "owner": "#319 M00 (closed)",
+      "note": "See docs/modernization/M00_EVIDENCE_LOCK.md. Enforced by tools/quality/check_lsposed_contract.py, including against the resolved artifact."
+    },
+    {
+      "id": "COUPLE-03",
+      "between": "resource injection and the M07 ResourceBridge replacement",
+      "consequence": "Four of the Android rows above are also resource-injection rows. Replacing the mechanism invalidates their evidence, so they have to be re-run after M07 rather than carried forward.",
+      "owner": "#326 M07",
+      "note": "Recorded so a later phase cannot cite evidence from before the mechanism it was gathered on changed."
+    }
+  ],
+  "evidence": {}
+}

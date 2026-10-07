@@ -51,6 +51,8 @@ MODULE_BUILD = "app/build.gradle.kts"
 GRADLE_PROPERTIES = "gradle.properties"
 MANIFEST = "app/src/main/AndroidManifest.xml"
 COMPATIBILITY = "docs/COMPATIBILITY.md"
+TEST_MATRIX = "docs/modernization/test-matrix.json"
+DEFECT_REGISTRY = "docs/modernization/known-runtime-defects.json"
 VERSION_CATALOG_SOURCE = "https://api.xposed.info/de/robv/android/xposed/api/maven-metadata.xml"
 
 
@@ -335,6 +337,16 @@ def collect() -> dict[str, object]:
             "matrix": COMPATIBILITY,
             "matrix_sha256": sha256_of(COMPATIBILITY),
             "declared_version_targets": {name: items for name, items in sorted(targets.items())},
+        },
+        # M00 deliverables that are evidence in their own right: the test matrix says which
+        # combinations have been run and which have not, and the defect registry says which
+        # known defects are pinned by a characterization test. Both are hashed so a change to
+        # either is visible in the same diff as the code it describes.
+        "program_evidence": {
+            "test_matrix": TEST_MATRIX,
+            "test_matrix_sha256": sha256_of(TEST_MATRIX),
+            "defect_registry": DEFECT_REGISTRY,
+            "defect_registry_sha256": sha256_of(DEFECT_REGISTRY),
         },
         "ci": {
             "workflows_sha256": workflows,
