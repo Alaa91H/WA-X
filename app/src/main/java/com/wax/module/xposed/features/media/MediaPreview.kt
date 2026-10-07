@@ -105,14 +105,14 @@ class MediaPreview(
             "onAttachedToWindow",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    if (!layoutClass.isInstance(param.thisObject))return
+                    if (!layoutClass.isInstance(param.thisObject)) return
                     val view = param.thisObject as View
                     view.postDelayed(
                         {
                             var resourceNames = listOf("invisible_press_surface", "video_control_frame_view")
                             for (rn in resourceNames) {
                                 val viewGroup = view.findViewById<View>(Utils.getID(rn, "id")) ?: continue
-                                if (!viewGroup.isVisible)continue
+                                if (!viewGroup.isVisible) continue
                                 logDebug("Found Surface: $viewGroup")
                                 handlePressSurface(view, viewGroup)
                                 return@postDelayed
@@ -127,7 +127,7 @@ class MediaPreview(
                                 )
                             for (rn in resourceNames) {
                                 val viewGroup = view.findViewById<View>(Utils.getID(rn, "id")) ?: continue
-                                if (!viewGroup.isVisible)continue
+                                if (!viewGroup.isVisible) continue
                                 logDebug("Found ControlFrame: $viewGroup")
                                 handleMediaControlFrame(view, viewGroup)
                                 return@postDelayed
@@ -270,7 +270,8 @@ class MediaPreview(
                 val query =
                     String.format(
                         Locale.ENGLISH,
-                        "SELECT message_url,mime_type,hex(media_key),direct_path,file_length FROM message_media WHERE message_row_id =\"%d\"",
+                        "SELECT message_url,mime_type,hex(media_key),direct_path,file_length " +
+                            "FROM message_media WHERE message_row_id =\"%d\"",
                         id,
                     )
                 val cursor0 = MessageStore.getInstance().getDatabase()?.rawQuery(query, null)
@@ -527,7 +528,7 @@ class MediaPreview(
             val request = Request.Builder().url(url).build()
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    throw Exception("Failed to download media")
+                    error("Failed to download media")
                 }
 
                 var contentLength = response.body.contentLength()
@@ -949,9 +950,9 @@ class MediaPreview(
                     }
                 }
 
-                override fun onStartTrackingTouch(seekBar: SeekBar) {}
+                override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
 
-                override fun onStopTrackingTouch(seekBar: SeekBar) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
             },
         )
 

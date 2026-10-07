@@ -60,7 +60,8 @@ class RecordingsFragment :
         adapter.setSelectionChangeListener { count ->
             if (count > 0) {
                 binding.selectionBar.visibility = View.VISIBLE
-                binding.tvSelectionCount.text = getString(R.string.selected_count, count)
+                binding.tvSelectionCount.text =
+                    resources.getQuantityString(R.plurals.selected_count, count, count)
             } else {
                 binding.selectionBar.visibility = View.GONE
             }
@@ -101,8 +102,16 @@ class RecordingsFragment :
         }
 
         addBaseDir(dirs, addedPaths, File(Environment.getExternalStorageDirectory(), "WA Call Recordings"))
-        addBaseDir(dirs, addedPaths, File("/sdcard/Android/data/com.whatsapp/files/Recordings"))
-        addBaseDir(dirs, addedPaths, File("/sdcard/Android/data/com.whatsapp.w4b/files/Recordings"))
+        addBaseDir(
+            dirs,
+            addedPaths,
+            File(Environment.getExternalStorageDirectory(), "Android/data/com.whatsapp/files/Recordings"),
+        )
+        addBaseDir(
+            dirs,
+            addedPaths,
+            File(Environment.getExternalStorageDirectory(), "Android/data/com.whatsapp.w4b/files/Recordings"),
+        )
         addBaseDir(dirs, addedPaths, File(Environment.getExternalStorageDirectory(), "Music/WA X/Recordings"))
         return dirs
     }
@@ -214,7 +223,7 @@ class RecordingsFragment :
             .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
             .setMessage(recording.file.name)
-            .setPositiveButton(android.R.string.yes) { _, _ ->
+            .setPositiveButton(R.string.yes) { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val deleted = recording.file.delete()
                     withContext(Dispatchers.Main) {
@@ -225,7 +234,7 @@ class RecordingsFragment :
                         }
                     }
                 }
-            }.setNegativeButton(android.R.string.no, null)
+            }.setNegativeButton(R.string.no, null)
             .show()
     }
 
@@ -300,8 +309,13 @@ class RecordingsFragment :
         AlertDialog
             .Builder(requireContext())
             .setTitle(R.string.delete_confirmation)
-            .setMessage(getString(R.string.delete_multiple_confirmation, selected.size))
-            .setPositiveButton(android.R.string.yes) { _, _ ->
+            .setMessage(
+                resources.getQuantityString(
+                    R.plurals.delete_multiple_confirmation,
+                    selected.size,
+                    selected.size,
+                ),
+            ).setPositiveButton(R.string.yes) { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     var deleted = 0
                     for (rec in selected) {
@@ -315,7 +329,7 @@ class RecordingsFragment :
                         loadRecordings()
                     }
                 }
-            }.setNegativeButton(android.R.string.no, null)
+            }.setNegativeButton(R.string.no, null)
             .show()
     }
 

@@ -245,8 +245,10 @@ def render(matrix: dict) -> str:
         "Step 2 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the"
         " runtime version gate and this document can never disagree."
     )
-    add("")
 
+    # The join below already terminates the last line, so the document must not carry a
+    # trailing empty element as well: that is what put a blank line at the end of the
+    # generated file, which then showed up as a spurious diff on every regeneration.
     return "\n".join(out) + "\n"
 
 

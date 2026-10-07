@@ -1,8 +1,7 @@
 package com.wax.module.xposed.utils
 
 import java.io.ByteArrayOutputStream
-import java.security.InvalidKeyException
-import java.security.NoSuchAlgorithmException
+import java.security.GeneralSecurityException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -18,10 +17,10 @@ abstract class HKDF {
     }
 
     fun deriveSecrets(
-        arr_b: ByteArray,
-        arr_b1: ByteArray,
-        v: Int,
-    ): ByteArray = deriveSecrets(arr_b, ByteArray(0x20), arr_b1, v)
+        inputKeyMaterial: ByteArray,
+        info: ByteArray,
+        outputLength: Int,
+    ): ByteArray = deriveSecrets(inputKeyMaterial, ByteArray(0x20), info, outputLength)
 
     fun deriveSecrets(
         inputKeyMaterial: ByteArray,
@@ -29,44 +28,38 @@ abstract class HKDF {
         info: ByteArray?,
         outputLength: Int,
     ): ByteArray {
-        val derivedKey: ByteArray
-        try {
-            val mac = Mac.getInstance("HmacSHA256")
-            mac.init(SecretKeySpec(salt, "HmacSHA256"))
-            derivedKey = mac.doFinal(inputKeyMaterial)
-        } catch (e: InvalidKeyException) {
-            throw AssertionError(e)
-        } catch (e: NoSuchAlgorithmException) {
-            throw AssertionError(e)
-        }
+        val extractMac = createHmac(salt)
+        val derivedKey = extractMac.doFinal(inputKeyMaterial)
 
-        try {
-            val iterations = Math.ceil(outputLength.toDouble() / 32.0).toInt()
-            var outputKey = ByteArray(0)
-            val outputStream = ByteArrayOutputStream()
-            var remainingLength = outputLength
-            var i = iterationStartOffset
-            while (i < iterationStartOffset + iterations) {
-                val macIteration = Mac.getInstance("HmacSHA256")
-                macIteration.init(SecretKeySpec(derivedKey, "HmacSHA256"))
-                macIteration.update(outputKey)
-                if (info != null) {
-                    macIteration.update(info)
-                }
-                macIteration.update(i.toByte())
-                outputKey = macIteration.doFinal()
-                val len = minOf(remainingLength, outputKey.size)
-                outputStream.write(outputKey, 0, len)
-                remainingLength -= len
-                ++i
+        val iterations = Math.ceil(outputLength.toDouble() / 32.0).toInt()
+        var outputKey = ByteArray(0)
+        val outputStream = ByteArrayOutputStream()
+        var remainingLength = outputLength
+        var i = iterationStartOffset
+        while (i < iterationStartOffset + iterations) {
+            val macIteration = createHmac(derivedKey)
+            macIteration.update(outputKey)
+            if (info != null) {
+                macIteration.update(info)
             }
-            return outputStream.toByteArray()
-        } catch (ex: InvalidKeyException) {
-            throw AssertionError(ex)
-        } catch (ex: NoSuchAlgorithmException) {
-            throw AssertionError(ex)
+            macIteration.update(i.toByte())
+            outputKey = macIteration.doFinal()
+            val len = minOf(remainingLength, outputKey.size)
+            outputStream.write(outputKey, 0, len)
+            remainingLength -= len
+            ++i
         }
+        return outputStream.toByteArray()
     }
+
+    private fun createHmac(key: ByteArray): Mac =
+        try {
+            Mac.getInstance("HmacSHA256").apply {
+                init(SecretKeySpec(key, "HmacSHA256"))
+            }
+        } catch (exception: GeneralSecurityException) {
+            throw AssertionError(exception)
+        }
 
     protected abstract val iterationStartOffset: Int
 }

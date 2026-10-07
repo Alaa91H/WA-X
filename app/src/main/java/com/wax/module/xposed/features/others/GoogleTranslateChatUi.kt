@@ -18,7 +18,9 @@ import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.content.edit
 import androidx.core.view.children
+import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.textfield.TextInputEditText
@@ -123,7 +125,7 @@ internal class GoogleTranslateChatUi(
         MenuHome.addMenuItem { menu, activity ->
             if (menu.findItem(R.string.google_translate) == null) {
                 menu
-                    .add(0, R.string.google_translate, 0, "Google Translate")
+                    .add(0, R.string.google_translate, 0, ModuleContextWrapper(activity).getString(R.string.gt_name))
                     .setOnMenuItemClickListener {
                         showSettings(activity, null)
                         true
@@ -221,7 +223,7 @@ internal class GoogleTranslateChatUi(
 
     private fun label(code: String) =
         if (code == "auto") {
-            "Detect language"
+            ModuleContextWrapper(Utils.application).getString(R.string.gt_detect_language)
         } else {
             GoogleTranslateLanguages.entries.firstOrNull { it.first == code }?.second ?: code
         }
@@ -229,8 +231,20 @@ internal class GoogleTranslateChatUi(
     private fun summary(chat: String?): String {
         val value = config(chat)
         val state =
-            if (value.enabled) "${label(value.source)} → ${label(value.target)}" else "Automatic translation off"
-        return if (chat != null && !hasOverride(chat)) "Global default · $state" else state
+            if (value.enabled) {
+                "${label(
+                    value.source,
+                )} → ${label(value.target)}"
+            } else {
+                ModuleContextWrapper(Utils.application).getString(R.string.gt_automatic_off)
+            }
+        return if (chat != null &&
+            !hasOverride(chat)
+        ) {
+            ModuleContextWrapper(Utils.application).getString(R.string.gt_global_default_format, state)
+        } else {
+            state
+        }
     }
 
     private fun updateInfoSummary(
@@ -244,6 +258,7 @@ internal class GoogleTranslateChatUi(
         activity: Activity,
         chat: String,
     ): View {
+        val moduleContext = ModuleContextWrapper(activity)
         val row =
             LinearLayout(activity).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -286,7 +301,7 @@ internal class GoogleTranslateChatUi(
                 layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
                 addView(
                     TextView(activity).apply {
-                        text = "Google Translate"
+                        text = moduleContext.getString(R.string.gt_name)
                         textSize =
                             17f
                         setTextColor(DesignUtils.getPrimaryTextColor())
@@ -324,13 +339,13 @@ internal class GoogleTranslateChatUi(
             }
         val inherit =
             MaterialCheckBox(ctx).apply {
-                text = "Use global settings"
+                text = ctx.getString(R.string.gt_use_global_settings)
                 isChecked = chat != null && !hasOverride(chat)
                 visibility = if (chat == null) View.GONE else View.VISIBLE
             }
         val enabled =
             MaterialCheckBox(ctx).apply {
-                text = "Automatically translate incoming messages"
+                text = ctx.getString(R.string.gt_auto_translate)
                 isChecked = draft.enabled
             }
 
@@ -355,8 +370,8 @@ internal class GoogleTranslateChatUi(
             enabled.isChecked = displayed.enabled
             from.isEnabled = editable
             to.isEnabled = editable
-            from.text = "From: ${label(displayed.source)}"
-            to.text = "To: ${label(displayed.target)}"
+            from.text = ctx.getString(R.string.gt_from_format, label(displayed.source))
+            to.text = ctx.getString(R.string.gt_to_format, label(displayed.target))
         }
         enabled.setOnCheckedChangeListener { _, checked ->
             if (!inherit.isChecked) draft = draft.copy(enabled = checked)
@@ -380,7 +395,7 @@ internal class GoogleTranslateChatUi(
         layout.addView(to)
         layout.addView(
             TextView(ctx).apply {
-                text = "Translation sends message text to Google. Original messages remain visible."
+                text = ctx.getString(R.string.gt_privacy_notice)
                 textSize = 13f
                 setTextColor(DesignUtils.getPrimaryTextColor())
                 alpha = .7f
@@ -389,23 +404,21 @@ internal class GoogleTranslateChatUi(
         )
         update()
         AlertDialogWpp(activity)
-            .setTitle(if (chat == null) "Google Translate · Global" else "Google Translate")
+            .setTitle(if (chat == null) ctx.getString(R.string.gt_global_title) else ctx.getString(R.string.gt_name))
             .setView(ScrollView(ctx).apply { addView(layout) })
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save") { _, _ ->
-                settings
-                    .edit()
-                    .apply {
-                        if (chat != null && inherit.isChecked) {
-                            remove(key(chat))
-                        } else {
-                            putString(
-                                key(chat),
-                                draft.encode(),
-                            )
-                        }
-                        remove(legacyKey(chat))
-                    }.apply()
+            .setNegativeButton(ctx.getString(R.string.cancel), null)
+            .setPositiveButton(ctx.getString(R.string.save)) { _, _ ->
+                settings.edit {
+                    if (chat != null && inherit.isChecked) {
+                        remove(key(chat))
+                    } else {
+                        putString(
+                            key(chat),
+                            draft.encode(),
+                        )
+                    }
+                    remove(legacyKey(chat))
+                }
                 failures.clear()
                 // Invalidate requests from an older selection, including changes made away from the conversation.
                 bound.clear()
@@ -430,12 +443,12 @@ internal class GoogleTranslateChatUi(
                 orientation = LinearLayout.VERTICAL
                 setPadding(Utils.dipToPixels(16), 0, Utils.dipToPixels(16), 0)
             }
-        val searchLayout = TextInputLayout(ctx).apply { hint = "Search languages" }
+        val searchLayout = TextInputLayout(ctx).apply { hint = ctx.getString(R.string.gt_search_languages) }
         val search = TextInputEditText(searchLayout.context).apply { isSingleLine = true }
         searchLayout.addView(search)
         val list = ListView(activity).apply { choiceMode = ListView.CHOICE_MODE_SINGLE }
         val all =
-            (if (source) listOf("auto" to "Detect language") else emptyList()) +
+            (if (source) listOf("auto" to ctx.getString(R.string.gt_detect_language)) else emptyList()) +
                 GoogleTranslateLanguages.entries.sortedBy { it.second.lowercase(Locale.ROOT) }
         var visible = all
         var choice = current
@@ -481,7 +494,7 @@ internal class GoogleTranslateChatUi(
                     start: Int,
                     count: Int,
                     after: Int,
-                ) {}
+                ) = Unit
 
                 override fun onTextChanged(
                     s: CharSequence?,
@@ -497,14 +510,14 @@ internal class GoogleTranslateChatUi(
                     markSelection()
                 }
 
-                override fun afterTextChanged(s: Editable?) {}
+                override fun afterTextChanged(s: Editable?) = Unit
             },
         )
         AlertDialogWpp(activity)
-            .setTitle(if (source) "Translate from" else "Translate to")
+            .setTitle(if (source) ctx.getString(R.string.gt_translate_from) else ctx.getString(R.string.gt_translate_to))
             .setView(layout)
             .setNegativeButton("Cancel", null)
-            .setPositiveButton("OK") { _, _ -> selected(choice) }
+            .setPositiveButton(ctx.getString(android.R.string.ok)) { _, _ -> selected(choice) }
             .show()
     }
 
@@ -528,7 +541,7 @@ internal class GoogleTranslateChatUi(
             }
             if (view is TextView &&
                 view !is EditText &&
-                view.visibility == View.VISIBLE &&
+                view.isVisible &&
                 (view.text.toString() == original || renderedViews[view]?.original?.toString() == original)
             ) {
                 return listOf(view)
@@ -579,19 +592,12 @@ internal class GoogleTranslateChatUi(
         val weakRoot = WeakReference(root)
         future.whenComplete { result, error ->
             main.post {
-                val view = weakRoot.get()
-                if (error == null &&
-                    result != null &&
-                    view != null &&
-                    bound[view] == request &&
-                    config(chat) == selection &&
-                    ConversationItemListener.isViewBoundToMessage(
-                        view,
-                        request.id,
-                    )
-                ) {
-                    messageTextView(view, text)?.let { render(it, result) }
-                }
+                val view = weakRoot.get() ?: return@post
+                if (error != null || result == null) return@post
+                if (bound[view] != request) return@post
+                if (config(chat) != selection) return@post
+                if (!ConversationItemListener.isViewBoundToMessage(view, request.id)) return@post
+                messageTextView(view, text)?.let { render(it, result) }
             }
         }
     }
@@ -603,7 +609,9 @@ internal class GoogleTranslateChatUi(
         val original = renderedViews[view]?.original ?: android.text.SpannedString(view.text)
         if (original.toString().trim() == translation.trim()) return
         val output =
-            SpannableStringBuilder(original).append("\n\nGoogle Translate\n").append(translation)
+            SpannableStringBuilder(
+                original,
+            ).append("\n\n").append(ModuleContextWrapper(Utils.application).getString(R.string.gt_name)).append("\n").append(translation)
         renderedViews[view] = Rendered(original, output.toString())
         view.text = output
     }
@@ -636,7 +644,7 @@ internal class GoogleTranslateChatUi(
             val messageText =
                 wpp.messageStr.takeUnless { it.isNullOrBlank() } ?: return@register null
             ContextMenuActionProvider.ContextMenuAction(
-                title = "Translate",
+                title = ModuleContextWrapper(activity).getString(R.string.gt_translate_action),
             ) {
                 val chat =
                     messageChat(wpp)
@@ -665,17 +673,18 @@ internal class GoogleTranslateChatUi(
         source: String,
         target: String,
     ) {
+        val ctx = ModuleContextWrapper(activity)
         if (text.length > 4000) {
             AlertDialogWpp(activity)
-                .setTitle("Google Translate")
-                .setMessage("This message is too long to translate.")
-                .setPositiveButton("Close", null)
+                .setTitle(ctx.getString(R.string.gt_name))
+                .setMessage(ctx.getString(R.string.gt_message_too_long))
+                .setPositiveButton(ctx.getString(R.string.gt_close), null)
                 .show()
             return
         }
         val output =
             TextView(activity).apply {
-                this.text = "Translating…"
+                this.text = ctx.getString(R.string.gt_translating)
                 setPadding(
                     32,
                     24,
@@ -687,7 +696,7 @@ internal class GoogleTranslateChatUi(
         val scroll = ScrollView(activity).apply { addView(output) }
         val dialog =
             AlertDialogWpp(activity)
-                .setTitle("Translator")
+                .setTitle(ctx.getString(R.string.gt_translator))
                 .setView(scroll)
                 .setPositiveButton("Close", null)
                 .create()
@@ -701,7 +710,7 @@ internal class GoogleTranslateChatUi(
                         ) {
                             result
                         } else {
-                            "Translation unavailable. Check your connection or try another language."
+                            ctx.getString(R.string.gt_unavailable)
                         }
                 }
             }

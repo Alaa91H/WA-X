@@ -31,7 +31,7 @@ class DownloadProfile(
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val menu = param.args[0] as Menu
                     val item = menu.add(0, 0, 0, R.string.download)
-                    item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                    item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                     item.setIcon(R.drawable.download)
                     item.setOnMenuItemClickListener(
                         MenuItem.OnMenuItemClickListener { _: MenuItem? ->

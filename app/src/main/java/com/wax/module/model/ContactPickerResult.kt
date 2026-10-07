@@ -12,4 +12,8 @@ data class ContactPickerResult(
     fun jid(): String = jid
 
     fun fullName(): String = fullName
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

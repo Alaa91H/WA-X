@@ -236,7 +236,7 @@ object ChannelAwareVersionGate {
         val newestFamily = newest.family
 
         return when {
-            installedFamily < oldestFamily ->
+            installedFamily < oldestFamily -> {
                 VersionAssessment(
                     verdict = VersionVerdict.UNSUPPORTED_OLDER_FAMILY,
                     installed = installed,
@@ -246,8 +246,9 @@ object ChannelAwareVersionGate {
                         "${installed.release} is older than the oldest declared build (${oldest.release}), " +
                             "which this build of WA X does not support$suffix.",
                 )
+            }
 
-            installedFamily > newestFamily ->
+            installedFamily > newestFamily -> {
                 VersionAssessment(
                     verdict = VersionVerdict.UNVERIFIED_NEWER_FAMILY,
                     installed = installed,
@@ -257,8 +258,9 @@ object ChannelAwareVersionGate {
                         "${installed.release} is newer than the newest declared build (${newest.release}), " +
                             "so it is loaded as unverified$suffix.",
                 )
+            }
 
-            else ->
+            else -> {
                 VersionAssessment(
                     verdict = VersionVerdict.UNVERIFIED_INSIDE_RANGE,
                     installed = installed,
@@ -268,6 +270,7 @@ object ChannelAwareVersionGate {
                         "${installed.release} is not a declared build, but it sits inside the declared range " +
                             "(${oldest.release}-${newest.release}), so it is loaded as unverified$suffix.",
                 )
+            }
         }
     }
 }

@@ -42,7 +42,6 @@ class HideChat(
             visibility = GONE
         }
 
-        override fun setVisibility(visibility: Int) {
-        }
+        override fun setVisibility(visibility: Int) = Unit
     }
 }

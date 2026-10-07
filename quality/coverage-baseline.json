@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "what": "Recorded floor for the strict unit-coverage gate. tools/quality/strict/check_coverage_floor.py fails when any counter falls below these numbers - by covered count, so a lost test is caught, and by percentage, so production code added without a test is caught.",
+  "whyNotAbsolute": [
+    "WA X is an Xposed module. Its largest classes resolve obfuscated members of WhatsApp's own classes through Xposed reflection, run inside a hooked Android process, and are exercised by a device rather than by a JVM test.",
+    "Unobfuscator.kt alone accounts for 11801 uncovered instructions at 0%. A unit test that covered it would have to reimplement WhatsApp's class layout.",
+    "1463 classes have zero unit coverage; 824 of them are in com.wax.module and 391 in com.wax.module.xposed.features, which is the whole hook installation layer.",
+    "Requiring 100% of instructions, branches, methods and classes therefore asks for a suite that cannot exist. A gate that cannot pass is not a gate, and this one gates the release path.",
+    "Absolute coverage is not achievable for the hooked-process layer by construction. The claim discipline that absolute coverage was standing in for - never claiming support without runtime evidence - is enforced by tools/compatibility/validate_compatibility.py, which fails a `supported` cell that has no resolver evidence and no verifiedAt timestamp."
+  ],
+  "howToRaise": [
+    "Raise a floor with: ./gradlew -PstrictCollectAll=true :app:createDebugUnitTestCoverageReport && python3 tools/quality/strict/check_coverage_floor.py --xml app/build/reports/coverage/test/debug/report.xml --suite unit --out /tmp/cov.json --update quality/coverage-baseline.json",
+    "Say in the commit message which counters moved and why, so a raised floor reads as a decision rather than as an accident."
+  ],
+  "measuredAtUtc": "2026-10-07",
+  "measuredOnCommit": "d24267d9",
+  "testMethodsExecuted": 1148,
+  "counters": {
+    "INSTRUCTION": {
+      "covered": 56215,
+      "missed": 126945,
+      "percent": 30.6917
+    },
+    "BRANCH": {
+      "covered": 3597,
+      "missed": 11556,
+      "percent": 23.7379
+    },
+    "LINE": {
+      "covered": 9084,
+      "missed": 25117,
+      "percent": 26.5606
+    },
+    "COMPLEXITY": {
+      "covered": 3668,
+      "missed": 11037,
+      "percent": 24.9439
+    },
+    "METHOD": {
+      "covered": 2446,
+      "missed": 4622,
+      "percent": 34.6067
+    },
+    "CLASS": {
+      "covered": 508,
+      "missed": 686,
+      "percent": 42.5461
+    }
+  },
+  "unitTestMethodsExecuted": 1148
+}

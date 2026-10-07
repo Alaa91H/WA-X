@@ -8,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.wax.module.R
@@ -47,16 +48,39 @@ class RecordingsAdapter(
     }
 
     fun setRecordings(recordings: List<Recording>) {
-        recordingItems = recordings
-        clearSelection()
-        notifyDataSetChanged()
+        val oldItems = recordingItems
+        val result =
+            DiffUtil.calculateDiff(
+                object : DiffUtil.Callback() {
+                    override fun getOldListSize(): Int = oldItems.size
+
+                    override fun getNewListSize(): Int = recordings.size
+
+                    override fun areItemsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int,
+                    ): Boolean = oldItems[oldItemPosition].file == recordings[newItemPosition].file
+
+                    override fun areContentsTheSame(
+                        oldItemPosition: Int,
+                        newItemPosition: Int,
+                    ): Boolean = oldItems[oldItemPosition] == recordings[newItemPosition]
+                },
+            )
+        recordingItems = recordings.toList()
+        selectedPositions.clear()
+        isSelectionMode = false
+        selectionChangeListener?.onSelectionChanged(0)
+        result.dispatchUpdatesTo(this)
     }
 
     fun setSelectionMode(selectionMode: Boolean) {
         if (isSelectionMode != selectionMode) {
             isSelectionMode = selectionMode
             if (!selectionMode) selectedPositions.clear()
-            notifyDataSetChanged()
+            if (recordingItems.isNotEmpty()) {
+                notifyItemRangeChanged(0, recordingItems.size)
+            }
         }
     }
 
@@ -69,14 +93,18 @@ class RecordingsAdapter(
     fun selectAll() {
         selectedPositions.clear()
         for (index in recordingItems.indices) selectedPositions.add(index)
-        notifyDataSetChanged()
+        if (recordingItems.isNotEmpty()) {
+            notifyItemRangeChanged(0, recordingItems.size)
+        }
         selectionChangeListener?.onSelectionChanged(selectedPositions.size)
     }
 
     fun clearSelection() {
         selectedPositions.clear()
         isSelectionMode = false
-        notifyDataSetChanged()
+        if (recordingItems.isNotEmpty()) {
+            notifyItemRangeChanged(0, recordingItems.size)
+        }
         selectionChangeListener?.onSelectionChanged(0)
     }
 
@@ -100,7 +128,12 @@ class RecordingsAdapter(
         holder.duration.text = recording.getFormattedDuration()
 
         val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-        holder.details.text = "${recording.getFormattedSize()} • ${dateFormat.format(Date(recording.date))}"
+        holder.details.text =
+            holder.itemView.context.getString(
+                R.string.recording_details_format,
+                recording.getFormattedSize(),
+                dateFormat.format(Date(recording.date)),
+            )
 
         if (isSelectionMode) {
             holder.checkbox.visibility = View.VISIBLE

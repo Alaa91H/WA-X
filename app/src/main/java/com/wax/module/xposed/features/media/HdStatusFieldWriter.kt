@@ -95,7 +95,7 @@ class HdStatusFieldWriter(
             applied++
             true
         } catch (t: Throwable) {
-            recordFailure(aliases, field, t)
+            recordFailure(field, t)
             false
         }
     }
@@ -133,7 +133,7 @@ class HdStatusFieldWriter(
             applied++
             true
         } catch (t: Throwable) {
-            recordFailure(aliases, field, t)
+            recordFailure(field, t)
             false
         }
     }
@@ -163,7 +163,7 @@ class HdStatusFieldWriter(
             applied++
             true
         } catch (t: Throwable) {
-            recordFailure(aliases, field, t)
+            recordFailure(field, t)
             false
         }
     }
@@ -179,15 +179,14 @@ class HdStatusFieldWriter(
     private fun selectField(
         aliases: List<String>,
         requiredType: Class<*>?,
-    ): Field? {
-        for (name in aliases) {
-            val field = fields[name] ?: continue
-            field.isAccessible = true
-            if (requiredType != null && field.type != requiredType) continue
-            return field
-        }
-        return null
-    }
+    ): Field? =
+        aliases
+            .asSequence()
+            .mapNotNull(fields::get)
+            .firstOrNull { field ->
+                field.isAccessible = true
+                requiredType == null || field.type == requiredType
+            }
 
     private fun recordMissing(
         aliases: List<String>,
@@ -203,7 +202,6 @@ class HdStatusFieldWriter(
     }
 
     private fun recordFailure(
-        aliases: List<String>,
         field: Field,
         t: Throwable,
     ): Boolean {

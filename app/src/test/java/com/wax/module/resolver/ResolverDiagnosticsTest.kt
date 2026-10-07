@@ -8,6 +8,10 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 
+private class ResolverDiagnosticsFailure(
+    message: String,
+) : RuntimeException(message)
+
 class ResolverDiagnosticsTest {
     @Before
     fun setUp() {
@@ -93,7 +97,7 @@ class ResolverDiagnosticsTest {
     @Test
     fun theReportContainsNoUserData() {
         FeatureInstaller.install("Broken") {
-            throw RuntimeException("failed for 4915112345678@s.whatsapp.net")
+            throw ResolverDiagnosticsFailure("failed for 4915112345678@s.whatsapp.net")
         }
         ResolverRegistry.record(
             "loadReceipt",

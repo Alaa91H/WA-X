@@ -2,6 +2,7 @@ package com.wax.module
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import java.util.Locale
 
@@ -121,7 +122,7 @@ object AppLanguage {
         val present = prefs.contains(LEGACY_FORCE_ENGLISH)
         val forced = runCatching { prefs.getBoolean(LEGACY_FORCE_ENGLISH, false) }.getOrDefault(false)
         val migrated = resolveWithLegacy(null, present, forced)
-        if (migrated != SYSTEM) prefs.edit().putString(KEY, migrated).apply()
+        if (migrated != SYSTEM) prefs.edit { putString(KEY, migrated) }
         return migrated
     }
 
@@ -133,9 +134,9 @@ object AppLanguage {
         val selected = selected(context)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         if (selected == SYSTEM) {
-            prefs.edit().remove(KEY).apply()
+            prefs.edit { remove(KEY) }
         } else {
-            prefs.edit().putString(KEY, selected).apply()
+            prefs.edit { putString(KEY, selected) }
         }
         return localeFor(selected)
     }

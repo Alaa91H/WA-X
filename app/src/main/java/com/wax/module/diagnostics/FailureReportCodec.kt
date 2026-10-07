@@ -88,14 +88,35 @@ object FailureReportCodec {
         append('"')
         for (char in value) {
             when (char) {
-                '"' -> append("\\\"")
-                '\\' -> append("\\\\")
-                '\n' -> append("\\n")
-                '\r' -> append("\\r")
-                '\t' -> append("\\t")
-                '\b' -> append("\\b")
-                '\u000C' -> append("\\f")
-                else ->
+                '"' -> {
+                    append("\\\"")
+                }
+
+                '\\' -> {
+                    append("\\\\")
+                }
+
+                '\n' -> {
+                    append("\\n")
+                }
+
+                '\r' -> {
+                    append("\\r")
+                }
+
+                '\t' -> {
+                    append("\\t")
+                }
+
+                '\b' -> {
+                    append("\\b")
+                }
+
+                '\u000C' -> {
+                    append("\\f")
+                }
+
+                else -> {
                     // Control characters must be escaped; everything else, including
                     // Arabic text, is emitted as-is.
                     if (char < ' ') {
@@ -107,6 +128,7 @@ object FailureReportCodec {
                     } else {
                         append(char)
                     }
+                }
             }
         }
         append('"')

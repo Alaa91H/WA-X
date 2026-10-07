@@ -7,8 +7,7 @@ class DebugFeature(
     classLoader: ClassLoader,
     preferences: SharedPreferences,
 ) : Feature(classLoader, preferences) {
-    override fun doHook() {
-    }
+    override fun doHook() = Unit
 
     override fun getPluginName(): String = "Debug Feature"
 }

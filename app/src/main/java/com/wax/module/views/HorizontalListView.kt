@@ -12,6 +12,7 @@ import android.view.ViewParent
 import android.widget.AdapterView
 import android.widget.ListAdapter
 import android.widget.Scroller
+import androidx.core.view.isNotEmpty
 import java.util.LinkedList
 import java.util.Queue
 
@@ -176,7 +177,23 @@ open class HorizontalListView
         }
 
         override fun setSelection(position: Int) {
-            // TODO: implement
+            val adapter = mAdapter ?: return
+            if (position !in 0 until adapter.count) return
+            if (width == 0) {
+                post { setSelection(position) }
+                return
+            }
+
+            var targetX = 0
+            for (index in 0 until position) {
+                val child = adapter.getView(index, null, this)
+                child.measure(
+                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
+                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
+                )
+                targetX += child.measuredWidth
+            }
+            scrollTo(targetX)
         }
 
         private fun addAndMeasureChild(
@@ -251,7 +268,7 @@ open class HorizontalListView
         }
 
         private fun positionItems(dx: Int) {
-            if (childCount > 0) {
+            if (isNotEmpty()) {
                 mDisplayOffset += dx
                 var left = mDisplayOffset
                 for (index in 0 until childCount) {

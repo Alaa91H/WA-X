@@ -114,7 +114,7 @@ class Others(
                     override fun afterHookedMethod(param: MethodHookParam) {
                         val menu = param.args[0] as Menu
                         val menuItem = menu.findItem(Utils.getID("me_tab_menu_item", "id"))
-                        menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                        menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                     }
                 },
             )
@@ -897,7 +897,7 @@ class Others(
     }
 
     private fun hookSearchbar(filterChats: String?) {
-        if (filterChats.isNullOrEmpty())return
+        if (filterChats.isNullOrEmpty()) return
         val searchbar = Unobfuscator.loadViewAddSearchBarMethod(classLoader)
         val searchBarID = Utils.getID("my_search_bar", "id")
 

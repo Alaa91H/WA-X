@@ -39,7 +39,7 @@ object ReflectionUtils {
         className: String?,
         classLoader: ClassLoader,
     ): Class<*> {
-        if (className == null) throw RuntimeException("Class name is null")
+        if (className == null) error("Class name is null")
         val primitive = primitiveClasses[className]
         if (primitive != null) return primitive
         return XposedHelpers.findClass(className, classLoader)
@@ -57,7 +57,7 @@ object ReflectionUtils {
             }
             current = current.superclass
         }
-        throw RuntimeException("Method not found")
+        error("Method not found")
     }
 
     @JvmStatic
@@ -71,7 +71,7 @@ object ReflectionUtils {
             if (results.isNotEmpty()) return results.toTypedArray()
             current = current.superclass
         }
-        throw RuntimeException("Method not found")
+        error("Method not found")
     }
 
     @JvmStatic
@@ -86,7 +86,7 @@ object ReflectionUtils {
             }
             current = current.superclass
         }
-        throw RuntimeException("Field not found")
+        error("Field not found")
     }
 
     @JvmStatic
@@ -115,7 +115,7 @@ object ReflectionUtils {
             }
             current = current.superclass
         }
-        throw RuntimeException("Constructor not found")
+        error("Constructor not found")
     }
 
     @JvmStatic
@@ -270,7 +270,7 @@ object ReflectionUtils {
             try {
                 return cls.getField(cachedFieldName)
             } catch (_: NoSuchFieldException) {
-                cachePrefs?.edit()?.remove(cacheKey)?.apply()
+                cachePrefs?.edit { remove(cacheKey) }
             }
         }
 
@@ -282,7 +282,7 @@ object ReflectionUtils {
                 .orElse(null)
 
         if (field != null && field.declaringClass == cls) {
-            cachePrefs?.edit()?.putString(cacheKey, field.name)?.apply()
+            cachePrefs?.edit { putString(cacheKey, field.name) }
         }
 
         return field
@@ -416,7 +416,7 @@ object ReflectionUtils {
             require(fragment.trim().isNotEmpty()) { "Stack trace fragments must not be blank." }
         }
 
-        val trace = Throwable().stackTrace
+        val trace = currentStackTrace()
         val limit = minOf(trace.size, 20)
 
         for (i in 2 until limit) {
@@ -457,7 +457,7 @@ object ReflectionUtils {
     @JvmStatic
     fun isCalledFromClass(cls: Class<*>?): Boolean {
         val className = cls?.name ?: return false
-        val stacks = Throwable().stackTrace
+        val stacks = currentStackTrace()
 
         for (i in 2 until stacks.size) {
             if (stacks[i].className == className) {
@@ -473,7 +473,7 @@ object ReflectionUtils {
         if (method == null) return false
         val declaringClassName = method.declaringClass.name
         val methodName = method.name
-        val stacks = Throwable().stackTrace
+        val stacks = currentStackTrace()
 
         for (i in 2 until stacks.size) {
             if (stacks[i].className == declaringClassName && stacks[i].methodName == methodName) {
@@ -496,4 +496,15 @@ object ReflectionUtils {
         } catch (_: Exception) {
         }
     }
+
+    /**
+     * The current thread's frames, for the call-site checks above.
+     *
+     * `Throwable().stackTrace` was the previous way to ask the same question, but it
+     * allocates an exception purely to read a stack and constructs one with no message,
+     * which reads as a bug to any reader - and to detekt's
+     * `ThrowingExceptionsWithoutMessageOrCause`. `Thread.currentThread().stackTrace`
+     * answers the same question without either.
+     */
+    private fun currentStackTrace(): Array<StackTraceElement> = Thread.currentThread().stackTrace
 }

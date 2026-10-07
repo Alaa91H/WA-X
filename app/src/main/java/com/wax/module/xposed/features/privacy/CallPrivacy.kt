@@ -46,8 +46,14 @@ class CallPrivacy(
                     val callInfoClass = ModuleRuntime.voipCallInfoClass
                     val callinfo: Any? =
                         when {
-                            param.args[0] is Message -> (param.args[0] as Message).obj
-                            param.args.size > 1 && callInfoClass.isInstance(param.args[1]) -> param.args[1]
+                            param.args[0] is Message -> {
+                                (param.args[0] as Message).obj
+                            }
+
+                            param.args.size > 1 && callInfoClass.isInstance(param.args[1]) -> {
+                                param.args[1]
+                            }
+
                             else -> {
                                 Utils.showToast("Invalid call info", Toast.LENGTH_SHORT)
                                 return
@@ -88,6 +94,7 @@ class CallPrivacy(
                             ReflectionUtils.callMethod(rejectCallMethod, mVoipManager, *params)
                             param.result = true
                         }
+
                         "ended" -> {
                             val params = ReflectionUtils.initArray(endCallMethod.parameterTypes)
                             params[0] = true
@@ -135,12 +142,19 @@ class CallPrivacy(
         val customprivacy = CustomPrivacy.getJSON(phoneNumber)
 
         return when (type) {
-            PrivacyType.ALL_BLOCKED -> customprivacy.optBoolean("BlockCall", true)
-            PrivacyType.ALL_PERMITTED -> customprivacy.optBoolean("BlockCall", false)
+            PrivacyType.ALL_BLOCKED -> {
+                customprivacy.optBoolean("BlockCall", true)
+            }
+
+            PrivacyType.ALL_PERMITTED -> {
+                customprivacy.optBoolean("BlockCall", false)
+            }
+
             PrivacyType.ONLY_UNKNOWN -> {
                 val waContact = WaContactWpp.getWaContactFromJid(userJid) ?: return true
                 !waContact.isSavedContact()
             }
+
             PrivacyType.BACKLIST -> {
                 if (customprivacy.optBoolean("BlockCall", false)) return true
                 val callBlockList = prefs.getString("call_block_contacts", "[]")!!
@@ -163,7 +177,9 @@ class CallPrivacy(
                 whiteList.none { it.isNotEmpty() && it == userJid.phoneRawString }
             }
 
-            null -> false
+            null -> {
+                false
+            }
         }
     }
 

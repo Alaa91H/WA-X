@@ -65,7 +65,7 @@ class ModuleApplication : Application() {
 
     private fun buildCrashInfo(): String {
         val androidVersion = Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")"
-        val deviceModel = (Build.MANUFACTURER + " " + Build.MODEL).trim { it <= ' ' }
+        val deviceModel = (Build.MANUFACTURER + " " + Build.MODEL).trim()
         return "WAE version: " + BuildConfig.VERSION_NAME + "\n" +
             "WAE package: " + packageName + "\n" +
             getString(R.string.crash_android_version) + ": " + androidVersion + "\n" +

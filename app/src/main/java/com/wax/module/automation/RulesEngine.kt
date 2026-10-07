@@ -51,9 +51,18 @@ object RuleEvaluator {
         event: RuleEvent,
     ): Boolean =
         when (condition) {
-            is RuleCondition.Sender -> !event.isGroup && event.chatId == condition.chatId
-            is RuleCondition.GroupChat -> event.isFromGroup(condition.groupId)
-            is RuleCondition.MessageTypeIs -> event.messageType == condition.type
+            is RuleCondition.Sender -> {
+                !event.isGroup && event.chatId == condition.chatId
+            }
+
+            is RuleCondition.GroupChat -> {
+                event.isFromGroup(condition.groupId)
+            }
+
+            is RuleCondition.MessageTypeIs -> {
+                event.messageType == condition.type
+            }
+
             is RuleCondition.Keyword -> {
                 if (condition.text.isEmpty()) {
                     false
@@ -64,13 +73,33 @@ object RuleEvaluator {
                 }
             }
 
-            is RuleCondition.RegexMatch -> compiled(condition)?.containsMatchIn(event.text) ?: false
-            is RuleCondition.TimeWindow -> matchesWindow(event.time, condition.start, condition.end)
-            is RuleCondition.Weekdays -> event.dayOfWeek in condition.days
-            is RuleCondition.Wifi -> event.wifiConnected == condition.connected
-            is RuleCondition.Charging -> event.charging == condition.charging
-            is RuleCondition.BatteryBelow -> event.batteryPercent?.let { it < condition.percent } ?: false
-            is RuleCondition.PackageProfile -> event.packageName == condition.packageName
+            is RuleCondition.RegexMatch -> {
+                compiled(condition)?.containsMatchIn(event.text) ?: false
+            }
+
+            is RuleCondition.TimeWindow -> {
+                matchesWindow(event.time, condition.start, condition.end)
+            }
+
+            is RuleCondition.Weekdays -> {
+                event.dayOfWeek in condition.days
+            }
+
+            is RuleCondition.Wifi -> {
+                event.wifiConnected == condition.connected
+            }
+
+            is RuleCondition.Charging -> {
+                event.charging == condition.charging
+            }
+
+            is RuleCondition.BatteryBelow -> {
+                event.batteryPercent?.let { it < condition.percent } ?: false
+            }
+
+            is RuleCondition.PackageProfile -> {
+                event.packageName == condition.packageName
+            }
         }
 
     /** Whether [pattern] compiles; used at rule-save time to reject broken regexes early. */
@@ -457,11 +486,10 @@ class RulesEngine(
                 }
                 var outcome = ActionOutcome.EXECUTED
                 var detail = developerDetail(planned.action)
-                try {
-                    executor.execute(planned.action, event)
-                } catch (error: Throwable) {
+                val failure = runCatching { executor.execute(planned.action, event) }.exceptionOrNull()
+                if (failure != null) {
                     outcome = ActionOutcome.FAILED
-                    detail = "failed: ${error.javaClass.simpleName}" + (developerDetail(planned.action)?.let { " ($it)" } ?: "")
+                    detail = "failed: ${failure.javaClass.simpleName}" + (developerDetail(planned.action)?.let { " ($it)" } ?: "")
                 }
                 entries.add(
                     AuditEntry(at, planned.ruleId, planned.action.actionId, outcome, event.messageType, detail),
@@ -565,8 +593,12 @@ class RulesEngine(
                                 plannedForRule = true
                             }
 
-                            existing.second == action.profileId -> Unit // Already switching there; dedupe.
-                            else ->
+                            existing.second == action.profileId -> {
+                                Unit
+                            }
+
+                            // Already switching there; dedupe.
+                            else -> {
                                 conflicts.add(
                                     RuleConflict(
                                         RuleConflictKind.CONFLICTING_PROFILE_SWITCH,
@@ -574,6 +606,7 @@ class RulesEngine(
                                         "two matching rules switch to different profiles; the higher-priority rule wins",
                                     ),
                                 )
+                            }
                         }
                     }
 
@@ -659,74 +692,107 @@ class RulesEngine(
 
     private fun encodeCondition(condition: RuleCondition): JsonValue.Obj =
         when (condition) {
-            is RuleCondition.Sender -> jsonObject("type" to jsonString("sender"), "chatId" to jsonString(condition.chatId))
-            is RuleCondition.GroupChat -> jsonObject("type" to jsonString("group"), "groupId" to jsonString(condition.groupId))
-            is RuleCondition.MessageTypeIs ->
-                jsonObject("type" to jsonString("message_type"), "value" to jsonString(condition.type.name))
+            is RuleCondition.Sender -> {
+                jsonObject("type" to jsonString("sender"), "chatId" to jsonString(condition.chatId))
+            }
 
-            is RuleCondition.Keyword ->
+            is RuleCondition.GroupChat -> {
+                jsonObject("type" to jsonString("group"), "groupId" to jsonString(condition.groupId))
+            }
+
+            is RuleCondition.MessageTypeIs -> {
+                jsonObject("type" to jsonString("message_type"), "value" to jsonString(condition.type.name))
+            }
+
+            is RuleCondition.Keyword -> {
                 jsonObject(
                     "type" to jsonString("keyword"),
                     "text" to jsonString(condition.text),
                     "caseSensitive" to jsonBoolean(condition.caseSensitive),
                 )
+            }
 
-            is RuleCondition.RegexMatch ->
+            is RuleCondition.RegexMatch -> {
                 jsonObject(
                     "type" to jsonString("regex"),
                     "pattern" to jsonString(condition.pattern),
                     "options" to jsonStrings(condition.options.map { it.name }),
                 )
+            }
 
-            is RuleCondition.TimeWindow ->
+            is RuleCondition.TimeWindow -> {
                 jsonObject(
                     "type" to jsonString("time"),
                     "start" to jsonString(condition.start.toString()),
                     "end" to jsonString(condition.end.toString()),
                 )
+            }
 
-            is RuleCondition.Weekdays ->
+            is RuleCondition.Weekdays -> {
                 jsonObject(
                     "type" to jsonString("weekdays"),
                     "days" to jsonStrings(condition.days.map { it.name }),
                 )
+            }
 
-            is RuleCondition.Wifi -> jsonObject("type" to jsonString("wifi"), "value" to jsonBoolean(condition.connected))
-            is RuleCondition.Charging ->
+            is RuleCondition.Wifi -> {
+                jsonObject("type" to jsonString("wifi"), "value" to jsonBoolean(condition.connected))
+            }
+
+            is RuleCondition.Charging -> {
                 jsonObject("type" to jsonString("charging"), "value" to jsonBoolean(condition.charging))
+            }
 
-            is RuleCondition.BatteryBelow ->
+            is RuleCondition.BatteryBelow -> {
                 jsonObject("type" to jsonString("battery"), "percent" to jsonNumber(condition.percent.toLong()))
+            }
 
-            is RuleCondition.PackageProfile ->
+            is RuleCondition.PackageProfile -> {
                 jsonObject("type" to jsonString("package"), "package" to jsonString(condition.packageName))
+            }
         }
 
     private fun encodeAction(action: RuleAction): JsonValue.Obj =
         when (action) {
-            is RuleAction.AutoReply -> jsonObject("type" to jsonString("auto_reply"), "text" to jsonString(action.text))
-            RuleAction.MuteChat -> jsonObject("type" to jsonString("mute"))
-            RuleAction.MarkLater -> jsonObject("type" to jsonString("mark_later"))
-            is RuleAction.Bookmark ->
-                jsonObject("type" to jsonString("bookmark"), "collection" to jsonString(action.collectionId))
+            is RuleAction.AutoReply -> {
+                jsonObject("type" to jsonString("auto_reply"), "text" to jsonString(action.text))
+            }
 
-            RuleAction.SaveMedia -> jsonObject("type" to jsonString("save_media"))
-            is RuleAction.Notify ->
+            RuleAction.MuteChat -> {
+                jsonObject("type" to jsonString("mute"))
+            }
+
+            RuleAction.MarkLater -> {
+                jsonObject("type" to jsonString("mark_later"))
+            }
+
+            is RuleAction.Bookmark -> {
+                jsonObject("type" to jsonString("bookmark"), "collection" to jsonString(action.collectionId))
+            }
+
+            RuleAction.SaveMedia -> {
+                jsonObject("type" to jsonString("save_media"))
+            }
+
+            is RuleAction.Notify -> {
                 jsonObject(
                     "type" to jsonString("notify"),
                     "title" to jsonString(action.title),
                     "text" to jsonString(action.text),
                 )
+            }
 
-            is RuleAction.SwitchPrivacyProfile ->
+            is RuleAction.SwitchPrivacyProfile -> {
                 jsonObject("type" to jsonString("switch_profile"), "profile" to jsonString(action.profileId))
+            }
 
-            is RuleAction.TaskerEvent ->
+            is RuleAction.TaskerEvent -> {
                 jsonObject(
                     "type" to jsonString("tasker"),
                     "name" to jsonString(action.name),
                     "payload" to action.payload?.let { jsonString(it) },
                 )
+            }
         }
 
     private fun decodeRule(value: JsonValue): AutomationRule? {
@@ -751,19 +817,27 @@ class RulesEngine(
     private fun decodeCondition(value: JsonValue): RuleCondition? {
         val fields = (value as? JsonValue.Obj)?.fields ?: return null
         return when (fields.string("type")) {
-            "sender" -> fields.string("chatId")?.let { RuleCondition.Sender(it) }
-            "group" -> fields.string("groupId")?.let { RuleCondition.GroupChat(it) }
-            "message_type" ->
+            "sender" -> {
+                fields.string("chatId")?.let { RuleCondition.Sender(it) }
+            }
+
+            "group" -> {
+                fields.string("groupId")?.let { RuleCondition.GroupChat(it) }
+            }
+
+            "message_type" -> {
                 MessageType.entries
                     .firstOrNull { it.name == fields.string("value") }
                     ?.let { RuleCondition.MessageTypeIs(it) }
+            }
 
-            "keyword" ->
+            "keyword" -> {
                 fields.string("text")?.let {
                     RuleCondition.Keyword(it, fields.boolean("caseSensitive") ?: false)
                 }
+            }
 
-            "regex" ->
+            "regex" -> {
                 fields.string("pattern")?.let { pattern ->
                     val options =
                         fields
@@ -772,6 +846,7 @@ class RulesEngine(
                             .toSet()
                     RuleCondition.RegexMatch(pattern, options)
                 }
+            }
 
             "time" -> {
                 val start = fields.string("start")?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
@@ -788,11 +863,25 @@ class RulesEngine(
                 if (days.isEmpty()) null else RuleCondition.Weekdays(days)
             }
 
-            "wifi" -> RuleCondition.Wifi(fields.boolean("value") ?: return null)
-            "charging" -> RuleCondition.Charging(fields.boolean("value") ?: return null)
-            "battery" -> RuleCondition.BatteryBelow((fields.long("percent") ?: return null).toInt())
-            "package" -> fields.string("package")?.let { RuleCondition.PackageProfile(it) }
-            else -> null
+            "wifi" -> {
+                RuleCondition.Wifi(fields.boolean("value") ?: return null)
+            }
+
+            "charging" -> {
+                RuleCondition.Charging(fields.boolean("value") ?: return null)
+            }
+
+            "battery" -> {
+                RuleCondition.BatteryBelow((fields.long("percent") ?: return null).toInt())
+            }
+
+            "package" -> {
+                fields.string("package")?.let { RuleCondition.PackageProfile(it) }
+            }
+
+            else -> {
+                null
+            }
         }
     }
 

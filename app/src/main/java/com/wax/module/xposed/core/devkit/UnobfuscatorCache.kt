@@ -30,6 +30,11 @@ import java.util.concurrent.atomic.AtomicReference
 class UnobfuscatorCache private constructor(
     private val mApplication: Application,
 ) {
+    private class CacheResolutionException(
+        message: String,
+        cause: Throwable? = null,
+    ) : RuntimeException(message, cause)
+
     val sPrefsCacheHooks: SharedPreferences
     private val sPrefsCacheStrings: SharedPreferences
     private val reverseResourceMap = ConcurrentHashMap<String, String>()
@@ -77,7 +82,7 @@ class UnobfuscatorCache private constructor(
             }
             initCacheStrings()
         } catch (e: Exception) {
-            throw RuntimeException("Can't initialize UnobfuscatorCache: ${e.message}", e)
+            throw CacheResolutionException("Can't initialize UnobfuscatorCache: ${e.message}", e)
         }
     }
 
@@ -195,7 +200,6 @@ class UnobfuscatorCache private constructor(
     private fun getMapIdString(search: String): String? {
         if (reverseResourceMap.isEmpty()) {
             initializeReverseResourceMap()
-            System.gc()
         }
         val s = search.lowercase(Locale.ROOT).replace("\\s".toRegex(), "")
         XposedBridge.log("need search obsfucate: $s")
@@ -230,7 +234,7 @@ class UnobfuscatorCache private constructor(
                 saveField(methodName, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting field $methodName: ${e.message}", e)
+                throw CacheResolutionException("Error getting field $methodName: ${e.message}", e)
             }
         return getFieldFromJson(loader, JSONObject(value))
     }
@@ -247,7 +251,7 @@ class UnobfuscatorCache private constructor(
                 saveFields(methodName, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting fields $methodName: ${e.message}", e)
+                throw CacheResolutionException("Error getting fields $methodName: ${e.message}", e)
             }
         val fields = ArrayList<Field>()
         val fieldsJson = JSONArray(value)
@@ -268,7 +272,7 @@ class UnobfuscatorCache private constructor(
                 saveMethod(methodName, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting method $methodName: ${e.message}", e)
+                throw CacheResolutionException("Error getting method $methodName: ${e.message}", e)
             }
         return getMethodFromJsonString(loader, value)
     }
@@ -280,12 +284,15 @@ class UnobfuscatorCache private constructor(
         val methodName = getKeyName()
         val value =
             sPrefsCacheHooks.getString(methodName, null) ?: try {
-                val result = functionCall.call() ?: throw NoSuchMethodException("Methods is null")
-                if (result.isEmpty()) throw NoSuchMethodException("Methods is empty")
+                val result =
+                    functionCall
+                        .call()
+                        ?.takeIf { it.isNotEmpty() }
+                        ?: throw NoSuchMethodException("Methods are missing or empty")
                 saveMethods(methodName, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting methods $methodName: ${e.message}", e)
+                throw CacheResolutionException("Error getting methods $methodName: ${e.message}", e)
             }
         val methods = ArrayList<Method>()
         val methodsJson = JSONArray(value)
@@ -316,7 +323,7 @@ class UnobfuscatorCache private constructor(
                 saveClass(key, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting class $key: ${e.message}", e)
+                throw CacheResolutionException("Error getting class $key: ${e.message}", e)
             }
         return getClassFromJson(loader, JSONObject(value))
     }
@@ -332,7 +339,7 @@ class UnobfuscatorCache private constructor(
                 saveClasses(methodName, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting classes $methodName: ${e.message}", e)
+                throw CacheResolutionException("Error getting classes $methodName: ${e.message}", e)
             }
         val classes = ArrayList<Class<*>>()
         val classesJson = JSONArray(value)
@@ -353,11 +360,11 @@ class UnobfuscatorCache private constructor(
         functionCall: FunctionCall<HashMap<String, Field>>,
     ): HashMap<String, Field> {
         sPrefsCacheHooks.getString(key, null) ?: try {
-            val result = functionCall.call() ?: throw Exception("HashMap is null")
+            val result = functionCall.call() ?: throw NoSuchElementException("HashMap is null")
             saveHashMap(key, result)
             return result
         } catch (e: Exception) {
-            throw Exception("Error getting HashMap $key: ${e.message}", e)
+            throw CacheResolutionException("Error getting HashMap $key: ${e.message}", e)
         }
         return loadHashMap(loader, key)
     }
@@ -454,16 +461,10 @@ class UnobfuscatorCache private constructor(
         sPrefsCacheHooks.edit { putString(key, values.toString()) }
     }
 
-    private fun fieldToJson(field: Field): JSONObject {
-        val value = JSONObject()
-        try {
-            value.put("class", field.declaringClass.name)
-            value.put("name", field.name)
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
-        return value
-    }
+    private fun fieldToJson(field: Field): JSONObject =
+        JSONObject()
+            .put("class", field.declaringClass.name)
+            .put("name", field.name)
 
     private fun getFieldFromJson(
         loader: ClassLoader,
@@ -473,17 +474,11 @@ class UnobfuscatorCache private constructor(
         return XposedHelpers.findField(cls, value.getString("name"))
     }
 
-    private fun methodToJson(method: Method): JSONObject {
-        val value = JSONObject()
-        try {
-            value.put("class", method.declaringClass.name)
-            value.put("name", method.name)
-            value.put("params", classArrayToJson(method.parameterTypes))
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
-        return value
-    }
+    private fun methodToJson(method: Method): JSONObject =
+        JSONObject()
+            .put("class", method.declaringClass.name)
+            .put("name", method.name)
+            .put("params", classArrayToJson(method.parameterTypes))
 
     private fun getMethodFromJson(
         loader: ClassLoader,
@@ -494,15 +489,7 @@ class UnobfuscatorCache private constructor(
         return XposedHelpers.findMethodExact(cls, value.getString("name"), *paramTypes)
     }
 
-    private fun classToJson(cls: Class<*>): JSONObject {
-        val value = JSONObject()
-        try {
-            value.put("class", cls.name)
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
-        return value
-    }
+    private fun classToJson(cls: Class<*>): JSONObject = JSONObject().put("class", cls.name)
 
     private fun getClassFromJson(
         loader: ClassLoader,
@@ -542,7 +529,7 @@ class UnobfuscatorCache private constructor(
         val methodName = getKeyName()
         val value = sPrefsCacheHooks.getString(methodName, null)
         if (value == null) {
-            val result = functionCall.call() ?: throw Exception("Constructor is null")
+            val result = functionCall.call() ?: throw NoSuchMethodException("Constructor is null")
             saveConstructor(methodName, result)
             return result
         }
@@ -556,13 +543,10 @@ class UnobfuscatorCache private constructor(
         key: String,
         constructor: Constructor<*>,
     ) {
-        val value = JSONObject()
-        try {
-            value.put("class", constructor.declaringClass.name)
-            value.put("params", classArrayToJson(constructor.parameterTypes))
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
+        val value =
+            JSONObject()
+                .put("class", constructor.declaringClass.name)
+                .put("params", classArrayToJson(constructor.parameterTypes))
         sPrefsCacheHooks.edit { putString(key, value.toString()) }
     }
 
@@ -573,11 +557,11 @@ class UnobfuscatorCache private constructor(
         val methodName = getKeyName()
         val value =
             sPrefsCacheHooks.getString(methodName, null) ?: try {
-                val result = functionCall.call() ?: throw Exception("Number is null")
+                val result = functionCall.call() ?: throw NoSuchElementException("Number is null")
                 saveNumber(methodName, result)
                 return result
             } catch (e: Exception) {
-                throw Exception("Error getting number $methodName: ${e.message}", e)
+                throw CacheResolutionException("Error getting number $methodName: ${e.message}", e)
             }
         return loadNumber(JSONObject(value))
     }
@@ -586,13 +570,10 @@ class UnobfuscatorCache private constructor(
         key: String,
         number: Number,
     ) {
-        val value = JSONObject()
-        try {
-            value.put("class", number.javaClass.name)
-            value.put("value", number)
-        } catch (e: JSONException) {
-            throw RuntimeException(e)
-        }
+        val value =
+            JSONObject()
+                .put("class", number.javaClass.name)
+                .put("value", number)
         sPrefsCacheHooks.edit { putString(key, value.toString()) }
     }
 

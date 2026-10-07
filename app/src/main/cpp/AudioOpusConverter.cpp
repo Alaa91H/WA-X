@@ -3,7 +3,7 @@
 #include <opusenc.h>
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_wmods_wppenhacer_xposed_utils_AudioOpusConverter_nativeInitOpusEncoder(JNIEnv *env, jclass clazz, jstring outputPath, jint sampleRate, jint channels) {
+Java_com_wax_module_xposed_utils_AudioOpusConverter_nativeInitOpusEncoder(JNIEnv *env, jclass, jstring outputPath, jint sampleRate, jint channels) {
     const char *path = env->GetStringUTFChars(outputPath, 0);
     
     int error = 0;
@@ -26,7 +26,7 @@ Java_com_wmods_wppenhacer_xposed_utils_AudioOpusConverter_nativeInitOpusEncoder(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_wmods_wppenhacer_xposed_utils_AudioOpusConverter_nativeEncodeOpus(JNIEnv *env, jclass clazz, jlong handle, jbyteArray pcm, jint length) {
+Java_com_wax_module_xposed_utils_AudioOpusConverter_nativeEncodeOpus(JNIEnv *env, jclass, jlong handle, jbyteArray pcm, jint length) {
     if (handle == 0 || pcm == nullptr) return;
     OggOpusEnc *enc = reinterpret_cast<OggOpusEnc *>(handle);
     
@@ -42,7 +42,7 @@ Java_com_wmods_wppenhacer_xposed_utils_AudioOpusConverter_nativeEncodeOpus(JNIEn
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_wmods_wppenhacer_xposed_utils_AudioOpusConverter_nativeCloseOpusEncoder(JNIEnv *env, jclass clazz, jlong handle) {
+Java_com_wax_module_xposed_utils_AudioOpusConverter_nativeCloseOpusEncoder(JNIEnv *, jclass, jlong handle) {
     if (handle == 0) return;
     OggOpusEnc *enc = reinterpret_cast<OggOpusEnc *>(handle);
     ope_encoder_drain(enc);

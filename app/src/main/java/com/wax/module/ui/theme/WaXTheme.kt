@@ -191,11 +191,17 @@ fun WaXTheme(
     val context = LocalContext.current
     val colorScheme: ColorScheme =
         when {
-            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
 
-            darkTheme -> DarkScheme
-            else -> LightScheme
+            darkTheme -> {
+                DarkScheme
+            }
+
+            else -> {
+                LightScheme
+            }
         }
     val extended = if (darkTheme) DarkExtended else LightExtended
 

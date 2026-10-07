@@ -43,18 +43,22 @@ class TargetScopedPreferences(
         val prefix = SettingsKeys.TARGET_PREFIX + target.code + "."
         val all = delegate.all ?: emptyMap()
         val rebuilt = HashMap<String, Any?>()
-        for ((physicalKey, value) in all) {
-            if (physicalKey == null || value == null) continue
-            if (!physicalKey.startsWith(prefix)) continue
-            // Decoded through the store so a set or a flag comes back as the type the
-            // writer used, not as the string the raw value happens to look like.
-            val key = physicalKey.removePrefix(prefix)
-            rebuilt[key] = decode(store, physicalKey, key, value)
-        }
+        all
+            .asSequence()
+            .filter { (physicalKey, value) ->
+                physicalKey != null &&
+                    value != null &&
+                    physicalKey.startsWith(prefix)
+            }.forEach { (physicalKey, value) ->
+                val key = physicalKey.removePrefix(prefix)
+                if (SettingKeyRegistry.find(key) != null) {
+                    // Decode through the typed store so the runtime sees the value kind
+                    // written by the manager rather than a raw string representation.
+                    rebuilt[key] = decode(store, physicalKey, key, value!!)
+                }
+            }
         overrides = rebuilt
-        if (rebuilt.isNotEmpty()) {
-            count = rebuilt.size
-        }
+        count = rebuilt.size
     }
 
     /** How many overrides this process is currently applying. */
@@ -78,24 +82,57 @@ class TargetScopedPreferences(
         if (key == null || overrides.isEmpty()) return current
         if (!overrides.containsKey(key)) return current
         val value = overrides[key] ?: return current
-        // Keep the type WhatsApp asked for: a set read as a boolean must not be handed
-        // over as a boolean, and the caller's own value is safer than a wrong one.
-        return if (current == null || expectedTypeMatches(current, value)) value else current
-    }
+        if (current == null) return value
 
-    private fun expectedTypeMatches(
-        current: Any,
-        value: Any,
-    ): Boolean =
-        when (current) {
-            is Boolean -> value is Boolean || value is String
-            is Int -> value is Number
-            is Long -> value is Number
-            is Float -> value is Number
-            is String -> value is String
-            is Set<*> -> value is Set<*>
-            else -> true
+        // Match the exact type the hooked preference read expects. Older builds could
+        // leave target overrides as strings after a scope copy, so recover those values
+        // rather than handing a String to a Boolean/Int hook or silently ignoring it.
+        return when (current) {
+            is Boolean -> {
+                when (value) {
+                    is Boolean -> value
+                    is String -> value.toBooleanStrictOrNull() ?: current
+                    else -> current
+                }
+            }
+
+            is Int -> {
+                when (value) {
+                    is Number -> value.toInt()
+                    is String -> value.toIntOrNull() ?: current
+                    else -> current
+                }
+            }
+
+            is Long -> {
+                when (value) {
+                    is Number -> value.toLong()
+                    is String -> value.toLongOrNull() ?: current
+                    else -> current
+                }
+            }
+
+            is Float -> {
+                when (value) {
+                    is Number -> value.toFloat()
+                    is String -> value.toFloatOrNull() ?: current
+                    else -> current
+                }
+            }
+
+            is String -> {
+                value as? String ?: current
+            }
+
+            is Set<*> -> {
+                value as? Set<*> ?: current
+            }
+
+            else -> {
+                if (current::class.java.isInstance(value)) value else current
+            }
         }
+    }
 
     private fun decode(
         store: SharedPreferencesSettingsStore,
@@ -104,12 +141,45 @@ class TargetScopedPreferences(
         raw: Any,
     ): Any? {
         val scope = SettingsScope.Target(target)
-        return when (store.typeOf(physicalKey) ?: ValueType.of(raw)) {
-            ValueType.Flag -> store.readBoolean(scope, key)
-            ValueType.Whole -> store.readInt(scope, key)
-            ValueType.Real -> store.readFloat(scope, key)
-            ValueType.Set -> store.readStringSet(scope, key)
-            ValueType.Text -> raw.toString()
+        val declaredKind = SettingKeyRegistry.find(key)?.kind
+
+        // The XML contract is authoritative for WA X settings. It also repairs values
+        // written by older builds with the wrong SharedPreferences type.
+        return when (declaredKind) {
+            SettingKeyRegistry.Kind.BOOLEAN -> {
+                store.readBoolean(scope, key)
+            }
+
+            SettingKeyRegistry.Kind.INT -> {
+                store.readInt(scope, key)
+            }
+
+            SettingKeyRegistry.Kind.FLOAT -> {
+                store.readFloat(scope, key)
+            }
+
+            SettingKeyRegistry.Kind.SET -> {
+                store.readStringSet(scope, key)
+                    ?: store
+                        .readString(scope, key)
+                        ?.split(LEGACY_SET_SEPARATOR)
+                        ?.filter { it.isNotEmpty() }
+                        ?.toSet()
+            }
+
+            SettingKeyRegistry.Kind.TEXT -> {
+                store.readString(scope, key)
+            }
+
+            null -> {
+                when (store.typeOf(physicalKey) ?: ValueType.of(raw)) {
+                    ValueType.Flag -> store.readBoolean(scope, key)
+                    ValueType.Whole -> store.readInt(scope, key)
+                    ValueType.Real -> store.readFloat(scope, key)
+                    ValueType.Set -> store.readStringSet(scope, key)
+                    ValueType.Text -> raw.toString()
+                }
+            }
         }
     }
 
@@ -136,8 +206,12 @@ class TargetScopedPreferences(
 
     override fun getAll(): MutableMap<String?, *>? {
         val all = delegate.all ?: return null
-        if (overrides.isEmpty()) return all
         val merged = HashMap<String?, Any?>(all)
+
+        // Physical target namespaces are an implementation detail. Exposing them through
+        // getAll() lets a feature iterating preferences see the other app's overrides.
+        merged.keys.removeAll { key -> key != null && SettingsKeys.isOverrideKey(key) }
+
         for ((key, value) in overrides) {
             if (value == null) merged.remove(key) else merged[key] = value
         }
@@ -153,9 +227,12 @@ class TargetScopedPreferences(
         s: String?,
         set: MutableSet<String?>?,
     ): MutableSet<String?>? {
-        @Suppress("UNCHECKED_CAST")
-        val value = override(s) { it is Set<*> } as Set<String>?
-        return if (value != null) value.toMutableSet() as MutableSet<String?> else delegate.getStringSet(s, set)
+        val value = override(s) { candidate -> candidate is Set<*> && candidate.all { it is String } } as? Set<*>
+        return if (value != null) {
+            value.mapTo(linkedSetOf<String?>()) { it as String }
+        } else {
+            delegate.getStringSet(s, set)
+        }
     }
 
     override fun getInt(
@@ -277,6 +354,15 @@ class TargetScopedPreferences(
     }
 
     companion object {
+        /**
+         * The separator an earlier release used for a string set held in one value.
+         *
+         * Pinned to [SettingsKeys.SET_SEPARATOR] rather than repeating the literal: a set
+         * written by that release has to keep decoding, so this can never become an
+         * independent choice.
+         */
+        private const val LEGACY_SET_SEPARATOR: String = SettingsKeys.SET_SEPARATOR
+
         /**
          * Wraps [delegate] when a target is attached, and returns it untouched otherwise.
          *

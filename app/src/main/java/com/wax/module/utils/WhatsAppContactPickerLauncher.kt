@@ -120,7 +120,7 @@ object WhatsAppContactPickerLauncher {
             val name = activityInfo.name
             if (isAboutActivity(name)) return name
         }
-        throw Exception("Class About not found")
+        error("Class About not found")
     }
 
     @Throws(Exception::class)
@@ -142,6 +142,6 @@ object WhatsAppContactPickerLauncher {
             val name = activityInfo.name
             if (isSettingsNotificationsActivity(name)) return name
         }
-        throw Exception("Class SettingsNotifications not found")
+        error("Class SettingsNotifications not found")
     }
 }

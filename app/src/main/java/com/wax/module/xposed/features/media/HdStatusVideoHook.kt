@@ -296,7 +296,6 @@ class HdStatusVideoHook(
             }
 
         val outputWriter = HdStatusFieldWriter("transcodeOutput", outputFields, log)
-        val sourceWriter = HdStatusFieldWriter("transcodeSource", sourceFields, log)
 
         XposedBridge.hookMethod(
             method,

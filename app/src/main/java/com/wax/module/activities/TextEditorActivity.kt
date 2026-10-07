@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.WebChromeClient
@@ -19,6 +20,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.wax.module.R
@@ -109,7 +111,7 @@ class TextEditorActivity : BaseActivity() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("TextEditorActivity", "Text editor operation failed", e)
             }
         }
     }
@@ -154,7 +156,7 @@ class TextEditorActivity : BaseActivity() {
                     cssCode.createNewFile()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("TextEditorActivity", "Text editor operation failed", e)
             }
         }
     }
@@ -179,7 +181,7 @@ class TextEditorActivity : BaseActivity() {
                             val prefs = PreferenceManager.getDefaultSharedPreferences(this@TextEditorActivity)
                             val key = intent.getStringExtra("key")
                             if (key != null && prefs.getString(key, "") == targetFolder) {
-                                prefs.edit().putString("custom_css", code).apply()
+                                prefs.edit { putString("custom_css", code) }
                             }
 
                             withContext(Dispatchers.Main) {
@@ -188,13 +190,25 @@ class TextEditorActivity : BaseActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Log.e("TextEditorActivity", "Text editor operation failed", e)
                 }
             }
-            R.id.menuitem_exit -> finish()
-            R.id.menuitem_clear -> updateWebViewContent("")
-            R.id.menuitem_import_image -> mGetContent.launch("image/*")
-            R.id.menuitem_export -> mExportFile.launch("$folderName.zip")
+
+            R.id.menuitem_exit -> {
+                finish()
+            }
+
+            R.id.menuitem_clear -> {
+                updateWebViewContent("")
+            }
+
+            R.id.menuitem_import_image -> {
+                mGetContent.launch("image/*")
+            }
+
+            R.id.menuitem_export -> {
+                mExportFile.launch("$folderName.zip")
+            }
         }
         return super.onOptionsItemSelected(item)
     }

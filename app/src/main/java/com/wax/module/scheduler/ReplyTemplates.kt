@@ -107,16 +107,29 @@ object TemplateRenderer {
         context: TemplateContext,
     ): String? =
         when (variable) {
-            TemplateVariable.CONTACT_NAME -> context.contactName?.takeIf { it.isNotBlank() }
-            TemplateVariable.MY_NAME -> context.myName?.takeIf { it.isNotBlank() }
-            TemplateVariable.DATE -> context.now?.format(DateTimeFormatter.ISO_LOCAL_DATE)
-            TemplateVariable.TIME -> context.now?.format(DateTimeFormatter.ofPattern("HH:mm"))
-            TemplateVariable.WEEKDAY ->
+            TemplateVariable.CONTACT_NAME -> {
+                context.contactName?.takeIf { it.isNotBlank() }
+            }
+
+            TemplateVariable.MY_NAME -> {
+                context.myName?.takeIf { it.isNotBlank() }
+            }
+
+            TemplateVariable.DATE -> {
+                context.now?.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            }
+
+            TemplateVariable.TIME -> {
+                context.now?.format(DateTimeFormatter.ofPattern("HH:mm"))
+            }
+
+            TemplateVariable.WEEKDAY -> {
                 context.now
                     ?.dayOfWeek
                     ?.name
                     ?.lowercase()
                     ?.replaceFirstChar { it.uppercase() }
+            }
         }
 }
 

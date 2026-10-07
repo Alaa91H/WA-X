@@ -73,6 +73,7 @@
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:alpha="0.55"
+                android:contentDescription="@null"
                 android:src="@drawable/ic_search"
                 app:tint="?attr/colorOnSurfaceVariant" />
 

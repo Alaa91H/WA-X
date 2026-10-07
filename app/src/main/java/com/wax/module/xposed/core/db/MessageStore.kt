@@ -59,11 +59,11 @@ class MessageStore private constructor() {
         return message
     }
 
-    fun getCurrentMessageByKey(message_key: String): String {
+    fun getCurrentMessageByKey(messageKey: String): String {
         val db = sqLiteDatabase ?: return ""
         val columns = arrayOf("text_data")
         val selection = "key_id=?"
-        val selectionArgs = arrayOf(message_key)
+        val selectionArgs = arrayOf(messageKey)
         try {
             db.query("message", columns, selection, selectionArgs, null, null, null).use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -76,11 +76,11 @@ class MessageStore private constructor() {
         return ""
     }
 
-    fun getIdfromKey(message_key: String): Long {
+    fun getIdfromKey(messageKey: String): Long {
         val db = sqLiteDatabase ?: return -1
         val columns = arrayOf("_id")
         val selection = "key_id=?"
-        val selectionArgs = arrayOf(message_key)
+        val selectionArgs = arrayOf(messageKey)
         try {
             db.query("message", columns, selection, selectionArgs, null, null, null).use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -96,7 +96,7 @@ class MessageStore private constructor() {
     fun getMediaFromID(id: Long): String? {
         val db = sqLiteDatabase ?: return null
         val columns = arrayOf("file_path")
-        val selection = "message_row_id=?"
+        val selection = "message_rowId=?"
         val selectionArgs = arrayOf(id.toString())
         try {
             db
@@ -112,11 +112,11 @@ class MessageStore private constructor() {
         return null
     }
 
-    fun getCurrentMessageByID(row_id: Long): String {
+    fun getCurrentMessageByID(rowId: Long): String {
         val db = sqLiteDatabase ?: return ""
         val columns = arrayOf("text_data")
         val selection = "_id=?"
-        val selectionArgs = arrayOf(row_id.toString())
+        val selectionArgs = arrayOf(rowId.toString())
         try {
             db.query("message", columns, selection, selectionArgs, null, null, null).use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -133,7 +133,7 @@ class MessageStore private constructor() {
         val db = sqLiteDatabase ?: return ""
         var message = ""
         val sql =
-            "SELECT parent_message_row_id, key_id FROM message_add_on WHERE parent_message_row_id=\"$id\""
+            "SELECT parent_message_rowId, key_id FROM message_add_on WHERE parent_message_rowId=\"$id\""
         try {
             db.rawQuery(sql, null).use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -263,22 +263,22 @@ class MessageStore private constructor() {
 
         val sql =
             """
-            WITH resolved(jid_row_id) AS (
+            WITH resolved(jid_rowId) AS (
                 SELECT _id FROM jid WHERE raw_string=?
                 UNION
-                SELECT jm.jid_row_id FROM jid_map jm
-                INNER JOIN jid j ON j._id = jm.lid_row_id
+                SELECT jm.jid_rowId FROM jid_map jm
+                INNER JOIN jid j ON j._id = jm.lid_rowId
                 WHERE j.raw_string=?
                 UNION
-                SELECT jm.lid_row_id FROM jid_map jm
-                INNER JOIN jid j ON j._id = jm.jid_row_id
+                SELECT jm.lid_rowId FROM jid_map jm
+                INNER JOIN jid j ON j._id = jm.jid_rowId
                 WHERE j.raw_string=?
             ), chat_target AS (
-                SELECT _id FROM chat WHERE jid_row_id IN (SELECT jid_row_id FROM resolved)
+                SELECT _id FROM chat WHERE jid_rowId IN (SELECT jid_rowId FROM resolved)
             )
-            SELECT m._id, m.sort_id, m.chat_row_id
+            SELECT m._id, m.sort_id, m.chat_rowId
             FROM message m
-            INNER JOIN chat_target c ON c._id = m.chat_row_id
+            INNER JOIN chat_target c ON c._id = m.chat_rowId
             ORDER BY m.sort_id ASC, m._id ASC
             LIMIT 1
             """.trimIndent()
@@ -336,7 +336,7 @@ class MessageStore private constructor() {
                     statusDbInstance
                         .query(
                             "status",
-                            arrayOf("row_id"),
+                            arrayOf("rowId"),
                             "uuid=?",
                             arrayOf(messageKey),
                             null,
@@ -357,8 +357,8 @@ class MessageStore private constructor() {
                             .rawQuery(
                                 "SELECT st.thumbnail_path, mc.file_path " +
                                     "FROM status_thumbnail st " +
-                                    "LEFT JOIN media_content mc ON st.media_content_row_id = mc.row_id " +
-                                    "WHERE st.status_row_id = ? LIMIT 1",
+                                    "LEFT JOIN media_content mc ON st.media_content_rowId = mc.rowId " +
+                                    "WHERE st.status_rowId = ? LIMIT 1",
                                 arrayOf(statusRowId.toString()),
                             ).use { cursor ->
                                 if (cursor.moveToFirst()) {
@@ -382,8 +382,8 @@ class MessageStore private constructor() {
                                 .rawQuery(
                                     "SELECT mc.file_path " +
                                         "FROM status_media_link sml " +
-                                        "JOIN media_content mc ON sml.media_content_row_id = mc.row_id " +
-                                        "WHERE sml.status_row_id = ? LIMIT 1",
+                                        "JOIN media_content mc ON sml.media_content_rowId = mc.rowId " +
+                                        "WHERE sml.status_rowId = ? LIMIT 1",
                                     arrayOf(statusRowId.toString()),
                                 ).use { cursor ->
                                     if (cursor.moveToFirst()) {
@@ -397,7 +397,7 @@ class MessageStore private constructor() {
 
                     var deleted = false
                     try {
-                        deleted = statusDbInstance.delete("status", "row_id=?", arrayOf(statusRowId.toString())) > 0
+                        deleted = statusDbInstance.delete("status", "rowId=?", arrayOf(statusRowId.toString())) > 0
                     } catch (e: Exception) {
                         XposedBridge.log(e)
                     }
@@ -443,7 +443,7 @@ class MessageStore private constructor() {
             try {
                 writeDb
                     .rawQuery(
-                        "SELECT _id, sender_jid_row_id, chat_row_id " +
+                        "SELECT _id, sender_jid_rowId, chat_rowId " +
                             "FROM message " +
                             "WHERE key_id=? AND from_me=0 " +
                             "ORDER BY _id DESC LIMIT 1",
@@ -466,7 +466,7 @@ class MessageStore private constructor() {
             try {
                 writeDb
                     .rawQuery(
-                        "SELECT file_path FROM message_media WHERE message_row_id=? LIMIT 1",
+                        "SELECT file_path FROM message_media WHERE message_rowId=? LIMIT 1",
                         arrayOf(messageRowId.toString()),
                     ).use { mediaCursor ->
                         if (mediaCursor.moveToFirst()) {
@@ -518,7 +518,7 @@ class MessageStore private constructor() {
                 .rawQuery(
                     "SELECT _id, timestamp, status " +
                         "FROM message " +
-                        "WHERE sender_jid_row_id=? AND chat_row_id=? " +
+                        "WHERE sender_jid_rowId=? AND chat_rowId=? " +
                         "ORDER BY timestamp DESC, _id DESC",
                     arrayOf(senderJidRowId.toString(), chatRowId.toString()),
                 ).use { cursor ->
@@ -546,7 +546,7 @@ class MessageStore private constructor() {
         }
 
         if (totalCount == 0) {
-            db.delete("status", "jid_row_id=?", arrayOf(senderJidRowId.toString()))
+            db.delete("status", "jid_rowId=?", arrayOf(senderJidRowId.toString()))
             return
         }
 
@@ -561,7 +561,7 @@ class MessageStore private constructor() {
                 "WHEN unseen_count_close_friends > ? THEN ? " +
                 "ELSE unseen_count_close_friends END, " +
                 "first_unread_message_table_id=? " +
-                "WHERE jid_row_id=?",
+                "WHERE jid_rowId=?",
             arrayOf<Any?>(
                 latestMessageId,
                 latestTimestamp,
@@ -578,17 +578,17 @@ class MessageStore private constructor() {
             "UPDATE status " +
                 "SET last_read_message_table_id = CASE " +
                 "WHEN last_read_message_table_id IN (" +
-                "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
+                "SELECT _id FROM message WHERE sender_jid_rowId=? AND chat_rowId=?" +
                 ") THEN last_read_message_table_id ELSE NULL END, " +
                 "last_read_receipt_sent_message_table_id = CASE " +
                 "WHEN last_read_receipt_sent_message_table_id IN (" +
-                "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
+                "SELECT _id FROM message WHERE sender_jid_rowId=? AND chat_rowId=?" +
                 ") THEN last_read_receipt_sent_message_table_id ELSE NULL END, " +
                 "autodownload_limit_message_table_id = CASE " +
                 "WHEN autodownload_limit_message_table_id IN (" +
-                "SELECT _id FROM message WHERE sender_jid_row_id=? AND chat_row_id=?" +
+                "SELECT _id FROM message WHERE sender_jid_rowId=? AND chat_rowId=?" +
                 ") THEN autodownload_limit_message_table_id ELSE NULL END " +
-                "WHERE jid_row_id=?",
+                "WHERE jid_rowId=?",
             arrayOf<Any>(
                 senderJidRowId,
                 chatRowId,

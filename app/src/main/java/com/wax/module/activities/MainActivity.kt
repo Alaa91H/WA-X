@@ -2,13 +2,14 @@ package com.wax.module.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.net.toUri
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -58,27 +59,35 @@ class MainActivity : BaseActivity() {
                         binding.viewPager.setCurrentItem(0, true)
                         true
                     }
+
                     R.id.navigation_chat -> {
                         binding.viewPager.setCurrentItem(1, true)
                         true
                     }
+
                     R.id.navigation_privacy -> {
                         binding.viewPager.setCurrentItem(2, true)
                         true
                     }
+
                     R.id.navigation_media -> {
                         binding.viewPager.setCurrentItem(3, true)
                         true
                     }
+
                     R.id.navigation_colors -> {
                         binding.viewPager.setCurrentItem(4, true)
                         true
                     }
+
                     R.id.navigation_recordings -> {
                         binding.viewPager.setCurrentItem(5, true)
                         true
                     }
-                    else -> false
+
+                    else -> {
+                        false
+                    }
                 }
             },
         )
@@ -88,7 +97,7 @@ class MainActivity : BaseActivity() {
                 override fun onPageSelected(position: Int) {
                     super.onPageSelected(position)
                     binding.navView.menu
-                        .getItem(position)
+                        .get(position)
                         .isChecked = true
 
                     val scrollKey = pendingScrollToPreference
@@ -191,16 +200,6 @@ class MainActivity : BaseActivity() {
         (childFragment as? BasePreferenceFragment)?.scrollToPreference(preferenceKey)
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(
-        requestCode: Int,
-        resultCode: Int,
-        data: Intent?,
-    ) {
-        super.onActivityResult(requestCode, resultCode, data)
-        supportFragmentManager.fragments.forEach { it.onActivityResult(requestCode, resultCode, data) }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.header_menu, menu)
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
@@ -223,6 +222,7 @@ class MainActivity : BaseActivity() {
                 startActivity(Intent(this, SearchActivity::class.java), options.toBundle())
                 return true
             }
+
             R.id.menu_about -> {
                 val options =
                     ActivityOptionsCompat.makeCustomAnimation(
@@ -233,6 +233,7 @@ class MainActivity : BaseActivity() {
                 startActivity(Intent(this, AboutActivity::class.java), options.toBundle())
                 return true
             }
+
             R.id.batteryoptimization -> {
                 if (batteryPermissionHelper.isBatterySaverPermissionAvailable(this, true)) {
                     batteryPermissionHelper.getPermission(this, true, true)
@@ -240,10 +241,9 @@ class MainActivity : BaseActivity() {
                     val batteryIntent =
                         Intent().apply {
                             action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                            data = Uri.parse("package:$packageName")
+                            data = "package:$packageName".toUri()
                         }
-                    @Suppress("DEPRECATION")
-                    startActivityForResult(batteryIntent, 0)
+                    startActivity(batteryIntent)
                 }
             }
         }
@@ -251,8 +251,8 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return super.onSupportNavigateUp()
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 
     private class DepthPageTransformer : ViewPager2.PageTransformer {
@@ -262,7 +262,10 @@ class MainActivity : BaseActivity() {
         ) {
             val pageWidth = page.width
             when {
-                position < -1 -> page.alpha = 0f
+                position < -1 -> {
+                    page.alpha = 0f
+                }
+
                 position <= 0 -> {
                     page.alpha = 1f
                     page.translationX = 0f
@@ -270,6 +273,7 @@ class MainActivity : BaseActivity() {
                     page.scaleX = 1f
                     page.scaleY = 1f
                 }
+
                 position <= 1 -> {
                     page.alpha = 1 - position
                     page.translationX = pageWidth * -position
@@ -278,7 +282,10 @@ class MainActivity : BaseActivity() {
                     page.scaleX = scaleFactor
                     page.scaleY = scaleFactor
                 }
-                else -> page.alpha = 0f
+
+                else -> {
+                    page.alpha = 0f
+                }
             }
         }
 

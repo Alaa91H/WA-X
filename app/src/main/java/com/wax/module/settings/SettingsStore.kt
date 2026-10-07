@@ -122,8 +122,6 @@ class InMemorySettingsStore(
             }
         }
 
-    private fun bucket(scope: SettingsScope): MutableMap<String, String>? = data[scope]
-
     private fun require(scope: SettingsScope): MutableMap<String, String> = data.getOrPut(scope) { ConcurrentHashMap() }
 
     private fun readRaw(
@@ -186,13 +184,13 @@ class InMemorySettingsStore(
     override fun readStringSet(
         scope: SettingsScope,
         key: String,
-    ): Set<String>? = readRaw(scope, key)?.split(SEP)?.filter { it.isNotEmpty() }?.toSet()
+    ): Set<String>? = readRaw(scope, key)?.split(SettingsKeys.SET_SEPARATOR)?.filter { it.isNotEmpty() }?.toSet()
 
     override fun writeStringSet(
         scope: SettingsScope,
         key: String,
         value: Set<String>?,
-    ) = writeRaw(scope, key, value?.sorted()?.joinToString(SEP))
+    ) = writeRaw(scope, key, value?.sorted()?.joinToString(SettingsKeys.SET_SEPARATOR))
 
     override fun keysWithOverrides(scope: SettingsScope): Set<String> = data[scope]?.keys?.toSet() ?: emptySet()
 
@@ -234,9 +232,4 @@ class InMemorySettingsStore(
 
     /** Read-only view of every scope, keyed by scope code. */
     fun snapshotAll(): Map<String, Map<String, String>> = data.entries.associate { (scope, values) -> scope.code to values.toMap() }
-
-    private companion object {
-        /** Separator for string sets; not a legal character in a preference value. */
-        const val SEP = "\u0001"
-    }
 }

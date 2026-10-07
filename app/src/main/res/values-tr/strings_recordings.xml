@@ -3,12 +3,12 @@
     <string name="recordings_manager">Kayıtlar</string>
     <string name="no_recordings_found">Kayıt bulunamadı</string>
     <string name="delete_confirmation">Bu kaydı silmek istediğinizden emin misiniz?</string>
-    <string name="delete_multiple_confirmation">%d kaydı silmek istediğinizden emin misiniz?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">%d kaydı silmek istediğinizden emin misiniz?</item>
+    <item quantity="other">%d kaydı silmek istediğinizden emin misiniz?</item>
+</plurals>
     <string name="share_recording">Kaydı paylaş</string>
     <string name="share_recordings">Kayıtları paylaş</string>
-    <string name="permission_required">İzin gerekli</string>
-    <string name="permission_required_desc">Kök klasörde saklanan kayıtları yönetmek için tam dosya erişimi gerekir.</string>
-    <string name="grant">İzin ver</string>
     <string name="sort_by">Sıralama ölçütü</string>
     <string name="sort_name">Ad</string>
     <string name="sort_date">Tarih</string>
@@ -16,12 +16,11 @@
     <string name="sort_contact">Kişi</string>
     <string name="list_view">Liste</string>
     <string name="group_by_contact">Kişiye göre</string>
-    <string name="selected_count">%d seçildi</string>
-    <string name="recordings_select_all">Tümünü seç</string>
-    <string name="recordings_for">%s için kayıtlar</string>
-    <string name="recording_count">%d kayıt</string>
+    <plurals name="selected_count">
+    <item quantity="one">%d seçildi</item>
+    <item quantity="other">%d seçildi</item>
+</plurals>
     <string name="play">Oynat</string>
-    <string name="pause">Duraklat</string>
     <string name="play_pause">Oynat/Duraklat</string>
     <string name="close">Kapat</string>
     <string name="share">Paylaş</string>

@@ -19,6 +19,20 @@ object SettingsKeys {
     /** Prefix for a per-target override. */
     const val TARGET_PREFIX: String = "waxtarget."
 
+    /**
+     * Separator used when a string set has to be held inside a single preference value.
+     *
+     * U+0001 is a control character no preference interface produces and no user types, so
+     * the encoding cannot collide with a real value. Declared once here because the
+     * preference-file store, the in-memory store and the hooked-process reader all have to
+     * agree on it, and three copies of one literal is three chances for a reader to stop
+     * understanding a file another copy wrote.
+     *
+     * The backup document carries its own constant: that is a different file with its own
+     * compatibility lifetime, so it must not move when this one does.
+     */
+    const val SET_SEPARATOR: String = "\u0001"
+
     /** The physical key an override for [key] in [scope] occupies. */
     fun physicalKey(
         scope: SettingsScope,

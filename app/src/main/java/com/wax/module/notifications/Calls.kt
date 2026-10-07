@@ -87,20 +87,31 @@ data class CallDecision(
 /** Evaluates one call condition. */
 fun CallCondition.matches(event: CallEvent): Boolean =
     when (this) {
-        CallCondition.UnknownCaller -> !event.isKnownContact
-        is CallCondition.FromContact -> event.callerId == contactId
-        is CallCondition.TimeWindow ->
+        CallCondition.UnknownCaller -> {
+            !event.isKnownContact
+        }
+
+        is CallCondition.FromContact -> {
+            event.callerId == contactId
+        }
+
+        is CallCondition.TimeWindow -> {
             if (start <= end) {
                 event.time >= start && event.time < end
             } else {
                 event.time >= start || event.time < end
             }
+        }
 
-        is CallCondition.Weekdays -> event.dayOfWeek in days
-        is CallCondition.RepeatCaller ->
+        is CallCondition.Weekdays -> {
+            event.dayOfWeek in days
+        }
+
+        is CallCondition.RepeatCaller -> {
             event.previousAttemptMillis?.let {
                 event.nowMillis - it in 0..withinMillis
             } ?: false
+        }
     }
 
 /**
@@ -204,25 +215,32 @@ class CallRuleEngine(
 
     private fun encodeCondition(condition: CallCondition): JsonValue.Obj =
         when (condition) {
-            CallCondition.UnknownCaller -> jsonObject("type" to jsonString("unknown"))
-            is CallCondition.FromContact ->
-                jsonObject("type" to jsonString("contact"), "contact" to jsonString(condition.contactId))
+            CallCondition.UnknownCaller -> {
+                jsonObject("type" to jsonString("unknown"))
+            }
 
-            is CallCondition.TimeWindow ->
+            is CallCondition.FromContact -> {
+                jsonObject("type" to jsonString("contact"), "contact" to jsonString(condition.contactId))
+            }
+
+            is CallCondition.TimeWindow -> {
                 jsonObject(
                     "type" to jsonString("time"),
                     "start" to jsonString(condition.start.toString()),
                     "end" to jsonString(condition.end.toString()),
                 )
+            }
 
-            is CallCondition.Weekdays ->
+            is CallCondition.Weekdays -> {
                 jsonObject(
                     "type" to jsonString("weekdays"),
                     "days" to jsonStrings(condition.days.map { it.name }),
                 )
+            }
 
-            is CallCondition.RepeatCaller ->
+            is CallCondition.RepeatCaller -> {
                 jsonObject("type" to jsonString("repeat"), "within" to jsonNumber(condition.withinMillis))
+            }
         }
 
     private fun decodeRule(value: JsonValue): CallRule? {
@@ -245,8 +263,14 @@ class CallRuleEngine(
     private fun decodeCondition(value: JsonValue): CallCondition? {
         val fields = (value as? JsonValue.Obj)?.fields ?: return null
         return when (fields.string("type")) {
-            "unknown" -> CallCondition.UnknownCaller
-            "contact" -> fields.string("contact")?.let { CallCondition.FromContact(it) }
+            "unknown" -> {
+                CallCondition.UnknownCaller
+            }
+
+            "contact" -> {
+                fields.string("contact")?.let { CallCondition.FromContact(it) }
+            }
+
             "time" -> {
                 val start =
                     fields.string("start")?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
@@ -266,8 +290,13 @@ class CallRuleEngine(
                 if (days.isEmpty()) null else CallCondition.Weekdays(days)
             }
 
-            "repeat" -> fields.long("within")?.let { CallCondition.RepeatCaller(it) }
-            else -> null
+            "repeat" -> {
+                fields.long("within")?.let { CallCondition.RepeatCaller(it) }
+            }
+
+            else -> {
+                null
+            }
         }
     }
 
@@ -419,7 +448,7 @@ data class RecordingEntry(
  * Organises call recordings that already exist on the device.
  *
  * The library only names and annotates files it is told about; it never records anything
- * itself and never decides where a recording is stored. [legalNotice] is part of the API
+ * itself and never decides where a recording is stored. [LEGAL_NOTICE] is part of the API
  * because T142 requires the UI to remind users that recording laws vary — making the string
  * impossible to forget is better than remembering to add it to a screen.
  */
@@ -553,7 +582,7 @@ class RecordingLibrary(
         const val MAX_FILE_NAME_LENGTH: Int = 128
 
         /** The reminder T142 requires before any recording feature is offered. */
-        fun legalNotice(): String =
+        const val LEGAL_NOTICE: String =
             "Call recording laws vary by jurisdiction. Make sure recording calls is legal where you are before using this feature."
     }
 }

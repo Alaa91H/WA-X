@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.TypedArray
 import android.util.AttributeSet
 import android.widget.TextView
+import androidx.core.content.withStyledAttributes
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.slider.Slider
@@ -30,18 +31,17 @@ class FloatSeekBarPreference
 
         init {
             layoutResource = R.layout.preference_feature_seekbar
-            val typedArray =
-                context.obtainStyledAttributes(
-                    attrs,
-                    R.styleable.FloatSeekBarPreference,
-                    defStyleAttr,
-                    defStyleRes,
-                )
-            minValue = typedArray.getFloat(R.styleable.FloatSeekBarPreference_minValue, 0f)
-            maxValue = typedArray.getFloat(R.styleable.FloatSeekBarPreference_maxValue, 1f)
-            valueSpacing = typedArray.getFloat(R.styleable.FloatSeekBarPreference_valueSpacing, 0.1f)
-            format = typedArray.getString(R.styleable.FloatSeekBarPreference_format) ?: "%3.1f"
-            typedArray.recycle()
+            context.withStyledAttributes(
+                attrs,
+                R.styleable.FloatSeekBarPreference,
+                defStyleAttr,
+                defStyleRes,
+            ) {
+                minValue = getFloat(R.styleable.FloatSeekBarPreference_minValue, 0f)
+                maxValue = getFloat(R.styleable.FloatSeekBarPreference_maxValue, 1f)
+                valueSpacing = getFloat(R.styleable.FloatSeekBarPreference_valueSpacing, 0.1f)
+                format = getString(R.styleable.FloatSeekBarPreference_format) ?: "%3.1f"
+            }
         }
 
         override fun onGetDefaultValue(

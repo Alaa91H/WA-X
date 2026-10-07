@@ -98,39 +98,50 @@ object FeatureAccessPolicy {
         val enabledByUser = facts.killSwitchState != FeatureSwitchState.MANUALLY_DISABLED
         val (availability, detail) =
             when {
-                metadata.availability == FeatureAvailability.NOT_IMPLEMENTED ->
+                metadata.availability == FeatureAvailability.NOT_IMPLEMENTED -> {
                     FeatureAvailability.NOT_IMPLEMENTED to "declared as not implemented"
+                }
 
-                !facts.targetSupported ->
+                !facts.targetSupported -> {
                     FeatureAvailability.UNSUPPORTED_TARGET to
                         "the feature does not declare support for ${facts.target.displayName}"
+                }
 
-                !facts.versionSupported ->
+                !facts.versionSupported -> {
                     FeatureAvailability.UNSUPPORTED_VERSION to
                         "the installed version is outside the declared compatibility range"
+                }
 
-                facts.killSwitchState == FeatureSwitchState.INCOMPATIBLE ->
+                facts.killSwitchState == FeatureSwitchState.INCOMPATIBLE -> {
                     FeatureAvailability.UNSUPPORTED_VERSION to
                         "marked incompatible with this build by the compatibility canary"
+                }
 
                 facts.killSwitchState == FeatureSwitchState.TEMPORARILY_DISABLED ||
-                    facts.killSwitchState == FeatureSwitchState.AUTOMATICALLY_DISABLED ->
+                    facts.killSwitchState == FeatureSwitchState.AUTOMATICALLY_DISABLED -> {
                     FeatureAvailability.TEMPORARILY_DISABLED to
                         "held back by the isolation engine (${facts.killSwitchState.name.lowercase()})"
+                }
 
-                metadata.availability == FeatureAvailability.EXPERIMENTAL && !facts.labsEnabled ->
+                metadata.availability == FeatureAvailability.EXPERIMENTAL && !facts.labsEnabled -> {
                     FeatureAvailability.EXPERIMENTAL to "experimental, and Labs is off"
+                }
 
-                !facts.resolversResolved ->
+                !facts.resolversResolved -> {
                     FeatureAvailability.MISSING_CAPABILITY to "a required resolver did not resolve"
+                }
 
-                !facts.permissionsGranted ->
+                !facts.permissionsGranted -> {
                     FeatureAvailability.MISSING_CAPABILITY to "a required permission is not granted"
+                }
 
-                !facts.capabilityPresent ->
+                !facts.capabilityPresent -> {
                     FeatureAvailability.MISSING_CAPABILITY to "a required capability is unavailable"
+                }
 
-                else -> FeatureAvailability.AVAILABLE to "available"
+                else -> {
+                    FeatureAvailability.AVAILABLE to "available"
+                }
             }
         return FeatureAvailabilityReport(
             featureId = metadata.id,

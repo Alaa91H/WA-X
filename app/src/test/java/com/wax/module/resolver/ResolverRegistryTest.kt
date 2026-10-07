@@ -109,6 +109,9 @@ class ResolverRegistryTest {
 }
 
 class HookResolverContractTest {
+    private val testClassLoader: ClassLoader
+        get() = requireNotNull(javaClass.classLoader) { "Test class loader is unavailable" }
+
     @Before
     fun setUp() {
         ResolverRegistry.clear()
@@ -130,20 +133,20 @@ class HookResolverContractTest {
     @Test
     fun resolveRecordedReturnsTheSameOutcome() {
         val resolver = FixedResolver("a", Resolution.exact("m"))
-        val outcome = resolver.resolveRecorded(this.javaClass.classLoader)
+        val outcome = resolver.resolveRecorded(testClassLoader)
         assertEquals("m", outcome.valueOrNull())
     }
 
     @Test
     fun resolveRecordedAlwaysRecords() {
-        FixedResolver("a", Resolution.NotFound()).resolveRecorded(this.javaClass.classLoader)
+        FixedResolver("a", Resolution.NotFound()).resolveRecorded(testClassLoader)
         assertEquals(1, ResolverRegistry.all().size)
     }
 
     @Test
     fun theRecordedEntryCarriesTheResolverIdAndTarget() {
         FixedResolver("loadReceipt", Resolution.exact("m"))
-            .resolveRecorded(this.javaClass.classLoader)
+            .resolveRecorded(testClassLoader)
         val record = ResolverRegistry.latestFor("loadReceipt")
         assertEquals("com.whatsapp.Fixed", record?.target)
     }
@@ -152,7 +155,7 @@ class HookResolverContractTest {
     fun recordingDoesNotChangeTheOutcome() {
         // Recording is a side channel; it must not turn a failure into a success.
         val resolver = FixedResolver("a", Resolution.Ambiguous(listOf("x", "y")))
-        val outcome = resolver.resolveRecorded(this.javaClass.classLoader)
+        val outcome = resolver.resolveRecorded(testClassLoader)
         assertTrue(outcome is Resolution.Ambiguous)
         assertFalse(outcome.isInstallable)
     }
@@ -160,7 +163,7 @@ class HookResolverContractTest {
     @Test
     fun theResolverRunsExactlyOnce() {
         val resolver = FixedResolver("a", Resolution.exact("m"))
-        resolver.resolveRecorded(this.javaClass.classLoader)
+        resolver.resolveRecorded(testClassLoader)
         assertEquals(1, resolver.calls)
     }
 
@@ -168,7 +171,7 @@ class HookResolverContractTest {
     fun theBaseClassDoesNotResolveOnItsOwn() {
         // resolveRecorded delegates; it must not swallow or transform the result.
         val resolver = FixedResolver("a", Resolution.Incompatible("api"))
-        val outcome = resolver.resolveRecorded(this.javaClass.classLoader)
+        val outcome = resolver.resolveRecorded(testClassLoader)
         assertTrue(outcome is Resolution.Incompatible)
         assertEquals(1, ResolverRegistry.unusable().size)
     }

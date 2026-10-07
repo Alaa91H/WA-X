@@ -59,8 +59,14 @@ class FeatureKillSwitch(
     fun stateOf(featureId: String): FeatureSwitchState =
         synchronized(lock) {
             when (store.getString(stateKey(featureId))) {
-                null -> FeatureSwitchState.ENABLED
-                STATE_MANUAL -> FeatureSwitchState.MANUALLY_DISABLED
+                null -> {
+                    FeatureSwitchState.ENABLED
+                }
+
+                STATE_MANUAL -> {
+                    FeatureSwitchState.MANUALLY_DISABLED
+                }
+
                 STATE_TEMPORARY -> {
                     val until = store.getLong(untilKey(featureId))
                     if (until > 0L && now() >= until) {
@@ -75,12 +81,20 @@ class FeatureKillSwitch(
                     }
                 }
 
-                STATE_AUTO -> FeatureSwitchState.AUTOMATICALLY_DISABLED
-                STATE_INCOMPATIBLE -> FeatureSwitchState.INCOMPATIBLE
+                STATE_AUTO -> {
+                    FeatureSwitchState.AUTOMATICALLY_DISABLED
+                }
+
+                STATE_INCOMPATIBLE -> {
+                    FeatureSwitchState.INCOMPATIBLE
+                }
+
                 // An unrecognised value can only come from a corrupted or future store. Failing
                 // open keeps a corrupt key from bricking a working feature; the state is not
                 // silently rewritten so diagnostics can still show the anomaly if it matters.
-                else -> FeatureSwitchState.ENABLED
+                else -> {
+                    FeatureSwitchState.ENABLED
+                }
             }
         }
 
@@ -219,7 +233,9 @@ class FeatureKillSwitch(
                     FeatureSwitchState.ENABLED
                 }
 
-                else -> stateOf(featureId)
+                else -> {
+                    stateOf(featureId)
+                }
             }
         }
 

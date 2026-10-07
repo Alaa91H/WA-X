@@ -175,7 +175,7 @@ class CallsTest {
 
     @Test
     fun theLegalReminderIsAlwaysAvailable() {
-        val notice = RecordingLibrary.legalNotice()
+        val notice = RecordingLibrary.LEGAL_NOTICE
         assertTrue(notice.contains("laws vary by jurisdiction"))
     }
 }

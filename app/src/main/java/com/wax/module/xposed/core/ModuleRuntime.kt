@@ -75,10 +75,7 @@ object ModuleRuntime {
 
     @JvmStatic
     @Throws(Exception::class)
-    fun initialize(
-        loader: ClassLoader,
-        pref: SharedPreferences,
-    ) {
+    fun initialize(loader: ClassLoader) {
         _privPrefs = Utils.application.getSharedPreferences("WaGlobal", Context.MODE_PRIVATE)
 
         // init UserJID
@@ -269,23 +266,21 @@ object ModuleRuntime {
             prefsCacheHooks.edit { putInt("preferredOrder", newPreferredOrder) }
             return
         }
-        throw Exception(context.getString(R.string.bridge_error))
+        error(context.getString(R.string.bridge_error))
     }
 
     @JvmStatic
-    @Throws(Exception::class)
     private fun tryConnectBridge(baseClient: BaseClient): Boolean =
-        try {
+        runCatching {
             XposedBridge.log("Trying to connect to ${baseClient.javaClass.simpleName}")
             client = baseClient
             runBlocking {
-                val canLoad = baseClient.connect()
-                if (!canLoad) throw Exception()
+                check(baseClient.connect()) {
+                    "Bridge client ${baseClient.javaClass.simpleName} refused the connection"
+                }
                 true
             }
-        } catch (_: Exception) {
-            false
-        }
+        }.getOrDefault(false)
 
     @JvmStatic
     fun sendMessage(
@@ -566,22 +561,18 @@ object ModuleRuntime {
 
     @JvmStatic
     fun stripJID(str: String?): String? {
-        try {
-            if (str == null) return null
-            if (str.contains(".") && str.contains("@") && str.indexOf(".") < str.indexOf("@")) {
-                return str.substring(0, str.indexOf("."))
-            } else if (str.contains("@g.us") ||
-                str.contains("@s.whatsapp.net") ||
-                str.contains("@broadcast") ||
-                str.contains("@lid")
-            ) {
-                return str.substring(0, str.indexOf("@"))
-            }
-            return str
-        } catch (e: Exception) {
-            XposedBridge.log(e)
-            return str
+        str ?: return null
+        val dotIndex = str.indexOf('.')
+        val atIndex = str.indexOf('@')
+        if (dotIndex >= 0 && atIndex > dotIndex) {
+            return str.substring(0, dotIndex)
         }
+        val knownJidSuffix =
+            str.endsWith("@g.us") ||
+                str.endsWith("@s.whatsapp.net") ||
+                str.endsWith("@broadcast") ||
+                str.endsWith("@lid")
+        return if (knownJidSuffix && atIndex > 0) str.substring(0, atIndex) else str
     }
 
     @JvmStatic
@@ -744,18 +735,13 @@ object ModuleRuntime {
     }
 
     @JvmStatic
-    @Throws(Exception::class)
     fun getClientBridge(): WaeIIFace? {
         if (!isBridgeConnected()) {
             synchronized(ModuleRuntime::class.java) {
                 if (!isBridgeConnected()) {
-                    if (client == null) {
-                        throw Exception("Bridge client not initialized")
-                    }
-                    client?.tryReconnect()
-                    if (!isBridgeConnected()) {
-                        throw Exception("Failed connect to Bridge")
-                    }
+                    val currentClient = checkNotNull(client) { "Bridge client not initialized" }
+                    currentClient.tryReconnect()
+                    check(isBridgeConnected()) { "Failed to connect to Bridge" }
                 }
             }
         }

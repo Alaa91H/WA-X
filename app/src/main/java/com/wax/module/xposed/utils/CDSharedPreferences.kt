@@ -1,6 +1,7 @@
 package com.wax.module.xposed.utils
 
 import android.content.SharedPreferences
+import android.util.Log
 import android.util.Xml
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlSerializer
@@ -43,19 +44,30 @@ class CDSharedPreferences(
 
                             if (key != null) {
                                 when (tagName) {
-                                    "string" -> preferencesMap[key] = parser.nextText()
-                                    "boolean" ->
+                                    "string" -> {
+                                        preferencesMap[key] = parser.nextText()
+                                    }
+
+                                    "boolean" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toBoolean() ?: false
-                                    "int" ->
+                                    }
+
+                                    "int" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toIntOrNull() ?: 0
-                                    "long" ->
+                                    }
+
+                                    "long" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toLongOrNull() ?: 0L
-                                    "float" ->
+                                    }
+
+                                    "float" -> {
                                         preferencesMap[key] =
                                             parser.getAttributeValue(null, "value")?.toFloatOrNull() ?: 0f
+                                    }
+
                                     "set" -> {
                                         val values = linkedSetOf<String>()
                                         var nestedEvent = parser.next()
@@ -74,7 +86,7 @@ class CDSharedPreferences(
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("CDSharedPreferences", "Failed to load preference XML", e)
             }
         }
     }
@@ -164,7 +176,7 @@ class CDSharedPreferences(
                 true
             } catch (e: Exception) {
                 tempFile.delete()
-                e.printStackTrace()
+                Log.e("CDSharedPreferences", "Failed to persist preference XML", e)
                 false
             }
         }

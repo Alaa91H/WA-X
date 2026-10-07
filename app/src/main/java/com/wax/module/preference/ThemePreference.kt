@@ -15,6 +15,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -71,7 +72,8 @@ class ThemePreference(
         val folders = getFolders().toMutableList().apply { add(0, "Default Theme") }
         val selectedFolder = sharedPreferences!!.getString(key, null)
 
-        val dialogView = LayoutInflater.from(currentContext).inflate(R.layout.preference_theme, null)
+        val dialogParent = FrameLayout(currentContext)
+        val dialogView = LayoutInflater.from(currentContext).inflate(R.layout.preference_theme, dialogParent, false)
         val builder = MaterialAlertDialogBuilder(currentContext).setView(dialogView)
         val folderListContainer = dialogView.findViewById<LinearLayout>(R.id.folder_list_container)
         val newThemeButton = dialogView.findViewById<Button>(R.id.create_theme_button)
@@ -87,7 +89,7 @@ class ThemePreference(
             val cssFile = File(rootDirectory, "$folder/style.css")
             if (!cssFile.exists() && folder != "Default Theme") return@forEach
 
-            val itemView = LayoutInflater.from(currentContext).inflate(R.layout.item_folder, null, false)
+            val itemView = LayoutInflater.from(currentContext).inflate(R.layout.item_folder, folderListContainer, false)
             val folderNameView = itemView.findViewById<TextView>(R.id.folder_name)
             folderNameView.text = folder
             if (folder == selectedFolder) {
@@ -127,7 +129,7 @@ class ThemePreference(
                         Intent(currentContext, TextEditorActivity::class.java)
                             .putExtra("folder_name", folder)
                             .putExtra("key", key)
-                    ContextCompat.startActivity(currentContext, intent, null)
+                    currentContext.startActivity(intent)
                 }
             }
             folderListContainer.addView(itemView)

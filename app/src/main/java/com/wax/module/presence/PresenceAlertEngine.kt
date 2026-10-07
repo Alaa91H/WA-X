@@ -91,19 +91,25 @@ class PresenceAlertEngine(
         val suppressors = rule.suppressors
         val what = observation.activity.label.lowercase()
         return when {
-            suppressors.mutedChats && state.chatIsMuted ->
+            suppressors.mutedChats && state.chatIsMuted -> {
                 "This chat is muted, and $what alerts respect that."
+            }
 
-            suppressors.blockedContacts && state.contactIsBlocked ->
+            suppressors.blockedContacts && state.contactIsBlocked -> {
                 "This contact is blocked, and $what alerts respect that."
+            }
 
-            suppressors.quietHours && state.quietHoursActive ->
+            suppressors.quietHours && state.quietHoursActive -> {
                 "Quiet hours are active, and $what alerts respect those."
+            }
 
-            !rule.alertWhenChatIsOpen && state.chatIsOpen ->
+            !rule.alertWhenChatIsOpen && state.chatIsOpen -> {
                 "This chat is open, and this alert is set for chats you are not looking at."
+            }
 
-            else -> null
+            else -> {
+                null
+            }
         }
     }
 

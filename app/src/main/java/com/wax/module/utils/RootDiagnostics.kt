@@ -3,6 +3,7 @@ package com.wax.module.utils
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.os.Process
+import android.util.Log
 import com.topjohnwu.superuser.Shell
 import com.wax.module.R
 import com.wax.module.platform.TargetPackageRegistry
@@ -12,6 +13,7 @@ import java.io.File
 import java.util.regex.Pattern
 
 object RootDiagnostics {
+    private const val TAG = "WA-X-RootDiagnostics"
     private const val SEPOLICY_LOG_PATH = "/data/adb/lspd/log/verbose*.log"
     private const val HMA_CONFIG_GLOB = "/data/misc/hide_my_applist*/config.json"
     private const val HMA_ZYGISK_PATH = "/data/adb/modules/hma_oss_zygisk"
@@ -244,6 +246,7 @@ object RootDiagnostics {
             cursor.close()
             found
         } catch (e: Exception) {
+            Log.w(TAG, "Unable to inspect LSPosed module database", e)
             false
         } finally {
             db?.close()

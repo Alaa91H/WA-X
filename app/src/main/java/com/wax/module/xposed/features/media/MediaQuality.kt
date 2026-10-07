@@ -132,11 +132,9 @@ class MediaQuality(
         name: String,
         block: () -> Unit,
     ) {
-        try {
-            block()
-        } catch (t: Throwable) {
-            log("step '$name' failed (${t.javaClass.simpleName}: ${t.message})")
-            log(t)
+        runCatching(block).onFailure { error ->
+            log("step '$name' failed (${error.javaClass.simpleName}: ${error.message})")
+            log(error)
         }
     }
 

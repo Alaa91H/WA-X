@@ -75,7 +75,7 @@ permissions:
   contents: read
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   GRADLE_ARGS: --no-daemon --stacktrace
   # Explicit APK growth budget for the regression gate. The 1.7.0 platform and
   # resolver work grew the debug APK by ~3.0%. The budget is a reviewed number,
@@ -107,6 +107,8 @@ jobs:
 
       - name: Set up JDK
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
@@ -268,6 +270,16 @@ jobs:
           python3 tools/compatibility/test_validator.py
           python3 tools/compatibility/validate_compatibility.py
           python3 tools/compatibility/sync_generated.py --check
+
+      # Preferences are user-visible API. Keep the generated target registry in sync
+      # with XML, preserve the correct persisted value type, and reject rows that have
+      # no implementation-side consumer.
+      - name: Validate settings registry and preference wiring
+        run: |
+          set -euo pipefail
+          python3 tools/settings/generate_target_registry.py --check
+          python3 tools/quality/check_preference_wiring.py
+          python3 tools/quality/check_preference_types.py
 
       # Every WA X-owned feature is free. The scanner fails the build if an internal
       # access gate reappears, and --check-mirror proves the scanner and the runtime
@@ -517,11 +529,307 @@ jobs:
           compression-level: 0
           retention-days: 14
 
+
+  strict-static:
+    name: Strict atomic static quality
+    if: always()
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+      - name: Run every static gate before returning a verdict
+        shell: bash
+        run: |
+          set +e
+          mkdir -p build/strict-quality/static
+          failures=0
+          run_gate() {
+            local name="$1"
+            shift
+            echo "::group::$name"
+            "$@" >"build/strict-quality/static/$name.log" 2>&1
+            local rc=$?
+            cat "build/strict-quality/static/$name.log"
+            echo "::endgroup::"
+            printf '%s\t%s\n' "$name" "$rc" >> build/strict-quality/static/results.tsv
+            if [[ "$rc" -ne 0 ]]; then
+              failures=$((failures + 1))
+              echo "::error::$name failed with exit code $rc"
+            fi
+          }
+          chmod +x gradlew
+
+          run_gate gradle-static ./gradlew --no-daemon --stacktrace --continue --warning-mode=fail spotlessCheck detekt lintDebug
+          run_gate compatibility-selftest python3 tools/compatibility/test_validator.py
+          run_gate compatibility python3 tools/compatibility/validate_compatibility.py
+          run_gate compatibility-render python3 tools/compatibility/sync_generated.py --check
+          run_gate settings-registry python3 tools/settings/generate_target_registry.py --check
+          run_gate preference-wiring python3 tools/quality/check_preference_wiring.py
+          run_gate preference-types python3 tools/quality/check_preference_types.py
+          run_gate ui-surface python3 tools/quality/strict/check_ui_surface.py
+          run_gate access-gate-selftest python3 tools/quality/test_scan_access_gates.py
+          run_gate access-gates python3 tools/quality/scan_access_gates.py --check-mirror
+          run_gate lsposed-selftest python3 tools/quality/test_check_lsposed_contract.py
+          run_gate lsposed-contract python3 tools/quality/check_lsposed_contract.py
+          run_gate repository-url-selftest python3 tools/quality/test_check_repository_urls.py
+          run_gate repository-urls python3 tools/quality/check_repository_urls.py
+          echo "Strict static gate failures: $failures"
+          [[ "$failures" -eq 0 ]]
+      - name: Upload complete static diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: strict-static-${{ github.sha }}
+          path: |
+            build/strict-quality/
+            app/build/reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  strict-unit:
+    name: Strict unit tests and coverage floor
+    if: always()
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+      # Absolute 100% is not reachable for a hooked-process module and is not what this
+      # checks. Every counter has a floor in quality/coverage-baseline.json, and a change
+      # fails when the covered count falls (a lost test) or the percentage falls (production
+      # code added without one). Both guards were verified to fire.
+      - name: Execute all unit tests and enforce the coverage floor
+        shell: bash
+        run: |
+          set +e
+          mkdir -p build/strict-quality/unit
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace --continue --warning-mode=fail \
+            -PstrictCollectAll=true \
+            :app:createDebugUnitTestCoverageReport
+          gradle_rc=$?
+          python3 tools/quality/strict/check_junit_results.py \
+            --glob 'app/build/test-results/**/*.xml' \
+            --suite unit \
+            --out build/strict-quality/unit/junit.json
+          junit_rc=$?
+          unit_xml="$(find app/build/reports/coverage -type f -name '*.xml' 2>/dev/null | sort | head -n 1)"
+          python3 tools/quality/strict/check_coverage_floor.py \
+            --xml "${unit_xml:-__missing_unit_coverage__.xml}" \
+            --suite unit \
+            --out build/strict-quality/unit/coverage.json
+          coverage_rc=$?
+          echo "gradle=$gradle_rc junit=$junit_rc coverage=$coverage_rc"
+          [[ "$gradle_rc" -eq 0 && "$junit_rc" -eq 0 && "$coverage_rc" -eq 0 ]]
+      - name: Upload complete unit diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: strict-unit-${{ github.sha }}
+          path: |
+            build/strict-quality/
+            app/build/test-results/
+            app/build/reports/coverage/
+          if-no-files-found: warn
+          retention-days: 30
+
+  strict-e2e:
+    name: Strict Android E2E tests and coverage floor
+    if: always()
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    # Job level, not step level: the cache key below selects the system image, so it has to
+    # be readable before the steps run.
+    env:
+      STRICT_E2E_API: '35'
+    steps:
+      # The system image is ~1.5 GB. Downloading it on every run is what pushed this job past
+      # its timeout before a single test executed, so the image is cached as a zip and the AVD
+      # with it. The key includes the API level because that is what selects the image.
+      - name: Restore the cached emulator image and AVD
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            ~/.cache/wax-e2e
+            ~/.android/avd
+          key: wax-e2e-${{ runner.os }}-api${{ env.STRICT_E2E_API }}-${{ github.sha }}
+          restore-keys: |
+            wax-e2e-${{ runner.os }}-api${{ env.STRICT_E2E_API }}-
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+      # Same floor mechanism as the unit suite. The E2E floor is not recorded yet, so this
+      # run records its measurement instead of failing on a threshold nobody has chosen; it
+      # becomes binding the moment someone pins it with --update.
+      - name: Run Android instrumentation to completion and enforce the coverage floor
+        shell: bash
+        run: |
+          set +e
+          mkdir -p build/strict-quality/e2e
+          chmod +x gradlew tools/ci/run_strict_e2e.sh
+          tools/ci/run_strict_e2e.sh
+          e2e_rc=$?
+          # 2 means the runner cannot host an accelerated emulator. That is an infrastructure
+          # fact, so it is recorded and surfaced in the job summary rather than failed as if
+          # the suite had run and broken.
+          if [[ "$e2e_rc" -eq 2 ]]; then
+            {
+              echo "### Android E2E"
+              echo
+              echo "- Result: not attempted"
+              echo "- Reason: /dev/kvm is unavailable, so this runner cannot host an accelerated emulator."
+              echo "- The gate stays binding on a runner that can; see tools/ci/run_strict_e2e.sh."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          python3 tools/quality/strict/check_junit_results.py \
+            --glob 'app/build/outputs/androidTest-results/**/*.xml' \
+            --suite e2e \
+            --out build/strict-quality/e2e/junit.json
+          junit_rc=$?
+          e2e_xml="$(find app/build/reports/coverage/androidTest -type f -name '*.xml' 2>/dev/null | sort | head -n 1)"
+          python3 tools/quality/strict/check_coverage_floor.py \
+            --xml "${e2e_xml:-__missing_e2e_coverage__.xml}" \
+            --suite e2e \
+            --out build/strict-quality/e2e/coverage.json
+          coverage_rc=$?
+          echo "e2e=$e2e_rc junit=$junit_rc coverage=$coverage_rc"
+          [[ "$e2e_rc" -eq 0 && "$junit_rc" -eq 0 && "$coverage_rc" -eq 0 ]]
+      - name: Upload complete E2E diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: strict-e2e-${{ github.sha }}
+          path: |
+            build/strict-quality/
+            app/build/outputs/androidTest-results/
+            app/build/reports/coverage/
+          if-no-files-found: warn
+          retention-days: 30
+
+  strict-runtime:
+    name: Latest WhatsApp and Business device-lab contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      # Binds the target the moment the compatibility matrix claims support for it. Today
+      # every cell is `unknown`, which its own statusVocabulary calls the only status
+      # permitted without evidence, so there is nothing to prove and this reports the count
+      # of claims it found. The self-test runs first, because a conditional gate that cannot
+      # reach its condition is a gate that never fails.
+      - name: Prove the claim-driven runtime gate can still fail
+        run: python3 tools/quality/test_check_latest_runtime_evidence.py
+      - name: Require evidence for every support claim on newest target trains
+        shell: bash
+        run: |
+          mkdir -p build/strict-quality/runtime
+          python3 tools/quality/strict/check_latest_runtime_evidence.py \
+            --commit "$GITHUB_SHA" \
+            --out build/strict-quality/runtime/latest-runtime.json
+      - name: Upload complete runtime-evidence diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: strict-runtime-${{ github.sha }}
+          path: build/strict-quality/
+          if-no-files-found: error
+          retention-days: 30
+
+  strict-verdict:
+    name: Atomic strict quality verdict
+    if: always()
+    needs:
+      - build
+      - strict-static
+      - strict-unit
+      - strict-e2e
+      - strict-runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Fail only after every independent gate has reported
+        shell: bash
+        run: |
+          cat <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          ### Atomic strict quality verdict
+
+          | Gate | Result |
+          | --- | --- |
+          | Existing build/release verification | ${{ needs.build.result }} |
+          | Static quality and source/UI contracts | ${{ needs.strict-static.result }} |
+          | Unit tests + coverage floor | ${{ needs.strict-unit.result }} |
+          | Android E2E + coverage floor | ${{ needs.strict-e2e.result }} |
+          | Runtime evidence for every support claim | ${{ needs.strict-runtime.result }} |
+          EOF
+          failed=0
+          for result in \
+            '${{ needs.build.result }}' \
+            '${{ needs.strict-static.result }}' \
+            '${{ needs.strict-unit.result }}' \
+            '${{ needs.strict-e2e.result }}' \
+            '${{ needs.strict-runtime.result }}'; do
+            if [[ "$result" != "success" ]]; then
+              failed=1
+            fi
+          done
+          if [[ "$failed" -ne 0 ]]; then
+            echo "::error::Strict atomic quality verdict failed. Inspect every strict-* artifact; no release is permitted."
+            exit 1
+          fi
+
   release:
     name: Publish the GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - build
+      - strict-verdict
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -651,6 +959,7 @@ jobs:
         always() &&
         github.event_name != 'pull_request' &&
         needs.build.result == 'success' &&
+        needs.strict-verdict.result == 'success' &&
         (needs.release.result == 'success' || needs.release.result == 'skipped') &&
         (
           startsWith(github.ref, 'refs/tags/v') ||
@@ -661,6 +970,7 @@ jobs:
       }}
     needs:
       - build
+      - strict-verdict
       - release
     runs-on: ubuntu-24.04
     timeout-minutes: 45

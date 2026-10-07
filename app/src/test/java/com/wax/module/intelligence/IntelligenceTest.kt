@@ -215,7 +215,7 @@ class IntelligenceTest {
     fun theGateDefaultsToEverythingOffAndStatesThePolicy() {
         val gate = gate()
         assertEquals(emptySet<CloudService>(), gate.enabledServices())
-        assertTrue(gate.policyStatement().contains("on this device"))
+        assertTrue(gate.policyStatement.contains("on this device"))
         gate.setEnabled(CloudService.TRANSLATION_GOOGLE, true)
         assertTrue(gate.allows(CloudService.TRANSLATION_GOOGLE, CloudDataKind.MESSAGE_TEXT))
         gate.setEnabled(CloudService.TRANSLATION_GOOGLE, false)

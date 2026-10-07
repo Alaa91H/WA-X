@@ -1,9 +1,11 @@
 package com.wax.module.ui.targets
 
 import android.app.Application
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
+import com.wax.module.BuildConfig
 import com.wax.module.platform.TargetApp
 import com.wax.module.settings.EffectiveSettingsResolver
 import com.wax.module.settings.SettingKeyRegistry
@@ -48,14 +50,20 @@ class TargetSettingsViewModel(
                 Row(
                     entry = entry,
                     triState = resolver.triState(entry.key, scope),
-                    effective = resolver.effectiveString(entry.key, scope),
+                    overridden = resolver.isOverridden(entry.key, scope),
+                    effective = effectiveDisplay(entry, scope),
                 )
             }
         _state.value =
             _state.value.copy(
                 rows = rows,
-                overrideCount = store.keysWithOverrides(scope).size,
-                totalOverrideCount = TargetApp.entries.sumOf { app -> store.keysWithOverrides(SettingsScope.Target(app)).size },
+                overrideCount =
+                    if (scope is SettingsScope.Target) {
+                        overrideable.count { entry -> resolver.isOverridden(entry.key, scope) }
+                    } else {
+                        0
+                    },
+                totalSettingCount = SettingKeyRegistry.entries.size,
             )
     }
 
@@ -92,6 +100,7 @@ class TargetSettingsViewModel(
             TriState.ENABLED -> store.writeBoolean(scope, entry.key, true)
             TriState.DISABLED -> store.writeBoolean(scope, entry.key, false)
         }
+        notifyRuntime(scope)
         reload()
     }
 
@@ -106,21 +115,27 @@ class TargetSettingsViewModel(
         if (scope !is SettingsScope.Target) return
         val global = SettingsScope.Global
         when (entry.kind) {
-            SettingKeyRegistry.Kind.BOOLEAN ->
+            SettingKeyRegistry.Kind.BOOLEAN -> {
                 store.writeBoolean(scope, entry.key, resolver.effectiveBoolean(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.INT ->
+            SettingKeyRegistry.Kind.INT -> {
                 store.writeInt(scope, entry.key, resolver.effectiveInt(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.FLOAT ->
+            SettingKeyRegistry.Kind.FLOAT -> {
                 store.writeFloat(scope, entry.key, resolver.effectiveFloat(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.SET ->
+            SettingKeyRegistry.Kind.SET -> {
                 store.writeStringSet(scope, entry.key, resolver.effectiveStringSet(entry.key, global))
+            }
 
-            SettingKeyRegistry.Kind.TEXT ->
+            SettingKeyRegistry.Kind.TEXT -> {
                 store.writeString(scope, entry.key, resolver.effectiveString(entry.key, global))
+            }
         }
+        notifyRuntime(scope)
         reload()
     }
 
@@ -137,14 +152,37 @@ class TargetSettingsViewModel(
     ) {
         if (entry.kind != SettingKeyRegistry.Kind.BOOLEAN) return
         store.writeBoolean(SettingsScope.Global, entry.key, enabled)
+        notifyRuntime(SettingsScope.Global)
         reload()
     }
+
+    /** Removes one target override, regardless of the preference's stored type. */
+    fun clearOverride(entry: SettingKeyRegistry.Entry) {
+        val scope = _state.value.scope
+        if (scope !is SettingsScope.Target) return
+        resolver.resetKey(entry.key, scope)
+        notifyRuntime(scope)
+        reload()
+    }
+
+    private fun effectiveDisplay(
+        entry: SettingKeyRegistry.Entry,
+        scope: SettingsScope,
+    ): String? =
+        when (entry.kind) {
+            SettingKeyRegistry.Kind.BOOLEAN -> resolver.effectiveBoolean(entry.key, scope).toString()
+            SettingKeyRegistry.Kind.INT -> resolver.effectiveInt(entry.key, scope).toString()
+            SettingKeyRegistry.Kind.FLOAT -> resolver.effectiveFloat(entry.key, scope).toString()
+            SettingKeyRegistry.Kind.SET -> resolver.effectiveStringSet(entry.key, scope).sorted().joinToString(", ")
+            SettingKeyRegistry.Kind.TEXT -> resolver.effectiveString(entry.key, scope)
+        }
 
     /** Removes every override on the current target, leaving Global alone. */
     fun resetTarget() {
         val scope = _state.value.scope
         if (scope !is SettingsScope.Target) return
         store.clearScope(scope)
+        notifyRuntime(scope)
         reload()
     }
 
@@ -152,8 +190,41 @@ class TargetSettingsViewModel(
     fun copyGlobalToTarget() {
         val scope = _state.value.scope
         if (scope !is SettingsScope.Target) return
-        store.copyScope(SettingsScope.Global, scope)
+
+        store.clearScope(scope)
+        for (entry in SettingKeyRegistry.entries) {
+            copyStoredGlobalValue(entry, scope)
+        }
+        notifyRuntime(scope)
         reload()
+    }
+
+    private fun copyStoredGlobalValue(
+        entry: SettingKeyRegistry.Entry,
+        target: SettingsScope.Target,
+    ) {
+        val global = SettingsScope.Global
+        when (entry.kind) {
+            SettingKeyRegistry.Kind.BOOLEAN -> {
+                store.readBoolean(global, entry.key)?.let { store.writeBoolean(target, entry.key, it) }
+            }
+
+            SettingKeyRegistry.Kind.INT -> {
+                store.readInt(global, entry.key)?.let { store.writeInt(target, entry.key, it) }
+            }
+
+            SettingKeyRegistry.Kind.FLOAT -> {
+                store.readFloat(global, entry.key)?.let { store.writeFloat(target, entry.key, it) }
+            }
+
+            SettingKeyRegistry.Kind.SET -> {
+                store.readStringSet(global, entry.key)?.let { store.writeStringSet(target, entry.key, it) }
+            }
+
+            SettingKeyRegistry.Kind.TEXT -> {
+                store.readString(global, entry.key)?.let { store.writeString(target, entry.key, it) }
+            }
+        }
     }
 
     /** Removes every override on every target. */
@@ -161,7 +232,23 @@ class TargetSettingsViewModel(
         for (app in TargetApp.entries) {
             store.clearScope(SettingsScope.Target(app))
         }
+        notifyRuntime(SettingsScope.Global)
         reload()
+    }
+
+    /**
+     * Uses the same restart signal as the ordinary preference screens.
+     *
+     * A target-only change is addressed to that WhatsApp package so Business is not
+     * asked to restart for a WhatsApp-only override. Global changes are broadcast to
+     * both targets because both inherit them.
+     */
+    private fun notifyRuntime(scope: SettingsScope) {
+        val intent = Intent("${BuildConfig.APPLICATION_ID}.MANUAL_RESTART")
+        if (scope is SettingsScope.Target) {
+            intent.setPackage(scope.app.packageName)
+        }
+        getApplication<Application>().sendBroadcast(intent)
     }
 
     /** The physical key an override occupies, for the interface's diagnostics line. */
@@ -171,7 +258,9 @@ class TargetSettingsViewModel(
     data class Row(
         val entry: SettingKeyRegistry.Entry,
         val triState: TriState,
-        /** The value this scope resolves to, as text, for the summary line. */
+        /** True when this target owns an explicit value instead of following Global. */
+        val overridden: Boolean,
+        /** The value this scope resolves to, rendered for the summary line. */
         val effective: String?,
     )
 
@@ -181,6 +270,6 @@ class TargetSettingsViewModel(
         val query: String = "",
         val rows: List<Row> = emptyList(),
         val overrideCount: Int = 0,
-        val totalOverrideCount: Int = 0,
+        val totalSettingCount: Int = SettingKeyRegistry.entries.size,
     )
 }

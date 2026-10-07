@@ -284,7 +284,7 @@ class ThemeGallery(
     fun install(theme: WaTheme): List<ThemeProblem> = repository.install(theme)
 
     /** The policy statement shown in the gallery. */
-    fun distributionPolicy(): String = "Themes are data only: colours, sizes and names. No theme can run code."
+    val distributionPolicy: String = "Themes are data only: colours, sizes and names. No theme can run code."
 
     private fun sampleThemes(): List<WaTheme> =
         listOf(

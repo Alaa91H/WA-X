@@ -1,6 +1,8 @@
 import com.diffplug.spotless.LineEnding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
@@ -26,6 +28,7 @@ val baseVersionName = providers.gradleProperty("waxVersionName").get()
 val baseVersionCode = providers.gradleProperty("waxVersionCode").get().toInt()
 val releaseTag = providers.gradleProperty("releaseTag").orNull
 val releaseVersion = releaseTag?.removePrefix("v")
+val debugPackageName = providers.gradleProperty("debug_package_name")
 
 if (releaseTag != null && releaseTag != "v$baseVersionName") {
     throw GradleException("Release tag $releaseTag does not match configured version v$baseVersionName")
@@ -100,6 +103,8 @@ android {
     buildTypes {
 
         debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
             isMinifyEnabled = project.hasProperty("minify") && project.findProperty("minify").toString().toBoolean()
             //noinspection NotShrinkingResources
             isShrinkResources = false
@@ -127,6 +132,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     buildFeatures {
         // Compose and view binding coexist: the Compose screens are new surfaces, and
         // converting a preference-fragment screen to Compose while it still has to keep
@@ -138,20 +149,42 @@ android {
         resValues = true
     }
 
+    testCoverage {
+        jacocoVersion = "0.8.15"
+    }
+
     lint {
         disable += "SelectedPhotoAccess"
+        // Kotlin 2.4.20 is fully supported through Gradle 9.7.0. Lint's generic
+        // version suggestion currently asks for Gradle 9.8.0, which is newer but
+        // outside Kotlin's fully supported range; keep the compatibility pin explicit.
+        disable += "AndroidGradlePluginVersion"
+        // Fires inside org.bouncycastle:bcpkix, which the backup signer depends on, and
+        // reports an empty checkServerTrusted in the library's own code. WA X implements
+        // no trust manager, so there is nothing to fix here and the finding cannot be
+        // resolved by any change to this repository.
+        disable += "TrustAllX509TrustManager"
         warning += "MissingTranslation"
+        warningsAsErrors = true
+        abortOnError = true
+        checkDependencies = false
+        // Named explicitly because the Android Gradle Plugin no longer discovers
+        // lint-baseline.xml on its own. Left implicit it is simply not applied: the file
+        // kept looking authoritative to tools/baseline/check_baseline.py while lint ignored
+        // it entirely, so the "baseline must not grow" ratchet was measuring a document
+        // that had no effect on the build. Four entries, all VectorPath on artwork this
+        // change does not own; every other finding is fixed rather than baselined.
         baseline = file("lint-baseline.xml")
     }
 
-    // T09: static analysis. The baseline records the debt that already exists so the
-    // check is useful immediately; unlike the lint gate this one starts in report mode
-    // and is tightened as the debt is paid down.
+    // Static analysis is fail-closed: there is no baseline and even Info-severity
+    // findings fail CI. The configuration only disables rules that are structurally
+    // inappropriate for Android/Xposed code, never individual findings.
     detekt {
         buildUponDefaultConfig = true
         allRules = false
-        ignoreFailures = true
-        baseline = file("detekt-baseline.xml")
+        ignoreFailures = false
+        failOnSeverity = dev.detekt.gradle.extensions.FailOnSeverity.Info
         config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     }
 
@@ -172,7 +205,7 @@ android {
                 "src/main/java/**/*.kt",
                 "src/test/**/*.kt",
             )
-            ktlint("1.5.0")
+            ktlint("1.8.0")
             // Pinned, not inherited from .gitattributes: with the endings left to the
             // checkout, a CRLF working tree makes ktlint 1.5.0 demand a different wrap
             // for a multi-line boolean expression than an LF one does, so the same commit
@@ -182,7 +215,7 @@ android {
         }
         kotlinGradle {
             target("*.kts")
-            ktlint("1.5.0")
+            ktlint("1.8.0")
             lineEndings = LineEnding.UNIX
         }
     }
@@ -202,6 +235,7 @@ androidComponents {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+        allWarningsAsErrors.set(true)
     }
 }
 
@@ -217,7 +251,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
     implementation(libs.colorpicker)
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
@@ -255,6 +294,18 @@ configurations.all {
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
+}
+
+tasks.withType<Test>().configureEach {
+    if (providers.gradleProperty("strictCollectAll").isPresent) {
+        // Strict CI parses the XML results and emits one final verdict after every
+        // independent gate has run. Keep producing coverage even when a test fails.
+        ignoreFailures = true
+    }
+}
+
 tasks.configureEach {
     if (name.endsWith("ReleaseArtProfile")) {
         enabled = false
@@ -270,29 +321,34 @@ afterEvaluate {
     // generic: it reads `debug_package_name`, which is set per install target.
     listOf("installDebug").forEach { taskName ->
         tasks.findByName(taskName)?.doLast {
-            runCatching {
-                val injected = project.objects.newInstance<InjectedExecOps>()
-                runBlocking {
-                    delay(1000.milliseconds)
-                    injected.execOps.exec {
-                        commandLine(
-                            "adb",
-                            "shell",
-                            "am",
-                            "force-stop",
-                            project.properties["debug_package_name"]?.toString(),
-                        )
-                    }
-                    delay(3000.milliseconds)
-                    injected.execOps.exec {
-                        commandLine(
-                            "adb",
-                            "shell",
-                            "am",
-                            "start",
-                            "-n",
-                            "$(cmd package resolve-activity --brief ${project.properties["debug_package_name"]} | tail -n 1)",
-                        )
+            val packageName = debugPackageName.orNull
+            if (!packageName.isNullOrBlank()) {
+                runCatching {
+                    val injected = project.objects.newInstance<InjectedExecOps>()
+                    runBlocking {
+                        delay(1000.milliseconds)
+                        injected.execOps.exec {
+                            commandLine(
+                                "adb",
+                                "shell",
+                                "am",
+                                "force-stop",
+                                packageName,
+                            )
+                        }
+                        delay(3000.milliseconds)
+                        injected.execOps.exec {
+                            commandLine(
+                                "adb",
+                                "shell",
+                                "monkey",
+                                "-p",
+                                packageName,
+                                "-c",
+                                "android.intent.category.LAUNCHER",
+                                "1",
+                            )
+                        }
                     }
                 }
             }

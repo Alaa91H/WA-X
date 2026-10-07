@@ -123,7 +123,7 @@ class MenuHome(
             itemMenu.icon = iconDraw
         }
         if (newSettings) {
-            itemMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            itemMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
         }
         itemMenu.setOnMenuItemClickListener {
             AlertDialogWpp(activity)
@@ -154,7 +154,7 @@ class MenuHome(
         iconDraw!!.setTint(if (newSettings) DesignUtils.getPrimaryTextColor() else -0x796960)
         val itemMenu = menu.add(0, 0, 0, R.string.restart_whatsapp).setIcon(iconDraw)
         if (newSettings) {
-            itemMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            itemMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
         }
         itemMenu.setOnMenuItemClickListener {
             Utils.doRestart(activity)
@@ -185,7 +185,7 @@ class MenuHome(
             item.icon = drawable
         }
         if (newSettings) {
-            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
         }
         item.setOnMenuItemClickListener {
             if (!dndmode) {
@@ -229,7 +229,7 @@ class MenuHome(
             item.icon = drawable
         }
         if (newSettings) {
-            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
         }
         item.setOnMenuItemClickListener {
             if (!freezelastseen) {

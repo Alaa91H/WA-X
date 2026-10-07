@@ -8,9 +8,9 @@ package com.wax.module.settings
  * overridden, and one that is listed but no longer exists would show an empty
  * row in the interface. Regenerate instead.
  *
- * 126 settings, of which 90 are toggles.
+ * 122 settings, of which 89 are toggles.
  *
- * 17 settings are excluded on purpose: the module's own appearance and diagnostics,
+ * 20 settings are excluded on purpose: the module's own appearance and diagnostics,
  * and anything holding a credential or a file path.
  */
 object SettingKeyRegistry {
@@ -73,11 +73,10 @@ object SettingKeyRegistry {
                 "preference_general_conversation",
                 com.wax.module.R.string.antirevokestatus,
             ),
-            Entry("assemblyai_key", Kind.TEXT, "title_audio", "fragment_media", com.wax.module.R.string.assemblyai_key),
             Entry("audio_transcription", Kind.BOOLEAN, "title_audio", "fragment_media", com.wax.module.R.string.audio_transcription),
             Entry("audio_type", Kind.TEXT, "title_audio", "fragment_media", com.wax.module.R.string.send_audio_as_voice_audio_note),
             Entry("autonext_status", Kind.BOOLEAN, "status", "fragment_general", com.wax.module.R.string.disable_auto_status),
-            Entry("background_color", Kind.TEXT, "general", "fragment_customization", com.wax.module.R.string.background_color),
+            Entry("background_color", Kind.INT, "general", "fragment_customization", com.wax.module.R.string.background_color),
             Entry("blueonreply", Kind.BOOLEAN, "conversation", "fragment_privacy", com.wax.module.R.string.blueonreply),
             Entry(
                 "broadcast_tag",
@@ -87,8 +86,8 @@ object SettingKeyRegistry {
                 com.wax.module.R.string.show_chat_broadcast_icon,
             ),
             Entry("bubble_color", Kind.BOOLEAN, "conversation", "fragment_customization", com.wax.module.R.string.change_bubble_colors),
-            Entry("bubble_left", Kind.TEXT, "conversation", "fragment_customization", com.wax.module.R.string.bubble_left),
-            Entry("bubble_right", Kind.TEXT, "conversation", "fragment_customization", com.wax.module.R.string.bubble_right),
+            Entry("bubble_left", Kind.INT, "conversation", "fragment_customization", com.wax.module.R.string.bubble_left),
+            Entry("bubble_right", Kind.INT, "conversation", "fragment_customization", com.wax.module.R.string.bubble_right),
             Entry(
                 "buttonaction",
                 Kind.BOOLEAN,
@@ -112,13 +111,6 @@ object SettingKeyRegistry {
                 "call_recording_title",
                 "fragment_media",
                 com.wax.module.R.string.call_recording_enable,
-            ),
-            Entry(
-                "call_recording_settings",
-                Kind.TEXT,
-                "call_recording_title",
-                "fragment_media",
-                com.wax.module.R.string.call_recording_settings,
             ),
             Entry(
                 "call_recording_toast",
@@ -293,7 +285,6 @@ object SettingKeyRegistry {
             Entry("metaai", Kind.BOOLEAN, "home_screen", "preference_general_homescreen", com.wax.module.R.string.disable_metaai),
             Entry("newchat", Kind.BOOLEAN, "home_screen", "preference_general_homescreen", com.wax.module.R.string.enable_new_chat_button),
             Entry("oldstatus", Kind.BOOLEAN, "status", "fragment_customization", com.wax.module.R.string.old_statuses),
-            Entry("per_target_settings", Kind.TEXT, "Other", "preference_general_home", com.wax.module.R.string.open_per_target_settings),
             Entry(
                 "pinnedlimit",
                 Kind.BOOLEAN,
@@ -301,7 +292,7 @@ object SettingKeyRegistry {
                 "preference_general_conversation",
                 com.wax.module.R.string.disable_pinned_limit,
             ),
-            Entry("primary_color", Kind.TEXT, "general", "fragment_customization", com.wax.module.R.string.primary_color),
+            Entry("primary_color", Kind.INT, "general", "fragment_customization", com.wax.module.R.string.primary_color),
             Entry("proximity_audios", Kind.BOOLEAN, "title_audio", "fragment_media", com.wax.module.R.string.disable_audio_sensor),
             Entry(
                 "remove_sticker_white_outline",
@@ -381,7 +372,7 @@ object SettingKeyRegistry {
                 com.wax.module.R.string.custom_colors_for_text_status,
             ),
             Entry("tasker", Kind.BOOLEAN, "general", "preference_general_home", com.wax.module.R.string.enable_tasker_automation),
-            Entry("text_color", Kind.TEXT, "general", "fragment_customization", com.wax.module.R.string.text_color),
+            Entry("text_color", Kind.INT, "general", "fragment_customization", com.wax.module.R.string.text_color),
             Entry("text_in_hour", Kind.TEXT, "general", "preference_general_home", com.wax.module.R.string.textonahora),
             Entry(
                 "toast_viewed_message",
@@ -399,13 +390,6 @@ object SettingKeyRegistry {
                 "conversation",
                 "preference_general_conversation",
                 com.wax.module.R.string.show_contact_added_status,
-            ),
-            Entry(
-                "video_call_screen_rec",
-                Kind.BOOLEAN,
-                "call_recording_title",
-                "fragment_media",
-                com.wax.module.R.string.video_call_screen_rec,
             ),
             Entry("video_limit_size", Kind.FLOAT, "title_video", "fragment_media", com.wax.module.R.string.increase_video_size_limit),
             Entry("video_maxfps", Kind.BOOLEAN, "title_video", "fragment_media", com.wax.module.R.string.send_video_in_60fps),

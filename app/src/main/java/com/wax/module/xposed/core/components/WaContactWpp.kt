@@ -16,10 +16,10 @@ class WaContactWpp(
 
     init {
         if (instance == null) {
-            throw RuntimeException("instance cannot be null")
+            error("instance cannot be null")
         }
         if (!type.isInstance(instance)) {
-            throw RuntimeException("object is not a WaContactWpp")
+            error("object is not a WaContactWpp")
         }
         this.mInstance = instance
     }

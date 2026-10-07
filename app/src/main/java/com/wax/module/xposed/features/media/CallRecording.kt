@@ -8,6 +8,7 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Environment
 import android.os.ParcelFileDescriptor
+import android.os.RemoteException
 import android.text.TextUtils
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -514,7 +515,7 @@ class CallRecording(
         try {
             recorder.reset()
             recorder.release()
-        } catch (_: Throwable) {
+        } catch (_: RuntimeException) {
         }
     }
 
@@ -557,26 +558,30 @@ class CallRecording(
                     )
                 }
                 logDebug("WA X: Bridge openFile returned null, fallback to Android/data path")
-            } catch (t: Throwable) {
-                logDebug("WA X: Bridge openFile failed, fallback to Android/data path: ${t.message}")
+            } catch (exception: RemoteException) {
+                logDebug("WA X: Bridge openFile failed, fallback to Android/data path: ${exception.message}")
+            } catch (exception: RuntimeException) {
+                logDebug("WA X: Bridge runtime failure, fallback to Android/data path: ${exception.message}")
             }
         }
 
-        val app = FeatureLoader.mApp ?: throw IOException("Could not resolve app context")
-        val appExternalDir =
-            app.getExternalFilesDir(null)
-                ?: throw IOException("Could not resolve app external files directory")
-
-        val fallbackDir = File(appExternalDir, "Recordings")
-        if (!fallbackDir.exists() && !fallbackDir.mkdirs()) {
-            throw IOException("Could not create fallback recording directory: ${fallbackDir.absolutePath}")
-        }
-
+        val fallbackDir = fallbackRecordingDirectory()
         val fallbackFile = File(fallbackDir, fileName)
         val fallbackStream = FileOutputStream(fallbackFile)
         logDebug("WA X: Recording fallback path in Android/data: ${fallbackFile.absolutePath}")
 
         return OutputTarget(fallbackFile, null, fallbackStream, fallbackStream.fd)
+    }
+
+    private fun fallbackRecordingDirectory(): File {
+        val externalDir =
+            FeatureLoader.mApp?.getExternalFilesDir(null)
+                ?: throw IOException("Could not resolve app external files directory")
+        val fallbackDir = File(externalDir, "Recordings")
+        if (!fallbackDir.exists() && !fallbackDir.mkdirs()) {
+            throw IOException("Could not create fallback recording directory: ${fallbackDir.absolutePath}")
+        }
+        return fallbackDir
     }
 
     private data class OutputTarget(
@@ -615,8 +620,13 @@ class CallRecording(
                     isNumberInList(cleanPhone, whitelist)
                 }
 
-                1 -> true
-                else -> true
+                1 -> {
+                    true
+                }
+
+                else -> {
+                    true
+                }
             }
         } catch (e: Exception) {
             logDebug("WA X: shouldRecord check error: ${e.message}")

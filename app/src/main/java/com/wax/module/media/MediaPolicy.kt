@@ -270,15 +270,16 @@ class MediaPolicyResolver(
             )
         }
         return when (resolved.choice) {
-            MediaPolicyChoice.ALWAYS ->
+            MediaPolicyChoice.ALWAYS -> {
                 MediaDownloadDecision(
                     action = MediaDownloadAction.DOWNLOAD_NOW,
                     choice = resolved.choice,
                     source = resolved.source,
                     explanation = "${mediaClass.label} are downloaded as they arrive.",
                 )
+            }
 
-            MediaPolicyChoice.WIFI_ONLY ->
+            MediaPolicyChoice.WIFI_ONLY -> {
                 if (network == NetworkClass.UNMETERED) {
                     MediaDownloadDecision(
                         action = MediaDownloadAction.DOWNLOAD_NOW,
@@ -294,32 +295,36 @@ class MediaPolicyResolver(
                         explanation = "${mediaClass.label} wait for an unmetered connection.",
                     )
                 }
+            }
 
-            MediaPolicyChoice.NEVER ->
+            MediaPolicyChoice.NEVER -> {
                 MediaDownloadDecision(
                     action = MediaDownloadAction.DO_NOT_DOWNLOAD,
                     choice = resolved.choice,
                     source = resolved.source,
                     explanation = "${mediaClass.label} are never downloaded in this chat.",
                 )
+            }
 
-            MediaPolicyChoice.MANUAL_TAP_ONLY ->
+            MediaPolicyChoice.MANUAL_TAP_ONLY -> {
                 MediaDownloadDecision(
                     action = MediaDownloadAction.WAIT_FOR_USER_TAP,
                     choice = resolved.choice,
                     source = resolved.source,
                     explanation = "${mediaClass.label} wait until you tap them.",
                 )
+            }
 
             // Only reachable when a scope stored USE_PARENT, which the resolver already
             // filtered out; kept exhaustive so adding a choice is a compile error here.
-            MediaPolicyChoice.USE_PARENT ->
+            MediaPolicyChoice.USE_PARENT -> {
                 MediaDownloadDecision(
                     action = MediaDownloadAction.LEAVE_TO_WHATSAPP,
                     choice = MediaPolicyChoice.USE_PARENT,
                     source = resolved.source,
                     explanation = "No WA X policy for ${mediaClass.label.lowercase()}; WhatsApp's own setting applies.",
                 )
+            }
         }
     }
 }

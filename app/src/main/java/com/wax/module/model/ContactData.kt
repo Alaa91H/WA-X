@@ -9,7 +9,11 @@ class ContactData(
     fun getDisplayName(): String =
         when {
             !name.isNullOrEmpty() -> name
-            jid != null -> jid.split("@")[0]
+            jid != null -> jid.substringBefore('@')
             else -> ""
         }
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

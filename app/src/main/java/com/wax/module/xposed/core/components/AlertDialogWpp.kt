@@ -30,7 +30,7 @@ open class AlertDialogWpp(
                 mAlertDialogWpp = getAlertDialog!!.invoke(null, context)
                 setMessage(null)
             } catch (_: Exception) {
-                throw RuntimeException("Failed to create AlertDialogWpp")
+                error("Failed to create AlertDialogWpp")
             }
         }
     }

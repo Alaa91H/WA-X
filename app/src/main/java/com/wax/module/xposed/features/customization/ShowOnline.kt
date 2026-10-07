@@ -254,7 +254,7 @@ class ShowOnline(
             lastSeenText: TextView?,
             onlineStatus: String,
         ) {
-            if (!TextUtils.isEmpty(status) && status!!.trim { it <= ' ' } == onlineStatus) {
+            if (!TextUtils.isEmpty(status) && status!!.trim() == onlineStatus) {
                 if (csDot != null) {
                     csDot.visibility = View.VISIBLE
                 }

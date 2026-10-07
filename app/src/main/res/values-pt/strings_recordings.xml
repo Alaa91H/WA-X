@@ -3,12 +3,13 @@
     <string name="recordings_manager">Gravações</string>
     <string name="no_recordings_found">Nenhuma gravação encontrada</string>
     <string name="delete_confirmation">Tem certeza de que deseja excluir esta gravação?</string>
-    <string name="delete_multiple_confirmation">Tem certeza de que deseja excluir %d gravações?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="one">Tem certeza de que deseja excluir %d gravação?</item>
+    <item quantity="many">Tem certeza de que deseja excluir %d gravações?</item>
+    <item quantity="other">Tem certeza de que deseja excluir %d gravações?</item>
+</plurals>
     <string name="share_recording">Compartilhar gravação</string>
     <string name="share_recordings">Compartilhar gravações</string>
-    <string name="permission_required">Permissão necessária</string>
-    <string name="permission_required_desc">O acesso completo aos arquivos é necessário para gerenciar as gravações armazenadas na pasta raiz.</string>
-    <string name="grant">Conceder</string>
     <string name="sort_by">Ordenar por</string>
     <string name="sort_name">Nome</string>
     <string name="sort_date">Data</string>
@@ -16,12 +17,12 @@
     <string name="sort_contact">Contato</string>
     <string name="list_view">Lista</string>
     <string name="group_by_contact">Por contato</string>
-    <string name="selected_count">%d selecionados</string>
-    <string name="recordings_select_all">Selecionar tudo</string>
-    <string name="recordings_for">Gravações de %s</string>
-    <string name="recording_count">%d gravação(ões)</string>
+    <plurals name="selected_count">
+    <item quantity="one">%d selecionado</item>
+    <item quantity="many">%d selecionados</item>
+    <item quantity="other">%d selecionados</item>
+</plurals>
     <string name="play">Reproduzir</string>
-    <string name="pause">Pausar</string>
     <string name="play_pause">Reproduzir/Pausar</string>
     <string name="close">Fechar</string>
     <string name="share">Compartilhar</string>

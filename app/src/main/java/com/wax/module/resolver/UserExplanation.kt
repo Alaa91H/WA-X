@@ -31,26 +31,36 @@ object UserExplanation {
             target?.let { " (${com.wax.module.diagnostics.ReportRedactor.redactAndBound(it)})" }
                 ?: ""
         return when (outcome) {
-            is Resolution.Resolved<*> ->
+            is Resolution.Resolved<*> -> {
                 when (outcome.confidence) {
-                    Confidence.EXACT -> "works normally$subject"
-                    Confidence.LIKELY ->
+                    Confidence.EXACT -> {
+                        "works normally$subject"
+                    }
+
+                    Confidence.LIKELY -> {
                         "works, but the match was a guess$subject, so it may stop working " +
                             "after a WhatsApp update"
+                    }
 
-                    else -> "could not be installed$subject"
+                    else -> {
+                        "could not be installed$subject"
+                    }
                 }
+            }
 
-            is Resolution.NotFound ->
+            is Resolution.NotFound -> {
                 "stopped working because WhatsApp changed something it depends on$subject. " +
                     "It will work again when WA X is updated for this version."
+            }
 
-            is Resolution.Ambiguous ->
+            is Resolution.Ambiguous -> {
                 "stopped working because WA X could not tell which part of WhatsApp " +
                     "to use$subject, so it was not installed."
+            }
 
-            is Resolution.Incompatible ->
+            is Resolution.Incompatible -> {
                 "cannot run on this version$subject: ${outcome.reason}."
+            }
         }
     }
 
@@ -74,30 +84,53 @@ object UserExplanation {
     ): String {
         val base =
             when (code) {
-                FailureCode.RESOLVER_NOT_FOUND ->
+                FailureCode.RESOLVER_NOT_FOUND -> {
                     "WhatsApp changed something this feature depends on"
-                FailureCode.RESOLVER_AMBIGUOUS ->
+                }
+
+                FailureCode.RESOLVER_AMBIGUOUS -> {
                     "WA X could not identify the right part of WhatsApp"
-                FailureCode.CLASS_NOT_FOUND ->
+                }
+
+                FailureCode.CLASS_NOT_FOUND -> {
                     "a part of WhatsApp that this feature needs no longer exists"
-                FailureCode.MEMBER_NOT_FOUND ->
+                }
+
+                FailureCode.MEMBER_NOT_FOUND -> {
                     "a WhatsApp method that this feature needs no longer exists"
-                FailureCode.HOOK_INSTALL_FAILED ->
+                }
+
+                FailureCode.HOOK_INSTALL_FAILED -> {
                     "the feature could not attach itself to WhatsApp"
-                FailureCode.CONSTRUCTION_FAILED ->
+                }
+
+                FailureCode.CONSTRUCTION_FAILED -> {
                     "the feature could not start up"
-                FailureCode.PREFERENCE_ERROR ->
+                }
+
+                FailureCode.PREFERENCE_ERROR -> {
                     "the feature could not read its settings"
-                FailureCode.TIMEOUT ->
+                }
+
+                FailureCode.TIMEOUT -> {
                     "the feature took too long and was skipped"
-                FailureCode.ACCESS_DENIED ->
+                }
+
+                FailureCode.ACCESS_DENIED -> {
                     "Android blocked the feature from accessing what it needs"
-                FailureCode.INCOMPATIBLE ->
+                }
+
+                FailureCode.INCOMPATIBLE -> {
                     "this feature does not support this WhatsApp or Android version"
-                FailureCode.RESOLVER_INIT_FAILED ->
+                }
+
+                FailureCode.RESOLVER_INIT_FAILED -> {
                     "WA X could not read WhatsApp's internals at all"
-                FailureCode.UNEXPECTED ->
+                }
+
+                FailureCode.UNEXPECTED -> {
                     "the feature hit an unexpected problem"
+                }
             }
         val suffix =
             detail

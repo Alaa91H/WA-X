@@ -121,11 +121,16 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.jvm.java
 
-class FeatureLoader {
+class FeatureLoader private constructor() {
     companion object {
+        // These references are process-scoped by design: the Xposed hook is installed
+        // into the WhatsApp process and lives exactly as long as that process. Neither
+        // field ever stores an Activity or shorter-lived UI context.
+        @SuppressLint("StaticFieldLeak")
         @JvmField
         var mApp: Application? = null
 
+        @SuppressLint("StaticFieldLeak")
         lateinit var moduleContext: Context
 
         const val PACKAGE_WPP = SupportedPackages.WHATSAPP
@@ -276,7 +281,7 @@ class FeatureLoader {
                                         Only the function of ignoring the expiration of the WhatsApp version has been applied!
                                         ${assessment.explanation}
                                         """.trimIndent()
-                                    throw Exception(errorMsg)
+                                    error(errorMsg)
                                 }
                             } else if (assessment.isExperimental) {
                                 // A tolerated build is loaded, but the log records that it was
@@ -551,7 +556,7 @@ class FeatureLoader {
             ProtocolTreeNodeWpp.initialize(loader)
             AlertDialogWpp.initDialog(loader)
             WaContactWpp.initialize(loader)
-            ModuleRuntime.initialize(loader, pref)
+            ModuleRuntime.initialize(loader)
             DesignUtils.setPrefs(pref)
             Utils.init()
 
@@ -670,6 +675,7 @@ class FeatureLoader {
                         context: Context,
                         intent: Intent,
                     ) {
+                        TargetSettingsBridge.reload()
                         ModuleRuntime.setPrivBoolean("need_restart", true)
                     }
                 }

@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Build
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
 
 object StateListDrawableCompact {
     private val drawableClass = StateListDrawable::class.java
@@ -14,12 +13,10 @@ object StateListDrawableCompact {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return stateListDrawable.stateCount
         return try {
             val method =
-                XposedHelpers.findMethodBestMatch(
-                    drawableClass,
-                    "getStateCount",
-                    *emptyArray<Class<*>>(),
-                )
-            val result = method?.invoke(stateListDrawable)
+                drawableClass.getDeclaredMethod("getStateCount").apply {
+                    isAccessible = true
+                }
+            val result = method.invoke(stateListDrawable)
             result as? Int ?: 0
         } catch (exception: Exception) {
             XposedBridge.log(exception)
@@ -35,12 +32,14 @@ object StateListDrawableCompact {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return stateListDrawable.getStateDrawable(index)
         return try {
             val method =
-                XposedHelpers.findMethodBestMatch(
-                    drawableClass,
-                    "getStateDrawable",
-                    Int::class.javaPrimitiveType,
-                )
-            method?.invoke(stateListDrawable, index) as? Drawable
+                drawableClass
+                    .getDeclaredMethod(
+                        "getStateDrawable",
+                        Int::class.javaPrimitiveType,
+                    ).apply {
+                        isAccessible = true
+                    }
+            method.invoke(stateListDrawable, index) as? Drawable
         } catch (exception: Exception) {
             XposedBridge.log(exception)
             null

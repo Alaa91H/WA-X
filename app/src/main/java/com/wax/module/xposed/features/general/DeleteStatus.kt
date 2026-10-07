@@ -1,6 +1,7 @@
 package com.wax.module.xposed.features.general
 
 import android.content.SharedPreferences
+import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
 import com.wax.module.R
@@ -53,7 +54,7 @@ class DeleteStatus(
                                     activity.finish()
                                 } else {
                                     activity.recreate()
-                                    activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                                    applyRecreateTransition(activity)
                                 }
                             }
                         }
@@ -61,6 +62,19 @@ class DeleteStatus(
                 }
             }
         MenuStatusProvider.register(item)
+    }
+
+    private fun applyRecreateTransition(activity: android.app.Activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity.overrideActivityTransition(
+                android.app.Activity.OVERRIDE_TRANSITION_OPEN,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out,
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
     }
 
     override fun getPluginName(): String = "Delete Status"

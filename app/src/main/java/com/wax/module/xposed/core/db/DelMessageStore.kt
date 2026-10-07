@@ -1,5 +1,6 @@
 package com.wax.module.xposed.core.db
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.wax.module.xposed.core.db.entity.DelMessage
 
@@ -10,6 +11,9 @@ class DelMessageStore private constructor(
     private var dao = database.delMessageDao()
 
     companion object {
+        // The singleton intentionally owns applicationContext only; its lifetime is
+        // exactly the WhatsApp process lifetime and never retains an Activity.
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: DelMessageStore? = null
 

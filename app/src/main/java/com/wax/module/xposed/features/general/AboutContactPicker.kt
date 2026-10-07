@@ -366,105 +366,102 @@ class AboutContactPicker(
         }
 
         private fun buildRoot(): Boolean =
-            try {
-                val root =
-                    FrameLayout(context).apply {
-                        layoutParams =
-                            ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                            )
-                        setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
-                    }
-
-                val content =
-                    LinearLayout(context).apply {
-                        orientation = LinearLayout.VERTICAL
-                        layoutParams =
-                            FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                            )
-                        setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
-                    }
-
+            runCatching {
+                val root = createRootFrame()
+                val content = createContentColumn()
                 content.addView(buildHeader())
                 content.addView(buildSearchField())
                 content.addView(buildFilters())
-
-                val swipeRefresh =
-                    SwipeRefreshLayout(context).apply {
-                        setColorSchemeColors(DesignUtils.getUnSeenColor())
-                        setOnRefreshListener { reloadItems() }
-                    }
-                swipeRefreshLayout = swipeRefresh
-
-                val adapterInstance = ContactPickerAdapter(this)
-                adapter = adapterInstance
-
-                val listView =
-                    ListView(context).apply {
-                        setBackgroundColor(Color.TRANSPARENT)
-                        divider = null
-                        dividerHeight = 0
-                        this.adapter = adapterInstance
-                    }
-
-                swipeRefresh.addView(
-                    listView,
-                    ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    ),
-                )
-
-                val empty =
-                    TextView(context).apply {
-                        gravity = Gravity.CENTER
-                        setTextColor(DesignUtils.getPrimaryTextColor())
-                        textSize = 15f
-                        text = getString(R.string.picker_loading_contacts)
-                        val padding = Utils.dipToPixels(24f)
-                        setPadding(padding, padding, padding, padding)
-                    }
-                emptyView = empty
-
-                val listContainer =
-                    FrameLayout(context).apply {
-                        layoutParams =
-                            LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                0,
-                                1f,
-                            )
-                        addView(
-                            swipeRefresh,
-                            FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                            ),
-                        )
-                        addView(
-                            empty,
-                            FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                            ),
-                        )
-                    }
-
-                content.addView(listContainer)
+                content.addView(buildContactListArea())
                 root.addView(content)
 
                 contentView = content
                 rootView = root
-                true
-            } catch (t: Throwable) {
-                XposedBridge.log("AboutContactPicker: failed to build root view: $t")
-                XposedBridge.log(t)
-                rootView = null
-                false
+            }.fold(
+                onSuccess = { true },
+                onFailure = { throwable ->
+                    XposedBridge.log("AboutContactPicker: failed to build root view: $throwable")
+                    XposedBridge.log(throwable)
+                    rootView = null
+                    false
+                },
+            )
+
+        private fun createRootFrame(): FrameLayout =
+            FrameLayout(context).apply {
+                layoutParams =
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+                setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
             }
+
+        private fun createContentColumn(): LinearLayout =
+            LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams =
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+                setBackgroundColor(DesignUtils.getPrimarySurfaceColor())
+            }
+
+        private fun buildContactListArea(): View {
+            val swipeRefresh =
+                SwipeRefreshLayout(context).apply {
+                    setColorSchemeColors(DesignUtils.getUnSeenColor())
+                    setOnRefreshListener { reloadItems() }
+                }
+            swipeRefreshLayout = swipeRefresh
+
+            val adapterInstance = ContactPickerAdapter(this)
+            adapter = adapterInstance
+            val listView =
+                ListView(context).apply {
+                    setBackgroundColor(Color.TRANSPARENT)
+                    divider = null
+                    dividerHeight = 0
+                    adapter = adapterInstance
+                }
+            swipeRefresh.addView(
+                listView,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
+            )
+
+            val empty = createEmptyView()
+            emptyView = empty
+            return FrameLayout(context).apply {
+                layoutParams =
+                    LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        0,
+                        1f,
+                    )
+                addView(swipeRefresh, matchParentFrameParams())
+                addView(empty, matchParentFrameParams())
+            }
+        }
+
+        private fun createEmptyView(): TextView =
+            TextView(context).apply {
+                gravity = Gravity.CENTER
+                setTextColor(DesignUtils.getPrimaryTextColor())
+                textSize = 15f
+                text = getString(R.string.picker_loading_contacts)
+                val padding = Utils.dipToPixels(24f)
+                setPadding(padding, padding, padding, padding)
+            }
+
+        private fun matchParentFrameParams(): FrameLayout.LayoutParams =
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
 
         private fun buildHeader(): View {
             val header =
@@ -569,8 +566,7 @@ class AboutContactPicker(
                                 start: Int,
                                 count: Int,
                                 after: Int,
-                            ) {
-                            }
+                            ) = Unit
 
                             override fun onTextChanged(
                                 s: CharSequence?,
@@ -581,7 +577,7 @@ class AboutContactPicker(
                                 scheduleFilterApply()
                             }
 
-                            override fun afterTextChanged(s: Editable?) {}
+                            override fun afterTextChanged(s: Editable?) = Unit
                         },
                     )
 
@@ -721,7 +717,6 @@ class AboutContactPicker(
                 try {
                     val loadedItems =
                         ContactPickerDataProvider.loadPickerItems(
-                            activity,
                             ArrayList(preservedSelection),
                         )
                     mainHandler.post {
@@ -758,25 +753,8 @@ class AboutContactPicker(
         private fun applyFilters() {
             visibleItems.clear()
             val query = normalize(searchInput?.text?.toString())
-
-            for (item in allItems) {
-                if (filterMode == FilterMode.CONTACTS && item.type != ContactType.CONTACT) continue
-                if (filterMode == FilterMode.GROUPS && item.type != ContactType.GROUP) continue
-
-                if (query.isNotEmpty()) {
-                    val displayName = normalize(item.displayName)
-                    val waName = normalize(item.waName)
-                    val jid = normalize(item.jid)
-                    if (!displayName.contains(query) &&
-                        !waName.contains(query) &&
-                        !jid.contains(
-                            query,
-                        )
-                    ) {
-                        continue
-                    }
-                }
-                visibleItems.add(item)
+            allItems.filterTo(visibleItems) { item ->
+                matchesFilterMode(item) && matchesSearch(item, query)
             }
 
             visibleItems.sortWith { left, right ->
@@ -794,6 +772,23 @@ class AboutContactPicker(
             updateActionBarTitle()
         }
 
+        private fun matchesFilterMode(item: ContactPickerItem): Boolean =
+            when (filterMode) {
+                FilterMode.ALL -> true
+                FilterMode.CONTACTS -> item.type == ContactType.CONTACT
+                FilterMode.GROUPS -> item.type == ContactType.GROUP
+            }
+
+        private fun matchesSearch(
+            item: ContactPickerItem,
+            query: String,
+        ): Boolean {
+            if (query.isEmpty()) return true
+            return sequenceOf(item.displayName, item.waName, item.jid)
+                .map(::normalize)
+                .any { it.contains(query) }
+        }
+
         private fun updateActionBarTitle() {
             if (titleView == null || subtitleView == null) return
 
@@ -804,7 +799,11 @@ class AboutContactPicker(
                 subtitleView?.text = getString(R.string.no_contacts_selected)
             } else {
                 subtitleView?.text =
-                    getString(R.string.contact_were_selected, selectedJids.size)
+                    activity.resources.getQuantityString(
+                        R.plurals.contact_were_selected,
+                        selectedJids.size,
+                        selectedJids.size,
+                    )
             }
         }
 
@@ -979,99 +978,81 @@ class AboutContactPicker(
             convertView: View?,
             parent: ViewGroup,
         ): View {
-            val holder: ViewHolder
-            val view: View
+            val holder = obtainViewHolder(convertView)
+            bind(holder, items[position])
+            return holder.itemView
+        }
 
-            if (convertView == null) {
-                val context = controller.context
+        private fun obtainViewHolder(convertView: View?): ViewHolder {
+            if (convertView != null) return convertView.tag as ViewHolder
 
-                val root =
-                    LinearLayout(context).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.CENTER_VERTICAL
-                        setPadding(
-                            Utils.dipToPixels(14f),
-                            Utils.dipToPixels(12f),
-                            Utils.dipToPixels(14f),
-                            Utils.dipToPixels(12f),
-                        )
-                    }
+            val context = controller.context
+            val root =
+                LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(12f),
+                        Utils.dipToPixels(14f),
+                        Utils.dipToPixels(12f),
+                    )
+                }
+            val avatarView =
+                ImageView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(Utils.dipToPixels(44f), Utils.dipToPixels(44f))
+                }
+            val content =
+                LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams =
+                        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                            setMargins(Utils.dipToPixels(12f), 0, Utils.dipToPixels(12f), 0)
+                        }
+                }
+            val title = textRow(context, 16f, 0, Typeface.DEFAULT_BOLD)
+            val waName = textRow(context, 13f, 0xFF8A8A8A.toInt())
+            val type = textRow(context, 12f, 0xFF6A6A6A.toInt())
+            content.addView(title)
+            content.addView(waName)
+            content.addView(type)
+            val selectionView =
+                ImageView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(Utils.dipToPixels(24f), Utils.dipToPixels(24f))
+                }
 
-                val avatarView =
-                    ImageView(context).apply {
-                        layoutParams =
-                            LinearLayout.LayoutParams(Utils.dipToPixels(44f), Utils.dipToPixels(44f))
-                    }
+            root.addView(avatarView)
+            root.addView(content)
+            root.addView(selectionView)
+            return ViewHolder(root, avatarView, title, waName, type, selectionView).also {
+                root.tag = it
+            }
+        }
 
-                val content =
-                    LinearLayout(context).apply {
-                        orientation = LinearLayout.VERTICAL
-                        layoutParams =
-                            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                                setMargins(Utils.dipToPixels(12f), 0, Utils.dipToPixels(12f), 0)
-                            }
-                    }
-
-                val title =
-                    TextView(context).apply {
-                        setTextColor(DesignUtils.getPrimaryTextColor())
-                        textSize = 16f
-                        typeface = Typeface.DEFAULT_BOLD
-                        maxLines = 1
-                        ellipsize = TextUtils.TruncateAt.END
-                    }
-
-                val waName =
-                    TextView(context).apply {
-                        setTextColor(0xFF8A8A8A.toInt())
-                        textSize = 13f
-                        maxLines = 1
-                        ellipsize = TextUtils.TruncateAt.END
-                    }
-
-                val type =
-                    TextView(context).apply {
-                        setTextColor(0xFF6A6A6A.toInt())
-                        textSize = 12f
-                        maxLines = 1
-                        ellipsize = TextUtils.TruncateAt.END
-                    }
-
-                content.addView(title)
-                content.addView(waName)
-                content.addView(type)
-
-                val selectionView =
-                    ImageView(context).apply {
-                        layoutParams =
-                            LinearLayout.LayoutParams(Utils.dipToPixels(24f), Utils.dipToPixels(24f))
-                    }
-
-                root.addView(avatarView)
-                root.addView(content)
-                root.addView(selectionView)
-
-                holder = ViewHolder(root, avatarView, title, waName, type, selectionView)
-                view = root
-                view.tag = holder
-            } else {
-                view = convertView
-                holder = view.tag as ViewHolder
+        private fun textRow(
+            context: Context,
+            sizeSp: Float,
+            color: Int,
+            face: Typeface? = null,
+        ): TextView =
+            TextView(context).apply {
+                setTextColor(if (color == 0) DesignUtils.getPrimaryTextColor() else color)
+                textSize = sizeSp
+                if (face != null) typeface = face
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
             }
 
-            val item = items[position]
+        private fun bind(
+            holder: ViewHolder,
+            item: ContactPickerItem,
+        ) {
             holder.titleView.text = item.displayName
             holder.waNameView.text = item.waName
             holder.typeView.text = item.typeLabel(controller.context)
             holder.avatarView.setImageDrawable(controller.getAvatar(item))
-            holder.selectionView.setImageDrawable(
-                createSelectionDrawable(
-                    controller.isSelected(item),
-                ),
-            )
+            holder.selectionView.setImageDrawable(createSelectionDrawable(controller.isSelected(item)))
             holder.itemView.setOnClickListener { controller.toggleSelection(item) }
-
-            return view
         }
 
         private fun createSelectionDrawable(checked: Boolean): Drawable {
@@ -1102,10 +1083,7 @@ class AboutContactPicker(
     }
 
     private object ContactPickerDataProvider {
-        fun loadPickerItems(
-            activity: Activity,
-            pinnedJids: List<String>,
-        ): ArrayList<ContactPickerItem> {
+        fun loadPickerItems(pinnedJids: List<String>): ArrayList<ContactPickerItem> {
             val items = LinkedHashMap<String, ContactPickerItem>()
             val database = ModuleRuntime.getWaDatabase()
 
@@ -1132,7 +1110,10 @@ class AboutContactPicker(
                     .query(
                         "wa_contacts",
                         arrayOf("jid", "display_name"),
-                        "jid IS NOT NULL AND jid != '' AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) AND is_whatsapp_user = 1",
+                        "jid IS NOT NULL AND jid != '' " +
+                            "AND (jid LIKE '%@s.whatsapp.net' OR jid LIKE '%@g.us') " +
+                            "AND (jid LIKE '%g.us' OR is_contact_synced is not NULL) " +
+                            "AND is_whatsapp_user = 1",
                         null,
                         null,
                         null,
@@ -1175,7 +1156,11 @@ class AboutContactPicker(
                 XposedBridge.log(throwable)
             }
 
-            return ContactPickerItem(jid, displayName ?: "", waName ?: "", type)
+            val resolvedDisplayName =
+                displayName
+                    ?: sanitize(fallbackDisplayName)
+                    ?: localPart(jid)
+            return ContactPickerItem(jid, resolvedDisplayName, waName ?: "", type)
         }
 
         private fun isSupportedPickerJid(jid: String): Boolean {

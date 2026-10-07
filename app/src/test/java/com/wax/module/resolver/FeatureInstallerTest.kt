@@ -8,6 +8,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+private class TestResolverFailure(
+    message: String,
+) : RuntimeException(message)
+
 class FeatureInstallerTest {
     @Before
     fun setUp() {
@@ -24,7 +28,7 @@ class FeatureInstallerTest {
         val outcomes =
             listOf(
                 FeatureInstaller.install("AntiRevoke") { installed.add("AntiRevoke") },
-                FeatureInstaller.install("Broken") { throw RuntimeException("resolver exploded") },
+                FeatureInstaller.install("Broken") { throw TestResolverFailure("resolver exploded") },
                 FeatureInstaller.install("HideSeen") { installed.add("HideSeen") },
                 FeatureInstaller.install("Others") { installed.add("Others") },
             )
@@ -43,7 +47,7 @@ class FeatureInstallerTest {
     @Test
     fun aFailureIsAttributedToTheFailingFeatureOnly() {
         FeatureInstaller.install("A") { }
-        FeatureInstaller.install("Broken") { throw RuntimeException("boom") }
+        FeatureInstaller.install("Broken") { throw TestResolverFailure("boom") }
         FeatureInstaller.install("C") { }
 
         assertEquals(FeatureHealth.FAILED, FeatureInstaller.outcomeFor("Broken")?.health)
@@ -69,7 +73,7 @@ class FeatureInstallerTest {
         // The message could contain user data; only the exception type is recorded.
         val outcome =
             FeatureInstaller.install("Broken") {
-                throw RuntimeException("failed for 4915112345678@s.whatsapp.net")
+                throw TestResolverFailure("failed for 4915112345678@s.whatsapp.net")
             }
         assertFalse(outcome.reason.contains("4915"))
     }
@@ -79,21 +83,21 @@ class FeatureInstallerTest {
     @Test
     fun runningFeaturesAreListed() {
         FeatureInstaller.install("A") { }
-        FeatureInstaller.install("B") { throw RuntimeException("x") }
+        FeatureInstaller.install("B") { throw TestResolverFailure("x") }
         assertEquals(listOf("A"), FeatureInstaller.running().map { it.featureId })
     }
 
     @Test
     fun stoppedFeaturesAreListed() {
         FeatureInstaller.install("A") { }
-        FeatureInstaller.install("B") { throw RuntimeException("x") }
+        FeatureInstaller.install("B") { throw TestResolverFailure("x") }
         assertEquals(listOf("B"), FeatureInstaller.stopped().map { it.featureId })
     }
 
     @Test
     fun notableExcludesHealthyFeatures() {
         FeatureInstaller.install("A") { }
-        FeatureInstaller.install("B") { throw RuntimeException("x") }
+        FeatureInstaller.install("B") { throw TestResolverFailure("x") }
         assertEquals(listOf("B"), FeatureInstaller.notable().map { it.featureId })
     }
 
@@ -111,7 +115,7 @@ class FeatureInstallerTest {
 
     @Test
     fun theLatestOutcomeForARepeatedFeatureWins() {
-        FeatureInstaller.install("A") { throw RuntimeException("first") }
+        FeatureInstaller.install("A") { throw TestResolverFailure("first") }
         FeatureInstaller.install("A") { }
         assertEquals(FeatureHealth.HEALTHY, FeatureInstaller.outcomeFor("A")?.health)
     }
@@ -149,7 +153,7 @@ class FeatureInstallerTest {
                 .builder<String>("AntiRevoke")
                 .primary { Resolution.exact("m") }
                 .build()
-        val outcome = FeatureInstaller.install("AntiRevoke", chain) { throw RuntimeException("x") }
+        val outcome = FeatureInstaller.install("AntiRevoke", chain) { throw TestResolverFailure("x") }
         assertFalse(outcome.isRunning)
     }
 

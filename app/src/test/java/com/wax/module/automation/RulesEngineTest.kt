@@ -272,7 +272,7 @@ class RulesEngineTest {
         engine.addRule("Two actions", listOf(RuleCondition.Wifi(true)), listOf(RuleAction.MuteChat, RuleAction.MarkLater))
         val report =
             engine.execute(event(wifi = true)) { action, _ ->
-                if (action == RuleAction.MuteChat) throw IllegalStateException("no permission")
+                if (action == RuleAction.MuteChat) throw SecurityException("no permission")
             }
         assertEquals(ActionOutcome.FAILED, report.entries.first().outcome)
         assertEquals(ActionOutcome.EXECUTED, report.entries.last().outcome)

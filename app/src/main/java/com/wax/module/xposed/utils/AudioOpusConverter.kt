@@ -54,20 +54,18 @@ object AudioOpusConverter {
         try {
             extractor.setDataSource(filePath)
             val audioTrack = selectAudioTrack(extractor)
-            if (audioTrack < 0) throw IOException("No audio track found in URI")
+            check(audioTrack >= 0) { "No audio track found in URI" }
 
             extractor.selectTrack(audioTrack)
             val inputFormat = extractor.getTrackFormat(audioTrack)
-            val inputMime = inputFormat.getString(MediaFormat.KEY_MIME) ?: throw IOException("No MIME type found")
+            val inputMime = inputFormat.getString(MediaFormat.KEY_MIME) ?: error("No MIME type found")
 
             decoder = MediaCodec.createDecoderByType(inputMime)
             decoder.configure(inputFormat, null, null, 0)
             decoder.start()
 
             encoderHandle = nativeInitOpusEncoder(outFile.absolutePath, OPUS_SAMPLE_RATE, OPUS_CHANNEL_COUNT)
-            if (encoderHandle == 0L) {
-                throw IOException("Failed to initialize native opus encoder")
-            }
+            check(encoderHandle != 0L) { "Failed to initialize native opus encoder" }
 
             transcode(extractor, decoder, encoderHandle)
             return outFile

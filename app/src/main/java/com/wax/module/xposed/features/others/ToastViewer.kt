@@ -29,232 +29,278 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 class ToastViewer(
     classLoader: ClassLoader,
     preferences: SharedPreferences,
 ) : Feature(classLoader, preferences) {
+    private data class ViewerOptions(
+        val messageToast: Boolean,
+        val statusToast: Boolean,
+    )
+
+    private data class ReceiptEvent(
+        val rowId: Long,
+        // Both are nullable because the JID is: a contact WhatsApp cannot resolve to a raw
+        // string has no name and no JID, and every consumer of these two already accepts
+        // null - stripJID, showViewedToast and Tasker.sendTaskerEvent are all declared that
+        // way. Stating them as non-null only moved the null check somewhere less obvious.
+        val contactName: String?,
+        val rawJid: String?,
+        val options: ViewerOptions,
+    )
+
     override fun doHook() {
-        val toastViewedMessage = prefs.getBoolean("toast_viewed_message", false)
-        val toastViewedStatus = prefs.getBoolean("toast_viewed_status", false)
-        if (!toastViewedMessage && !toastViewedStatus) {
-            return
-        }
+        val options = currentOptions()
+        if (!options.messageToast && !options.statusToast) return
 
         startCleanupTask()
+        hookMessageReceipts()
+        hookStatusReceipts()
+    }
 
-        val onInsertReceipt = loadOnInsertReceipt(classLoader)
-
+    private fun hookMessageReceipts() {
         XposedBridge.hookMethod(
-            onInsertReceipt,
+            loadOnInsertReceipt(classLoader),
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    processNewWA(
-                        param,
-                        prefs.getBoolean("toast_viewed_message", false),
-                        prefs.getBoolean("toast_viewed_status", false),
-                    )
-                }
-            },
-        )
-        val onSeenReceiptForStatus = loadSeenReceiptForStatus(classLoader)
-        XposedBridge.hookMethod(
-            onSeenReceiptForStatus,
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    val receiptType = param.args.filterIsInstance<Int>().first()
-                    if (receiptType != 13) return
-                    val fStatusObject =
-                        param.args.firstOrNull { FStatusWpp.type.isInstance(it) }
-                            ?: runCatching {
-                                val fStatusField =
-                                    ReflectionUtils.findFieldUsingFilter(param.thisObject.javaClass) { f ->
-                                        FStatusWpp.type.isAssignableFrom(f.type)
-                                    }
-                                fStatusField.get(param.thisObject)
-                            }.getOrNull()
-                            ?: return
-                    val fStatus = FStatusWpp(fStatusObject)
-                    if (!fStatus.fStatusKey.isFromMe) return
-                    val userjid = UserJid(param.args[0])
-                    val contactName =
-                        getWaContactFromJid(userjid)?.displayName
-                            ?: getContactName(userjid)
-                    if (prefs.getBoolean("toast_viewed_status", false)) {
-                        Utils.showToast(
-                            Utils.application.getString(R.string.viewed_your_status, contactName),
-                            Toast.LENGTH_LONG,
-                        )
-                    }
-                    Tasker.sendTaskerEvent(contactName, userjid.phoneNumber, "viewed_status")
+                    processMessageReceipts(param, currentOptions())
                 }
             },
         )
     }
 
-    @Throws(Exception::class)
-    private fun processNewWA(
-        param: MethodHookParam,
-        toastViewedMessage: Boolean,
-        toastViewedStatus: Boolean,
-    ) {
-        val collection =
-            if (param.args[0] !is MutableCollection<*>) {
-                mutableSetOf<Any?>(param.args[0])
-            } else {
-                param.args[0] as MutableCollection<*>
-            }
-        val jidClass = findFirstClassUsingName(classLoader, StringMatchType.EndsWith, "jid.Jid")
-        for (messageStatusUpdateReceipt in collection) {
-            val fieldByType =
-                ReflectionUtils.getFieldByType(
-                    messageStatusUpdateReceipt!!.javaClass,
-                    Int::class.javaPrimitiveType,
-                )
-            val fieldId =
-                ReflectionUtils.getFieldByType(
-                    messageStatusUpdateReceipt.javaClass,
-                    Long::class.javaPrimitiveType,
-                )
-            val fieldByUserJid =
-                ReflectionUtils.getFieldByExtendType(
-                    messageStatusUpdateReceipt.javaClass,
-                    jidClass,
-                )
-            val fieldMessage =
-                ReflectionUtils.getFieldByExtendType(
-                    messageStatusUpdateReceipt.javaClass,
-                    FMessageWpp.type,
-                )
-            val type = fieldByType!!.getInt(messageStatusUpdateReceipt)
-            val id = fieldId!!.getLong(messageStatusUpdateReceipt)
-            if (type != 13) continue
-            val userJid = UserJid(fieldByUserJid!!.get(messageStatusUpdateReceipt))
-            val fmessage = AtomicReference<Any?>()
-            try {
-                fmessage.set(fieldMessage!!.get(messageStatusUpdateReceipt))
-            } catch (_: Exception) {
-            }
-            Utils.databaseExecutor.execute {
-                var contactName: String? = getContactName(userJid)
-                var rowId = id
-
-                if (TextUtils.isEmpty(contactName)) contactName = userJid.phoneNumber
-
-                val sql = getInstance().getDatabase()
-
-                if (fmessage.get() != null) {
-                    rowId = FMessageWpp(fmessage.get()).rowId
+    private fun hookStatusReceipts() {
+        XposedBridge.hookMethod(
+            loadSeenReceiptForStatus(classLoader),
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    processStatusReceipt(param)
                 }
-                checkDataBase(
-                    sql!!,
-                    rowId,
-                    contactName,
-                    userJid.phoneRawString,
-                    toastViewedMessage,
-                    toastViewedStatus,
-                )
+            },
+        )
+    }
+
+    private fun processStatusReceipt(param: MethodHookParam) {
+        val receiptType = param.args.filterIsInstance<Int>().firstOrNull() ?: return
+        if (receiptType != VIEWED_RECEIPT_TYPE) return
+
+        val statusObject = statusObjectFrom(param) ?: return
+        val status = FStatusWpp(statusObject)
+        if (!status.fStatusKey.isFromMe) return
+
+        val userJid =
+            runCatching { UserJid(param.args[0]) }.getOrElse {
+                XposedBridge.log(it)
+                return
             }
+        val contactName = getWaContactFromJid(userJid)?.displayName ?: getContactName(userJid)
+        val options = currentOptions()
+        if (options.statusToast) {
+            showViewedToast(R.string.viewed_your_status, contactName)
+        }
+        Tasker.sendTaskerEvent(contactName, userJid.phoneNumber, EVENT_VIEWED_STATUS)
+    }
+
+    private fun statusObjectFrom(param: MethodHookParam): Any? =
+        param.args.firstOrNull { FStatusWpp.type.isInstance(it) }
+            ?: runCatching {
+                ReflectionUtils
+                    .findFieldUsingFilter(param.thisObject.javaClass) { field ->
+                        FStatusWpp.type.isAssignableFrom(field.type)
+                    }.get(param.thisObject)
+            }.onFailure(XposedBridge::log)
+                .getOrNull()
+
+    private fun processMessageReceipts(
+        param: MethodHookParam,
+        options: ViewerOptions,
+    ) {
+        val receipts =
+            (param.args.firstOrNull() as? Collection<*>)
+                ?: listOf(param.args.firstOrNull())
+        val jidClass =
+            findFirstClassUsingName(
+                classLoader,
+                StringMatchType.EndsWith,
+                "jid.Jid",
+            )
+
+        receipts.filterNotNull().forEach { receipt ->
+            processReceipt(receipt, jidClass, options)
         }
     }
 
-    override fun getPluginName(): String = "Toast Viewer"
-
-    private fun checkDataBase(
-        sql: SQLiteDatabase,
-        id: Long,
-        contactName: String?,
-        rawJid: String?,
-        toastViewedMessage: Boolean,
-        toastViewedStatus: Boolean,
+    private fun processReceipt(
+        receipt: Any,
+        jidClass: Class<*>,
+        options: ViewerOptions,
     ) {
-        sql
+        val receiptType =
+            ReflectionUtils
+                .getFieldByType(receipt.javaClass, Int::class.javaPrimitiveType)
+                ?.getInt(receipt)
+                ?: return
+        if (receiptType != VIEWED_RECEIPT_TYPE) return
+
+        val rowId =
+            ReflectionUtils
+                .getFieldByType(receipt.javaClass, Long::class.javaPrimitiveType)
+                ?.getLong(receipt)
+                ?: return
+        val jidField = ReflectionUtils.getFieldByExtendType(receipt.javaClass, jidClass) ?: return
+        val userJid =
+            runCatching { UserJid(jidField.get(receipt)) }.getOrElse {
+                XposedBridge.log(it)
+                return
+            }
+        val message =
+            ReflectionUtils
+                .getFieldByExtendType(receipt.javaClass, FMessageWpp.type)
+                ?.let { field -> runCatching { field.get(receipt) }.onFailure(XposedBridge::log).getOrNull() }
+
+        Utils.databaseExecutor.execute {
+            processReceiptInDatabase(rowId, userJid, message, options)
+        }
+    }
+
+    private fun processReceiptInDatabase(
+        fallbackRowId: Long,
+        userJid: UserJid,
+        message: Any?,
+        options: ViewerOptions,
+    ) {
+        runCatching {
+            val database = getInstance().getDatabase() ?: return
+            val contactName = getContactName(userJid).takeUnless(TextUtils::isEmpty) ?: userJid.phoneNumber
+            val rowId = message?.let { FMessageWpp(it).rowId } ?: fallbackRowId
+            checkDatabase(
+                database,
+                ReceiptEvent(
+                    rowId = rowId,
+                    contactName = contactName,
+                    rawJid = userJid.phoneRawString,
+                    options = options,
+                ),
+            )
+        }.onFailure(XposedBridge::log)
+    }
+
+    private fun checkDatabase(
+        database: SQLiteDatabase,
+        event: ReceiptEvent,
+    ) {
+        database
             .query(
                 "message",
                 arrayOf("participant_hash", "chat_row_id"),
                 "_id = ?",
-                arrayOf(id.toString()),
+                arrayOf(event.rowId.toString()),
                 null,
                 null,
                 null,
-            ).use { result2 ->
-                if (!result2.moveToNext()) return
-                val participantHash =
-                    result2.getString(result2.getColumnIndexOrThrow("participant_hash"))
+            ).use { cursor ->
+                if (!cursor.moveToFirst()) return
+                val participantHash = cursor.getString(cursor.getColumnIndexOrThrow("participant_hash"))
                 if (participantHash != null) {
-                    if (toastViewedStatus) {
-                        Utils.showToast(
-                            Utils.application
-                                .getString(R.string.viewed_your_status, contactName),
-                            Toast.LENGTH_LONG,
-                        )
-                    }
-                    Tasker.sendTaskerEvent(contactName, stripJID(rawJid), "viewed_status")
+                    emitViewedStatus(event)
                     return
                 }
 
-                val userJid = getCurrentUserJid()
-
-                if (rawJid != null && userJid != null && userJid.phoneRawString == rawJid) return
-
-                val chatId = result2.getLong(result2.getColumnIndexOrThrow("chat_row_id"))
-                try {
-                    sql
-                        .query(
-                            "chat",
-                            arrayOf("_id"),
-                            "_id = ? AND subject IS NULL",
-                            arrayOf(chatId.toString()),
-                            null,
-                            null,
-                            null,
-                        ).use { result3 ->
-                            if (!result3.moveToNext()) return
-                            val key = rawJid + "_" + "viewed_message"
-                            val currentTime = System.currentTimeMillis()
-                            val shouldEmit =
-                                synchronized(lastEventTimeMap) {
-                                    val lastEventTime = lastEventTimeMap[key]
-                                    if (lastEventTime == null || (currentTime - lastEventTime) >= MIN_INTERVAL) {
-                                        lastEventTimeMap[key] = currentTime
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }
-                            if (shouldEmit) {
-                                Tasker.sendTaskerEvent(contactName, stripJID(rawJid), "viewed_message")
-                                if (toastViewedMessage) {
-                                    Utils.showToast(
-                                        Utils.application
-                                            .getString(R.string.viewed_your_message, contactName),
-                                        Toast.LENGTH_LONG,
-                                    )
-                                }
-                            }
-                        }
-                } catch (e: Exception) {
-                    XposedBridge.log(e)
+                if (isCurrentUser(event.rawJid)) return
+                val chatId = cursor.getLong(cursor.getColumnIndexOrThrow("chat_row_id"))
+                if (isDirectChat(database, chatId)) {
+                    emitViewedMessage(event)
                 }
             }
     }
+
+    private fun emitViewedStatus(event: ReceiptEvent) {
+        if (event.options.statusToast) {
+            showViewedToast(R.string.viewed_your_status, event.contactName)
+        }
+        Tasker.sendTaskerEvent(event.contactName, stripJID(event.rawJid), EVENT_VIEWED_STATUS)
+    }
+
+    private fun emitViewedMessage(event: ReceiptEvent) {
+        val key = "${event.rawJid}_$EVENT_VIEWED_MESSAGE"
+        if (!markEventIfDue(key)) return
+
+        Tasker.sendTaskerEvent(event.contactName, stripJID(event.rawJid), EVENT_VIEWED_MESSAGE)
+        if (event.options.messageToast) {
+            showViewedToast(R.string.viewed_your_message, event.contactName)
+        }
+    }
+
+    private fun isCurrentUser(rawJid: String?): Boolean = getCurrentUserJid()?.phoneRawString == rawJid
+
+    private fun isDirectChat(
+        database: SQLiteDatabase,
+        chatId: Long,
+    ): Boolean =
+        database
+            .query(
+                "chat",
+                arrayOf("_id"),
+                "_id = ? AND subject IS NULL",
+                arrayOf(chatId.toString()),
+                null,
+                null,
+                null,
+            ).use { it.moveToFirst() }
+
+    private fun markEventIfDue(key: String): Boolean =
+        synchronized(lastEventTimeMap) {
+            val now = System.currentTimeMillis()
+            val previous = lastEventTimeMap[key]
+            if (previous != null && now - previous < MIN_INTERVAL) {
+                false
+            } else {
+                lastEventTimeMap[key] = now
+                true
+            }
+        }
+
+    private fun showViewedToast(
+        stringRes: Int,
+        contactName: String?,
+    ) {
+        Utils.showToast(
+            Utils.application.getString(stringRes, contactName),
+            Toast.LENGTH_LONG,
+        )
+    }
+
+    private fun currentOptions(): ViewerOptions =
+        ViewerOptions(
+            messageToast = prefs.getBoolean("toast_viewed_message", false),
+            statusToast = prefs.getBoolean("toast_viewed_status", false),
+        )
 
     private fun startCleanupTask() {
         if (!cleanupStarted.compareAndSet(false, true)) return
-        scheduler.scheduleWithFixedDelay({
-            val currentTime = System.currentTimeMillis()
-            synchronized(lastEventTimeMap) {
-                lastEventTimeMap.entries.removeIf { entry ->
-                    currentTime - entry.value >= MIN_INTERVAL
+        scheduler.scheduleWithFixedDelay(
+            {
+                val expiry = System.currentTimeMillis() - MIN_INTERVAL
+                synchronized(lastEventTimeMap) {
+                    lastEventTimeMap.entries.removeIf { entry -> entry.value <= expiry }
                 }
-            }
-        }, CLEANUP_INTERVAL, CLEANUP_INTERVAL, TimeUnit.SECONDS)
+            },
+            CLEANUP_INTERVAL,
+            CLEANUP_INTERVAL,
+            TimeUnit.SECONDS,
+        )
     }
 
+    override fun getPluginName(): String = "Toast Viewer"
+
     companion object {
+        private const val VIEWED_RECEIPT_TYPE = 13
+        private const val EVENT_VIEWED_STATUS = "viewed_status"
+        private const val EVENT_VIEWED_MESSAGE = "viewed_message"
         private const val MIN_INTERVAL: Long = 1000
         private const val CLEANUP_INTERVAL: Long = 30
+
         private val cleanupStarted = AtomicBoolean(false)
         private val lastEventTimeMap = ConcurrentHashMap<String, Long>()
         private val scheduler: ScheduledExecutorService =

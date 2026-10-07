@@ -101,37 +101,41 @@ object StockModePolicy {
         stockModeEnabled: Boolean,
     ): PresentationOutcome =
         when {
-            metadata.visualImpact == VisualImpact.EXTERNAL_ONLY ->
+            metadata.visualImpact == VisualImpact.EXTERNAL_ONLY -> {
                 PresentationOutcome(
                     featureId = metadata.id,
                     decision = PresentationDecision.EXTERNAL,
                     fallback = metadata.stockModeFallback,
                     reason = "Its controls are outside WhatsApp, so nothing has to change.",
                 )
+            }
 
-            !metadata.visualImpact.isVisibleInWhatsApp ->
+            !metadata.visualImpact.isVisibleInWhatsApp -> {
                 PresentationOutcome(
                     featureId = metadata.id,
                     decision = PresentationDecision.NATIVE_STOCK,
                     fallback = metadata.stockModeFallback,
                     reason = "It changes behaviour without changing what you see.",
                 )
+            }
 
-            stockModeEnabled ->
+            stockModeEnabled -> {
                 PresentationOutcome(
                     featureId = metadata.id,
                     decision = PresentationDecision.SUPPRESSED,
                     fallback = metadata.stockModeFallback,
                     reason = "Hidden while Stock WhatsApp Mode is on; ${describeFallback(metadata.stockModeFallback)}.",
                 )
+            }
 
-            else ->
+            else -> {
                 PresentationOutcome(
                     featureId = metadata.id,
                     decision = PresentationDecision.NATIVE_STOCK,
                     fallback = metadata.stockModeFallback,
                     reason = "Your own visual customisation is active.",
                 )
+            }
         }
 
     /** Decides presentation for every feature. */

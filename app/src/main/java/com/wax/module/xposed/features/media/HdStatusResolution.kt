@@ -240,12 +240,11 @@ fun <T : Any> HdStatusAnchor.resolve(probe: (String) -> T?): HdStatusResolution<
     val failures = ArrayList<String>(candidates.size)
     for (candidate in candidates) {
         val hit =
-            try {
-                probe(candidate)
-            } catch (t: Throwable) {
-                failures += "$candidate -> ${t.javaClass.simpleName}: ${t.message}"
-                null
-            }
+            runCatching { probe(candidate) }
+                .getOrElse { error ->
+                    failures += "$candidate -> ${error.javaClass.simpleName}: ${error.message}"
+                    null
+                }
         if (hit != null) return HdStatusResolution.Resolved(hit, candidate)
         failures += "$candidate -> no match"
     }

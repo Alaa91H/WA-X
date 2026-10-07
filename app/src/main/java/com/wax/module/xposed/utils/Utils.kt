@@ -293,7 +293,7 @@ object Utils {
         i: Int,
     ): Int =
         try {
-            wallpaperAlpha?.trim { it <= ' ' }?.toInt() ?: i
+            wallpaperAlpha?.trim()?.toInt() ?: i
         } catch (_: Exception) {
             i
         }

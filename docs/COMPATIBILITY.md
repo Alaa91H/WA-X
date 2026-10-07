@@ -250,4 +250,3 @@ The validator refuses any `supported` cell whose resolver evidence is missing,
 partial, or lacking a `verifiedAt` timestamp.
 
 Step 2 rewrites `app/src/main/res/values/arrays.xml` from this matrix, so the runtime version gate and this document can never disagree.
-

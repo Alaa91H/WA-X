@@ -24,10 +24,10 @@ object FeatureInstaller {
         install: () -> Unit,
     ): FeatureOutcome {
         val outcome =
-            try {
+            runCatching {
                 install()
                 FeatureOutcome.healthy(featureId)
-            } catch (error: Throwable) {
+            }.getOrElse { error ->
                 FeatureOutcome.failed(
                     featureId,
                     com.wax.module.diagnostics.FailureCode
@@ -52,16 +52,15 @@ object FeatureInstaller {
         install: () -> Unit,
     ): FeatureOutcome {
         val outcome =
-            try {
-                chain.run { install() }
-            } catch (error: Throwable) {
-                FeatureOutcome.failed(
-                    featureId,
-                    com.wax.module.diagnostics.FailureCode
-                        .classify(error, "install"),
-                    "installing the feature failed: ${error.javaClass.simpleName}",
-                )
-            }
+            runCatching { chain.run { install() } }
+                .getOrElse { error ->
+                    FeatureOutcome.failed(
+                        featureId,
+                        com.wax.module.diagnostics.FailureCode
+                            .classify(error, "install"),
+                        "installing the feature failed: ${error.javaClass.simpleName}",
+                    )
+                }
         outcomes.add(outcome)
         return outcome
     }

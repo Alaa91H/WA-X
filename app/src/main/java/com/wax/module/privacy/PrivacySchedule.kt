@@ -98,11 +98,25 @@ fun PrivacyTrigger.matches(context: ScheduleContext): Boolean =
             }
         }
 
-        is PrivacyTrigger.Weekdays -> context.dayOfWeek in days
-        is PrivacyTrigger.Charging -> context.charging == charging
-        is PrivacyTrigger.Wifi -> context.wifiConnected == connected
-        is PrivacyTrigger.Bluetooth -> context.bluetoothConnected == connected
-        is PrivacyTrigger.TaskerEvent -> context.taskerEvents.contains(name)
+        is PrivacyTrigger.Weekdays -> {
+            context.dayOfWeek in days
+        }
+
+        is PrivacyTrigger.Charging -> {
+            context.charging == charging
+        }
+
+        is PrivacyTrigger.Wifi -> {
+            context.wifiConnected == connected
+        }
+
+        is PrivacyTrigger.Bluetooth -> {
+            context.bluetoothConnected == connected
+        }
+
+        is PrivacyTrigger.TaskerEvent -> {
+            context.taskerEvents.contains(name)
+        }
     }
 
 /** What the scheduler wants to happen next. */
@@ -367,42 +381,48 @@ class PrivacyScheduleEngine(
 
     private fun encodeTrigger(trigger: PrivacyTrigger): JsonValue.Obj =
         when (trigger) {
-            is PrivacyTrigger.TimeWindow ->
+            is PrivacyTrigger.TimeWindow -> {
                 jsonObject(
                     "type" to jsonString("time"),
                     "start" to jsonString(trigger.start.toString()),
                     "end" to jsonString(trigger.end.toString()),
                 )
+            }
 
-            is PrivacyTrigger.Weekdays ->
+            is PrivacyTrigger.Weekdays -> {
                 jsonObject(
                     "type" to jsonString("weekdays"),
                     "days" to jsonStrings(trigger.days.map { it.name }),
                 )
+            }
 
-            is PrivacyTrigger.Charging ->
+            is PrivacyTrigger.Charging -> {
                 jsonObject(
                     "type" to jsonString("charging"),
                     "value" to jsonBoolean(trigger.charging),
                 )
+            }
 
-            is PrivacyTrigger.Wifi ->
+            is PrivacyTrigger.Wifi -> {
                 jsonObject(
                     "type" to jsonString("wifi"),
                     "value" to jsonBoolean(trigger.connected),
                 )
+            }
 
-            is PrivacyTrigger.Bluetooth ->
+            is PrivacyTrigger.Bluetooth -> {
                 jsonObject(
                     "type" to jsonString("bluetooth"),
                     "value" to jsonBoolean(trigger.connected),
                 )
+            }
 
-            is PrivacyTrigger.TaskerEvent ->
+            is PrivacyTrigger.TaskerEvent -> {
                 jsonObject(
                     "type" to jsonString("tasker"),
                     "name" to jsonString(trigger.name),
                 )
+            }
         }
 
     private fun decodeRule(value: JsonValue): PrivacyScheduleRule? {
@@ -443,11 +463,25 @@ class PrivacyScheduleEngine(
                 if (days.isEmpty()) null else PrivacyTrigger.Weekdays(days)
             }
 
-            "charging" -> PrivacyTrigger.Charging(fields.boolean("value") ?: return null)
-            "wifi" -> PrivacyTrigger.Wifi(fields.boolean("value") ?: return null)
-            "bluetooth" -> PrivacyTrigger.Bluetooth(fields.boolean("value") ?: return null)
-            "tasker" -> fields.string("name")?.let { PrivacyTrigger.TaskerEvent(it) }
-            else -> null
+            "charging" -> {
+                PrivacyTrigger.Charging(fields.boolean("value") ?: return null)
+            }
+
+            "wifi" -> {
+                PrivacyTrigger.Wifi(fields.boolean("value") ?: return null)
+            }
+
+            "bluetooth" -> {
+                PrivacyTrigger.Bluetooth(fields.boolean("value") ?: return null)
+            }
+
+            "tasker" -> {
+                fields.string("name")?.let { PrivacyTrigger.TaskerEvent(it) }
+            }
+
+            else -> {
+                null
+            }
         }
     }
 

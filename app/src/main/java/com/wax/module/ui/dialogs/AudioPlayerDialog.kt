@@ -5,8 +5,10 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
@@ -33,7 +35,8 @@ class AudioPlayerDialog(
     private var isPrepared = false
 
     init {
-        val view = LayoutInflater.from(context).inflate(R.layout.dialog_audio_player, null)
+        val parent = FrameLayout(context)
+        val view = LayoutInflater.from(context).inflate(R.layout.dialog_audio_player, parent, false)
         setContentView(view)
 
         window?.let { win ->
@@ -79,7 +82,7 @@ class AudioPlayerDialog(
             mediaPlayer = mp
             mp.prepareAsync()
         } catch (e: IOException) {
-            e.printStackTrace()
+            Log.e("AudioPlayerDialog", "Failed to prepare audio file", e)
             dismiss()
         }
 
@@ -99,9 +102,9 @@ class AudioPlayerDialog(
                     }
                 }
 
-                override fun onStartTrackingTouch(sb: SeekBar?) {}
+                override fun onStartTrackingTouch(sb: SeekBar?) = Unit
 
-                override fun onStopTrackingTouch(sb: SeekBar?) {}
+                override fun onStopTrackingTouch(sb: SeekBar?) = Unit
             },
         )
 

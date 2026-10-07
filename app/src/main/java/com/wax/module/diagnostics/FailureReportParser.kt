@@ -131,14 +131,38 @@ object FailureReportParser {
 
         private fun readEscape(): Char =
             when (val char = next()) {
-                '"' -> '"'
-                '\\' -> '\\'
-                '/' -> '/'
-                'n' -> '\n'
-                'r' -> '\r'
-                't' -> '\t'
-                'b' -> '\b'
-                'f' -> '\u000C'
+                '"' -> {
+                    '"'
+                }
+
+                '\\' -> {
+                    '\\'
+                }
+
+                '/' -> {
+                    '/'
+                }
+
+                'n' -> {
+                    '\n'
+                }
+
+                'r' -> {
+                    '\r'
+                }
+
+                't' -> {
+                    '\t'
+                }
+
+                'b' -> {
+                    '\b'
+                }
+
+                'f' -> {
+                    '\u000C'
+                }
+
                 'u' -> {
                     if (index + 4 > text.length) throw ParseException("truncated unicode escape")
                     val hex = text.substring(index, index + 4)
@@ -146,7 +170,9 @@ object FailureReportParser {
                     hex.toIntOrNull(16)?.toChar() ?: throw ParseException("bad unicode escape")
                 }
 
-                else -> throw ParseException("bad escape")
+                else -> {
+                    throw ParseException("bad escape")
+                }
             }
 
         private fun readStringArray(): List<String> {
@@ -202,16 +228,19 @@ object FailureReportParser {
                 ?: throw ParseException("not an integral number")
         }
 
+        private fun requiredString(
+            fields: Map<String, Any?>,
+            key: String,
+        ): String = fields[key] as? String ?: throw ParseException("missing $key")
+
+        private fun parseFailureCode(name: String): FailureCode =
+            FailureCode.entries.firstOrNull { it.name == name }
+                ?: throw ParseException("unknown code")
+
         private fun build(fields: Map<String, Any?>): FeatureFailureReport {
-            val feature =
-                fields["feature"] as? String
-                    ?: throw ParseException("missing feature")
-            val codeName =
-                fields["code"] as? String
-                    ?: throw ParseException("missing code")
-            val code =
-                FailureCode.entries.firstOrNull { it.name == codeName }
-                    ?: throw ParseException("unknown code")
+            val feature = requiredString(fields, "feature")
+            val codeName = requiredString(fields, "code")
+            val code = parseFailureCode(codeName)
             val frames = (fields["frames"] as? List<*>).orEmpty().mapNotNull { it as? String }
             return FeatureFailureReport(
                 featureId = feature,

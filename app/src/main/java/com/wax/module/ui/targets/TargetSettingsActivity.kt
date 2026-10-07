@@ -106,7 +106,7 @@ private fun TargetSettingsScreen(viewModel: TargetSettingsViewModel = viewModel(
             ScopeSelector(
                 scope = state.scope,
                 overrideCount = state.overrideCount,
-                totalOverrideCount = state.totalOverrideCount,
+                totalSettingCount = state.totalSettingCount,
                 onSelect = {
                     query = ""
                     viewModel.selectScope(it)
@@ -158,6 +158,7 @@ private fun TargetSettingsScreen(viewModel: TargetSettingsViewModel = viewModel(
                             scope = state.scope,
                             onTriState = { viewModel.setTriState(row.entry, it) },
                             onPin = { viewModel.pinGlobalValue(row.entry) },
+                            onClearOverride = { viewModel.clearOverride(row.entry) },
                             onGlobalToggle = { viewModel.setGlobalToggle(row.entry, it) },
                         )
                     }
@@ -180,7 +181,7 @@ private fun TargetSettingsScreen(viewModel: TargetSettingsViewModel = viewModel(
 private fun ScopeSelector(
     scope: SettingsScope,
     overrideCount: Int,
-    totalOverrideCount: Int,
+    totalSettingCount: Int,
     onSelect: (SettingsScope) -> Unit,
 ) {
     val scopes = remember { listOf(SettingsScope.Global) + TargetApp.entries.map { SettingsScope.Target(it) } }
@@ -209,7 +210,7 @@ private fun ScopeSelector(
                 if (scope is SettingsScope.Global) {
                     stringResource(R.string.scope_global_explainer)
                 } else {
-                    stringResource(R.string.scope_target_explainer, overrideCount, totalOverrideCount)
+                    stringResource(R.string.scope_target_explainer, overrideCount, totalSettingCount)
                 },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -223,6 +224,7 @@ private fun SettingRow(
     scope: SettingsScope,
     onTriState: (TriState) -> Unit,
     onPin: () -> Unit,
+    onClearOverride: () -> Unit,
     onGlobalToggle: (Boolean) -> Unit,
 ) {
     val entry = row.entry
@@ -234,7 +236,7 @@ private fun SettingRow(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    if (row.triState != TriState.INHERIT && scope is SettingsScope.Target) {
+                    if (row.overridden && scope is SettingsScope.Target) {
                         MaterialTheme.colorScheme.surfaceContainerHigh
                     } else {
                         MaterialTheme.colorScheme.surfaceContainer
@@ -256,7 +258,13 @@ private fun SettingRow(
             if (scope is SettingsScope.Global) {
                 GlobalControl(entry = entry, triState = row.triState, onChange = onGlobalToggle)
             } else {
-                TargetControl(entry = entry, row = row, onTriState = onTriState, onPin = onPin)
+                TargetControl(
+                    entry = entry,
+                    row = row,
+                    onTriState = onTriState,
+                    onPin = onPin,
+                    onClearOverride = onClearOverride,
+                )
             }
         }
     }
@@ -300,6 +308,7 @@ private fun TargetControl(
     row: TargetSettingsViewModel.Row,
     onTriState: (TriState) -> Unit,
     onPin: () -> Unit,
+    onClearOverride: () -> Unit,
 ) {
     if (entry.isToggle) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -316,16 +325,17 @@ private fun TargetControl(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text =
-                        when (row.triState) {
-                            TriState.INHERIT -> stringResource(R.string.follows_global)
-                            else -> stringResource(R.string.pinned_to, row.effective.orEmpty())
+                        if (row.overridden) {
+                            stringResource(R.string.pinned_to, row.effective.orEmpty())
+                        } else {
+                            stringResource(R.string.follows_global)
                         },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             TextButton(onClick = onPin) { Text(stringResource(R.string.pin_global)) }
-            TextButton(onClick = { onTriState(TriState.INHERIT) }) { Text(stringResource(R.string.follow_global)) }
+            TextButton(onClick = onClearOverride) { Text(stringResource(R.string.follow_global)) }
         }
     }
 }

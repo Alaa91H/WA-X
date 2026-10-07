@@ -16,8 +16,17 @@ import java.util.ArrayList
 class ContactPickerPreference :
     Preference,
     Preference.OnPreferenceClickListener {
-    private var summaryOff: CharSequence? = null
-    private var summaryOn: CharSequence? = null
+    /** Resource id of the summary shown while nothing is selected, or 0 for none. */
+    private var summaryOffRes: Int = 0
+
+    /**
+     * Resource id of the summary shown once something is selected, or 0 for none.
+     *
+     * May be a `@plurals` resource: the count of selected contacts is exactly the case a
+     * plural exists for, and a single formatted string has to lie about one contact.
+     */
+    private var summaryOnRes: Int = 0
+
     private var contacts: ArrayList<String>? = null
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
@@ -54,7 +63,7 @@ class ContactPickerPreference :
                 WhatsAppContactPickerLauncher.getPackageLabel(installedPackages[index])
             }
         MaterialAlertDialogBuilder(context)
-            .setTitle("Select WhatsApp app")
+            .setTitle(R.string.select_whatsapp_app)
             .setItems(items) { _, which ->
                 startSelectContacts(installedPackages[which], preferenceKey, ArrayList(selectedContacts))
             }.show()
@@ -91,8 +100,8 @@ class ContactPickerPreference :
                 0,
                 0,
             )
-        summaryOff = typedArray.getText(R.styleable.ContactPickerPreference_summaryOff)
-        summaryOn = typedArray.getText(R.styleable.ContactPickerPreference_summaryOn)
+        summaryOffRes = typedArray.getResourceId(R.styleable.ContactPickerPreference_contactPickerSummaryOff, 0)
+        summaryOnRes = typedArray.getResourceId(R.styleable.ContactPickerPreference_contactPickerSummaryOn, 0)
         typedArray.recycle()
 
         val preferenceKey = key
@@ -121,12 +130,34 @@ class ContactPickerPreference :
 
     private fun updateSummary() {
         val selected = contacts
+        val count = selected?.size ?: 0
         summary =
-            if (!selected.isNullOrEmpty()) {
-                String.format(summaryOn.toString(), selected.size)
+            if (count > 0) {
+                resolveSummary(summaryOnRes, count)
             } else {
-                summaryOff.toString()
+                resolveSummary(summaryOffRes, 0)
             }
+    }
+
+    /**
+     * Resolves one summary attribute for the current selection size.
+     *
+     * A `@plurals` resource is resolved through `Resources.getQuantityString` so the
+     * per-language quantity form is chosen for the real count; anything else is a plain
+     * string. An absent attribute yields null so the preference shows whatever summary it
+     * already had instead of the literal text "null".
+     */
+    private fun resolveSummary(
+        resourceId: Int,
+        count: Int,
+    ): CharSequence? {
+        if (resourceId == 0) return null
+        val resources = context.resources
+        return if (resources.getResourceTypeName(resourceId) == "plurals") {
+            resources.getQuantityString(resourceId, count, count)
+        } else {
+            resources.getText(resourceId)
+        }
     }
 
     companion object {

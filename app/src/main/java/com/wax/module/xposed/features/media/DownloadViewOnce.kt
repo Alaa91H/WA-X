@@ -41,7 +41,7 @@ class DownloadViewOnce(
                         if (!fMessage.isViewOnce) return
                         val menu = ReflectionUtils.getArg(param.args, Menu::class.java, 0)
                         val item = menu!!.add(0, 0, 0, R.string.download).setIcon(R.drawable.download)
-                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                         item.setOnMenuItemClickListener {
                             CompletableFuture.runAsync {
                                 try {
@@ -74,7 +74,7 @@ class DownloadViewOnce(
                     override fun afterHookedMethod(param: MethodHookParam) {
                         val menu = param.args[0] as Menu
                         val item = menu.add(0, 0, 0, R.string.download).setIcon(R.drawable.download)
-                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                         item.setOnMenuItemClickListener {
                             CompletableFuture.runAsync {
                                 val keyClass: Class<*> = FMessageWpp.Key.type

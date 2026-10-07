@@ -3,12 +3,11 @@
     <string name="recordings_manager">Rekaman</string>
     <string name="no_recordings_found">Tidak ada rekaman ditemukan</string>
     <string name="delete_confirmation">Yakin ingin menghapus rekaman ini?</string>
-    <string name="delete_multiple_confirmation">Yakin ingin menghapus %d rekaman?</string>
+    <plurals name="delete_multiple_confirmation">
+    <item quantity="other">Yakin ingin menghapus %d rekaman?</item>
+</plurals>
     <string name="share_recording">Bagikan Rekaman</string>
     <string name="share_recordings">Bagikan Rekaman</string>
-    <string name="permission_required">Izin Diperlukan</string>
-    <string name="permission_required_desc">Akses File Penuh diperlukan untuk mengelola rekaman yang disimpan di folder utama.</string>
-    <string name="grant">Beri Izin</string>
     <string name="sort_by">Urutkan Berdasarkan</string>
     <string name="sort_name">Nama</string>
     <string name="sort_date">Tanggal</string>
@@ -16,12 +15,10 @@
     <string name="sort_contact">Kontak</string>
     <string name="list_view">Daftar</string>
     <string name="group_by_contact">Menurut Kontak</string>
-    <string name="selected_count">%d dipilih</string>
-    <string name="recordings_select_all">Pilih Semua</string>
-    <string name="recordings_for">Rekaman untuk %s</string>
-    <string name="recording_count">%d rekaman</string>
+    <plurals name="selected_count">
+    <item quantity="other">%d dipilih</item>
+</plurals>
     <string name="play">Putar</string>
-    <string name="pause">Jeda</string>
     <string name="play_pause">Putar/Jeda</string>
     <string name="close">Tutup</string>
     <string name="share">Bagikan</string>

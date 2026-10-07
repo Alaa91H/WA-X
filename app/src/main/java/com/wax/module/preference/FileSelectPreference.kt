@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.AttributeSet
 import android.widget.Toast
@@ -70,43 +72,46 @@ class FileSelectPreference :
     }
 
     override fun onPreferenceClick(preference: Preference): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            showAlertPermission()
-            return true
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                (context as Activity).requestPermissions(arrayOf(Manifest.permission.READ_MEDIA_IMAGES), 1)
+        // FileSelectPreference persists a raw path that is later read from the hooked
+        // WhatsApp process. The selected URI itself is not enough, so the module copies
+        // the content into its shared Downloads folder and needs raw storage access.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                showAlertPermission()
                 return true
             }
-        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            (context as Activity).requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-            return true
+        } else {
+            val readDenied =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) !=
+                    PackageManager.PERMISSION_GRANTED
+            val writeDenied =
+                ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                    PackageManager.PERMISSION_GRANTED
+            if (readDenied || writeDenied) {
+                ModuleApplication.showRequestStoragePermission(context as Activity)
+                return true
+            }
         }
 
         FilePicker.setOnFilePickedListener(this)
+
         if (selectDirectory) {
             showSelectDirectoryDialog()
             return true
         }
 
+        FilePicker.setOnUriPickedListener(this)
         if (mineTypes.size == 1 && mineTypes[0].contains("image")) {
-            FilePicker.setOnUriPickedListener(this)
             FilePicker.imageCapture.launch(
                 PickVisualMediaRequest
                     .Builder()
                     .setMediaType(ActivityResultContracts.PickVisualMedia.SingleMimeType(mineTypes[0]))
                     .build(),
             )
-            return true
+        } else {
+            FilePicker.fileCapture.launch(mineTypes)
         }
-        FilePicker.fileCapture.launch(mineTypes)
-        return false
+        return true
     }
 
     private fun showSelectDirectoryDialog() {
@@ -160,23 +165,40 @@ class FileSelectPreference :
 
     override fun onUriPicked(uri: Uri) {
         val contentResolver: ContentResolver = context.contentResolver
-        val extension = requireNotNull(contentResolver.getType(uri)).split("/")[1]
+        val mimeType = contentResolver.getType(uri)
+        val extension =
+            mimeType
+                ?.substringAfter('/', "")
+                ?.substringBefore(';')
+                ?.filter { it.isLetterOrDigit() }
+                ?.takeIf { it.isNotEmpty() }
+                ?: "bin"
         val folder = File(ModuleApplication.moduleFolder, "files")
-        if (!folder.exists()) folder.mkdirs()
         val outFile = File(folder, "$key.$extension")
-        val editor = sharedPreferences!!.edit()
-        editor.putString(key, "").apply()
-        summary = outFile.absolutePath
 
         CompletableFuture.runAsync {
             try {
-                contentResolver.openInputStream(uri)!!.use { input ->
+                if (!folder.exists() && !folder.mkdirs()) {
+                    error("Unable to create ${folder.absolutePath}")
+                }
+                contentResolver.openInputStream(uri)?.use { input ->
                     Files.copy(input, outFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                } ?: error("Unable to open the selected file")
+
+                Handler(Looper.getMainLooper()).post {
+                    sharedPreferences!!.edit { putString(key, outFile.absolutePath) }
+                    summary = outFile.absolutePath
                 }
             } catch (exception: Exception) {
-                Utils.showToast("Failed to save file: $exception", Toast.LENGTH_SHORT)
+                Handler(Looper.getMainLooper()).post {
+                    Toast
+                        .makeText(
+                            context,
+                            "Failed to save file: ${exception.message}",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                }
             }
-            editor.putString(key, outFile.absolutePath).apply()
         }
     }
 }

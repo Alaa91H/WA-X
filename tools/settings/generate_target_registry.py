@@ -29,11 +29,12 @@ APP = "{http://schemas.android.com/apk/res-auto}"
 def attr(node, name):
     """Read an attribute under either namespace.
 
-    The preference screens in this project declare keys as pp:key, not ndroid:key,
+    The preference screens in this project declare keys as app:key, not android:key,
     which a reader that only knows the android namespace silently misses: the whole
     screen then looks empty instead of failing.
     """
     return node.get(ANDROID + name) or node.get(APP + name)
+
 
 # Element name -> value kind. Anything not listed is TEXT, which is the safe default:
 # a target override of an unknown type is still stored and still resolves.
@@ -54,12 +55,16 @@ def element_kind(tag: str) -> str:
         return "FLOAT"
     if simple.endswith("SeekBarPreference"):
         return "INT"
+    if "ColorPreference" in simple:
+        # ColorPreferenceCompat persists an Android ARGB color as an Int.
+        # Treating it as TEXT makes per-target pinning silently write null.
+        return "INT"
     if simple.endswith("FileSelectPreference") or simple.endswith("FileReaderPreference"):
         return "TEXT"
     return KIND_BY_ELEMENT.get(simple, "TEXT")
 
 
-def title_of(node, titles):
+def title_of(node):
     """The title of a preference, resolved through the app's string resources."""
     ref = attr(node, "title")
     if not ref:
@@ -81,14 +86,20 @@ def collect():
 
         category_stack = []
 
-        def walk(node, path):
+        def walk(node):
             for child in node:
                 tag = child.tag
                 key = attr(child, "key")
                 if tag == "PreferenceCategory":
-                    title = title_of(child, None)
-                    category_stack.append(title or category_stack[-1] if category_stack else (title or "Other"))
-                    walk(child, path)
+                    # A category with no title of its own belongs to the one above it, so
+                    # its settings keep that category instead of collapsing into "Other".
+                    # Spelled out rather than written as one expression: `a or b if c
+                    # else d` parses as `a or (b if c else d)`, which is correct by
+                    # accident and unreadable on purpose.
+                    title = title_of(child)
+                    inherited = category_stack[-1] if category_stack else None
+                    category_stack.append(title or inherited or "Other")
+                    walk(child)
                     category_stack.pop()
                     continue
                 if key:
@@ -102,12 +113,12 @@ def collect():
                             "kind": kind,
                             "category": category,
                             "screen": screen,
-                            "title": title_of(child, None),
+                            "title": title_of(child),
                         },
                     )
-                walk(child, path)
+                walk(child)
 
-        walk(tree.getroot(), [])
+        walk(tree.getroot())
     return entries
 
 
@@ -118,8 +129,11 @@ EXCLUDED = {
     "app_language", "thememode", "wae_color_mode", "wae_color_preset", "update_check", "enablelogs",
     "restartbutton", "open_wae", "bootsloader_placeholder", "bootloader_spoofer",
     "bootloader_spoofer_custom", "bootloader_spoofer_xml",
-    "groq_api_key", "transcription_provider", "css_theme", "wallpaper_file",
+    "groq_api_key", "assemblyai_key", "transcription_provider", "css_theme", "wallpaper_file",
     "call_recording_path", "tasker_auth_token",
+    # Navigation/action rows do not hold a target-specific value and must never
+    # appear as fake settings in the scope editor.
+    "per_target_settings", "call_recording_settings",
 }
 
 
@@ -205,7 +219,70 @@ def main() -> int:
     lines.append("    fun toggles(): List<Entry> = ALL.filter { it.isToggle }")
     lines.append("}")
 
-    io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
+    rendered = "\n".join(lines) + "\n"
+    if "--check" in sys.argv[1:]:
+        try:
+            current = io.open(OUT, "r", encoding="utf-8").read()
+        except OSError:
+            current = ""
+
+        # Spotless/ktlint is allowed to reflow long Entry(...) calls after generation.
+        # Compare the generated registry semantically rather than byte-for-byte so the
+        # generator gate and formatting gate do not fight each other.
+        entry_pattern = re.compile(
+            r'Entry\(\s*"([^"]+)",\s*Kind\.([A-Z]+),\s*"([^"]*)",\s*"([^"]*)",\s*'
+            r'(?:com\.wax\.module\.R\.string\.([A-Za-z0-9_]+)|0),?\s*\)',
+            re.DOTALL,
+        )
+        actual = {
+            match.group(1): (
+                match.group(2),
+                match.group(3),
+                match.group(4),
+                match.group(5),
+            )
+            for match in entry_pattern.finditer(current)
+        }
+        expected = {
+            key: (
+                value["kind"],
+                value["category"],
+                value["screen"],
+                value["title"],
+            )
+            for key, value in offered.items()
+        }
+
+        if actual != expected:
+            missing = sorted(set(expected) - set(actual))
+            extra = sorted(set(actual) - set(expected))
+            changed = sorted(
+                key for key in set(expected) & set(actual) if expected[key] != actual[key]
+            )
+            print("SettingKeyRegistry.kt is stale.", file=sys.stderr)
+            if missing:
+                print("  missing: " + ", ".join(missing), file=sys.stderr)
+            if extra:
+                print("  extra: " + ", ".join(extra), file=sys.stderr)
+            if changed:
+                print("  changed metadata/type: " + ", ".join(changed), file=sys.stderr)
+            print(
+                "Run: python tools/settings/generate_target_registry.py && ./gradlew :app:spotlessApply",
+                file=sys.stderr,
+            )
+            return 1
+
+        print(
+            "SettingKeyRegistry.kt is up to date: %d settings (%d toggles, %d other)"
+            % (
+                len(offered),
+                by_kind.get("BOOLEAN", 0),
+                len(offered) - by_kind.get("BOOLEAN", 0),
+            )
+        )
+        return 0
+
+    io.open(OUT, "w", encoding="utf-8", newline="\n").write(rendered)
     print(
         "wrote %s: %d settings (%d toggles, %d other)"
         % (

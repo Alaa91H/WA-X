@@ -122,10 +122,8 @@ class HdStatusTargets(
         name: String,
         block: () -> T,
     ): T? =
-        try {
-            block()
-        } catch (t: Throwable) {
-            log("$name: unresolved (${t.javaClass.simpleName}: ${t.message})")
+        runCatching(block).getOrElse { error ->
+            log("$name: unresolved (${error.javaClass.simpleName}: ${error.message})")
             null
         }
 
