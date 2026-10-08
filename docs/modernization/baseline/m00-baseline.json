@@ -4,7 +4,7 @@
       "ci/telegram-release-publisher-test",
       "main"
     ],
-    "gradle_wrapper": "9.7.0",
+    "gradle_wrapper": "9.8.1",
     "jvm_version": "21",
     "workflows_sha256": {
       "ci.yml": "a46404470251e83d53a856f372d798fb31415f92a95d82f7107b977ac6465f10",
@@ -224,6 +224,13 @@
         "ref": "xposed-legacy"
       }
     },
+    "libxposed-modern-api": {
+      "group": "io.github.libxposed",
+      "name": "api",
+      "version": {
+        "ref": "libxposed-modern"
+      }
+    },
     "markwon-core": {
       "module": "io.noties.markwon:core",
       "version": {
@@ -341,12 +348,13 @@
     "strict_policy_sha256": "6baded2ff84fc81ef1bafd1825de255ef6ee34bd0d6ffd65dda11ad88e031dff"
   },
   "toolchain": {
-    "agp": "9.4.1",
+    "agp": "9.5.0-alpha08",
     "composeBom": "2026.09.00",
     "composeMaterial3": "1.4.0",
     "detekt": "2.0.0-alpha.6",
     "kotlin": "2.4.21",
     "ksp": "2.3.12",
+    "libxposed-modern": "102.0.0",
     "spotless": "8.10.4",
     "xposed-legacy": "82"
   }

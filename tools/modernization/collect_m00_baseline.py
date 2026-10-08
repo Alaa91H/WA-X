@@ -262,6 +262,7 @@ def collect() -> dict[str, object]:
         "detekt",
         "spotless",
         "xposed-legacy",
+        "libxposed-modern",
     )
 
     lint = gradle_block(build, "lint")

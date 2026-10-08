@@ -261,6 +261,9 @@ dependencies {
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
     compileOnly(libs.libxposed.legacy)
+    // M06 preparation only: no modern entry point until all hooks and preferences migrate.
+    // compileOnly prevents both APIs being shipped into the APK; the legacy loader stays active.
+    compileOnly(libs.libxposed.modern.api)
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.core)
