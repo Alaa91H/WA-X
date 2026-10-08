@@ -151,6 +151,7 @@ Beta released before this package could provide that. The measurements are on #3
 
 | 7 | RuntimeGraph and global-state containment (A02) | `v1.2.0-beta.7` | merged to `main`; one `RuntimeGraph` per process with an asserted lifetime, the single-holder rule, a write-site ratchet on 7 legacy globals, and the feature isolation gate. #336 closed; #342 A08 owns the 63 remaining features. Beta published from this commit |
 
+| 8 | One feature registry (A03) | `v1.2.0-beta.8` | merged to `main`; 64 features registered in one file, three reflective construction sites removed, the compatibility matrix derived from the registry. #337 closed; KSP codegen #400. Beta published from this commit |
 ### Package 6 notes, for whoever picks up package 7
 
 Two things this package did that changed its own plan, both recorded rather than absorbed:
@@ -175,6 +176,23 @@ Two things this package did that changed its own plan, both recorded rather than
   fail with an erased type parameter, so the slot-mismatch path was unexecutable and a wrong-typed read
   would have returned the wrong object silently. Any type-safe accessor written the same way later would
   have shipped the same way.
+
+### Package 8 notes, for whoever picks up package 9
+
+- **This package grew the release APK by 6.9% and shipped it.** `v1.2.0-beta.8` is 16,047,274 bytes
+  against beta.7's 15,015,078, and defines 12,537 classes instead of 11,075 — from a change that
+  *removed* an array of 64 class literals. Direct constructor calls give R8 64 real call edges into
+  the feature layer, and `proguard-rules.pro` disables optimisation, so the classes the shrinker
+  could not previously see are now kept. Filed as **#403**.
+- **The growth budget only watches the debug APK.** `MAX_APK_GROWTH_PCT` compares an unminified build,
+  so a change in the release shrinker's reachability is invisible to it. Every package since M00 has
+  been reading that gate as if it covered the shipped artifact; it does not.
+- **The bisect that would confirm the cause has not been run.** Building the pre-A03 commit in a
+  scratch worktree fails on `configureCMakeRelWithDebInfo`, so the attribution comes from the CI
+  artifacts and class counts rather than a controlled A/B. #403 records that as outstanding.
+- **Do not fold `-dontoptimize` into a feature package.** It is the obvious remedy and the largest
+  available saving, but it changes stack traces and can break reflection-dependent paths. It belongs
+  with #346 A12 and #341 A07.
 
 ## 6. What a package records when it closes
 
