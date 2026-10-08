@@ -337,6 +337,7 @@ def build() -> dict[str, Any]:
     order = find_registered_order()
     imported = {simple: package for simple, package in find_feature_classes()}
     files = feature_files()
+    owners = declared_classes(files)
     usage = feature_resolver_usage(files)
     sources = feature_resolution_sources(files)
     pref_keys = feature_preference_keys(files)
@@ -353,7 +354,13 @@ def build() -> dict[str, Any]:
     features: list[dict[str, Any]] = []
     for name in order:
         package = imported[name]
-        used = usage.get(name, [])
+        owner = owners.get(package + "." + name)
+        if owner is None:
+            raise SystemExit(
+                "registered feature %s has no unique Kotlin declaration in %s"
+                % (name, package)
+            )
+        used = usage.get(owner, [])
         for resolver in used:
             if resolver not in declared:
                 unknown_resolvers.add("%s -> %s" % (name, resolver))
@@ -363,8 +370,8 @@ def build() -> dict[str, Any]:
                 "category": package_for(package) or "unknown",
                 "sourcePackage": package,
                 "resolverDependencies": used,
-                "resolutionSources": sources.get(name, []),
-                "preferenceKeys": pref_keys.get(name, []),
+                "resolutionSources": sources.get(owner, []),
+                "preferenceKeys": pref_keys.get(owner, []),
             }
         )
 
