@@ -332,8 +332,8 @@
     "android_tests": 1,
     "cpp": 425,
     "java": 3,
-    "kotlin": 402,
-    "unit_tests": 76
+    "kotlin": 403,
+    "unit_tests": 77
   },
   "static_analysis": {
     "detekt_config_sha256": "8b4cf8b450cfc9ae6c27877f7b795678576454dba2154fb578089f81616f58bf",
