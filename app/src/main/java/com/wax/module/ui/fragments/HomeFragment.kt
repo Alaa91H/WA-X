@@ -25,6 +25,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wax.module.BuildConfig
 import com.wax.module.ModuleApplication
 import com.wax.module.R
+import com.wax.module.activation.ActivationAction
+import com.wax.module.activation.ActivationMonitor
+import com.wax.module.activation.ActivationState
+import com.wax.module.activation.ActivationStatus
+import com.wax.module.activation.ActivationStatusResolver
+import com.wax.module.activation.TargetHeartbeatCodec
+import com.wax.module.activation.TargetProcessObserver
 import com.wax.module.adapter.LogLineAdapter
 import com.wax.module.compat.TargetVersions
 import com.wax.module.compat.UpdateOffer
@@ -56,6 +63,16 @@ class HomeFragment : BaseFragment() {
     private val binding get() = currentBinding!!
     private var statusReceiverRegistered = false
 
+    /**
+     * The activation model this screen reads.
+     *
+     * Created lazily from the fragment's context because the store is a file in the Manager's
+     * own storage, and the screen is the only thing in this process that receives heartbeats.
+     * Everything the status cards show is resolved through it, so no card can compute its own
+     * verdict - which is the defect the single boolean used to be.
+     */
+    private val activation: ActivationMonitor by lazy { ActivationMonitor.forContext(requireContext()) }
+
     private val statusReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(
@@ -63,9 +80,13 @@ class HomeFragment : BaseFragment() {
                 intent: Intent,
             ) {
                 try {
+                    // Filed before anything is rendered, so the reply the screen shows and the
+                    // record it leaves behind cannot disagree. A payload this version cannot
+                    // read is dropped rather than guessed at.
+                    activation.accept(TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT)))
                     when (intent.getStringExtra("PKG")) {
-                        FeatureLoader.PACKAGE_WPP -> receiverBroadcastWpp(context, intent)
-                        FeatureLoader.PACKAGE_BUSINESS -> receiverBroadcastBusiness(context, intent)
+                        FeatureLoader.PACKAGE_WPP -> renderTarget(FeatureLoader.PACKAGE_WPP)
+                        FeatureLoader.PACKAGE_BUSINESS -> renderTarget(FeatureLoader.PACKAGE_BUSINESS)
                     }
                 } catch (_: Exception) {
                 }
@@ -106,7 +127,10 @@ class HomeFragment : BaseFragment() {
         binding.rebootBtn.setOnClickListener { view ->
             animateClick(view)
             ModuleApplication.instance.restartApp(FeatureLoader.PACKAGE_WPP)
-            disableWpp()
+            // Re-rendered rather than forced into an error state: after a restart the runtime
+            // has not reported yet, and painting "not running" during that window would be a
+            // claim the module cannot make.
+            renderTarget(FeatureLoader.PACKAGE_WPP)
         }
 
         binding.scrollDiagBtn.setOnClickListener { view ->
@@ -121,7 +145,7 @@ class HomeFragment : BaseFragment() {
         binding.rebootBtn2.setOnClickListener { view ->
             animateClick(view)
             ModuleApplication.instance.restartApp(FeatureLoader.PACKAGE_BUSINESS)
-            disableBusiness()
+            renderTarget(FeatureLoader.PACKAGE_BUSINESS)
         }
 
         binding.exportBtn.setOnClickListener { view ->
@@ -195,65 +219,255 @@ class HomeFragment : BaseFragment() {
         super.onResume()
         setDisplayHomeAsUpEnabled(false)
         updatePackageStatuses(requireContext())
+        renderActivation()
     }
 
-    private fun receiverBroadcastBusiness(
-        context: Context,
-        intent: Intent,
-    ) {
-        if (ModuleApplication.isOriginalPackage) binding.status3.visibility = View.VISIBLE
-        binding.statusTitle3.setText(R.string.business_in_background)
-        val version = intent.getStringExtra("VERSION")
-        val supportedList = context.resources.getStringArray(R.array.supported_versions_business).toList()
-        when (versionTone(version, supportedList)) {
-            VersionStatusTone.SUPPORTED -> {
-                binding.statusSummary3.text = getString(R.string.version_s, version)
-                binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
-            }
+    /**
+     * Resolves and renders every card from the activation model.
+     *
+     * Called on entry, on resume and whenever a probe reply arrives. The previous
+     * implementation branched on one boolean here and left the target cards at whatever the
+     * last broadcast said; both facts came from different processes and neither was re-checked
+     * against the other.
+     */
+    private fun renderActivation() {
+        val context = context ?: return
+        val legacy = ModuleApplication.instance.isLegacySelfHookSignal()
 
-            VersionStatusTone.UNVERIFIED -> {
-                binding.statusSummary3.text = getString(R.string.version_s_unverified, version)
-                binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
-            }
-
-            VersionStatusTone.UNSUPPORTED -> {
-                binding.statusSummary3.text = getString(R.string.version_s_not_listed, version)
-                binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
-            }
+        renderTarget(FeatureLoader.PACKAGE_WPP)
+        if (ModuleApplication.isOriginalPackage) {
+            renderTarget(FeatureLoader.PACKAGE_BUSINESS)
+        } else {
+            binding.status3.visibility = View.GONE
         }
-        binding.rebootBtn2.visibility = View.VISIBLE
-        binding.statusSummary3.visibility = View.VISIBLE
-        binding.statusIcon3.setImageResource(R.drawable.ic_round_check_circle_24)
+
+        renderModule(
+            listOf(FeatureLoader.PACKAGE_WPP, FeatureLoader.PACKAGE_BUSINESS)
+                .map { statusOf(context, it, legacy) },
+            legacy,
+        )
     }
 
-    private fun receiverBroadcastWpp(
+    private fun statusOf(
         context: Context,
-        intent: Intent,
-    ) {
-        binding.statusTitle2.setText(R.string.whatsapp_in_background)
-        val version = intent.getStringExtra("VERSION")
-        val supportedList = context.resources.getStringArray(R.array.supported_versions_wpp).toList()
+        packageName: String,
+        legacy: Boolean,
+    ): ActivationStatus =
+        activation.status(
+            packageName = packageName,
+            installed = isInstalled(packageName),
+            process = TargetProcessObserver.observe(context, packageName),
+            legacySelfHookSignal = legacy,
+        )
 
-        when (versionTone(version, supportedList)) {
-            VersionStatusTone.SUPPORTED -> {
-                binding.statusSummary1.text = getString(R.string.version_s, version)
-                binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
-            }
+    private fun renderTarget(packageName: String) {
+        val context = context ?: return
+        val legacy = ModuleApplication.instance.isLegacySelfHookSignal()
+        val status = statusOf(context, packageName, legacy)
+        val business = packageName == FeatureLoader.PACKAGE_BUSINESS
+        val label = if (business) getString(R.string.whatsapp_business_package) else getString(R.string.whatsapp_app_label)
 
-            VersionStatusTone.UNVERIFIED -> {
-                binding.statusSummary1.text = getString(R.string.version_s_unverified, version)
-                binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
-            }
+        val title = binding.statusTitle3.takeIf { business } ?: binding.statusTitle2
+        val summary = binding.statusSummary3.takeIf { business } ?: binding.statusSummary1
+        val icon = binding.statusIcon3.takeIf { business } ?: binding.statusIcon2
+        val card = binding.status3.takeIf { business } ?: binding.status2
+        val restart = binding.rebootBtn2.takeIf { business } ?: binding.rebootBtn
 
-            VersionStatusTone.UNSUPPORTED -> {
-                binding.statusSummary1.text = getString(R.string.version_s_not_listed, version)
-                binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_warning)
-            }
+        if (business && !ModuleApplication.isOriginalPackage) {
+            binding.status3.visibility = View.GONE
+            return
         }
-        binding.rebootBtn.visibility = View.VISIBLE
-        binding.statusSummary1.visibility = View.VISIBLE
-        binding.statusIcon2.setImageResource(R.drawable.ic_round_check_circle_24)
+
+        title.text = label.statusTitle(status.state)
+        icon.setImageResource(status.icon())
+        card.getChildAt(0).setBackgroundResource(status.background())
+        summary.text = label.statusSummary(context, status)
+        summary.visibility = View.VISIBLE
+        // The restart button only means something once the runtime is in the target, because
+        // restarting is the action that makes the runtime load into it.
+        restart.visibility = if (status.state.isInjected) View.VISIBLE else View.GONE
     }
+
+    private fun renderModule(
+        targetStatuses: List<ActivationStatus>,
+        legacy: Boolean,
+    ) {
+        val status = ActivationStatusResolver.resolveModuleStatus(legacy, targetStatuses)
+        binding.statusIcon.setImageResource(status.icon())
+        binding.statusTitle.text =
+            getString(
+                when (status.state) {
+                    ActivationState.READY -> R.string.module_state_ready
+                    ActivationState.DEGRADED -> R.string.module_state_degraded
+                    ActivationState.FAILED -> R.string.module_state_failed
+                    ActivationState.RUNNING_NOT_INJECTED -> R.string.module_state_framework_only
+                    else -> R.string.module_state_unknown
+                },
+                targetLabel(targetStatuses),
+            )
+        binding.status.getChildAt(0).setBackgroundResource(status.background())
+        binding.statusSummary.text =
+            buildString {
+                append(getString(R.string.module_state_summary, BuildConfig.VERSION_NAME, status.signal.name))
+                append('\n')
+                append(
+                    getString(
+                        if (legacy) R.string.module_state_signal_legacy else R.string.module_state_signal_absent,
+                    ),
+                )
+                status.failureCode?.let {
+                    append('\n')
+                    append(getString(R.string.activation_action_open_diagnostics, it.name))
+                }
+            }
+        binding.statusSummary.visibility = View.VISIBLE
+    }
+
+    /**
+     * The targets that actually reported, named.
+     *
+     * The module card says "Running in WhatsApp" rather than "Module enabled" because that is
+     * the whole claim: a module is running *somewhere*, and naming the somewhere is what makes
+     * the sentence checkable.
+     */
+    private fun targetLabel(statuses: List<ActivationStatus>): String {
+        val injected =
+            statuses
+                .filter { it.state.isInjected }
+                .map { status ->
+                    if (status.packageName == FeatureLoader.PACKAGE_BUSINESS) {
+                        getString(R.string.whatsapp_business_package)
+                    } else {
+                        getString(R.string.whatsapp_app_label)
+                    }
+                }
+        return when (injected.size) {
+            0 -> getString(R.string.module_state_unknown)
+            1 -> injected.first()
+            else -> injected.joinToString(", ")
+        }
+    }
+
+    private fun String.statusTitle(state: ActivationState): String =
+        when (state) {
+            ActivationState.NOT_INSTALLED -> getString(R.string.activation_state_not_installed, this)
+            ActivationState.NOT_RUNNING -> getString(R.string.activation_state_not_running, this)
+            ActivationState.RUNNING_NOT_INJECTED -> getString(R.string.activation_state_running_not_injected, this)
+            ActivationState.BOOTSTRAPPING -> getString(R.string.activation_state_bootstrapping, this)
+            ActivationState.DEGRADED -> getString(R.string.activation_state_degraded, this)
+            ActivationState.FAILED -> getString(R.string.activation_state_failed, this)
+            ActivationState.READY -> getString(R.string.activation_state_ready, this)
+            ActivationState.UNKNOWN -> getString(R.string.activation_state_unknown, this)
+        }
+
+    /**
+     * The line under the title: the action, then the evidence behind the claim.
+     *
+     * The action comes first because it is what the reader needs, and the evidence follows
+     * because it is what makes the action checkable. The version tone the old summary showed is
+     * preserved, so nothing the card used to tell the user is lost.
+     */
+    private fun String.statusSummary(
+        context: Context,
+        status: ActivationStatus,
+    ): String {
+        val lines =
+            mutableListOf(
+                when (status.action) {
+                    ActivationAction.NONE -> {
+                        status.evidence().orEmpty()
+                    }
+
+                    ActivationAction.INSTALL_TARGET -> {
+                        getString(R.string.activation_action_install_target, this)
+                    }
+
+                    ActivationAction.OPEN_TARGET -> {
+                        getString(R.string.activation_action_open_target, this)
+                    }
+
+                    ActivationAction.ENABLE_IN_FRAMEWORK -> {
+                        getString(R.string.activation_action_enable_in_framework, this)
+                    }
+
+                    ActivationAction.WAIT -> {
+                        getString(R.string.activation_action_wait)
+                    }
+
+                    ActivationAction.OPEN_DIAGNOSTICS -> {
+                        getString(R.string.activation_action_open_diagnostics, status.failureCode?.name ?: "UNKNOWN")
+                    }
+                },
+            )
+        // The version tone the card always showed, kept. It is the one fact here that comes
+        // from the target rather than from the runtime, and dropping it would lose something
+        // the user could act on.
+        versionTone(context, status.packageName)?.let { lines += it }
+        status.evidence()?.let { lines += it }
+        return lines.filter { it.isNotBlank() }.joinToString("\n")
+    }
+
+    /**
+     * The supported/unsupported verdict for the target version, or null when unknown.
+     *
+     * Read from the heartbeat when there is one, and from the package manager otherwise, so a
+     * target that has never started still gets its version line.
+     */
+    private fun versionTone(
+        context: Context,
+        packageName: String,
+    ): String? {
+        val heartbeat = activation.heartbeatFor(packageName)
+        val version =
+            heartbeat?.targetVersionName
+                ?: runCatching { context.packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull()
+        if (version.isNullOrBlank()) return null
+        val supported =
+            context.resources
+                .getStringArray(
+                    if (packageName == FeatureLoader.PACKAGE_BUSINESS) {
+                        R.array.supported_versions_business
+                    } else {
+                        R.array.supported_versions_wpp
+                    },
+                ).toList()
+        return when (versionTone(version, supported)) {
+            VersionStatusTone.SUPPORTED -> getString(R.string.app_version_s_supported, version)
+            VersionStatusTone.UNVERIFIED -> getString(R.string.version_s_unverified, version)
+            VersionStatusTone.UNSUPPORTED -> getString(R.string.app_version_s_unsupported, version)
+        }
+    }
+
+    /** The technical detail behind a claim: stage, failure and session, when there is any. */
+    private fun ActivationStatus.evidence(): String? {
+        val heartbeat = activation.heartbeatFor(packageName) ?: return null
+        val parts =
+            mutableListOf<String>()
+        parts += getString(R.string.activation_stage, heartbeat.stage)
+        heartbeat.failureCode?.let { parts += it.name }
+        parts +=
+            getString(
+                R.string.activation_session,
+                heartbeat.targetSessionId,
+                heartbeat.pid,
+                heartbeat.freshnessAt(System.currentTimeMillis()).name,
+            )
+        return parts.joinToString(" · ")
+    }
+
+    private fun ActivationStatus.icon(): Int =
+        when (state) {
+            ActivationState.READY -> R.drawable.ic_round_check_circle_24
+            ActivationState.DEGRADED, ActivationState.BOOTSTRAPPING, ActivationState.UNKNOWN -> R.drawable.ic_round_warning_24
+            else -> R.drawable.ic_round_error_outline_24
+        }
+
+    private fun ActivationStatus.background(): Int =
+        when (state) {
+            ActivationState.READY -> R.drawable.gradient_success
+            ActivationState.DEGRADED, ActivationState.BOOTSTRAPPING, ActivationState.UNKNOWN -> R.drawable.gradient_warning
+            else -> R.drawable.gradient_error
+        }
 
     private fun resetConfigs(context: Context) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -386,26 +600,15 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun checkStateWpp(activity: FragmentActivity) {
-        if (ModuleApplication.instance.isXposedEnabled()) {
-            binding.statusIcon.setImageResource(R.drawable.ic_round_check_circle_24)
-            binding.statusTitle.setText(R.string.module_enabled)
-            binding.statusSummary.text = String.format(getString(R.string.version_s), BuildConfig.VERSION_NAME)
-            binding.status.getChildAt(0).setBackgroundResource(R.drawable.gradient_success)
-        } else {
-            binding.statusIcon.setImageResource(R.drawable.ic_round_error_outline_24)
-            binding.statusTitle.setText(R.string.module_disabled)
-            binding.status.getChildAt(0).setBackgroundResource(R.drawable.gradient_error)
-            binding.statusSummary.visibility = View.GONE
-        }
         if (isInstalled(FeatureLoader.PACKAGE_WPP) && ModuleApplication.isOriginalPackage) {
-            disableWpp()
+            binding.status2.visibility = View.VISIBLE
         } else {
             binding.status2.visibility = View.GONE
         }
-        if (ModuleApplication.isOriginalPackage) {
-            binding.status3.visibility = View.GONE
-        }
-        checkWpp(activity)
+        // The probe is asked for *after* the cards have rendered what is already known, so the
+        // screen shows the last known truth immediately and improves when the answer arrives
+        // rather than sitting on "checking" until a broadcast comes back.
+        renderActivation()
         binding.deviceName.text = Build.MANUFACTURER
         binding.sdk.text = String.format(Locale.getDefault(), "%d", Build.VERSION.SDK_INT)
         binding.modelName.text = Build.DEVICE
@@ -417,6 +620,7 @@ class HomeFragment : BaseFragment() {
         }
         binding.listBusiness.text = activity.resources.getStringArray(R.array.supported_versions_business).contentToString()
         updatePackageStatuses(activity)
+        checkWpp(activity)
     }
 
     private fun updatePackageStatuses(context: Context) {
@@ -495,22 +699,14 @@ class HomeFragment : BaseFragment() {
         supportedVersions: List<String>,
     ): VersionStatusTone = TargetVersions.assess(version, supportedVersions).tone
 
-    private fun disableBusiness() {
-        binding.statusIcon3.setImageResource(R.drawable.ic_round_error_outline_24)
-        binding.statusTitle3.setText(R.string.business_is_not_running_or_has_not_been_activated_in_lsposed)
-        binding.status3.getChildAt(0).setBackgroundResource(R.drawable.gradient_error)
-        binding.statusSummary3.visibility = View.GONE
-        binding.rebootBtn2.visibility = View.GONE
-    }
-
-    private fun disableWpp() {
-        binding.statusIcon2.setImageResource(R.drawable.ic_round_error_outline_24)
-        binding.statusTitle2.setText(R.string.whatsapp_is_not_running_or_has_not_been_activated_in_lsposed)
-        binding.status2.getChildAt(0).setBackgroundResource(R.drawable.gradient_error)
-        binding.statusSummary1.visibility = View.GONE
-        binding.rebootBtn.visibility = View.GONE
-    }
-
+    /**
+     * Asks each target to report.
+     *
+     * A target that answers proves the module's code is executing inside it, because only code
+     * running there can answer. A target that does not answer proves nothing by itself, which
+     * is why the probe is a request for evidence rather than a check - and why silence renders
+     * as "nothing reported" rather than as a failure.
+     */
     private fun checkWpp(activity: FragmentActivity) {
         listOf(FeatureLoader.PACKAGE_WPP, FeatureLoader.PACKAGE_BUSINESS).forEach { packageName ->
             val checkWpp =

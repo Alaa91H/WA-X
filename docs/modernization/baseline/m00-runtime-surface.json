@@ -189,7 +189,7 @@
         "XposedBridge.hookAllMethods": 32,
         "XposedBridge.hookMethod": 116,
         "XposedHelpers.findAndHookConstructor": 3,
-        "XposedHelpers.findAndHookMethod": 55
+        "XposedHelpers.findAndHookMethod": 56
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleEntryPoint.kt",
@@ -263,7 +263,7 @@
         "app/src/main/java/com/wax/module/xposed/spoofer/HookBL.java",
         "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt"
       ],
-      "occurrences": 234,
+      "occurrences": 235,
       "owner": "#318 M03 / #333 A05",
       "target": "Stays non-zero; every hook gains an owner that can report its own failure.",
       "title": "Direct legacy hook installation",
@@ -766,29 +766,29 @@
     },
     "self_hook_activation": {
       "by_file": {
-        "hooks isXposedEnabled": [
+        "installs the legacy self-hook": [
           "app/src/main/java/com/wax/module/ModuleEntryPoint.kt"
         ],
-        "references isXposedEnabled": [
+        "references the legacy self-hook signal": [
           "app/src/main/java/com/wax/module/ModuleApplication.kt",
           "app/src/main/java/com/wax/module/ModuleEntryPoint.kt",
           "app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt"
         ]
       },
       "by_pattern": {
-        "hooks isXposedEnabled": 1,
-        "references isXposedEnabled": 4
+        "installs the legacy self-hook": 2,
+        "references the legacy self-hook signal": 5
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
         "app/src/main/java/com/wax/module/ModuleEntryPoint.kt",
         "app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt"
       ],
-      "occurrences": 5,
-      "owner": "#318 M01-M02 / #333 A01",
-      "target": "Zero. Activation is observed from the framework, never from a self-hook.",
+      "occurrences": 7,
+      "owner": "#333 A01",
+      "target": "One site, the hook itself. No reader: nothing may branch on the legacy signal alone.",
       "title": "Self-hook as the activation signal",
-      "why": "`isXposedEnabled` is replaced with a constant that returns true inside the module's own process. That makes the manager report the module as active for the reason that the module is running, which is circular: the one question the user asks is the one question the module answers about itself. It is also why a DexKit failure, a resolver failure or a feature failure can surface as 'Xposed is disabled'."
+      "why": "M02 demoted the self-hook. `isLegacySelfHookSignal` still reports that a framework loaded WA X into the module's own process, and it is now `ActivationSignal.LEGACY_SELF_HOOK_SIGNAL` rather than the answer to every activation question. What stays measurable is the surface of that signal: the hook that installs the constant, and every reader of the method it replaces. A new reader is the defect returning, which is why the count is kept rather than dropped - the method may not become the answer to anything again."
     },
     "silent_catch": {
       "by_file": {
@@ -1019,5 +1019,5 @@
     }
   },
   "schema": "wax.m00.runtime-surface/1",
-  "source_files": 298
+  "source_files": 310
 }

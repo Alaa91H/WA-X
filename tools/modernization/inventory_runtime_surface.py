@@ -218,18 +218,19 @@ CATEGORIES: dict[str, dict[str, object]] = {
     },
     "self_hook_activation": {
         "title": "Self-hook as the activation signal",
-        "owner": "#318 M01-M02 / #333 A01",
+        "owner": "#333 A01",
         "why": (
-            "`isXposedEnabled` is replaced with a constant that returns true inside the module's "
-            "own process. That makes the manager report the module as active for the reason that "
-            "the module is running, which is circular: the one question the user asks is the one "
-            "question the module answers about itself. It is also why a DexKit failure, a resolver "
-            "failure or a feature failure can surface as 'Xposed is disabled'."
+            "M02 demoted the self-hook. `isLegacySelfHookSignal` still reports that a framework loaded "
+            "WA X into the module's own process, and it is now `ActivationSignal.LEGACY_SELF_HOOK_SIGNAL` "
+            "rather than the answer to every activation question. What stays measurable is the surface "
+            "of that signal: the hook that installs the constant, and every reader of the method it "
+            "replaces. A new reader is the defect returning, which is why the count is kept rather than "
+            "dropped - the method may not become the answer to anything again."
         ),
-        "target": "Zero. Activation is observed from the framework, never from a self-hook.",
+        "target": "One site, the hook itself. No reader: nothing may branch on the legacy signal alone.",
         "patterns": [
-            (re.compile(r'"isXposedEnabled"'), "hooks isXposedEnabled"),
-            (re.compile(r"\bisXposedEnabled\b"), "references isXposedEnabled"),
+            (re.compile(r"LEGACY_SIGNAL_METHOD"), "installs the legacy self-hook"),
+            (re.compile(r"\bisLegacySelfHookSignal\b"), "references the legacy self-hook signal"),
         ],
     },
     "runtime_global_state": {

@@ -25,6 +25,7 @@ import com.wax.module.ModuleEntryPoint
 import com.wax.module.R
 import com.wax.module.TargetRuntime
 import com.wax.module.UpdateChecker
+import com.wax.module.activation.TargetHeartbeatCodec
 import com.wax.module.activities.CrashReportActivity
 import com.wax.module.compat.TargetVersions
 import com.wax.module.diagnostics.FailureReportCodec
@@ -34,6 +35,7 @@ import com.wax.module.diagnostics.ReportRedactor
 import com.wax.module.health.RuntimeFailureCode
 import com.wax.module.health.RuntimeHealth
 import com.wax.module.health.RuntimeSubsystem
+import com.wax.module.health.SubsystemState
 import com.wax.module.platform.SupportedPackages
 import com.wax.module.settings.TargetSettingsBridge
 import com.wax.module.xposed.core.components.AlertDialogWpp
@@ -223,6 +225,15 @@ class FeatureLoader private constructor() {
          */
         private const val RESOLVER_INIT_COMPONENT = "resolver.engine.init"
 
+        /**
+         * Extra carrying the encoded activation heartbeat in the probe reply.
+         *
+         * One extra rather than a dozen because the reply already exists: the Manager's probe
+         * is the moment it asks, so the answer travels back on the same broadcast rather than
+         * through a second channel that would have to be built, secured and versioned.
+         */
+        const val EXTRA_HEARTBEAT: String = "ACTIVATION_HEARTBEAT"
+
         private var supportedVersions: List<String> = emptyList()
         private var currentVersion: String? = null
         private var crashHandlerInstalled = false
@@ -243,8 +254,30 @@ class FeatureLoader private constructor() {
             // with zero hooks installed, and the app went on showing a green banner from
             // another process. The stage is therefore opened here, not after the engine.
             val health = RuntimeHealth.beginForTarget(packageName, processName)
+            val proof = ActivationProof(health)
+            // Reaching this function is itself the evidence for four of the eleven subsystems
+            // the aggregate reads: the framework invoked us, the module is loaded, the
+            // framework decided to load us into *this* package - which is the effective scope,
+            // as opposed to the recommended one in the manifest - and we are inside the
+            // target's process. Reporting them here rather than on demand is what lets the
+            // Manager distinguish "injected and starting" from "never injected", which is a
+            // distinction no amount of formatting on one boolean can carry.
+            proof.frameworkAnswered()
+            proof.moduleLoaded(BuildConfig.VERSION_NAME)
+            proof.scopeIsEffective()
+            proof.targetProcessIsRunning()
+            proof.injected()
+
             val dexKitStage = health.begin(RuntimeSubsystem.DEXKIT, RESOLVER_INIT_COMPONENT)
 
+            // The bootstrap stops if the engine will not start - which stages are safe to
+            // continue with is M03's decision and it is deliberately not pre-empted here. What
+            // M02 does own is the other half of M00-DEF-02: without a responder the Manager
+            // cannot be told, so a failure of exactly this kind is the one that must never be
+            // reported as anything else. installProbeResponder installs no feature and changes
+            // nothing inside the target; it only makes the recorded failure observable, which
+            // is what turns "the module says it is enabled and nothing works" into "the
+            // resolution engine failed to start".
             if (!Unobfuscator.initWithPath(sourceDir)) {
                 XposedBridge.log("Can't init dexkit")
                 // Recorded, not swallowed. The early return is unchanged on purpose - what
@@ -255,6 +288,7 @@ class FeatureLoader private constructor() {
                     RuntimeFailureCode.DEXKIT_INIT_FAILED,
                     "Unobfuscator.initWithPath returned false for $sourceDir",
                 )
+                installProbeResponder()
                 return
             }
 
@@ -275,6 +309,10 @@ class FeatureLoader private constructor() {
                         // Global value. The target comes from the process package name, which
                         // is the only place a single APK can tell the two builds apart.
                         val pref = TargetSettingsBridge.install(getPreferences(application), TargetRuntime.target)
+                        // Recorded from what was actually returned, not from what was asked for:
+                        // the fallback route works, so it is a degradation rather than a failure,
+                        // and it is the kind of thing a user can act on once they know about it.
+                        proof.preferencesResolved(pref !is RemotePreferences)
                         Feature.isDebug = pref.getBoolean("enablelogs", false)
                         Utils.xprefs = pref
 
@@ -331,13 +369,30 @@ class FeatureLoader private constructor() {
                             }
 
                             initComponents(loader, pref)
+                            proof.coreComponentsReady()
                             plugins(loader, pref, packageInfo.versionName!!)
+                            proof.hooksInstalled()
+                            // Counted from the reports already collected rather than guessed: the
+                            // aggregate reads "some of it failed" as DEGRADED, and the count is
+                            // what tells the user how much of it did.
+                            proof.optionalFeaturesInstalled(getFailureReports())
+                            proof.resolversFinished(getFailureReports())
+                            // The document written when storage was attached describes a runtime
+                            // that had proved injection and nothing else. Writing it again here
+                            // records the completed bootstrap, so the stored evidence and the
+                            // broadcast answer agree.
+                            runCatching { RuntimeHealth.current().persist() }
                             sendEnabledBroadcast(application)
 
                             val totalTime = System.currentTimeMillis() - timeMillis
                             XposedBridge.log("Loaded Hooks in ${totalTime}ms")
                         } catch (e: Throwable) {
                             XposedBridge.log(e)
+                            // The hook set is what the module exists to install, so a bootstrap
+                            // that threw here has failed at a core capability. Reported against
+                            // the subsystem that owns it rather than as an anonymous failure, so
+                            // the card can say which part is missing instead of "LSPosed".
+                            proof.essentialHooksFailed(e.message)
                             recordFailure(
                                 featureId = "MainFeatures[Critical]",
                                 throwable = e,
@@ -689,24 +744,8 @@ class FeatureLoader private constructor() {
                 ContextCompat.RECEIVER_EXPORTED,
             )
 
-            // Wpp receiver
-            val wppReceiver =
-                object : BroadcastReceiver() {
-                    override fun onReceive(
-                        context: Context,
-                        intent: Intent,
-                    ) {
-                        sendEnabledBroadcast(context)
-                    }
-                }
-            ContextCompat.registerReceiver(
-                app,
-                wppReceiver,
-                IntentFilter("${BuildConfig.APPLICATION_ID}.CHECK_WPP"),
-                INTERNAL_BROADCAST_PERMISSION,
-                null,
-                ContextCompat.RECEIVER_EXPORTED,
-            )
+// Wpp receiver
+            registerProbeResponder(app)
 
             // Dialog receiver restart
             val restartManualReceiver =
@@ -729,6 +768,58 @@ class FeatureLoader private constructor() {
             )
         }
 
+        /**
+         * Registers the receiver that answers the Manager's probe.
+         *
+         * Split out of [registerReceivers] because a runtime whose bootstrap stopped early still
+         * has something to report - that it failed - and a runtime that cannot answer a probe is
+         * indistinguishable from a runtime that was never injected. Registering only this
+         * receiver installs no feature, so it does not pre-empt M03's decision about what a
+         * failed bootstrap should continue to do.
+         */
+        @SuppressLint("WrongConstant")
+        private fun registerProbeResponder(app: Application) {
+            val probeReceiver =
+                object : BroadcastReceiver() {
+                    override fun onReceive(
+                        context: Context,
+                        intent: Intent,
+                    ) {
+                        sendEnabledBroadcast(context)
+                    }
+                }
+            ContextCompat.registerReceiver(
+                app,
+                probeReceiver,
+                IntentFilter("${BuildConfig.APPLICATION_ID}.CHECK_WPP"),
+                INTERNAL_BROADCAST_PERMISSION,
+                null,
+                ContextCompat.RECEIVER_EXPORTED,
+            )
+        }
+
+        /**
+         * Hooks only the application callback a stopped bootstrap needs, to reach a Context.
+         *
+         * The Manager's probe travels by broadcast, and a broadcast needs a Context. Nothing else
+         * from the normal bootstrap is installed here on purpose: the failure this path reports
+         * is that the bootstrap stopped, and pretending otherwise would be the defect.
+         */
+        private fun installProbeResponder() {
+            XposedHelpers.findAndHookMethod(
+                Instrumentation::class.java,
+                "callApplicationOnCreate",
+                Application::class.java,
+                object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        val application = param.args[0] as? Application ?: return
+                        mApp = application
+                        registerProbeResponder(application)
+                    }
+                },
+            )
+        }
+
         private fun sendEnabledBroadcast(context: Context) {
             try {
                 val wppIntent =
@@ -738,12 +829,35 @@ class FeatureLoader private constructor() {
                             context.packageManager.getPackageInfo(context.packageName, 0).versionName,
                         )
                         putExtra("PKG", context.packageName)
+                        // The answer to "is WA X running in this process right now", produced by
+                        // the only code that can know: this process. The Manager used to be told
+                        // it by a constant a hook installed in its own process, which is why a
+                        // failure anywhere in here could present as "LSPosed is disabled".
+                        putExtra(EXTRA_HEARTBEAT, encodeHeartbeat())
                         setPackage(BuildConfig.APPLICATION_ID)
                     }
                 context.sendBroadcast(wppIntent)
             } catch (_: Exception) {
             }
         }
+
+        /**
+         * The encoded heartbeat for this process, or null when there is nothing to report.
+         *
+         * Encoding can fail on a snapshot that a component has filled with something the record
+         * cannot legally carry. That is worth logging rather than hiding: a heartbeat that
+         * cannot be built is a defect in the model, not a transient condition.
+         */
+        private fun encodeHeartbeat(): String? {
+            val heartbeat = runCatching { currentProof()?.heartbeat() }.getOrNull()
+            if (heartbeat == null) return null
+            return runCatching { TargetHeartbeatCodec.encode(heartbeat) }
+                .onFailure { XposedBridge.log(it) }
+                .getOrNull()
+        }
+
+        /** The proof reporter for this process, or null before the runtime has one. */
+        private fun currentProof(): ActivationProof? = if (RuntimeHealth.isInstalled()) ActivationProof(RuntimeHealth.current()) else null
 
         @Throws(Exception::class)
         private fun plugins(
