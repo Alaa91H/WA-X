@@ -135,3 +135,5 @@ The sequence is internal to UIX-01 (no parallel competing implementation). Separ
 - WhatsApp appearance sections: [#260](https://github.com/Alaa91H/WA-X/issues/260)
 - Selective hiding: [#69](https://github.com/Alaa91H/WA-X/issues/69)
 - Status AdBlock audit: [#369](https://github.com/Alaa91H/WA-X/issues/369)
+
+- Illustrative interactive Home + diagnosis + feature compatibility preview: [HOME_DIAGNOSTICS_COMPATIBILITY_PREVIEW.html](preview/HOME_DIAGNOSTICS_COMPATIBILITY_PREVIEW.html)
