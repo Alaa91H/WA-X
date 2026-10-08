@@ -53,6 +53,17 @@ object Unobfuscator {
     }
 
     /**
+     * Whether the engine actually started.
+     *
+     * A capability provider needs to answer this, and it is the difference between "this WhatsApp
+     * build does not have that class" and "the engine never came up". The engine failing to
+     * initialise is recorded against the DEXKIT subsystem with its own failure code, so nothing
+     * downstream has to infer it from the absence of a lookup result.
+     */
+    @JvmStatic
+    fun isInitialised(): Boolean = ::bridge.isInitialized
+
+    /**
      * Replaces a `!!` on a DexKit class lookup with a failure that names the resolver.
      *
      * A bare `!!` here surfaced as a null-cast NullPointerException with no indication of
