@@ -189,7 +189,7 @@
         "XposedBridge.hookAllMethods": 32,
         "XposedBridge.hookMethod": 116,
         "XposedHelpers.findAndHookConstructor": 3,
-        "XposedHelpers.findAndHookMethod": 56
+        "XposedHelpers.findAndHookMethod": 55
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleEntryPoint.kt",
@@ -263,7 +263,7 @@
         "app/src/main/java/com/wax/module/xposed/spoofer/HookBL.java",
         "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt"
       ],
-      "occurrences": 235,
+      "occurrences": 234,
       "owner": "#318 M03 / #333 A05",
       "target": "Stays non-zero; every hook gains an owner that can report its own failure.",
       "title": "Direct legacy hook installation",
@@ -639,6 +639,7 @@
           "app/src/main/java/com/wax/module/xposed/bridge/BridgeAccessPolicy.kt",
           "app/src/main/java/com/wax/module/xposed/bridge/service/HookBinder.kt",
           "app/src/main/java/com/wax/module/xposed/core/ActivityStateRegistry.kt",
+          "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt",
           "app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt",
           "app/src/main/java/com/wax/module/xposed/core/components/FMessageWpp.kt",
           "app/src/main/java/com/wax/module/xposed/core/components/FStatusWpp.kt",
@@ -665,8 +666,8 @@
       "by_pattern": {
         "@JvmStatic var": 2,
         "lateinit var": 32,
-        "module-level nullable var": 155,
-        "object singleton": 32
+        "module-level nullable var": 158,
+        "object singleton": 34
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -727,7 +728,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 221,
+      "occurrences": 226,
       "owner": "#333 A02",
       "target": "Contained in RuntimeGraph with an explicit lifetime.",
       "title": "Global mutable state inside the injected process",
@@ -861,8 +862,8 @@
         ]
       },
       "by_pattern": {
-        "catch with discarded binding": 92,
-        "empty catch body": 54
+        "catch with discarded binding": 91,
+        "empty catch body": 53
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -909,7 +910,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 146,
+      "occurrences": 144,
       "owner": "#318 M03 / #333 A05",
       "target": "Every catch reports through the runtime health store.",
       "title": "Failures swallowed without reporting",
@@ -1019,5 +1020,5 @@
     }
   },
   "schema": "wax.m00.runtime-surface/1",
-  "source_files": 310
+  "source_files": 312
 }
