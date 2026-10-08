@@ -4,6 +4,7 @@
 **Decision:** APPROVED DESIGN / PENDING IMPLEMENTATION AND QUALITY GATES.  
 **Package identifier:** `UIX-01` — **ONE coherent Manager UI/UX delivery package**, not separate feature releases.  
 **Source of truth for pre-approved Features screen:** [APPROVED_FEATURES_SCREEN_SPEC.md](APPROVED_FEATURES_SCREEN_SPEC.md).  
+**Enhanced interactive Customization preview:** [CUSTOMIZATION_INTERACTIVE_PREVIEW.html](preview/CUSTOMIZATION_INTERACTIVE_PREVIEW.html) (illustrative, non-production).  
 **Architecture / order:** #318 M00→M13 blocker; #333 architectural dependency ordering; #344 A10 (data/UDF before new shell); #345 A11 (Compose shell), then implement and release **UIX-01** only when prerequisites are green.  
 **Related owners:** #370 (Features screen), #260 F213 (WhatsApp-side customization), #69 F060 (distraction-free), #369 (Status AdBlock audit). Feature owners retain behavior; UIX-01 owns Manager surface, grouping, preview and interaction design.
 
@@ -115,6 +116,8 @@ The sequence is internal to UIX-01 (no parallel competing implementation). Separ
 ## 9. Deliverable references
 
 - Approved Features screen reference: [APPROVED_FEATURES_SCREEN_SPEC.md](APPROVED_FEATURES_SCREEN_SPEC.md)
+- Interactive Customization preview: [CUSTOMIZATION_INTERACTIVE_PREVIEW.html](preview/CUSTOMIZATION_INTERACTIVE_PREVIEW.html)
+- Unified UIX-01 issue: [#371](https://github.com/Alaa91H/WA-X/issues/371)
 - Parent architecture modernization: [#333](https://github.com/Alaa91H/WA-X/issues/333)
 - Manager ViewModel/UDF prerequisite: [#344](https://github.com/Alaa91H/WA-X/issues/344)
 - Manager Compose shell: [#345](https://github.com/Alaa91H/WA-X/issues/345)
