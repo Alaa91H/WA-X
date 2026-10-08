@@ -10,7 +10,7 @@ This file separates **published framework releases** from **dependencies consume
 | Legacy Xposed API | Maven artifact **82**, runtime API level **93** | Remains the active loading contract. 82 and 93 are different version spaces; do not invent legacy artifact 102. | https://github.com/LSPosed/LSPosed/wiki/Develop-Xposed-Modules-Using-Modern-Xposed-API |
 | Spotless Gradle plugin | **8.10.4** already pinned | No change necessary to this plugin; CI builds with it. | https://github.com/diffplug/spotless |
 | Gradle | **9.8.1**, security patch | Wrapper distribution moved from 9.7.0 to 9.8.1; SHA-256 pinned from Gradle official checksums. | https://gradle.org/release-checksums/ |
-| Android Gradle Plugin | **9.4.1** latest stable checked | Already pinned; 9.5 is preview only. | https://developer.android.google.cn/reference/tools/gradle-api |
+| Android Gradle Plugin | **9.4.1** latest stable; **9.5.0-alpha08** latest preview tested here | Trying preview 9.5.0-alpha08 because AGP 9.4.1 calls deprecated `Configuration.setVisible` under Gradle 9.8.1 and strict CI fails. Must pass all gates before acceptance. | https://developer.android.google.cn/reference/tools/gradle-api |
 | DexKit | **2.3.0** latest upstream at review | WA X embeds a local `app/libs/dexkit-android.aar`; its binary version/hash must be independently verified before claiming it was upgraded. | https://github.com/LuckyPray/DexKit/releases |
 
 ## Deliberate boundaries
