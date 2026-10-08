@@ -1,3 +1,87 @@
+WA X 1.2.0-beta.3
+Release date: 2026-10-07
+
+Development package 3: the module's entry point was missing from every release build, and it
+is back. This is the first WA X build whose released APK contains the code LSPosed loads —
+which means it is also the first one whose behaviour on a device can be tested at all. It
+carries the previous package's runtime-health work with it, because that work was being
+stripped out of the release APK along with everything else.
+
+THE ENTRY POINT
+- Every WA X release until this build installed, declared itself as an Xposed module, carried
+the correct update signature and named its entry class in `assets/xposed_init` — and did not
+contain that class. The release build's shrinking step removes code that nothing reachable
+refers to, and the entry point's only reference in the whole package is that text file, which
+shrinking does not read. So the class was removed, and the entire runtime behind it with it.
+- The visible consequence was nothing at all: LSPosed was given a class name it could not
+  instantiate, the module loaded no hooks, and no build, gate or installer inspection could
+tell the difference between that and a module that works.
+- It is not a new break. The measured comparison against the pre-rename stable release shows
+  the older build shipped its runtime and the WA X builds did not, which is also why no runtime
+  evidence had ever been collected for this project.
+- Fixed with one keep rule that holds the entry point against the shrinking step. Keeping the
+  class also restores everything it reaches, because the feature registry refers to its
+  features directly rather than by name at runtime.
+
+The released APK now defines the entry point, the loader and the runtime-health foundation, and
+defines 11,005 classes where the previous release defined 9,803. Roughly 1.2 MB of the module
+was missing from every build you could install; that is why this APK is larger.
+
+GATES SO IT CANNOT COME BACK
+- The loader contract is now checked against a **built APK**, not only against the source: the
+  APK's own entry-point file is read and the named class must be a class in its code. This runs
+  on the debug build on every change and on the release APK before it is published.
+- The rule that protects the class is checked on every change as well, including the subtle
+  ways a rule can look present and not protect anything (naming another class, keeping only
+  members, or carrying a modifier that still allows the class to be removed).
+- Both checks have tests that fail on deliberately broken packages, including a case where the
+  class name survives somewhere as a piece of text but the class does not exist.
+- The beta you are reading is the first artifact published with the release-APK check in place.
+
+RELEASE HYGIENE
+- Beta builds were being published as the repository's "latest release", which replaced the
+  pointer to the last stable version with a testing build. A version with a beta suffix is now
+  published as a pre-release and is no longer marked as the latest; stable releases are
+  unchanged. The rule is tested, including against the pipeline file itself.
+
+CARRIED FROM PACKAGE 2 (STRUCTURED RUNTIME HEALTH)
+- Twelve runtime subsystems, each with its own state, and a failure code that says which part
+  failed, so a resolver or engine failure can no longer be presented as "LSPosed is disabled".
+- A health record that survives a restart, is written atomically, keeps its last good state and
+  refuses to store message bodies, contact names, identifiers or keys.
+- A failure to start the resolution engine is now recorded instead of only logged. What the
+  module does after such a failure is still the next package's decision, and is deliberately
+  unchanged here.
+
+VERIFICATION
+- 27 static contracts, 1211 unit tests with every coverage counter above its recorded floor.
+- Formatting, static analysis and Android lint clean, with the build failing on warnings rather
+  than collecting them.
+- Both APK variants built, and the new entry-point check passes on both — and rejects the
+  previously published beta by name.
+- The project's baseline evidence lock is re-derived in this release rather than adjusted by
+  hand.
+
+KNOWN LIMITATIONS
+- No device verification is claimed for this beta. It is proven to contain the entry point and
+  the runtime it needs; whether the module hooks correctly inside WhatsApp on your device is
+  exactly what testing this build has to establish, and it is unverified today.
+- The activation banner is still driven by the module's own self-hook. The package that
+  replaces that with framework evidence is the next one.
+- The packaging migration to the modern loader format is not done; the remaining packaging tasks
+  (modern metadata preservation, mixed-format rejection, checking signed distributed APKs) are
+  still open.
+- 193 files of recorded architectural debt remain, unchanged.
+
+MIGRATION AND ROLLBACK
+- No settings, preference key or user-visible feature changed. Install over any earlier build:
+  the update key is unchanged.
+- Because the runtime is now actually present for the first time, behaviour that was previously
+  silently absent may appear in this build — including hooks that now run and may fail loudly.
+  That is the intended change, and it is the reason this beta needs testing rather than
+  assuming.
+- Rollback is installing the previous build; the downgrade installs normally.
+
 WA X 1.2.0-beta.2
 Release date: 2026-10-07
 
