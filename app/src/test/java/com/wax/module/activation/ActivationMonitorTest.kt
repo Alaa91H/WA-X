@@ -6,8 +6,8 @@ import com.wax.module.health.RuntimeFailureCode
 import com.wax.module.health.SubsystemState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -137,7 +137,7 @@ class ActivationMonitorTest {
         val anotherBoot = "boot-1800000020000"
 
         assertFalse(BootIdentity.isSameBoot(first, anotherBoot))
-        org.junit.Assert.assertFalse(BootIdentity.isSameBoot("boot-1", "boot-2"))
+        assertFalse(BootIdentity.isSameBoot("boot-1", "boot-2"))
         assertTrue(
             BootIdentity.isSameBoot(first, "boot-1800000000050"),
         )
