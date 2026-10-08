@@ -347,6 +347,12 @@ jobs:
               # progress, not a failure.
               python3 tools/quality/test_check_legacy_global_writes.py || failures=$((failures + 1))
               python3 tools/quality/check_legacy_global_writes.py || failures=$((failures + 1))
+              # One registration source for the module's features. The runtime used to install from a
+              # hand-maintained array while the compatibility matrix was computed from a second list,
+              # and nothing compared them: a feature registered in one and not the other would have
+              # shipped a module whose behaviour the matrix does not describe.
+              python3 tools/quality/test_check_feature_registry.py || failures=$((failures + 1))
+              python3 tools/quality/check_feature_registry.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
           - name: Modernization evidence contracts
             shell: bash

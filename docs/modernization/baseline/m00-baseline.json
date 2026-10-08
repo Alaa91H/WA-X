@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "bd1aaa2fb5ad25398d4ea9ed583e1088b6ff807b11387a7ee37158f63cafd62e",
+      "ci.yml": "a46404470251e83d53a856f372d798fb31415f92a95d82f7107b977ac6465f10",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -332,8 +332,8 @@
     "android_tests": 1,
     "cpp": 425,
     "java": 3,
-    "kotlin": 399,
-    "unit_tests": 75
+    "kotlin": 402,
+    "unit_tests": 76
   },
   "static_analysis": {
     "detekt_config_sha256": "8b4cf8b450cfc9ae6c27877f7b795678576454dba2154fb578089f81616f58bf",

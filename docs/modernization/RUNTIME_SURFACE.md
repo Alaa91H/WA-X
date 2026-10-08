@@ -15,7 +15,7 @@ the numbers.
 | [Direct DexKit use](#dexkit_direct) | #318 M08 / #333 A04 | 29 | 24 |
 | [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 71 |
 | [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
-| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 232 | 59 |
+| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 234 | 61 |
 | [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 144 | 43 |
 
 ## Legacy Xposed API surface
@@ -465,14 +465,14 @@ Legacy types in use:
 
 **End state:** Contained in RuntimeGraph with an explicit lifetime.
 
-**Current:** 232 occurrences across 59 files.
+**Current:** 234 occurrences across 61 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
 | `@JvmStatic var` | 2 | 2 |
 | `lateinit var` | 32 | 11 |
 | `module-level nullable var` | 160 | 42 |
-| `object singleton` | 38 | 29 |
+| `object singleton` | 40 | 31 |
 
 <details><summary>Files</summary>
 
@@ -527,6 +527,8 @@ Legacy types in use:
 - `app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt`
 - `app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt`
 - `app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt`
+- `app/src/main/java/com/wax/module/xposed/registry/FeatureFactory.kt`
+- `app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt`
 - `app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt`
 - `app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt`
 - `app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt`
