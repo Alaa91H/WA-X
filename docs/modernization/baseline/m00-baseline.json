@@ -4,7 +4,7 @@
       "ci/telegram-release-publisher-test",
       "main"
     ],
-    "gradle_wrapper": "9.7.0",
+    "gradle_wrapper": "9.8.1",
     "jvm_version": "21",
     "workflows_sha256": {
       "ci.yml": "a46404470251e83d53a856f372d798fb31415f92a95d82f7107b977ac6465f10",
@@ -265,6 +265,13 @@
     "rikkax-widget-borderview": {
       "module": "dev.rikka.rikkax.widget:borderview",
       "version": "1.1.0"
+    },
+    "libxposed-modern-api": {
+      "group": "io.github.libxposed",
+      "name": "api",
+      "version": {
+        "ref": "libxposed-modern"
+      }
     }
   },
   "loader_contract": {
@@ -348,6 +355,7 @@
     "kotlin": "2.4.21",
     "ksp": "2.3.12",
     "spotless": "8.10.4",
-    "xposed-legacy": "82"
+    "xposed-legacy": "82",
+    "libxposed-modern": "102.0.0"
   }
 }
