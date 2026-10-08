@@ -147,6 +147,18 @@ Beta released before this package could provide that. The measurements are on #3
 | 3 | LSPosed loader integrity (blocker insert) | `v1.2.0-beta.3` | fix, keep rule, source-level and release-APK gates merged; #324, #361 closed. Beta published from this commit |
 | 4 | Activation, scope truth, heartbeat (M02) | `v1.2.0-beta.4` | merged to `main`; the activation model, the per-target heartbeat, the demoted self-hook and Gate A. Beta published from this commit |
 | 5 | Atomic bootstrap, failure isolation (M03) | `v1.2.0-beta.5` | merged to `main`; the declared stage sequence, the criticality table, the engine's early return removed. Beta published from this commit |
+| 6 | Explicit Manager / Runtime contracts (A01) | `v1.2.0-beta.6` | merged to `main`; nine platform-free contracts, the `xposed.contract` adapters, `DebugFeature` as the first migrated feature, and `check_feature_contracts.py` as a CI gate. #335 closed; the Manager side filed as #372, the remaining 63 features as #342 A08. Beta published from this commit |
+
+### Package 6 notes, for whoever picks up package 7
+
+Two things this package did that changed its own plan, both recorded rather than absorbed:
+
+- **`AE-03` and `AE-05` were not cleared.** They were measured exactly (#372) and filed, because
+  clearing them means changing 14 Manager and shared-layer files with real behaviour risk, which
+  cannot be told apart afterwards from the contracts change. `AE-06` was already 0.
+- **`check_feature_contracts.py` shipped unwired.** The design doc and PR called it a CI gate and
+  nothing ran it; it was wired in the release branch. Any checker added from now on should be wired
+  in the same change that adds it, and asserted against, or it is documentation.
 
 ## 6. What a package records when it closes
 
