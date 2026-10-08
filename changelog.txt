@@ -1,71 +1,59 @@
-WA X 1.2.0-beta.7
+WA X 1.2.0-beta.8
 Release date: 2026-10-08
 
-Development package 7: the state that WA X keeps while it is running inside WhatsApp now has an
-owner and a lifetime, and a gate that stops the list of things that write it from growing. Nothing
-you can see changed. The point of this build is that the next sixty-three features can be cleaned up
-one at a time.
+Development package 8: WA X's features are now registered in exactly one place, and the place the
+compatibility matrix is computed from is that same place. Nothing you can see changed. The point of
+this build is that the module and its own documentation can no longer quietly disagree about which
+features exist.
 
-THE COUNT WAS NOT THE PROBLEM
-- WA X tracks 232 declarations of mutable state in code that runs inside WhatsApp. That number sounds
-  alarming and it is nearly useless: it counts declarations rather than writes, so a second place
-  owning the same field looks exactly like the first, and it counts about forty ordinary local
-  variables and some words in comments that merely mention an object.
-- Counted by the place that actually writes each one, the shape is different. There are eleven write
-  sites, for seven pieces of state, in five files.
-- So the state is written in a handful of places and read in many. That is the signature of code
-  that works and has no owner, not of code that is broken. Nothing here was a bug to fix.
+TWO LISTS, AND NOBODY COMPARED THEM
+- The runtime installed features from a hand-written list of 64 class names. The compatibility matrix
+  was computed from a second list of 64 names.
+- They held the same names in the same order. That is the part worth being precise about: this was
+  never a case of the two disagreeing. It was a case of them being free to disagree without anything
+  noticing.
+- A feature added to one list and not the other would have shipped a build that installs a different
+  set of features than the compatibility documentation says it does. You would have found out by
+  installing it.
+- The second list was not even independent. The tool that produced it did not look for features; it
+  read the first list and attached extra facts to the names in it. So the documentation was a copy of
+  the code with comments.
 
-WHAT IS NOW DIFFERENT INTERNALLY
-- There is one RuntimeGraph per WhatsApp process. It holds the target's application, the module's own
-  themed context, the target's settings and the context handed to features, and it can say what it
-  released when the process ends.
-- It names no Android type at all, on purpose: a container whose own rules can only be checked by
-  starting WhatsApp gets checked by starting WhatsApp, which is to say not at all. Its attach,
-  replace, close, refuse-after-close and release-reporting behaviour is now asserted in ordinary
-  unit tests.
-- A holder for it exists, in one place, and that one place is the single deliberate exception the
-  project now has. A gate fails if a second one appears.
-- The version of WhatsApp the process is running is recorded exactly once, when the system finally
-  answers the question, instead of being read out of whatever global happened to be set.
+WHAT IS DIFFERENT NOW
+- There is one list, in one file, and it says which features exist and in what order they install.
+- The tool that builds the compatibility matrix reads that list. It still works out each feature's
+  preference keys and resolver dependencies by reading that feature's own code, because those are
+  facts about what the feature does rather than declarations anyone should have to maintain twice.
+- A check runs in every build. It fails if a feature exists in the code but is not registered, if two
+  features share an id, if the documentation's list has drifted from the code's, or if anything goes
+  back to building features by looking constructors up at runtime.
+- Adding a feature is now: write it, add one line. Nothing else.
 
-THE GATE, AND WHY IT ONLY FAILS ONE WAY
-- A new place writing one of those seven pieces of state fails the build. So does a second declaration
-  of it, a second graph holder, or an unexpected file building a graph.
-- A place that stops writing it does not fail anything. That direction is on purpose: this state is
-  meant to disappear, and a gate that complained when it did would make progress look like breakage.
-- The write sites are recorded by file rather than by line number. A rule that has to be re-approved
-  every time an unrelated edit shifts a line teaches you to re-approve it without reading.
+REFLECTION IS GONE FROM FEATURE STARTUP
+- Every feature used to be built by searching for a constructor with the right parameter types and
+  calling it. If a feature's constructor ever changed shape, that failed at runtime with an error
+  naming neither the feature nor the reason.
+- Each registered entry now names the constructor directly, so changing a feature's shape fails the
+  build at the entry that has to change with it.
+- That also removed a real fault. Each of the 63 older features was being built twice, once and then
+  discarded, before the one that was actually used was started. Two copies of every feature, one
+  thrown away, and nothing in the test suite could have noticed.
 
-THE FEATURE GATE
-- A feature written against the new contract may not read any of that state, and may not go looking
-  for the graph either. Reaching for the graph would turn "your dependencies are passed to you" back
-  into "your dependencies are whatever the process happens to hold", and the feature would be
-  untestable again.
-- The gate also fails if there are no such features to check, so it cannot pass by having nothing to
-  look at.
-
-REMOVED
-- One file: a registry of activity states that was written on every activity callback and read by
-  nothing at all. It held weak references to activities under a map that never cleaned up, so it was
-  keeping the names of destroyed screens alive for the life of the process. Deleting it changes
-  nothing you can observe, because nothing observed it.
-
-ONE THING THAT WAS WRONG AND WAS CAUGHT
-- The first version of the graph handed out a value from a named slot without actually checking its
-  type, because with a generic type parameter the cast compiles to nothing and cannot fail. The test
-  written to prove the mismatch was reported failed on its first run, which is the only reason it is
-  fixed: a check that cannot fail is not a check.
+A FAILURE REASON THAT WAS BEING THROTTEN AWAY
+- When a feature told WA X why it had failed, that reason was written into a list that nothing ever
+  read, and the reason that actually got stored and shown was one guessed back out of the error text.
+- A feature that says "the class I need does not exist on this build" now has exactly that recorded.
+  If you send a diagnostics report, that sentence is now in it.
 
 WHAT DID NOT CHANGE
-- No feature behaves differently. No setting is read differently. Nothing on screen moves.
-- Sixty-three of the sixty-four features still use the old contract, exactly as before. Cleaning
-  them up belongs to the settings package, which owns the replacement for the preferences object they
-  take.
-- There is still no way to shut down the activity listeners that seven features register, because the
-  mechanism for it did not exist until this build. The mechanism exists now; the call sites belong to
-  the features.
+- The same 64 features install, in the same order, with the same settings. No feature behaves
+  differently and nothing on screen moves.
+- Sixty-three of them still take the same two arguments they always did. That changes next, in the
+  settings package, and because they are now named rather than looked up, that change will be caught
+  by the compiler in one file at a time instead of failing on a user's phone.
+- There is still no per-feature safety assessment on anything. The field is deliberately absent until
+  there is real evidence to put in it, because an invented assessment is worse than none.
 
 UPGRADE
-- Install over 1.2.0-beta.6. Same signature, so Android keeps the module's settings. Nothing in this
+- Install over 1.2.0-beta.7. Same signature, so Android keeps the module's settings. Nothing in this
   build migrates or rewrites anything you have configured.
