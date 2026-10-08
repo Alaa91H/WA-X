@@ -5,6 +5,7 @@
 **Package identifier:** `UIX-01` — **ONE coherent Manager UI/UX delivery package**, not separate feature releases.  
 **Source of truth for pre-approved Features screen:** [APPROVED_FEATURES_SCREEN_SPEC.md](APPROVED_FEATURES_SCREEN_SPEC.md).  
 **Enhanced interactive Customization preview:** [CUSTOMIZATION_INTERACTIVE_PREVIEW.html](preview/CUSTOMIZATION_INTERACTIVE_PREVIEW.html) (illustrative, non-production).  
+**Approved Home diagnostic and feature compatibility contract:** [APPROVED_HOME_HEALTH_COMPAT_SPEC.md](APPROVED_HOME_HEALTH_COMPAT_SPEC.md).  
 **Architecture / order:** #318 M00→M13 blocker; #333 architectural dependency ordering; #344 A10 (data/UDF before new shell); #345 A11 (Compose shell), then implement and release **UIX-01** only when prerequisites are green.  
 **Related owners:** #370 (Features screen), #260 F213 (WhatsApp-side customization), #69 F060 (distraction-free), #369 (Status AdBlock audit). Feature owners retain behavior; UIX-01 owns Manager surface, grouping, preview and interaction design.
 
@@ -20,13 +21,19 @@ The package has one shared design system, one typed settings source of truth, on
 
 | Primary surface | Purpose | Entry |
 |---|---|---|
-| Home | Real target/runtime status, most-used shortcuts, recovery entry and targeted notices | Bottom nav |
+| Home | Verified runtime/LSPosed state, one-tap health check, precise problem cause/remedy, per-version compatible-feature summary and shortcuts | Bottom nav; detailed in approved Home health specification |
 | Features | All feature settings, search, categories, favorites, effective vs desired state | Bottom nav — detailed in companion approved spec and #370 |
 | Customization | WhatsApp appearance, UI sections/tabs, theme, chat bubbles, toolbar, Status/Channels, optional advanced styles | Bottom nav |
 | Tools | Diagnostics, compatibility, backup/restore, updates, logs, safe mode/recovery | Bottom nav |
 | App Settings | WA X Manager language, own UI theme, motion, notifications/update checks, local log privacy, advanced, About/licenses | Header gear (not bottom nav) |
 
 Both WhatsApp and WhatsApp Business must have **clearly isolated** target selection wherever settings affect the injected target. App Settings are global to Manager unless a setting is explicitly target-specific. Never conflate Manager appearance with native WhatsApp customization.
+
+## 2A. Home — professional health and compatibility hub (binding extension)
+
+The Home screen is **not only an activation badge or a Diagnostics shortcut**. Include a prominent **Check now** action, verified stage-by-stage LSPosed/module/scope/process/injection/IPC/preferences/DexKit/resolver/hook state, clear evidence-backed and non-blaming root cause, next-safe-step guidance, and a filtered **compatible features for this installed WhatsApp version** summary. The selected WhatsApp or Business app and exact version/build must be visible; show scan freshness and distinguish verified compatible/fallback/unverified/incompatible/runtime failed/user disabled/not implemented. Never call a target unsupported based solely on an undeclared build or stale heartbeat. Home presents a short digest; Tools provides detailed analysis and report export; Features uses the same per-feature state. Reuse #320/#321 and F154 #169, F155 #170, F159 #177, F166 #184, A05 #339, rather than forking health subsystems.
+
+**Full interaction, classification, causes, actions, version evidence and tests:** [APPROVED_HOME_HEALTH_COMPAT_SPEC.md](APPROVED_HOME_HEALTH_COMPAT_SPEC.md). This is inside UIX-01, not an independent delivery.
 
 ## 3. Common visual system
 
@@ -90,12 +97,13 @@ Entry via header gear; independent of WhatsApp visual customization.
 
 After prerequisites and A10/A11 foundations:
 1. **UIX-01.0 Inventory and reference:** enumerate every existing preference XML key, custom activity, menu, feature registry item, diagnostic/backup/update surface. Create old→new IA/key/target mapping, identify orphans; establish screenshot goldens and backwards-compatibility baseline.
-2. **UIX-01.1 Shared foundation:** Manager navigation shell, design tokens, reusable green/gray switch, category/filter/search/group controls, target selector, status indicators, scalable lists/animations/accessibility.
-3. **UIX-01.2 Features screen:** implement #370/companion spec. Use real registry/state, target isolation, favorites and localized search.
-4. **UIX-01.3 Customization screen:** enhanced live miniature preview, independent toggles, staged theme apply/reset, old preference migration, progressive Advanced organization, #260/#69 hooks referenced not duplicated.
-5. **UIX-01.4 Tools screen:** real health/diagnostic/update/backup/recovery entry points, safe actions and source-backed status.
-6. **UIX-01.5 App Settings:** Manager-only settings, language/appearance/motion/updates/log privacy/About. Header gear placement; no fifth nav destination.
-7. **UIX-01.6 Integration & final release gate:** entire package tested and reviewed together, reversible, final changelog + release. No standalone "finished screen" release until integrated global gate.
+2. **UIX-01.1 Shared foundation:** Manager navigation shell, design tokens, reusable green/gray switch, category/filter/search/group controls, target selector, status indicators, scan progress and cause-action states, scalable lists/animations/accessibility.
+3. **UIX-01.H Home health hub:** verified target/runtime summary, one-tap staged check, evidence-based root-cause diagnostics and detailed per-version compatible-feature summary/link. Integrate existing M01/M02/F154/F155/F159/F166 owners; no duplicate health engine.
+4. **UIX-01.2 Features screen:** implement #370/companion spec. Use real registry/state, target isolation, favorites and localized search.
+5. **UIX-01.3 Customization screen:** enhanced live miniature preview, independent toggles, staged theme apply/reset, old preference migration, progressive Advanced organization, #260/#69 hooks referenced not duplicated.
+6. **UIX-01.4 Tools screen:** real health/diagnostic/update/backup/recovery entry points, safe actions and source-backed status.
+7. **UIX-01.5 App Settings:** Manager-only settings, language/appearance/motion/updates/log privacy/About. Header gear placement; no fifth nav destination.
+8. **UIX-01.6 Integration & final release gate:** entire package tested and reviewed together, reversible, final changelog + release. No standalone "finished screen" release until integrated global gate.
 
 The sequence is internal to UIX-01 (no parallel competing implementation). Separate commits/reviewable PRs are OK only if their intermediate merges keep `main` buildable and do not claim package-level completion.
 
@@ -103,6 +111,7 @@ The sequence is internal to UIX-01 (no parallel competing implementation). Separ
 
 - [ ] Every current feature and setting has a reachable destination (coverage report, no silent deletion) and existing preferences survive upgrade/rollback.
 - [ ] Four bottom navigation destinations; App Settings gear accessible; deep links/predictive back/process recreation correct.
+- [ ] Home has a verified target/version-aware Check now/diagnostic health journey with precise problem/evidence/cause/safe fix/recheck and version-specific feature compatibility categories, filtering and last-check timestamps (see approved Home spec); no false 'LSPosed disabled' or unverified compatibility claims.
 - [ ] Features (#370) full search/category/favorites, target state, true runtime compatibility behavior and safe independent switches.
 - [ ] Customization preview accurately simulates toggles/colors/toolbar/status/channel layout changes; explicit target indicator; visually distinct preview vs real effect; advanced settings collapsed.
 - [ ] Four independent section switches + separate channel recommendations and sponsored Status filter (only when truly supported) behave consistently with F060/F213 and Stock Mode.
@@ -116,6 +125,7 @@ The sequence is internal to UIX-01 (no parallel competing implementation). Separ
 ## 9. Deliverable references
 
 - Approved Features screen reference: [APPROVED_FEATURES_SCREEN_SPEC.md](APPROVED_FEATURES_SCREEN_SPEC.md)
+- Approved Home diagnostic and compatibility spec: [APPROVED_HOME_HEALTH_COMPAT_SPEC.md](APPROVED_HOME_HEALTH_COMPAT_SPEC.md)
 - Interactive Customization preview: [CUSTOMIZATION_INTERACTIVE_PREVIEW.html](preview/CUSTOMIZATION_INTERACTIVE_PREVIEW.html)
 - Unified UIX-01 issue: [#371](https://github.com/Alaa91H/WA-X/issues/371)
 - Parent architecture modernization: [#333](https://github.com/Alaa91H/WA-X/issues/333)
