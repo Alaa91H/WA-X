@@ -112,3 +112,5 @@ The top summary does **not** list hundreds of features by default. Show 3-5 prio
 - Main unified spec: [APPROVED_MANAGER_UI_UX_UNIFIED_PACKAGE.md](APPROVED_MANAGER_UI_UX_UNIFIED_PACKAGE.md)
 - Feature browsing: [APPROVED_FEATURES_SCREEN_SPEC.md](APPROVED_FEATURES_SCREEN_SPEC.md)
 - M01 #320, M02 #321; A05 #339, F154 #169, F155 #170, F159 #177, F166 #184, F161 #179
+
+- Illustrative interactive Home + diagnosis + feature compatibility preview: [HOME_DIAGNOSTICS_COMPATIBILITY_PREVIEW.html](preview/HOME_DIAGNOSTICS_COMPATIBILITY_PREVIEW.html)
