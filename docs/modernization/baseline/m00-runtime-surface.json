@@ -663,6 +663,8 @@
           "app/src/main/java/com/wax/module/xposed/features/others/GoogleTranslateLanguages.kt",
           "app/src/main/java/com/wax/module/xposed/features/others/GoogleTranslateSettings.kt",
           "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
+          "app/src/main/java/com/wax/module/xposed/registry/FeatureFactory.kt",
+          "app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
           "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt",
@@ -676,7 +678,7 @@
         "@JvmStatic var": 2,
         "lateinit var": 32,
         "module-level nullable var": 160,
-        "object singleton": 38
+        "object singleton": 40
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -730,6 +732,8 @@
         "app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt",
         "app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt",
         "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
+        "app/src/main/java/com/wax/module/xposed/registry/FeatureFactory.kt",
+        "app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt",
         "app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt",
         "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
         "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt",
@@ -739,7 +743,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 232,
+      "occurrences": 234,
       "owner": "#333 A02",
       "target": "Contained in RuntimeGraph with an explicit lifetime.",
       "title": "Global mutable state inside the injected process",
@@ -1031,5 +1035,5 @@
     }
   },
   "schema": "wax.m00.runtime-surface/1",
-  "source_files": 326
+  "source_files": 328
 }
