@@ -102,7 +102,24 @@ def render(matrix: dict) -> str:
         per_package[key] = local
     total = sum(counts.values())
     if counts["unknown"] == total:
-        add("No cell in this matrix is resolver-verified yet. All cells are unknown.")
+        # Preserve the existing generated report when every declared cell is
+        # unknown.  This avoids an unrelated generated-doc change in #392.
+        add(
+            "No cell in this matrix is resolver-verified yet. Declared versions below are a "
+            "maintainer declaration that the runtime version gate enforces; they are **not** "
+            "evidence. Per the plan's governing rule, a version or feature is not declared "
+            "supported until its resolvers actually resolve on that target."
+        )
+        add("")
+        add("| Package | Declared versions | Resolver-verified |")
+        add("|---|---|---|")
+        for key in ("whatsapp", "business"):
+            entry = matrix["packages"][key]
+            add(
+                "| %s | %d | 0 / %d cells |"
+                % (PACKAGE_LABELS[key], len(entry["declaredVersions"]),
+                   len(entry["declaredVersions"]) * len(features))
+            )
     else:
         add(
             "Across %d feature/version cells: %d `supported` status claim(s), "
@@ -110,24 +127,18 @@ def render(matrix: dict) -> str:
             "These are matrix status claims, not independent resolver verification."
             % (total, counts["supported"], counts["degraded"], counts["unsupported"], counts["unknown"])
         )
-    add("")
-    add("| Package | Declared versions | Supported claims | Degraded | Unsupported | Unknown |")
-    add("|---|---|---|---|---|---|")
-    for key in ("whatsapp", "business"):
-        entry = matrix["packages"][key]
-        local = per_package[key]
-        add(
-            "| %s | %d | %d / %d cells | %d | %d | %d |"
-            % (
-                PACKAGE_LABELS[key],
-                len(entry["declaredVersions"]),
-                local["supported"],
-                len(entry["declaredVersions"]) * len(features),
-                local["degraded"],
-                local["unsupported"],
-                local["unknown"],
+        add("")
+        add("| Package | Declared versions | Supported claims | Degraded | Unsupported | Unknown |")
+        add("|---|---|---|---|---|---|")
+        for key in ("whatsapp", "business"):
+            entry = matrix["packages"][key]
+            local = per_package[key]
+            add(
+                "| %s | %d | %d / %d cells | %d | %d | %d |"
+                % (PACKAGE_LABELS[key], len(entry["declaredVersions"]),
+                   local["supported"], len(entry["declaredVersions"]) * len(features),
+                   local["degraded"], local["unsupported"], local["unknown"])
             )
-        )
     add("")
 
     add("## Status vocabulary")
