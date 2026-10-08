@@ -224,6 +224,13 @@
         "ref": "xposed-legacy"
       }
     },
+    "libxposed-modern-api": {
+      "group": "io.github.libxposed",
+      "name": "api",
+      "version": {
+        "ref": "libxposed-modern"
+      }
+    },
     "markwon-core": {
       "module": "io.noties.markwon:core",
       "version": {
@@ -265,13 +272,6 @@
     "rikkax-widget-borderview": {
       "module": "dev.rikka.rikkax.widget:borderview",
       "version": "1.1.0"
-    },
-    "libxposed-modern-api": {
-      "group": "io.github.libxposed",
-      "name": "api",
-      "version": {
-        "ref": "libxposed-modern"
-      }
     }
   },
   "loader_contract": {
@@ -354,8 +354,8 @@
     "detekt": "2.0.0-alpha.6",
     "kotlin": "2.4.21",
     "ksp": "2.3.12",
+    "libxposed-modern": "102.0.0",
     "spotless": "8.10.4",
-    "xposed-legacy": "82",
-    "libxposed-modern": "102.0.0"
+    "xposed-legacy": "82"
   }
 }
