@@ -102,5 +102,67 @@ class OwnershipTests(unittest.TestCase):
         )
 
 
+
+class DefensiveExtractionTests(unittest.TestCase):
+    def test_unrelated_typed_getters_and_dynamic_keys_are_not_certified(self):
+        files = {
+            "Feature": """
+                package com.wax.module.xposed.features.media
+                const val PREF_REAL = "real_pref"
+                fun install() {
+                    jsonObject.getString("json_field")
+                    bundle.getInt("bundle_field", 0)
+                    prefs.getString("real_literal", null)
+                    prefs.getLong(PREF_REAL, 0L)
+                    prefs.getInt(dynamicKey(), 0)
+                    prefs.edit().putString("write_only", "value")
+                }
+            """
+        }
+        self.assertEqual(
+            extractor.feature_preference_keys(files)["Feature"],
+            ["real_literal", "real_pref"],
+        )
+
+    def test_class_declared_in_differently_named_file(self):
+        files = {
+            "Feature": """
+                package com.wax.module.xposed.features.media
+                import com.wax.module.xposed.features.general.CrossHelper as AliasHelper
+                fun install() { LocalHelper(); AliasHelper(); AmbiguousHelper() }
+            """,
+            "Helpers": """
+                package com.wax.module.xposed.features.media
+                class LocalHelper { fun apply() { Unobfuscator.loadMedia() } }
+            """,
+            "DifferentFilename": """
+                package com.wax.module.xposed.features.general
+                class CrossHelper { fun apply() { Unobfuscator.loadGeneral() } }
+            """,
+            "Foreign": """
+                package com.wax.module.xposed.features.privacy
+                class AmbiguousHelper { fun apply() { Unobfuscator.loadPrivacy() } }
+            """,
+        }
+        unresolved = set()
+        self.assertEqual(
+            extractor.feature_closure("Feature", files, unresolved),
+            {"Feature", "Helpers", "DifferentFilename"},
+        )
+        self.assertIn("Feature: AmbiguousHelper", unresolved)
+        self.assertEqual(
+            extractor.feature_resolver_usage(files)["Feature"],
+            ["loadGeneral", "loadMedia"],
+        )
+
+    def test_ambiguous_qualified_class_definitions_fail(self):
+        files = {
+            "A": "package com.wax.module.xposed.features.media\nclass Helper {}",
+            "B": "package com.wax.module.xposed.features.media\nclass Helper {}",
+        }
+        with self.assertRaisesRegex(ValueError, "ambiguous Kotlin class ownership"):
+            extractor.feature_closure("A", files)
+
+
 if __name__ == "__main__":
     unittest.main()
