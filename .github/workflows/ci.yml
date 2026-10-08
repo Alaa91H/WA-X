@@ -333,6 +333,13 @@ jobs:
               python3 tools/quality/test_check_apk_loader_contract.py || failures=$((failures + 1))
               python3 tools/quality/test_check_repository_urls.py || failures=$((failures + 1))
               python3 tools/quality/check_repository_urls.py || failures=$((failures + 1))
+              # The feature-contract boundary. A platform type in a feature constructor compiles
+              # fine and fails on a device, so the rule that keeps com.wax.module.contract free of
+              # Android, Xposed and DexKit has to be a gate rather than a convention. The self-test
+              # runs first for the same reason as every other one here: a checker whose own regexes
+              # quietly stopped matching reports a clean tree that is not clean.
+              python3 tools/quality/test_check_feature_contracts.py || failures=$((failures + 1))
+              python3 tools/quality/check_feature_contracts.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
           - name: Modernization evidence contracts
             shell: bash
