@@ -1,3 +1,86 @@
+WA X 1.2.0-beta.4
+Release date: 2026-10-08
+
+Development package 4: the status screen no longer reports that the module is working because
+the module is running. For the first time, the card describes the state of WhatsApp and
+WhatsApp Business individually, and it names what failed when something did.
+
+This is a build where a wrong message has been removed rather than a feature added. If your
+WhatsApp was working, you will see the same green card with a different, more specific line
+under it. If something was broken, you will now be told which part — which is the first time
+this build has been able to tell you that at all.
+
+WHAT THE STATUS SCREEN NOW SAYS
+- One card per target, and each says one of eight specific things rather than one of two vague
+  ones: not installed, not running, running but WA X did not load into it, WA X is starting,
+  running with reduced capability, WA X could not start, in background, or WA X has not
+  reported from it recently.
+- The line under the title is the action you can take, followed by the evidence behind it — the
+  stage the runtime reached, the recorded failure code, the session, the process id and how
+  fresh the report is. Nothing on the card is a guess about a different app.
+- The failure is named. A resolution engine that failed to start, a preference file that could
+  only be read through a fallback, a hook set that threw, an optional feature that did not
+  install: each reaches the card under its own name. Before this build, all of them produced
+  the same sentence about LSPosed, and a resolver failure was simply invisible.
+- "Whatsapp is not running or has not been activated in Lsposed" no longer exists, in any
+  language. There is no fallback sentence left to reach for. The one case that may still say
+  that WA X was not loaded is the one where it is proven: a framework demonstrably loaded WA X
+  somewhere, and a process demonstrably exists for WhatsApp, and WA X never reported from
+  inside it.
+- A stale report is shown as a stale report. A heartbeat older than thirty seconds is no longer
+  described as READY, and one older than two minutes is not described as anything positive. A
+  restart is recognised as a restart rather than read as a continuing process.
+
+WHAT THE MODULE ITSELF REPORTS
+- The runtime now records all twelve of its subsystems instead of one. It could previously only
+  ever publish "degraded", because a subsystem that had not reported was indistinguishable
+  from one that had — which would have been the old false banner wearing longer sentences.
+- Each of those records is something the framework already told the runtime, not something the
+  module decided about itself. That includes the difference between the scope WA X *recommends*
+  in its manifest and the scope that is actually in effect, which is the only one of the two
+  that can be observed — and WA X now reports the effective one. It does not report the
+  recommended one as though it were a fact.
+- A bootstrap that stops because the resolution engine will not start now installs a
+  responder only — no feature, nothing changed inside WhatsApp — so that failure is visible to
+  the app. Previously that failure was recorded and then unreachable, which is why the screen
+  could say everything was fine while WhatsApp had no WA X hooks at all.
+- The self-hook is unchanged in what it observes and is renamed in what it claims. It still
+  reports that a framework loaded WA X into the module's own process, and it is no longer the
+  answer to any other question. The architecture rule that counted the self-hook as the
+  activation signal is now at zero.
+
+VERIFICATION
+- 1269 unit tests run in this build, none failing. The previous release ran 1211.
+- Every coverage counter is above its recorded floor, with more code covered than before, not
+  a lower bar.
+- Formatting, static analysis and Android lint are clean, and the build fails on warnings rather
+  than collecting them. Lint has the same four accepted baseline entries as the previous
+  release.
+- All nine failure modes the phase names — no framework, module disabled, missing scope,
+  stopped target, no injection, an engine failure, a stale heartbeat and a restart — are unit
+  tests over one pure resolver, including a matrix assertion over every combination of what was
+  observed and every failure code. The generic message is gone because no input can produce it.
+- Both APK variants were built locally and the entry-point check passes on both. The released
+  APK carries the same update key as every previous build, so this installs over them.
+
+KNOWN LIMITATIONS
+- No device verification is claimed for this beta. The activation model is verified by unit
+  tests and by the built artifact; whether the module hooks correctly inside WhatsApp on your
+  device is unverified and is exactly what testing this build has to establish.
+- On a stock Android release the app usually cannot see whether another app's process is
+  running. The interface says so rather than guessing: a target it cannot inspect is reported
+  as "nothing reported", never as "not running". Reading the real process list reliably needs
+  a channel the module does not have yet, and building one is a later package's work.
+- WhatsApp Business support is unchanged; nothing in this package widens it.
+- 190 files of recorded architectural debt remain, down from 193.
+
+MIGRATION AND ROLLBACK
+- No settings, preference key or user-visible feature changed. One new file appears in the
+  app's own storage; an existing installation simply has none yet, and an unreadable one is
+  set aside rather than trusted.
+- Rollback is installing the previous build; the update key is unchanged, so the downgrade
+  installs normally.
+
 WA X 1.2.0-beta.3
 Release date: 2026-10-07
 
