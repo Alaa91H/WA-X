@@ -317,8 +317,8 @@
       "org/**"
     ],
     "target_sdk": 34,
-    "version_code": "114",
-    "version_name": "1.2.0-beta.4"
+    "version_code": "115",
+    "version_name": "1.2.0-beta.5"
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",
