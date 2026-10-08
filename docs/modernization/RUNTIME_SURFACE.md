@@ -13,8 +13,8 @@ the numbers.
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
 | [Direct DexKit use](#dexkit_direct) | #318 M08 / #333 A04 | 29 | 24 |
-| [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 234 | 70 |
-| [Self-hook as the activation signal](#self_hook_activation) | #318 M01-M02 / #333 A01 | 5 | 3 |
+| [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 70 |
+| [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
 | [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 221 | 57 |
 | [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 146 | 43 |
 
@@ -346,7 +346,7 @@ Legacy types in use:
 
 **End state:** Stays non-zero; every hook gains an owner that can report its own failure.
 
-**Current:** 234 occurrences across 70 files.
+**Current:** 235 occurrences across 70 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
@@ -354,7 +354,7 @@ Legacy types in use:
 | `XposedBridge.hookAllMethods` | 32 | 14 |
 | `XposedBridge.hookMethod` | 116 | 47 |
 | `XposedHelpers.findAndHookConstructor` | 3 | 2 |
-| `XposedHelpers.findAndHookMethod` | 55 | 25 |
+| `XposedHelpers.findAndHookMethod` | 56 | 25 |
 
 <details><summary>Files</summary>
 
@@ -435,16 +435,16 @@ Legacy types in use:
 
 `self_hook_activation`
 
-**Why this is counted:** `isXposedEnabled` is replaced with a constant that returns true inside the module's own process. That makes the manager report the module as active for the reason that the module is running, which is circular: the one question the user asks is the one question the module answers about itself. It is also why a DexKit failure, a resolver failure or a feature failure can surface as 'Xposed is disabled'.
+**Why this is counted:** M02 demoted the self-hook. `isLegacySelfHookSignal` still reports that a framework loaded WA X into the module's own process, and it is now `ActivationSignal.LEGACY_SELF_HOOK_SIGNAL` rather than the answer to every activation question. What stays measurable is the surface of that signal: the hook that installs the constant, and every reader of the method it replaces. A new reader is the defect returning, which is why the count is kept rather than dropped - the method may not become the answer to anything again.
 
-**End state:** Zero. Activation is observed from the framework, never from a self-hook.
+**End state:** One site, the hook itself. No reader: nothing may branch on the legacy signal alone.
 
-**Current:** 5 occurrences across 3 files.
+**Current:** 7 occurrences across 3 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `hooks isXposedEnabled` | 1 | 1 |
-| `references isXposedEnabled` | 4 | 3 |
+| `installs the legacy self-hook` | 2 | 1 |
+| `references the legacy self-hook signal` | 5 | 3 |
 
 <details><summary>Files</summary>
 

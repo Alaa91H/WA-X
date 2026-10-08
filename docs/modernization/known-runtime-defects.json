@@ -35,9 +35,9 @@
       "title": "DexKit initialisation failure installs zero hooks and reports nothing",
       "severity": "high",
       "status": "partially fixed",
-      "fixedBy": "#320 M01",
-      "fixedHalf": "The failure is no longer silent. Health exists before the engine is asked to initialise, the stage is opened, and the failure is recorded against the DEXKIT subsystem with RuntimeFailureCode.DEXKIT_INIT_FAILED instead of only being logged. The ordering is asserted, not just the presence: the record has to exist before the step that can fail.",
-      "remainingHalf": "The early return is deliberately unchanged, so this failure still stops the bootstrap and installs nothing. What should happen instead of returning - which stages are safe to continue with - is #322 M03's decision, and it needs the record to exist first. The same is true of the persistence: the record is in-process because nothing has a usable data directory this early, and the manager-visible surface arrives with the stage runner.",
+      "fixedBy": "#320 M01 / #321 M02",
+      "fixedHalf": "The failure is no longer silent and it is no longer invisible. Health exists before the engine is asked to initialise, the stage is opened, and the failure is recorded against the DEXKIT subsystem with RuntimeFailureCode.DEXKIT_INIT_FAILED instead of only being logged; the ordering is asserted, not just the presence. M02 then made that record reachable: a runtime whose bootstrap stops installs a probe responder that answers the Manager's request with the recorded heartbeat and installs no feature, so the card names the engine failure instead of showing a healthy module.",
+      "remainingHalf": "The bootstrap still stops and installs no hooks. That is #322 M03's decision rather than a defect this package can close - it needs the record to exist first, and it now does - so the entry stays \"partially fixed\" and M03 is named as the owner.",
       "owner": "#320 M01 / #322 M03",
       "locations": [
         "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt:218",
@@ -49,26 +49,32 @@
       "characterized_by": [
         "dexKitInitFailureIsRecordedBeforeTheBootstrapStops"
       ],
-      "fixedWording": "The test asserts both halves: the failure is recorded with DEXKIT_INIT_FAILED, and the early return is still there so that removing it without a decision reads as a failure naming M03 rather than as a silent behaviour change."
+      "fixedWording": "The early-return assertion still holds and still names M03 as its owner, so M03 can change the bootstrap without this registry being rewritten first. A second test asserts that the engine failure reaches the card under its own code and is never permitted to present as the framework being absent."
     },
     {
       "id": "M00-DEF-03",
       "title": "The status banner is the module's opinion of itself, not the runtime's state",
       "severity": "high",
-      "owner": "#320 M01 / #335 A01",
+      "status": "fixed",
+      "fixedBy": "#321 M02",
+      "fixedIn": "the activation model in com.wax.module.activation: a per-target heartbeat produced by the runtime from inside the target process, an ActivationSignal hierarchy in which the self-hook is the weakest source, one ActivationState per distinguishable situation, and a resolver that refuses to infer a scope or module failure from absence",
+      "owner": "#321 M02",
       "locations": [
-        "app/src/main/java/com/wax/module/ModuleApplication.kt:84",
-        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:105",
-        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt:59",
-        "app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt:389"
+        "app/src/main/java/com/wax/module/activation/ActivationStatusResolver.kt:1",
+        "app/src/main/java/com/wax/module/activation/TargetHeartbeat.kt:1",
+        "app/src/main/java/com/wax/module/xposed/core/ActivationProof.kt:1",
+        "app/src/main/java/com/wax/module/ModuleApplication.kt:1"
       ],
-      "current_behaviour": "isXposedEnabled() is System.currentTimeMillis() == 0L, which is unconditionally false unhooked. Its only true path is a self-hook returning a constant, installed only when LSPosed loads WA X into its own process. HomeFragment.checkStateWpp() branches on it alone.",
-      "symptom": "The banner means \"LSPosed is running and has WA X in its own scope\". It cannot be affected by WhatsApp's scope, the target process, injection, preferences, DexKit, resolvers or any feature.",
-      "root_cause": "Self-hook as an activation signal is circular: the module reports itself healthy because it is running.",
+      "current_behaviour": "isLegacySelfHookSignal() is still System.currentTimeMillis() == 0L and is still installed by the self-hook, but it is no longer the activation signal. It is ActivationSignal.LEGACY_SELF_HOOK_SIGNAL, ranked below the framework evidence a target reports about itself, and the Home screen renders a state resolved from that heartbeat rather than from this boolean.",
+      "symptom": "Resolved. The banner no longer claims a module is active for the reason that it is running. Each card names one of: not installed, not running, running but not injected, bootstrapping, degraded, failed, ready, or nothing reported - and the failure that produced the state travels with it.",
+      "root_cause": "Fixed by separating the question from its source. A self-hook can answer \"did a framework load WA X somewhere\" and nothing else, and no other claim may be derived from it.",
+      "gate": "Gate A of #321. A generic activation message is permitted for exactly one failure code - INJECTION_NOT_OBSERVED, which requires a framework to be proven present and a target process to be proven alive - and for no other. SCOPE_MISSING and MODULE_DISABLED cannot be proven from a third process and are never produced there.",
       "characterized_by": [
         "activationSignalIsFalseWithoutTheSelfHook",
-        "selfHookIsReachableOnlyForTheModuleOwnPackage"
-      ]
+        "selfHookIsReachableOnlyForTheModuleOwnPackage",
+        "noScreenFallsBackOnAGenericActivationMessage"
+      ],
+      "fixedWording": "Both original tests now assert the fix from the other side: the placeholder is named for the signal it carries rather than for the question it was asked, and the hook that installs it is still reachable only for the module's own package. A third test asserts that no screen can fall back on a generic activation message, because the message being gone is what makes the fix structural rather than cosmetic."
     },
     {
       "id": "M00-DEF-04",

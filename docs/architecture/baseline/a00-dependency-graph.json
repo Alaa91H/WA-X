@@ -22,6 +22,15 @@
         "xposed.utils"
       ]
     },
+    "activation": {
+      "external": [
+        "platform"
+      ],
+      "files": 11,
+      "first_party": [
+        "health"
+      ]
+    },
     "activities": {
       "external": [
         "com",
@@ -110,6 +119,16 @@
       ],
       "files": 6,
       "first_party": []
+    },
+    "health": {
+      "external": [
+        "platform"
+      ],
+      "files": 14,
+      "first_party": [
+        "<root>",
+        "diagnostics"
+      ]
     },
     "history": {
       "external": [
@@ -315,6 +334,7 @@
       "files": 6,
       "first_party": [
         "<root>",
+        "activation",
         "activities",
         "adapter",
         "compat",
@@ -468,12 +488,14 @@
         "platform",
         "xposed"
       ],
-      "files": 5,
+      "files": 6,
       "first_party": [
         "<root>",
+        "activation",
         "activities",
         "compat",
         "diagnostics",
+        "health",
         "platform",
         "settings",
         "views.dialog",
@@ -755,13 +777,13 @@
     "dexkit_outside_resolver": 21,
     "feature_shared_preferences": 64,
     "feature_unobfuscator": 72,
-    "self_hook_references": 3,
+    "self_hook_references": 0,
     "shared_layer_imports_runtime": 30,
     "ui_xposed_direct": 3
   },
   "schema": "wax.a00.dependency-graph/1",
   "totals": {
-    "files": 284,
-    "lines": 64290
+    "files": 310,
+    "lines": 67889
   }
 }

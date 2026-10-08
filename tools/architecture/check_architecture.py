@@ -288,14 +288,17 @@ LAW: dict[str, object] = {
     "AE-06": {
         "title": "The activation signal must not be a self-hook",
         "rationale": (
-            "`isXposedEnabled` returns a constant installed by a hook into the module's own "
-            "process, so the module reports itself healthy because it is running. A DexKit or "
-            "resolver failure can then present as 'LSPosed is disabled'."
+            "A method whose value is installed by a hook into the module's own process answers "
+            "'the module is running', not 'the module is working', and the Manager used to treat "
+            "the two as the same question - so a DexKit or resolver failure presented as 'LSPosed "
+            "is disabled'. M02 renamed the method to say what it observes and made activation a "
+            "per-target claim; the rule is at zero and stays there, because a method named for "
+            "the legacy signal must not become the answer to anything again."
         ),
         "measure": "self_hook_references",
         "limit": None,
-        "owner": "#320 M01 / #335 A01",
-        "removalPhase": "M01 - runtime health observed from the framework",
+        "owner": "#335 A01",
+        "removalPhase": "A01 - explicit Manager/Runtime contracts",
     },
 }
 

@@ -81,7 +81,24 @@ class ModuleApplication : Application() {
         sendBroadcast(intent)
     }
 
-    fun isXposedEnabled(): Boolean = System.currentTimeMillis() == 0L
+    /**
+     * The legacy self-hook signal: a framework loaded WA X into its own process.
+     *
+     * The name is the fix as much as the wiring is. This used to be named for the question it
+     * was asked - "is Xposed enabled" - and answering that question with a constant a hook
+     * installs in the module's own process is the whole defect: the module reported itself
+     * healthy because it was running. It now says what it observes - that a framework loaded
+     * WA X somewhere - and it is reported beside the per-target evidence rather than in place of
+     * it, as `ActivationSignal.LEGACY_SELF_HOOK_SIGNAL`.
+     *
+     * The value itself is unchanged on purpose: the hook that replaces it with a constant is
+     * still the only thing that can make it true, and
+     * `RuntimeTruthCharacterizationTest.selfHookIsReachableOnlyForTheModuleOwnPackage` is the
+     * test that keeps that honest. It stays `false` unhooked, because wall-clock milliseconds
+     * have never been zero since 1970, so the placeholder can never report a healthy runtime on
+     * its own.
+     */
+    fun isLegacySelfHookSignal(): Boolean = System.currentTimeMillis() == 0L
 
     companion object {
         lateinit var instance: ModuleApplication

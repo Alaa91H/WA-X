@@ -31,6 +31,15 @@ class ModuleEntryPoint :
     companion object {
         private var pref: XSharedPreferences? = null
 
+        /**
+         * The method the self-hook replaces, named here so the name exists in exactly one place.
+         *
+         * It is a constant rather than an inline literal because the string is the contract
+         * between the hook and the method it hooks: renaming one without the other would leave
+         * the signal permanently false with nothing failing.
+         */
+        const val LEGACY_SIGNAL_METHOD: String = "isLegacySelfHookSignal"
+
         @JvmStatic
         var resParam: InitPackageResourcesParam? = null
 
@@ -52,10 +61,15 @@ class ModuleEntryPoint :
         val classLoader = lpparam.classLoader
 
         // The module's own process. It is hooked, but not enhanced: this is what
-        // makes ModuleApplication.isXposedEnabled report an active module and what forces the
-        // preference file world-readable so hooked WhatsApp processes can read it
-        // through XSharedPreferences. LSPosed adds a legacy module to its own scope
-        // automatically for exactly this reason.
+        // makes ModuleApplication.isLegacySelfHookSignal report that a framework loaded WA X
+        // here, and what forces the preference file world-readable so hooked WhatsApp
+        // processes can read it through XSharedPreferences. LSPosed adds a legacy module to its
+        // own scope automatically for exactly this reason.
+        //
+        // This signal is deliberately narrow. It says a framework loaded the module into the
+        // module's own process, which is not the same claim as "WhatsApp is activated", and it
+        // is no longer used to make that claim - the per-target heartbeat is. What it remains is
+        // the one piece of evidence available when no target has ever started.
         if (packageName == BuildConfig.APPLICATION_ID) {
             hookSelf(classLoader)
             return
@@ -108,10 +122,16 @@ class ModuleEntryPoint :
     /**
      * Hooks the module's own process. Kept separate from [handleLoadPackage] so the
      * self-hook cannot accidentally be reached for any other package.
+     *
+     * The method it replaces is named after what it is - a legacy signal - rather than after
+     * the question it used to be asked. A hook that replaced a method named for "is Xposed
+     * enabled" was, by its name, claiming to make the module enabled; one that replaces a
+     * method named for the legacy signal is only claiming what the framework did, which is the
+     * entire difference between evidence and an opinion.
      */
     private fun hookSelf(classLoader: ClassLoader) {
         val clazz = XposedHelpers.findClass(ModuleApplication::class.java.name, classLoader)
-        XposedBridge.hookAllMethods(clazz, "isXposedEnabled", XC_MethodReplacement.returnConstant(true))
+        XposedBridge.hookAllMethods(clazz, LEGACY_SIGNAL_METHOD, XC_MethodReplacement.returnConstant(true))
 
         @Suppress("DEPRECATION")
         @SuppressLint("WorldReadableFiles")

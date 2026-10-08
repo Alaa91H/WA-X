@@ -158,9 +158,11 @@ class RuntimeTruthCharacterizationTest {
     /**
      * The activation signal is false without the self-hook, and cannot be anything else.
      *
-     * [com.wax.module.ModuleApplication.isXposedEnabled] is `System.currentTimeMillis() == 0L`.
-     * Wall-clock milliseconds have not been zero since 1970, so unhooked it is unconditionally
-     * false and the placeholder can never report a healthy runtime by itself.
+     * What used to be `isXposedEnabled` is now `isLegacySelfHookSignal`, and the rename is the
+     * fix M00-DEF-03 asked for: a hook that replaced `isXposedEnabled` was, by its name,
+     * claiming to make the module enabled. The value is unchanged - deliberately - because the
+     * hook that replaces it with a constant is still the only thing that can make it true, and
+     * the next test is what keeps that honest.
      */
     @Test
     fun activationSignalIsFalseWithoutTheSelfHook() {
@@ -171,10 +173,17 @@ class RuntimeTruthCharacterizationTest {
 
         val source = readSource("java/com/wax/module/ModuleApplication.kt")
         assertTrue(
-            "M01/A01 own this. ModuleApplication.isXposedEnabled is no longer the " +
-                "System.currentTimeMillis() placeholder. That is the fix - update M00-DEF-03.",
-            Regex("""fun\s+isXposedEnabled\(\)\s*:\s*Boolean\s*=\s*System\.currentTimeMillis\(\)\s*==\s*0L""")
+            "M02 owns this. ModuleApplication.isLegacySelfHookSignal is no longer the " +
+                "System.currentTimeMillis() placeholder, so the legacy signal can no longer be " +
+                "distinguished from an absent one. Update M00-DEF-03.",
+            Regex("""fun\s+isLegacySelfHookSignal\(\)\s*:\s*Boolean\s*=\s*System\.currentTimeMillis\(\)\s*==\s*0L""")
                 .containsMatchIn(source),
+        )
+
+        assertTrue(
+            "The name is the fix as much as the wiring is: a method called isXposedEnabled that " +
+                "only reports the self-hook is the defect, whatever it is used for.",
+            !Regex("""\bisXposedEnabled\b""").containsMatchIn(source),
         )
     }
 
@@ -182,8 +191,8 @@ class RuntimeTruthCharacterizationTest {
      * The self-hook is reachable only for the module's own package.
      *
      * This is the invariant the entire modernization program is trying to remove: the module must
-     * not learn whether it is active by observing itself. It survives M01 and M02 deliberately -
-     * if M01 ever makes a non-self-hook path install the replacement, this fails, and that is the
+     * not learn whether it is active by observing itself. It survives M02 deliberately - if the
+     * replacement constant is ever installed for any other package, this fails, and that is the
      * point.
      */
     @Test
@@ -195,27 +204,73 @@ class RuntimeTruthCharacterizationTest {
                 .find(source)
                 ?.range
                 ?: error(
-                    "M01 owns this. ModuleEntryPoint no longer gates hookSelf on the module's own " +
+                    "M02 owns this. ModuleEntryPoint no longer gates hookSelf on the module's own " +
                         "package. Check that the self-hook did not gain another entry point.",
                 )
 
         val body = source.substring(guard.last, minOf(source.length, guard.last + 200))
         assertTrue(
-            "M01 owns this. hookSelf is no longer followed by an early return, so the guard " +
+            "M02 owns this. hookSelf is no longer followed by an early return, so the guard " +
                 "stopped meaning what it says. Update M00-DEF-03.",
             Regex("""hookSelf\s*\([^)]*\)\s*;?\s*return""", RegexOption.MULTILINE)
                 .containsMatchIn(body),
         )
 
-        // And the replacement it installs is a constant.
+        // And the replacement it installs is a constant, over the narrowly named signal.
         assertTrue(
-            "M01 owns this. The self-hook no longer installs returnConstant(true) over " +
-                "isXposedEnabled. Update M00-DEF-03.",
+            "M02 owns this. The self-hook no longer installs returnConstant(true) over the " +
+                "legacy signal method. Update M00-DEF-03.",
             Regex(
-                """hookAllMethods\(\s*\w+\s*,\s*"isXposedEnabled"\s*,\s*""" +
+                """hookAllMethods\(\s*\w+\s*,\s*LEGACY_SIGNAL_METHOD\s*,\s*""" +
                     """XC_MethodReplacement\.returnConstant\(true\)""",
             ).containsMatchIn(source),
         )
+        assertTrue(
+            "The hooked name must exist in exactly one place, so the hook and the method it " +
+                "replaces cannot drift apart with nothing failing.",
+            Regex("""const\s+val\s+LEGACY_SIGNAL_METHOD\s*:\s*String\s*=\s*"isLegacySelfHookSignal"""").containsMatchIn(source),
+        )
+    }
+
+    /**
+     * The generic activation messages are gone from the interface.
+     *
+     * M00-DEF-03's symptom was a screen that collapsed six different facts into one sentence.
+     * Deleting the strings is what makes that unrepeatable: a status card that cannot name a
+     * state has nothing to fall back on. Asserted over the whole source tree rather than over
+     * one file, because the message is what the defect looked like wherever it was rendered.
+     */
+    @Test
+    fun noScreenFallsBackOnAGenericActivationMessage() {
+        val forbidden =
+            listOf(
+                "whatsapp_is_not_running_or_has_not_been_activated_in_lsposed",
+                "business_is_not_running_or_has_not_been_activated_in_lsposed",
+                "module_disabled",
+            )
+
+        for (path in sourceFiles("java/com/wax/module/ui").plus(sourceFiles("java/com/wax/module/activation"))) {
+            val text = java.io.File(path).readText()
+            for (name in forbidden) {
+                assertTrue(
+                    "$path still refers to R.string.$name. Gate A of #321 forbids a generic " +
+                        "activation message unless the failure was proven, and a screen that " +
+                        "renders one is exactly the defect M02 removed.",
+                    !text.contains(name),
+                )
+            }
+        }
+    }
+
+    private fun sourceFiles(relativeRoot: String): List<String> {
+        val roots =
+            listOf("../$relativeRoot", "src/main/$relativeRoot", "app/$relativeRoot")
+        val root = roots.map { java.io.File(it) }.firstOrNull { it.isDirectory } ?: return emptyList()
+        return root
+            .walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .map { it.path }
+            .toList()
     }
 
     // ---------------------------------------------------------------- M00-DEF-04
