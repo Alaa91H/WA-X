@@ -17,7 +17,7 @@ kotlin = "2.4.21"
 markwon = "4.6.2"
 remotePreferences = "0.8"
 detekt = "2.0.0-alpha.6"
-spotless = "8.10.3"
+spotless = "8.10.4"
 # Compose. One BOM for the whole Compose surface so the runtime, UI and Material3
 # artifacts cannot drift apart, with Material3 pinned explicitly to the stable
 # 1.4.0 rather than inherited, because a BOM upgrade silently moving Material3 to a

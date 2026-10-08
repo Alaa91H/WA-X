@@ -61,11 +61,43 @@ data class RuntimeSessions(
  * is recorded as a number, so it is comparable but says nothing about the user.
  */
 object BootIdentity {
+    private const val PREFIX = "boot-"
+    private const val MIN_REAL_BOOT_EPOCH_MILLIS = 946_684_800_000L
+    private const val MAX_CLOCK_SAMPLING_SKEW_MILLIS = 5_000L
+
     /** The boot identity for a device whose uptime is [elapsedRealtimeMillis] at [nowMillis]. */
     fun of(
         elapsedRealtimeMillis: Long,
         nowMillis: Long,
-    ): String = "boot-" + (nowMillis - elapsedRealtimeMillis).coerceAtLeast(0L)
+    ): String = PREFIX + (nowMillis - elapsedRealtimeMillis).coerceAtLeast(0L)
+
+    /**
+     * Whether two independently sampled boot identities describe the same reboot.
+     *
+     * Wall time and elapsedRealtime are read separately, so two processes cannot reliably
+     * produce the exact same millisecond timestamp. Comparing the generated strings for
+     * equality rejected valid runtime heartbeats even when the Manager had received them.
+     * Only realistic wall-clock boot timestamps may use this bounded sampling tolerance:
+     * synthetic test ids, absent ids, and two genuinely different boots stay distinct.
+     */
+    fun isSameBoot(
+        reported: String,
+        current: String,
+    ): Boolean {
+        if (reported == current) return true
+
+        fun bootTime(id: String): Long? =
+            id
+                .takeIf { it.startsWith(PREFIX) }
+                ?.removePrefix(PREFIX)
+                ?.toLongOrNull()
+                ?.takeIf { it >= MIN_REAL_BOOT_EPOCH_MILLIS }
+
+        val reportedTime = bootTime(reported) ?: return false
+        val currentTime = bootTime(current) ?: return false
+        val difference = if (reportedTime >= currentTime) reportedTime - currentTime else currentTime - reportedTime
+        return difference <= MAX_CLOCK_SAMPLING_SKEW_MILLIS
+    }
 
     /** The unknown boot. */
     fun unknown(): String = RuntimeSessions.NO_ID

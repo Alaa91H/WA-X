@@ -20,6 +20,7 @@ import java.io.File
 class ActivationMonitor(
     private val store: ActivationStore,
     private val now: () -> Long = System::currentTimeMillis,
+    private val currentBoot: () -> String = { currentBootId() },
 ) {
     /**
      * The status of [packageName], from the filed heartbeat plus what the caller observed.
@@ -41,11 +42,11 @@ class ActivationMonitor(
                     packageName = packageName,
                     installed = installed,
                     process = process,
-                    heartbeat = store.read(packageName),
+                    heartbeat = heartbeatFor(packageName),
                     legacySelfHookSignal = legacySelfHookSignal,
                 ),
             nowMillis = now(),
-            currentBootId = currentBootId(),
+            currentBootId = currentBoot(),
         )
 
     /**
@@ -59,8 +60,17 @@ class ActivationMonitor(
         store.write(heartbeat)
     }
 
-    /** The heartbeat filed for [packageName], if any. */
-    fun heartbeatFor(packageName: String): TargetHeartbeat? = store.read(packageName)
+    /**
+     * The heartbeat for the target's *main process*, if any.
+     *
+     * [ActivationStore] writes under `package|process` (see [TargetHeartbeat.targetKey]).
+     * Reading just the package never found that record, so the Home screen stayed UNKNOWN
+     * even after the runtime successfully replied to the Manager's probe.
+     *
+     * Do not use a secondary process' heartbeat to mark the main process READY: a
+     * background process can keep running when the main WhatsApp process is gone.
+     */
+    fun heartbeatFor(packageName: String): TargetHeartbeat? = store.read("$packageName|$packageName")
 
     companion object {
         /** The Manager's monitor, reading heartbeats from its own storage. */
