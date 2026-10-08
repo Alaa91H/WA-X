@@ -1,57 +1,71 @@
-WA X 1.2.0-beta.6
+WA X 1.2.0-beta.7
 Release date: 2026-10-08
 
-Development package 6: WA X features can now be written against something other than a
-SharedPreferences object, and the first one has been rewritten that way. Nothing you can see
-changed. The point of this build is that the next one can be tested.
+Development package 7: the state that WA X keeps while it is running inside WhatsApp now has an
+owner and a lifetime, and a gate that stops the list of things that write it from growing. Nothing
+you can see changed. The point of this build is that the next sixty-three features can be cleaned up
+one at a time.
 
-THE THING THAT WAS WRONG
-- Every feature in WA X extended one class whose constructor was a class loader and a
-  SharedPreferences, and whose only method was doHook(), which returns nothing.
-- Sixty-four features did that. Every one of them was constructed reflectively from those two
-  arguments, so none of them could be given anything else: not a clock, not a logger, not a
-  recording of what it hooked.
-- The practical cost was that the entire feature layer had no unit tests at all - not a low
-  number, zero. Twelve hundred and fifteen classes, no way to run any of them off a device.
-- doHook() returning nothing was the other half of it. "I installed", "this build does not have
-  the thing I hook", "I installed but half of it is unavailable" and "I failed" were the same
-  event, and the only way to make any of them visible was to throw.
+THE COUNT WAS NOT THE PROBLEM
+- WA X tracks 232 declarations of mutable state in code that runs inside WhatsApp. That number sounds
+  alarming and it is nearly useless: it counts declarations rather than writes, so a second place
+  owning the same field looks exactly like the first, and it counts about forty ordinary local
+  variables and some words in comments that merely mention an object.
+- Counted by the place that actually writes each one, the shape is different. There are eleven write
+  sites, for seven pieces of state, in five files.
+- So the state is written in a handful of places and read in many. That is the signature of code
+  that works and has no owner, not of code that is broken. Nothing here was a bug to fix.
 
-THE NEW CONTRACTS
-- Nine contracts, in one package, that name no platform type at all: WaFeature, FeatureContext,
-  FeatureStartResult, HookEngine, CapabilityProvider, DiagnosticSink, RuntimeClock, RuntimeLogger,
-  and the settings snapshot that already existed.
-- FeatureStartResult is the part worth noticing. Installed, degraded, skipped and failed are now
-  four different answers, so a feature can say "this WhatsApp version does not have the hook I
-  wanted" without pretending it succeeded and without crashing.
-- A feature no longer receives preferences. It receives an immutable, target-scoped snapshot of
-  the settings, so a test can hand it real settings over an in-memory store.
-- A feature still gets the target's ClassLoader, because reflecting on the target's classes is
-  the entire job - but it is handed to the feature rather than read from a global, so a test
-  controls it.
-- There is deliberately no Context. A feature that wants to show a dialog would be asking for
-  something a module cannot honestly provide, and leaving that impossible is what keeps the rest
-  of it testable.
+WHAT IS NOW DIFFERENT INTERNALLY
+- There is one RuntimeGraph per WhatsApp process. It holds the target's application, the module's own
+  themed context, the target's settings and the context handed to features, and it can say what it
+  released when the process ends.
+- It names no Android type at all, on purpose: a container whose own rules can only be checked by
+  starting WhatsApp gets checked by starting WhatsApp, which is to say not at all. Its attach,
+  replace, close, refuse-after-close and release-reporting behaviour is now asserted in ordinary
+  unit tests.
+- A holder for it exists, in one place, and that one place is the single deliberate exception the
+  project now has. A gate fails if a second one appears.
+- The version of WhatsApp the process is running is recorded exactly once, when the system finally
+  answers the question, instead of being read out of whatever global happened to be set.
 
-THE PROOF, NOT THE PROMISE
-- One real feature, taken straight from the shipped code, is now started in a plain JVM test with
-  fakes and a real settings snapshot. No device. No framework. If that test compiles and passes,
-  the claim holds, and CI runs it.
-- A gate in CI fails if a platform type appears anywhere in that contract package - as an import or
-  as a fully qualified name - and it fails if the contracts stop being implemented. A checker
-  nobody runs is a comment, so it runs in every build from this one onwards.
-- Test count: 1290, up from 1281. None failing.
+THE GATE, AND WHY IT ONLY FAILS ONE WAY
+- A new place writing one of those seven pieces of state fails the build. So does a second declaration
+  of it, a second graph holder, or an unexpected file building a graph.
+- A place that stops writing it does not fail anything. That direction is on purpose: this state is
+  meant to disappear, and a gate that complained when it did would make progress look like breakage.
+- The write sites are recorded by file rather than by line number. A rule that has to be re-approved
+  every time an unrelated edit shifts a line teaches you to re-approve it without reading.
+
+THE FEATURE GATE
+- A feature written against the new contract may not read any of that state, and may not go looking
+  for the graph either. Reaching for the graph would turn "your dependencies are passed to you" back
+  into "your dependencies are whatever the process happens to hold", and the feature would be
+  untestable again.
+- The gate also fails if there are no such features to check, so it cannot pass by having nothing to
+  look at.
+
+REMOVED
+- One file: a registry of activity states that was written on every activity callback and read by
+  nothing at all. It held weak references to activities under a map that never cleaned up, so it was
+  keeping the names of destroyed screens alive for the life of the process. Deleting it changes
+  nothing you can observe, because nothing observed it.
+
+ONE THING THAT WAS WRONG AND WAS CAUGHT
+- The first version of the graph handed out a value from a named slot without actually checking its
+  type, because with a generic type parameter the cast compiles to nothing and cannot fail. The test
+  written to prove the mismatch was reported failed on its first run, which is the only reason it is
+  fixed: a check that cannot fail is not a check.
 
 WHAT DID NOT CHANGE
-- Sixty-three of the sixty-four features still use the old contract, and WA X starts them exactly
-  as it always has. One was migrated: the debug feature, chosen because it does nothing, so if the
-  migration were wrong the only thing that could be wrong is the migration.
-- Nothing on screen behaves differently. There is no new setting, and no feature was added, removed
-  or changed.
-- The boundary between the app's own code and the code that runs inside WhatsApp is unchanged and
-  still has three known leaks. They are now filed with the exact files involved instead of being
-  quietly counted.
+- No feature behaves differently. No setting is read differently. Nothing on screen moves.
+- Sixty-three of the sixty-four features still use the old contract, exactly as before. Cleaning
+  them up belongs to the settings package, which owns the replacement for the preferences object they
+  take.
+- There is still no way to shut down the activity listeners that seven features register, because the
+  mechanism for it did not exist until this build. The mechanism exists now; the call sites belong to
+  the features.
 
 UPGRADE
-- Install over 1.2.0-beta.5. Same signature, so Android keeps the module's settings; nothing in
-  this build migrates or rewrites anything you have configured.
+- Install over 1.2.0-beta.6. Same signature, so Android keeps the module's settings. Nothing in this
+  build migrates or rewrites anything you have configured.
