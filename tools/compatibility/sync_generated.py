@@ -90,32 +90,55 @@ def render(matrix: dict) -> str:
 
     add("## Current state")
     add("")
-    add(
-        "No cell in this matrix is resolver-verified yet. Declared versions below are a"
-        " maintainer declaration that the runtime version gate enforces; they are **not**"
-        " evidence. Per the plan's governing rule, a version or feature is not declared"
-        " supported until its resolvers actually resolve on that target."
-    )
-    add("")
-    add("| Package | Declared versions | Resolver-verified |")
-    add("|---|---|---|")
+    counts = {status: 0 for status in ("supported", "degraded", "unsupported", "unknown")}
+    per_package = {}
     for key in ("whatsapp", "business"):
-        entry = matrix["packages"][key]
-        verified = sum(
-            1
-            for feature in features
-            for version in entry["declaredVersions"]
-            if effective_status(matrix, feature["id"], key, version) == "supported"
-        )
+        local = {status: 0 for status in counts}
+        for feature in features:
+            for version in matrix["packages"][key]["declaredVersions"]:
+                status = effective_status(matrix, feature["id"], key, version)
+                local[status] += 1
+                counts[status] += 1
+        per_package[key] = local
+    total = sum(counts.values())
+    if counts["unknown"] == total:
+        # Preserve the existing generated report when every declared cell is
+        # unknown.  This avoids an unrelated generated-doc change in #392.
         add(
-            "| %s | %d | %d / %d cells |"
-            % (
-                PACKAGE_LABELS[key],
-                len(entry["declaredVersions"]),
-                verified,
-                len(entry["declaredVersions"]) * len(features),
-            )
+            "No cell in this matrix is resolver-verified yet. Declared versions below are a "
+            "maintainer declaration that the runtime version gate enforces; they are **not** "
+            "evidence. Per the plan's governing rule, a version or feature is not declared "
+            "supported until its resolvers actually resolve on that target."
         )
+        add("")
+        add("| Package | Declared versions | Resolver-verified |")
+        add("|---|---|---|")
+        for key in ("whatsapp", "business"):
+            entry = matrix["packages"][key]
+            add(
+                "| %s | %d | 0 / %d cells |"
+                % (PACKAGE_LABELS[key], len(entry["declaredVersions"]),
+                   len(entry["declaredVersions"]) * len(features))
+            )
+    else:
+        add(
+            "Across %d feature/version cells: %d `supported` status claim(s), "
+            "%d `degraded`, %d `unsupported`, and %d `unknown`. "
+            "These are matrix status claims, not independent resolver verification."
+            % (total, counts["supported"], counts["degraded"], counts["unsupported"], counts["unknown"])
+        )
+        add("")
+        add("| Package | Declared versions | Supported claims | Degraded | Unsupported | Unknown |")
+        add("|---|---|---|---|---|---|")
+        for key in ("whatsapp", "business"):
+            entry = matrix["packages"][key]
+            local = per_package[key]
+            add(
+                "| %s | %d | %d / %d cells | %d | %d | %d |"
+                % (PACKAGE_LABELS[key], len(entry["declaredVersions"]),
+                   local["supported"], len(entry["declaredVersions"]) * len(features),
+                   local["degraded"], local["unsupported"], local["unknown"])
+            )
     add("")
 
     add("## Status vocabulary")
