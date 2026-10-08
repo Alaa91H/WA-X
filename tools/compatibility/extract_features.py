@@ -4,7 +4,7 @@
 This script does not invent compatibility data. It only *derives facts* that are
 provable by reading the source tree:
 
-  * the registered feature list, taken from the ``plugins()`` array in FeatureLoader
+  * the registered feature list, taken from ``RuntimeFeatureRegistry``
   * each feature's category, taken from its package
   * each feature's resolver dependencies, taken from the ``Unobfuscator.load*``
     calls inside that feature's own file
@@ -38,8 +38,8 @@ from typing import Any
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-FEATURE_LOADER = os.path.join(
-    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+FEATURE_REGISTRY = os.path.join(
+    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt"
 )
 FEATURES_DIR = os.path.join(
     REPO_ROOT, "app/src/main/java/com/wax/module/xposed/features"
@@ -54,23 +54,22 @@ PACKAGE_IMPORT = re.compile(r"^import\s+([\w.]+)\s*$")
 RESOLVER_CALL = re.compile(r"\bUnobfuscator\s*\.\s*(load\w+)")
 RESOLVER_DECL = re.compile(r"\bfun\s+(load\w+)\s*\(")
 ARRAY_ITEM = re.compile(r"<item>([^<]+)</item>")
-# Preference reads can use multiple typed SharedPreferences getters. Capture
-# literals and declared PREF_* constants only when passed to a read, not a write.
+# Only known preference/settings receivers are treated as evidence of a read.
+# Generic getString/getInt calls on JSONObject, Bundle, etc. are not preferences.
 PREF_READ = re.compile(
-    r'\b(?:getBoolean|getString|getInt|getLong|getFloat|getStringSet)\s*'
-    r'\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
+    r'\b(?:prefs|preferences|sharedPreferences|settingsStore|settings|store)'
+    r'\s*\.\s*(?:getBoolean|getString|getInt|getLong|getFloat|getStringSet|contains|get|read)'
+    r'\s*\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
 )
 PREF_CONST = re.compile(
     r'\bconst\s+val\s+(PREF_[A-Z0-9_]+)\s*=\s*"([^"]+)"'
 )
-# Bare get()/read() are too generic: restrict them to known settings receivers.
-TYPED_SETTINGS_READ = re.compile(
-    r'\b(?:settingsStore|settings|preferences|prefs|sharedPreferences|store)'
-    r'\s*\.\s*(?:get|read|contains)\s*'
-    r'\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
-)
 KOTLIN_PACKAGE = re.compile(r"^\s*package\s+([\w.]+)\s*$", re.MULTILINE)
 KOTLIN_IMPORT = re.compile(r"^\s*import\s+([\w.]+)(?:\s+as\s+(\w+))?\s*$", re.MULTILINE)
+KOTLIN_DECL = re.compile(
+    r"\b(?:class|object|interface)\s+([A-Z][A-Za-z0-9_]*)\b"
+)
+
 # A type token naming another Kotlin file in the feature tree.
 TYPE_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
 # A helper class is *owned* by a feature when the feature constructs it. A bare type
@@ -112,7 +111,7 @@ def read(path: str) -> str:
 def find_feature_classes() -> list[tuple[str, str]]:
     """Return ``(simpleName, importedPackage)`` for every feature loader import."""
     found: list[tuple[str, str]] = []
-    for line in read(FEATURE_LOADER).splitlines():
+    for line in read(FEATURE_REGISTRY).splitlines():
         match = PACKAGE_IMPORT.match(line)
         if not match:
             continue
@@ -126,17 +125,29 @@ def find_feature_classes() -> list[tuple[str, str]]:
 
 
 def find_registered_order() -> list[str]:
-    """Return feature simple names in the exact order ``plugins()`` installs them.
+    """Return feature ids in the exact order the runtime installs them.
 
-    The whitespace between the assignment and the call is matched loosely: ktlint
-    rewraps ``val classes = arrayOf(`` into two lines when the list is long, so a
-    pattern that hardcodes the single-line form silently finds no features at all.
+    Read from ``RuntimeFeatureRegistry``, which is the one registration source. Before #337 this
+    parsed an ``arrayOf(...)`` inside ``FeatureLoader.plugins()``, which meant the compatibility
+    matrix was derived from a hand-maintained list that duplicated the runtime list and that
+    nothing checked against it: a feature added to one and not the other would have produced a
+    module that installs a different set of features than the matrix claims to describe.
+
+    The id is the ``featureId`` argument rather than the class reference, because that is the name
+    the runtime logs, the diagnostics dialog shows and the failure reports carry. A rename in the
+    registry therefore fails here rather than producing a matrix whose cells describe features that
+    no longer exist.
     """
-    source = read(FEATURE_LOADER)
-    match = re.search(r"val\s+classes\s*=\s*arrayOf\((.*?)\n\s*\)", source, re.DOTALL)
-    if not match:
-        raise SystemExit("could not locate the plugins() array in FeatureLoader.kt")
-    return re.findall(r"([A-Za-z0-9_]+)::class\.java", match.group(1))
+    source = read(FEATURE_REGISTRY)
+    body = source[source.index("val entries:") :]
+    ids = re.findall(r'FeatureFactory\.(?:Contract|Legacy)\("([A-Za-z0-9_]+)"\)', body)
+    if not ids:
+        raise SystemExit(
+            "could not locate the feature registry entries in %s; a compatibility matrix derived "
+            "from an empty list would report every cell unsupported for the wrong reason"
+            % os.path.relpath(FEATURE_REGISTRY, REPO_ROOT)
+        )
+    return ids
 
 
 def resolvers_declared() -> set[str]:
@@ -144,7 +155,7 @@ def resolvers_declared() -> set[str]:
 
 
 def feature_files() -> dict[str, str]:
-    """Map Kotlin stems to source; reject ambiguous names rather than drop files."""
+    """Index source by file stem; never silently drop a colliding Kotlin file."""
     files: dict[str, str] = {}
     paths: dict[str, str] = {}
     for dirpath, dirnames, filenames in os.walk(FEATURES_DIR):
@@ -159,8 +170,8 @@ def feature_files() -> dict[str, str]:
                     "duplicate Kotlin file stem %r: %s and %s"
                     % (stem, paths[stem], path)
                 )
-            paths[stem] = path
             files[stem] = read(path)
+            paths[stem] = path
     return files
 
 
@@ -170,12 +181,31 @@ def source_package(body: str) -> str | None:
 
 
 def source_imports(body: str) -> dict[str, str]:
-    """Map imported Kotlin class names and aliases to qualified class names."""
+    """Resolve explicitly imported Kotlin classes, including aliases."""
     return {
         alias or qualified.rsplit(".", 1)[-1]: qualified
         for qualified, alias in KOTLIN_IMPORT.findall(body)
     }
 
+
+def declared_classes(files: dict[str, str]) -> dict[str, str]:
+    """Map fully qualified class names to their defining Kotlin file stem."""
+    owners: dict[str, str] = {}
+    for stem, body in files.items():
+        code = strip_comments(body)
+        package = source_package(code)
+        # Bare source snippets in test fixtures retain the old stem fallback.
+        names = set(KOTLIN_DECL.findall(code)) or {stem}
+        for name in names:
+            qualified = (package + "." if package else "") + name
+            previous = owners.get(qualified)
+            if previous is not None and previous != stem:
+                raise ValueError(
+                    "ambiguous Kotlin class ownership %s: %s and %s"
+                    % (qualified, previous, stem)
+                )
+            owners[qualified] = stem
+    return owners
 
 def strip_comments(body: str) -> str:
     """Remove comments so a KDoc mention is not mistaken for a real reference."""
@@ -183,23 +213,18 @@ def strip_comments(body: str) -> str:
     return LINE_COMMENT.sub(" ", without_block)
 
 
-def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
-    """Files that make up one feature: its own file plus the helpers it constructs.
+def feature_closure(
+    stem: str, files: dict[str, str], unresolved: set[str] | None = None
+) -> set[str]:
+    """Follow constructed helpers by declaration, package and explicit imports.
 
-    A feature is not always one file. HD Status, for example, keeps its target
-    resolution and its image and video hooks in sibling classes, and those files hold
-    the resolver calls. Reading only the entry file reported that the feature needed no
-    resolvers at all, which is exactly the kind of wrong-but-passing metadata this
-    matrix exists to prevent.
-
-    The closure follows constructor calls only. Matching every capitalised token would
-    be far too greedy: a KDoc reference, a log string or a static access such as
-    ``Others.propsInteger[...]`` is not ownership, and following those pulled three
-    unrelated features in.
+    Unqualified names in other packages are not evidence of ownership.
+    Unresolved/ambiguous names can be collected for audit without inventing
+    dependencies or failing on ordinary external constructors.
     """
     if stem not in files:
         return set()
-
+    owners = declared_classes(files)
     closure: set[str] = set()
     pending = [stem]
     while pending:
@@ -211,21 +236,21 @@ def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
         package = source_package(code)
         imports = source_imports(code)
         for token in set(CONSTRUCTS.findall(code)):
-            imported = imports.get(token)
-            target = imported.rsplit(".", 1)[-1] if imported else token
-            if target not in files or target in closure:
-                continue
-            target_package = source_package(files[target])
-            # A simple class name in another package is not owned unless the
-            # source explicitly imports it. Avoid unrelated same-named helpers.
-            if imported:
-                if target_package and imported != target_package + "." + target:
-                    continue
-            elif package and target_package and package != target_package:
-                continue
-            pending.append(target)
+            qualified = imports.get(token) or (
+                (package + "." if package else "") + token
+            )
+            target = owners.get(qualified)
+            if target is None and unresolved is not None:
+                # Only report an unresolved *feature-tree* candidate.
+                candidates = [
+                    owner for name, owner in owners.items()
+                    if name.rsplit(".", 1)[-1] == token
+                ]
+                if candidates:
+                    unresolved.add("%s: %s" % (current, token))
+            if target is not None and target not in closure:
+                pending.append(target)
     return closure
-
 
 def aggregate(files: dict[str, str], stems: set[str]) -> str:
     return "\n".join(files[stem] for stem in sorted(stems) if stem in files)
@@ -242,22 +267,20 @@ def feature_resolver_usage(files: dict[str, str]) -> dict[str, list[str]]:
 
 
 def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
-    """Map feature simple name -> statically provable preference reads."""
+    """Inventory statically provable reads; writes and dynamic keys stay unknown."""
     keys: dict[str, list[str]] = {}
     for stem in files:
         body = strip_comments(aggregate(files, feature_closure(stem, files)))
         constants = dict(PREF_CONST.findall(body))
         found: set[str] = set()
-        for matcher in (PREF_READ, TYPED_SETTINGS_READ):
-            for literal, constant in matcher.findall(body):
-                if literal:
-                    found.add(literal)
-                elif constant in constants:
-                    found.add(constants[constant])
+        for literal, constant in PREF_READ.findall(body):
+            if literal:
+                found.add(literal)
+            elif constant in constants:
+                found.add(constants[constant])
         if found:
             keys[stem] = sorted(found)
     return keys
-
 
 def feature_resolution_sources(files: dict[str, str]) -> dict[str, list[str]]:
     """Map feature simple name -> internal resolution layers its closure references."""
@@ -322,7 +345,7 @@ def build() -> dict[str, Any]:
     missing = [name for name in order if name not in imported]
     if missing:
         raise SystemExit(
-            "features registered in plugins() but not imported by FeatureLoader: %s"
+            "features registered in the runtime registry but not present as a source file: %s"
             % ", ".join(missing)
         )
 
