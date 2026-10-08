@@ -221,7 +221,7 @@ jobs:
       - name: Make the Gradle wrapper executable
         run: chmod +x gradlew
       - name: Compile the debug APK
-        run: ./gradlew $GRADLE_ARGS assembleDebug
+        run: ./gradlew $GRADLE_ARGS assembleDebug :modern-runtime:testDebugUnitTest
 
       # The declaration-level LSPosed contract check runs in strict-static and only reads
       # gradle/libs.versions.toml, so it works on a cold checkout. This one opens the artifact
@@ -326,6 +326,7 @@ jobs:
               python3 tools/quality/scan_access_gates.py --check-mirror || failures=$((failures + 1))
               python3 tools/quality/test_check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_lsposed_contract.py || failures=$((failures + 1))
+              python3 tools/quality/check_modern_bridge_contract.py || failures=$((failures + 1))
               # The keep rule is what holds the entry point against R8, which never reads
               # assets/xposed_init. The source-level checker above asserts the rule exists; the
               # artifact-level check that reads a built APK runs in the build and release steps,
