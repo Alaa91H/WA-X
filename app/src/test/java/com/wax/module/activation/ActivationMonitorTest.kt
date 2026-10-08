@@ -1,9 +1,12 @@
 package com.wax.module.activation
 
+import com.wax.module.health.BootIdentity
 import com.wax.module.health.HealthFreshness
 import com.wax.module.health.RuntimeFailureCode
 import com.wax.module.health.SubsystemState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
@@ -112,6 +115,32 @@ class ActivationMonitorTest {
         monitor.accept(business)
         assertEquals(business, monitor.heartbeatFor(BUSINESS))
         assertEquals(ActivationState.READY, status(monitor, BUSINESS).state)
+    }
+
+    @Test
+    fun clockSamplingSkewDoesNotDiscardTheCurrentBootHeartbeat() {
+        val firstSampling = 1_800_000_000_000L
+        val monitor =
+            ActivationMonitor(
+                store = ActivationStore(directory.newFolder("activation")),
+                now = { now },
+                currentBoot = { BootIdentity.of(600_000L, firstSampling + 90L) },
+            )
+        monitor.accept(heartbeat(bootId = BootIdentity.of(600_000L, firstSampling)))
+
+        assertEquals(ActivationState.READY, status(monitor).state)
+    }
+
+    @Test
+    fun anotherActualBootOrSyntheticIdIsNeverMistakenForTheCurrentBoot() {
+        val first = "boot-1800000000000"
+        val anotherBoot = "boot-1800000020000"
+
+        assertFalse(BootIdentity.isSameBoot(first, anotherBoot))
+        org.junit.Assert.assertFalse(BootIdentity.isSameBoot("boot-1", "boot-2"))
+        assertTrue(
+            BootIdentity.isSameBoot(first, "boot-1800000000050"),
+        )
     }
 
     @Test
