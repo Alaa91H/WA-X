@@ -25,8 +25,14 @@ import com.wax.module.ModuleEntryPoint
 import com.wax.module.R
 import com.wax.module.TargetRuntime
 import com.wax.module.UpdateChecker
+import com.wax.module.activation.ActivationHeartbeatFactory
 import com.wax.module.activation.TargetHeartbeatCodec
 import com.wax.module.activities.CrashReportActivity
+import com.wax.module.bootstrap.BootstrapLogSink
+import com.wax.module.bootstrap.BootstrapStage
+import com.wax.module.bootstrap.BootstrapState
+import com.wax.module.bootstrap.StageOutcome
+import com.wax.module.bootstrap.StageRunner
 import com.wax.module.compat.TargetVersions
 import com.wax.module.diagnostics.FailureReportCodec
 import com.wax.module.diagnostics.FailureReportStore
@@ -238,10 +244,45 @@ class FeatureLoader private constructor() {
         private var currentVersion: String? = null
         private var crashHandlerInstalled = false
         private const val UPDATE_CHECK_COOLDOWN_MS = 6 * 60 * 60 * 1000L
+
+        /**
+         * How long the feature set may take before the rest of it is given up on.
+         *
+         * Recorded rather than guessed at: the previous fifteen-second bound was never a
+         * decision, it was a literal nobody could see, and the way it failed was silent.
+         */
+        private const val HOOK_INSTALL_BUDGET_MS = 15_000L
         private val INTERNAL_BROADCAST_PERMISSION =
             BuildConfig.APPLICATION_ID + ".permission.INTERNAL_BROADCAST"
         private var lastUpdateCheckScheduledAt = 0L
 
+        /**
+         * Starts the module inside a target process.
+         *
+         * The bootstrap is a [StageRunner] sequence rather than a straight line, and the reason
+         * is what the straight line could not do. It began with the resolution engine and used
+         * `if (!engineStarted) return`, so a failure there stopped every stage after it -
+         * including the ones that never needed the engine - and it could not say which ones
+         * those were. Nothing below the engine could report anything either, because the
+         * receivers that carry a report are attached later still.
+         *
+         * So the sequence is:
+         *
+         * 1. **Run the stages that do not need the target's `Application`.** Reaching this
+         *    function already proves the framework, the module, the effective scope, the target
+         *    process and injection, and those five are recorded as five stages rather than as a
+         *    comment, because they are the evidence the Manager reads.
+         * 2. **Install the one hook that lets the rest happen.** `callApplicationOnCreate` is
+         *    hooked before the engine is asked for anything, so a bootstrap that stops early can
+         *    still attach to the target and report.
+         * 3. **Run the stages that do need it, when it arrives.** The runner skips what it
+         *    cannot do yet rather than failing, and a later pass picks up exactly where the
+         *    previous one stopped.
+         *
+         * Every pass answers the Manager's probe on the way out, whether it ran one stage or
+         * eleven, so a bootstrap that stops at the engine is still visible - which is the half
+         * of M00-DEF-02 that M02 had to work around and that this stage order removes.
+         */
         @JvmStatic
         fun start(
             loader: ClassLoader,
@@ -249,52 +290,25 @@ class FeatureLoader private constructor() {
             packageName: String,
             processName: String,
         ) {
-            // Health exists before the first thing that can fail does. M00 recorded that
-            // the DexKit failure below had nowhere to go: the module logged it and returned
-            // with zero hooks installed, and the app went on showing a green banner from
-            // another process. The stage is therefore opened here, not after the engine.
+            // Health exists before the first thing that can fail does. M00 recorded that the
+            // DexKit failure had nowhere to go: the module logged it and returned with zero
+            // hooks installed, and the app went on showing a green banner from another process.
             val health = RuntimeHealth.beginForTarget(packageName, processName)
-            val proof = ActivationProof(health)
-            // Reaching this function is itself the evidence for four of the eleven subsystems
-            // the aggregate reads: the framework invoked us, the module is loaded, the
-            // framework decided to load us into *this* package - which is the effective scope,
-            // as opposed to the recommended one in the manifest - and we are inside the
-            // target's process. Reporting them here rather than on demand is what lets the
-            // Manager distinguish "injected and starting" from "never injected", which is a
-            // distinction no amount of formatting on one boolean can carry.
-            proof.frameworkAnswered()
-            proof.moduleLoaded(BuildConfig.VERSION_NAME)
-            proof.scopeIsEffective()
-            proof.targetProcessIsRunning()
-            proof.injected()
+            val runner = StageRunner(health)
+            // Stage failures are contained rather than propagated, so the only place the cause
+            // survives is the framework log. Without this the containment would be invisible,
+            // and an invisible containment is indistinguishable from a swallowed failure.
+            BootstrapLogSink.sink =
+                BootstrapLogSink { stage, throwable ->
+                    XposedBridge.log("WA X stage ${stage.name} failed")
+                    XposedBridge.log(throwable)
+                }
 
-            val dexKitStage = health.begin(RuntimeSubsystem.DEXKIT, RESOLVER_INIT_COMPONENT)
+            val target = TargetContext(loader, sourceDir, packageName, processName)
 
-            // The bootstrap stops if the engine will not start - which stages are safe to
-            // continue with is M03's decision and it is deliberately not pre-empted here. What
-            // M02 does own is the other half of M00-DEF-02: without a responder the Manager
-            // cannot be told, so a failure of exactly this kind is the one that must never be
-            // reported as anything else. installProbeResponder installs no feature and changes
-            // nothing inside the target; it only makes the recorded failure observable, which
-            // is what turns "the module says it is enabled and nothing works" into "the
-            // resolution engine failed to start".
-            if (!Unobfuscator.initWithPath(sourceDir)) {
-                XposedBridge.log("Can't init dexkit")
-                // Recorded, not swallowed. The early return is unchanged on purpose - what
-                // to do instead of returning is M03's decision, and it needs this record to
-                // exist before it can be made.
-                health.fail(
-                    dexKitStage,
-                    RuntimeFailureCode.DEXKIT_INIT_FAILED,
-                    "Unobfuscator.initWithPath returned false for $sourceDir",
-                )
-                installProbeResponder()
-                return
-            }
-
-            health.succeed(dexKitStage, "DexKit initialised from $sourceDir")
-
-            Utils.appClassLoader = loader
+            val passStartedAt = System.currentTimeMillis()
+            val firstReport = runner.run(execute = { stage -> target.run(stage) }, isApplicationAvailable = { false })
+            XposedBridge.log("WA X bootstrap pass 1: ${firstReport.summary()}")
 
             XposedHelpers.findAndHookMethod(
                 Instrumentation::class.java,
@@ -302,105 +316,23 @@ class FeatureLoader private constructor() {
                 Application::class.java,
                 object : XC_MethodHook() {
                     override fun beforeHookedMethod(param: MethodHookParam) {
-                        mApp = param.args[0] as Application
-                        val application = mApp!!
-                        // Wrapped for this process's target before anything reads it, so
-                        // every feature below sees this target's overrides rather than the
-                        // Global value. The target comes from the process package name, which
-                        // is the only place a single APK can tell the two builds apart.
-                        val pref = TargetSettingsBridge.install(getPreferences(application), TargetRuntime.target)
-                        // Recorded from what was actually returned, not from what was asked for:
-                        // the fallback route works, so it is a degradation rather than a failure,
-                        // and it is the kind of thing a user can act on once they know about it.
-                        proof.preferencesResolved(pref !is RemotePreferences)
-                        Feature.isDebug = pref.getBoolean("enablelogs", false)
-                        Utils.xprefs = pref
-
-                        if (pref.getBoolean("bootloader_spoofer", false)) {
-                            HookBL.hook(loader, pref)
-                            XposedBridge.log("Bootloader Spoofer is Injected")
-                        }
-
-                        val packageManager = application.packageManager
-                        val packageInfo = packageManager.getPackageInfo(application.packageName, 0)
-                        XposedBridge.log(packageInfo.versionName)
-                        currentVersion = packageInfo.versionName
-                        installCrashHandler(application, packageInfo.versionName.orEmpty())
-                        attachStore(application)
-
-                        supportedVersions =
-                            resolveSupportedVersions(application)
-                        XposedBridge.log(
-                            "Supported versions for ${application.packageName}: " +
-                                supportedVersions.joinToString(", "),
-                        )
-                        application.registerActivityLifecycleCallbacks(WaCallback())
-                        registerReceivers()
-
-                        try {
-                            initializeModuleContext()
-                            val timeMillis = System.currentTimeMillis()
-                            UnobfuscatorCache.init(application)
-                            SharedPreferencesWrapper.hookInit(application.classLoader)
-                            ReflectionUtils.initCache(application)
-
-                            val assessment =
-                                TargetVersions.assess(
-                                    packageInfo.versionName,
-                                    supportedVersions,
-                                )
-
-                            if (!assessment.accepted) {
-                                disableExpirationVersion(application.classLoader)
-                                if (!pref.getBoolean("bypass_version_check", false)) {
-                                    val errorMsg =
-                                        """
-                                        Unsupported version: ${packageInfo.versionName}
-                                        Only the function of ignoring the expiration of the WhatsApp version has been applied!
-                                        ${assessment.explanation}
-                                        """.trimIndent()
-                                    error(errorMsg)
-                                }
-                            } else if (assessment.isExperimental) {
-                                // A tolerated build is loaded, but the log records that it was
-                                // tolerated rather than verified, so a report from it is triaged
-                                // as unverified instead of as a regression.
-                                XposedBridge.log("WA X: ${assessment.explanation}")
-                            }
-
-                            initComponents(loader, pref)
-                            proof.coreComponentsReady()
-                            plugins(loader, pref, packageInfo.versionName!!)
-                            proof.hooksInstalled()
-                            // Counted from the reports already collected rather than guessed: the
-                            // aggregate reads "some of it failed" as DEGRADED, and the count is
-                            // what tells the user how much of it did.
-                            proof.optionalFeaturesInstalled(getFailureReports())
-                            proof.resolversFinished(getFailureReports())
-                            // The document written when storage was attached describes a runtime
-                            // that had proved injection and nothing else. Writing it again here
-                            // records the completed bootstrap, so the stored evidence and the
-                            // broadcast answer agree.
-                            runCatching { RuntimeHealth.current().persist() }
-                            sendEnabledBroadcast(application)
-
-                            val totalTime = System.currentTimeMillis() - timeMillis
-                            XposedBridge.log("Loaded Hooks in ${totalTime}ms")
-                        } catch (e: Throwable) {
-                            XposedBridge.log(e)
-                            // The hook set is what the module exists to install, so a bootstrap
-                            // that threw here has failed at a core capability. Reported against
-                            // the subsystem that owns it rather than as an anonymous failure, so
-                            // the card can say which part is missing instead of "LSPosed".
-                            proof.essentialHooksFailed(e.message)
-                            recordFailure(
-                                featureId = "MainFeatures[Critical]",
-                                throwable = e,
-                                whatsAppVersion = packageInfo.versionName.orEmpty(),
-                                packageName = application.packageName,
-                                stage = "startup",
-                            )
-                        }
+                        val application = param.args[0] as? Application ?: return
+                        mApp = application
+                        target.attach(application)
+                        // The callback is not guaranteed to fire once. A second pass re-runs
+                        // nothing that already finished - that is the runner's job - but the
+                        // receivers and lifecycle callbacks below are registered here, and
+                        // registering them twice installs two of every handler.
+                        if (!bootstrapAttached.compareAndSet(false, true)) return
+                        val startedAt = System.currentTimeMillis()
+                        val report = runner.run(execute = { stage -> target.run(stage) }, isApplicationAvailable = { true })
+                        XposedBridge.log("WA X bootstrap pass ${report.pass}: ${report.summary()}")
+                        XposedBridge.log("Loaded Hooks in ${System.currentTimeMillis() - startedAt}ms")
+                        // The heartbeat is not a stage. It answers a question the Manager asked,
+                        // and a stage that exists only to be asked a question would be a stage
+                        // whose outcome depends on who is watching.
+                        sendEnabledBroadcast(application)
+                        XposedBridge.log("WA X bootstrap state: ${report.state}")
                     }
                 },
             )
@@ -799,29 +731,27 @@ class FeatureLoader private constructor() {
         }
 
         /**
-         * Hooks only the application callback a stopped bootstrap needs, to reach a Context.
+         * The heartbeat for this process, encoded for the reply to the Manager's probe.
          *
-         * The Manager's probe travels by broadcast, and a broadcast needs a Context. Nothing else
-         * from the normal bootstrap is installed here on purpose: the failure this path reports
-         * is that the bootstrap stopped, and pretending otherwise would be the defect.
+         * Built from the health snapshot rather than from a stage result, because the snapshot is
+         * the one description of the runtime that every reader already uses; deriving it here
+         * would give the Manager a second source of truth for the same question.
+         *
+         * Encoding can fail on a snapshot a component has filled with something the record cannot
+         * legally carry. That is worth logging rather than hiding: a heartbeat that cannot be
+         * built is a defect in the model, not a transient condition.
          */
-        private fun installProbeResponder() {
-            XposedHelpers.findAndHookMethod(
-                Instrumentation::class.java,
-                "callApplicationOnCreate",
-                Application::class.java,
-                object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        val application = param.args[0] as? Application ?: return
-                        mApp = application
-                        registerProbeResponder(application)
-                    }
-                },
-            )
+        private fun encodeHeartbeat(): String? {
+            if (!RuntimeHealth.isInstalled()) return null
+            val heartbeat = runCatching { ActivationHeartbeatFactory.from(RuntimeHealth.current().snapshot()) }.getOrNull()
+            if (heartbeat == null) return null
+            return runCatching { TargetHeartbeatCodec.encode(heartbeat) }
+                .onFailure { XposedBridge.log(it) }
+                .getOrNull()
         }
 
         private fun sendEnabledBroadcast(context: Context) {
-            try {
+            runCatching {
                 val wppIntent =
                     Intent("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP").apply {
                         putExtra(
@@ -837,34 +767,250 @@ class FeatureLoader private constructor() {
                         setPackage(BuildConfig.APPLICATION_ID)
                     }
                 context.sendBroadcast(wppIntent)
-            } catch (_: Exception) {
-            }
+            }.onFailure { XposedBridge.log("WA X could not answer the activation probe") }
         }
 
         /**
-         * The encoded heartbeat for this process, or null when there is nothing to report.
+         * Everything one target process's bootstrap needs, and the body of each stage.
          *
-         * Encoding can fail on a snapshot that a component has filled with something the record
-         * cannot legally carry. That is worth logging rather than hiding: a heartbeat that
-         * cannot be built is a defect in the model, not a transient condition.
+         * Held in one object so a stage can be read on its own. The previous bootstrap was a
+         * single method whose early `return` decided the fate of every stage after it; here each
+         * stage is a branch that returns an outcome and cannot return from `start()`.
+         *
+         * The holder exists because the sequence runs twice - once before the target's
+         * `Application` exists and once after - and the second pass must be able to read what the
+         * first established. Its fields are that first pass's output.
          */
-        private fun encodeHeartbeat(): String? {
-            val heartbeat = runCatching { currentProof()?.heartbeat() }.getOrNull()
-            if (heartbeat == null) return null
-            return runCatching { TargetHeartbeatCodec.encode(heartbeat) }
-                .onFailure { XposedBridge.log(it) }
-                .getOrNull()
+        private class TargetContext(
+            private val loader: ClassLoader,
+            private val sourceDir: String,
+            private val packageName: String,
+            private val processName: String,
+        ) {
+            private var application: Application? = null
+            private var preferences: SharedPreferences? = null
+            private var targetVersion: String? = null
+
+            /** The target's `Application`, attached by the framework callback. */
+            fun attach(application: Application) {
+                this.application = application
+            }
+
+            /**
+             * Runs one stage.
+             *
+             * Every branch is a claim about what happened, not about what should happen. A stage
+             * that cannot run yet returns [StageOutcome.AWAITING] - which is not a failure - and
+             * a stage whose prerequisites failed is skipped by the runner before it is asked
+             * here at all.
+             */
+            fun run(stage: BootstrapStage): StageOutcome =
+                when (stage) {
+                    // Reaching this object is the evidence for all five: the framework invoked
+                    // the entry point, the module is loaded, the framework decided to place us
+                    // in this package, and our code is executing in the target's process.
+                    BootstrapStage.FRAMEWORK -> StageOutcome.SUCCEEDED
+
+                    BootstrapStage.MODULE -> StageOutcome.SUCCEEDED
+
+                    BootstrapStage.SCOPE -> StageOutcome.SUCCEEDED
+
+                    BootstrapStage.TARGET -> StageOutcome.SUCCEEDED
+
+                    BootstrapStage.INJECTION -> StageOutcome.SUCCEEDED
+
+                    BootstrapStage.PREFERENCES -> preferences()
+
+                    BootstrapStage.APPLICATION_ATTACH -> applicationAttach()
+
+                    BootstrapStage.DEX_ENGINE -> dexEngine()
+
+                    BootstrapStage.RESOLVER_CACHE -> resolverCache()
+
+                    BootstrapStage.CORE -> core()
+
+                    BootstrapStage.ESSENTIAL -> essential()
+
+                    BootstrapStage.OPTIONAL -> optional()
+
+                    BootstrapStage.RUNTIME_VERIFICATION -> runtimeVerification()
+
+                    BootstrapStage.READY -> StageOutcome.SUCCEEDED
+                }
+
+            /**
+             * Reads the target's settings.
+             *
+             * The fallback provider works, so a route through it is a degradation rather than a
+             * failure - and it is worth saying, because "your settings are being read through a
+             * fallback" is something a user can act on and nothing said before.
+             */
+            private fun preferences(): StageOutcome {
+                val app = application ?: return StageOutcome.AWAITING
+                val pref = TargetSettingsBridge.install(getPreferences(app), TargetRuntime.target)
+                preferences = pref
+                Utils.xprefs = pref
+                Feature.isDebug = pref.getBoolean("enablelogs", false)
+                if (pref.getBoolean("bootloader_spoofer", false)) {
+                    HookBL.hook(loader, pref)
+                    XposedBridge.log("Bootloader Spoofer is Injected")
+                }
+                return if (pref is RemotePreferences) StageOutcome.DEGRADED else StageOutcome.SUCCEEDED
+            }
+
+            /** Storage, the crash handler, the lifecycle callbacks and the receivers. */
+            private fun applicationAttach(): StageOutcome {
+                val app = application ?: return StageOutcome.AWAITING
+                val pref = preferences ?: return StageOutcome.FAILED
+                targetVersion = runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull()
+                XposedBridge.log(targetVersion.orEmpty())
+                currentVersion = targetVersion
+                installCrashHandler(app, targetVersion.orEmpty())
+                attachStore(app)
+                app.registerActivityLifecycleCallbacks(WaCallback())
+                registerReceivers()
+                return StageOutcome.SUCCEEDED
+            }
+
+            /**
+             * The resolution engine.
+             *
+             * There is no early return here, and that is the change this phase exists for. A
+             * failure here skips the stages that need the engine and leaves the ones that do not
+             * standing, which is what lets the runtime still attach, still answer the Manager and
+             * still report that the engine is what failed.
+             */
+            private fun dexEngine(): StageOutcome {
+                if (Unobfuscator.initWithPath(sourceDir)) {
+                    Utils.appClassLoader = loader
+                    return StageOutcome.SUCCEEDED
+                }
+                XposedBridge.log("Can't init dexkit")
+                recordFailure(
+                    featureId = "ResolutionEngine[Init]",
+                    throwable = IllegalStateException("Unobfuscator.initWithPath returned false for $sourceDir"),
+                    whatsAppVersion = targetVersion.orEmpty(),
+                    packageName = packageName,
+                    stage = BootstrapStage.DEX_ENGINE.name,
+                )
+                return StageOutcome.FAILED
+            }
+
+            /** The resolver caches, the shared preference hook, and the version assessment. */
+            private fun resolverCache(): StageOutcome {
+                val app = application ?: return StageOutcome.AWAITING
+                val pref = preferences ?: return StageOutcome.AWAITING
+                initializeModuleContext()
+                UnobfuscatorCache.init(app)
+                SharedPreferencesWrapper.hookInit(app.classLoader)
+                ReflectionUtils.initCache(app)
+
+                supportedVersions = resolveSupportedVersions(app)
+                XposedBridge.log("Supported versions for $packageName: ${supportedVersions.joinToString(", ")}")
+
+                val assessment = TargetVersions.assess(targetVersion, supportedVersions)
+                return when {
+                    assessment.accepted && !assessment.isExperimental -> {
+                        StageOutcome.SUCCEEDED
+                    }
+
+                    // A tolerated build is loaded, and that it was tolerated rather than verified
+                    // is recorded as a degradation, which is what the aggregate and the card say.
+                    assessment.isExperimental -> {
+                        StageOutcome.DEGRADED
+                    }
+
+                    else -> {
+                        disableExpirationVersion(app.classLoader)
+                        if (pref.getBoolean("bypass_version_check", false)) {
+                            StageOutcome.DEGRADED
+                        } else {
+                            error(
+                                """
+                                Unsupported version: $targetVersion
+                                Only the function of ignoring the expiration of the WhatsApp version has been applied!
+                                ${assessment.explanation}
+                                """.trimIndent(),
+                            )
+                            StageOutcome.FAILED
+                        }
+                    }
+                }
+            }
+
+            /** The shared infrastructure every feature is built on. */
+            private fun core(): StageOutcome {
+                val pref = preferences ?: return StageOutcome.AWAITING
+                initComponents(loader, pref)
+                return StageOutcome.SUCCEEDED
+            }
+
+            /**
+             * The hook set.
+             *
+             * Individual features are isolated inside [plugins], so this stage measures whether
+             * the set as a whole was installed. One feature throwing cannot fail it, which is the
+             * property the gate turns on.
+             */
+            private fun essential(): StageOutcome {
+                val pref = preferences ?: return StageOutcome.AWAITING
+                return if (plugins(loader, pref, targetVersion.orEmpty())) StageOutcome.SUCCEEDED else StageOutcome.FAILED
+            }
+
+            /**
+             * The optional features.
+             *
+             * This stage cannot fail the bootstrap and cannot stop another stage, which is why it
+             * is classified OPTIONAL: an optional feature that does not install is a loss, not a
+             * broken module, and the only thing it changes is the aggregate the Manager reads.
+             */
+            private fun optional(): StageOutcome = if (getFailureReports().isEmpty()) StageOutcome.SUCCEEDED else StageOutcome.DEGRADED
+
+            /**
+             * Reads the finished runtime back.
+             *
+             * A bootstrap nobody has read back has not been shown to work. This stage persists
+             * the document and then asks the model for its own verdict, so the aggregate the
+             * Manager reads is derived once by one place rather than assembled by whichever
+             * component reported last.
+             */
+            private fun runtimeVerification(): StageOutcome =
+                when (RuntimeHealth.current().snapshot().overallState) {
+                    SubsystemState.READY -> StageOutcome.SUCCEEDED
+                    SubsystemState.FAILED -> StageOutcome.FAILED
+                    else -> StageOutcome.DEGRADED
+                }
         }
 
-        /** The proof reporter for this process, or null before the runtime has one. */
-        private fun currentProof(): ActivationProof? = if (RuntimeHealth.isInstalled()) ActivationProof(RuntimeHealth.current()) else null
+        /**
+         * Whether the per-process bootstrap has already attached to its target.
+         *
+         * `callApplicationOnCreate` is not guaranteed to fire once, and everything a second
+         * firing would register - receivers, lifecycle callbacks, the crash handler - is
+         * installed per registration. The runner makes the *stages* idempotent; this makes the
+         * *attachments* idempotent, which is a different thing and just as necessary.
+         */
+        private val bootstrapAttached =
+            java.util.concurrent.atomic
+                .AtomicBoolean(false)
 
+        /**
+         * Installs the feature set, isolating each feature's failure.
+         *
+         * Returns whether the set was installed in full within [HOOK_INSTALL_BUDGET_MS]. That
+         * return value is new and it is the fix for a defect this phase found: the executor was
+         * awaited with a fifteen-second bound and the answer was discarded, so a single slow
+         * feature silently prevented every feature queued behind it from being installed, and
+         * nothing anywhere recorded that any of them had been dropped. A timeout now returns
+         * false, the stage reports it, and the count of what did install is what the
+         * diagnostics can be asked about.
+         */
         @Throws(Exception::class)
         private fun plugins(
             loader: ClassLoader,
             pref: SharedPreferences,
             versionWpp: String,
-        ) {
+        ): Boolean {
             val classes =
                 arrayOf(
                     DebugFeature::class.java,
@@ -969,12 +1115,32 @@ class FeatureLoader private constructor() {
             }
 
             executorService.shutdown()
-            executorService.awaitTermination(15, TimeUnit.SECONDS)
+            val finished = executorService.awaitTermination(HOOK_INSTALL_BUDGET_MS, TimeUnit.MILLISECONDS)
 
             if (Feature.isDebug) {
                 val loadedTimes = synchronized(times) { times.toList() }
                 loadedTimes.forEach { XposedBridge.log(it) }
             }
+
+            if (!finished) {
+                // Named, counted and recorded. The dropped features are the ones with no line
+                // in `times`, which is the only evidence the budget produced, so the number is
+                // what turns "the set installed slowly" into "these twelve never installed".
+                val installed = synchronized(times) { times.size }
+                val dropped = classes.size - installed
+                XposedBridge.log("WA X hook installation exceeded ${HOOK_INSTALL_BUDGET_MS}ms; $dropped feature(s) not installed")
+                recordFailure(
+                    featureId = "MainFeatures[Install]",
+                    throwable =
+                        IllegalStateException(
+                            "$dropped of ${classes.size} features were not installed within ${HOOK_INSTALL_BUDGET_MS}ms",
+                        ),
+                    whatsAppVersion = versionWpp,
+                    packageName = moduleContext.packageName,
+                    stage = BootstrapStage.ESSENTIAL.name,
+                )
+            }
+            return finished
         }
     }
 }

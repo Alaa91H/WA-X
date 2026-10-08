@@ -120,7 +120,7 @@ The issue asks for three separate things, and the code now names all three:
 | | What it is | Where |
 | --- | --- | --- |
 | **Recommended scope** | what `xposedscope` in the manifest declares | `arrays.xml` — a suggestion the user is free to edit |
-| **Effective scope** | whether the framework reached this package, which is proof | `ActivationProof.scopeIsEffective()` |
+| **Effective scope** | whether the framework reached this package, which is proof | `BootstrapStage.SCOPE` |
 | **Runtime injection proof** | that the module's code is executing here | `FRAMEWORK_EVIDENCE` — the heartbeat |
 
 Only the second and third are ever reported. `SCOPE_MISSING` and `MODULE_DISABLED` exist in the
@@ -135,8 +135,15 @@ guess. Only a runtime that can see the framework's own decision may produce them
 M01 built a twelve-subsystem model and wired **one** subsystem to it. That left the aggregate
 permanently `DEGRADED` by its own rule 5 — "some subsystems have reported and others have not" —
 so a perfectly healthy bootstrap could only ever publish "degraded". That is the same defect as
-the boolean, with more words. `ActivationProof` records the remaining ten, each from something the
-framework already told us:
+the boolean, with more words. The remaining ten are recorded, each from something the framework
+already told us:
+
+> **Superseded by M03.** M02 recorded them through a class of its own, `ActivationProof`, whose
+> methods were one per subsystem. M03 replaced it with the declared stage sequence in
+> [`com.wax.module.bootstrap`](M03_ATOMIC_BOOTSTRAP.md), where each stage owns exactly one
+> subsystem and the runner is its only writer. Two writers for one subsystem is how a subsystem's
+> state becomes a function of which writer ran last, so the class was folded into the sequence
+> rather than left beside it. The table below is unchanged in substance and in ownership.
 
 | Subsystem | Evidence |
 | --- | --- |
@@ -146,7 +153,7 @@ framework already told us:
 | `OPTIONAL_HOOKS` | the count of collected failure reports |
 | `RESOLVER` | whether any collected report is resolver-classified |
 
-`ActivationProofTest.aHealthyBootstrapProducesReadyAndNotDegraded` is the test that fails the day
+`StageRunnerTest.aHealthyBootstrapProducesReadyAndNotDegraded` is the test that fails the day
 one of them stops reporting.
 
 ### The engine failure, end to end

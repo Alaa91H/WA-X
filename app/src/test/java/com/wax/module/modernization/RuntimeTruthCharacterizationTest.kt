@@ -1,5 +1,6 @@
 package com.wax.module.modernization
 
+import com.wax.module.bootstrap.BootstrapStage
 import com.wax.module.diagnostics.FailureCode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -99,57 +100,62 @@ class RuntimeTruthCharacterizationTest {
     // ---------------------------------------------------------------- M00-DEF-02
 
     /**
-     * A DexKit initialisation failure stops the bootstrap, and is now recorded before it does.
+     * A DexKit initialisation failure is recorded, classified, and no longer stops the bootstrap.
      *
-     * M00 recorded M00-DEF-02 as "installs nothing and reports nothing". M01 fixed the second half:
-     * the stage is opened before the engine is asked to initialise, and the failure is recorded
-     * against the DEXKIT subsystem with [com.wax.module.health.RuntimeFailureCode.DEXKIT_INIT_FAILED],
-     * so the failure has one authoritative record instead of a log line.
+     * M00 recorded M00-DEF-02 as "installs zero hooks and reports nothing". M01 fixed the first
+     * half - the record exists before the engine is asked - and deliberately left the early
+     * return in place, because *which stages are safe to continue with* was M03's decision.
      *
-     * The early return is deliberately **unchanged**. What should happen instead of returning -
-     * which paths are safe to continue with, and what the healthy non-DexKit features do meanwhile -
-     * is M03's decision, and it needs this record to exist before that decision can be made. So this
-     * test asserts both halves, and the message on the second assertion names the phase that owns
-     * changing it.
-     *
-     * Asserted against the source rather than by invoking it: the failure path needs a real
-     * `dex2oat`-loaded dex file and an LSPosed-provided class loader, neither of which exists on a
-     * JVM unit test. The record itself is covered behaviourally by the health reporter's own tests.
+     * This is M03's decision, taken. There is no `return` after the engine failure any more: the
+     * failure is a stage outcome, the stages that need the engine are skipped with the engine
+     * named as the reason, and the stages that do not need it still run - which is what lets the
+     * runtime attach, answer the Manager and report that the engine is what failed. Asserted over
+     * the source because the engine needs a real dex file and an LSPosed class loader, neither of
+     * which exists on a JVM unit test; the behaviour itself is covered by
+     * `StageRunnerTest.anEngineFailureSkipsOnlyWhatNeedsTheEngine`.
      */
     @Test
-    fun dexKitInitFailureIsRecordedBeforeTheBootstrapStops() {
+    fun dexKitInitFailureIsClassifiedAndDoesNotStopTheBootstrap() {
         val loader = readSource("java/com/wax/module/xposed/core/FeatureLoader.kt")
 
         val guard =
-            Regex("""if\s*\(\s*!\s*Unobfuscator\.initWithPath\([^)]*\)\s*\)""")
+            Regex("""if\s*\(\s*Unobfuscator\.initWithPath\([^)]*\)\s*\)""")
                 .find(loader)
                 ?.range
                 ?: error("M03 owns this. FeatureLoader no longer guards on initWithPath failing. Update M00-DEF-02.")
-        val body = loader.substring(guard.last, minOf(loader.length, guard.last + 800))
+        val body = loader.substring(guard.last, minOf(loader.length, guard.last + 1200))
 
         assertTrue(
-            "M03 owns this. The early return after a DexKit failure is gone, so the bootstrap no " +
-                "longer stops. That is M03's fix to make; update M00-DEF-02 rather than re-adding a " +
-                "guard here.",
-            Regex("""return\s*$""", RegexOption.MULTILINE).containsMatchIn(body),
+            "M03-DEF-02 has regressed: the early return after a DexKit failure is back, so one " +
+                "engine failure stops every later stage again - including the stages that never " +
+                "needed the engine, which is the defect M00 recorded.",
+            !Regex("""return\s*\$""", RegexOption.MULTILINE).containsMatchIn(body),
         )
         assertTrue(
             "M01-DEF-02 has regressed: the DexKit failure path records nothing again, so the " +
                 "failure is silent - which is exactly what M00 recorded.",
-            Regex("""RuntimeFailureCode\.DEXKIT_INIT_FAILED""").containsMatchIn(body),
+            body.contains("StageOutcome.FAILED") && body.contains(BootstrapStage.DEX_ENGINE.name),
+        )
+
+        // The bootstrap is a declared sequence rather than a straight line, and that is the
+        // property the early return used to defeat.
+        assertTrue(
+            "M03 owns this. FeatureLoader is not running a declared stage sequence any more.",
+            loader.contains("StageRunner(") && loader.contains("runner.run("),
         )
 
         // Ordering, not just presence: health must exist before the first thing that can fail,
         // otherwise a failure recorded during bootstrap has nowhere to go - the root cause M00
         // identified for this defect.
         val healthStart = loader.indexOf("RuntimeHealth.beginForTarget")
+        val runnerStart = loader.indexOf("StageRunner(health)")
         val dexKitInit = loader.indexOf("Unobfuscator.initWithPath")
-        assertTrue("M01 owns this. The DexKit initialisation is not guarded at all.", dexKitInit > 0)
-        assertTrue("M01 owns this. There is no health reporter in the loader.", healthStart > 0)
+        assertTrue("M03 owns this. The DexKit initialisation is not guarded at all.", dexKitInit > 0)
+        assertTrue("M03 owns this. There is no stage runner in the loader.", runnerStart > 0)
         assertTrue(
-            "The health reporter must be created before DexKit is asked to initialise; the defect " +
-                "M00 recorded was precisely that the failure happened first and had nowhere to go.",
-            healthStart < dexKitInit,
+            "The health reporter must exist before the sequence runs, or a failure recorded " +
+                "during bootstrap has nowhere to go - the defect M00 identified.",
+            healthStart in 0 until runnerStart,
         )
     }
 

@@ -32,24 +32,25 @@
     },
     {
       "id": "M00-DEF-02",
-      "title": "DexKit initialisation failure installs zero hooks and reports nothing",
+      "title": "A DexKit initialisation failure stopped the whole bootstrap and reported nothing",
       "severity": "high",
-      "status": "partially fixed",
-      "fixedBy": "#320 M01 / #321 M02",
-      "fixedHalf": "The failure is no longer silent and it is no longer invisible. Health exists before the engine is asked to initialise, the stage is opened, and the failure is recorded against the DEXKIT subsystem with RuntimeFailureCode.DEXKIT_INIT_FAILED instead of only being logged; the ordering is asserted, not just the presence. M02 then made that record reachable: a runtime whose bootstrap stops installs a probe responder that answers the Manager's request with the recorded heartbeat and installs no feature, so the card names the engine failure instead of showing a healthy module.",
-      "remainingHalf": "The bootstrap still stops and installs no hooks. That is #322 M03's decision rather than a defect this package can close - it needs the record to exist first, and it now does - so the entry stays \"partially fixed\" and M03 is named as the owner.",
-      "owner": "#320 M01 / #322 M03",
+      "status": "fixed",
+      "fixedBy": "#320 M01 / #321 M02 / #322 M03",
+      "fixedIn": "the declared stage sequence in com.wax.module.bootstrap: fourteen ordered stages, each with a criticality and a dependency set, run by StageRunner in two passes. The engine is one stage rather than a guard in the middle of start(), so its failure skips the six stages that need it, names the engine as the cause, and leaves the five that do not standing",
+      "owner": "#322 M03",
       "locations": [
-        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt:218",
-        "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt:87"
+        "app/src/main/java/com/wax/module/bootstrap/BootstrapStage.kt:1",
+        "app/src/main/java/com/wax/module/bootstrap/StageRunner.kt:1",
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt:1"
       ],
-      "current_behaviour": "Unobfuscator.initWithPath catches every Exception and returns a bare false. FeatureLoader.start() logs \"Can't init dexkit\" and returns before installing any hook.",
-      "symptom": "WhatsApp starts with no WA X behaviour at all, nothing on any surface the user can read, and the WA X app still shows \"Module enabled\" with a version number because the self-hook fired in a different process.",
-      "root_cause": "Same as M00-DEF-01: no reporting channel exists before Application.onCreate.",
+      "current_behaviour": "There is no early return after the engine failure. FeatureLoader.start runs a StageRunner sequence: once before the target Application exists and once after it does. The engine is the DEX_ENGINE stage; when it fails, RESOLVER_CACHE, CORE, ESSENTIAL, OPTIONAL, RUNTIME_VERIFICATION and READY are recorded as SKIPPED with DEX_ENGINE named as the cause, and FRAMEWORK, MODULE, SCOPE, TARGET, INJECTION, PREFERENCES and APPLICATION_ATTACH still ran.",
+      "symptom": "Resolved. The engine failure is recorded before it happens, is classified as the engine, is visible to the Manager on the next heartbeat, and no longer decides the fate of the stages that never needed the engine.",
+      "root_cause": "Fixed by making the sequence a declared one. A guard in the middle of a method cannot say which later work needed the thing it guarded, so it can only stop all of it - and a stage that was never reached could not report that it was never reached.",
+      "gate": "M03 Gate: a DexKit failure is diagnosable, an optional failure cannot block READY, and the bootstrap is deterministic and idempotent. StageRunnerTest asserts each clause.",
       "characterized_by": [
-        "dexKitInitFailureIsRecordedBeforeTheBootstrapStops"
+        "dexKitInitFailureIsClassifiedAndDoesNotStopTheBootstrap"
       ],
-      "fixedWording": "The early-return assertion still holds and still names M03 as its owner, so M03 can change the bootstrap without this registry being rewritten first. A second test asserts that the engine failure reaches the card under its own code and is never permitted to present as the framework being absent."
+      "fixedWording": "The test now asserts the fix from both sides: the guard still exists and the failure is still recorded with the stage named, and there is no return after it any more - re-adding one would stop every later stage again, including the ones that never needed the engine. The health reporter is still created before the sequence runs, which is the ordering M00 identified as the root cause."
     },
     {
       "id": "M00-DEF-03",
@@ -62,7 +63,7 @@
       "locations": [
         "app/src/main/java/com/wax/module/activation/ActivationStatusResolver.kt:1",
         "app/src/main/java/com/wax/module/activation/TargetHeartbeat.kt:1",
-        "app/src/main/java/com/wax/module/xposed/core/ActivationProof.kt:1",
+        "app/src/main/java/com/wax/module/bootstrap/BootstrapStage.kt:1",
         "app/src/main/java/com/wax/module/ModuleApplication.kt:1"
       ],
       "current_behaviour": "isLegacySelfHookSignal() is still System.currentTimeMillis() == 0L and is still installed by the self-hook, but it is no longer the activation signal. It is ActivationSignal.LEGACY_SELF_HOOK_SIGNAL, ranked below the framework evidence a target reports about itself, and the Home screen renders a state resolved from that heartbeat rather than from this boolean.",

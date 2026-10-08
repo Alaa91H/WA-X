@@ -13,10 +13,10 @@ the numbers.
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
 | [Direct DexKit use](#dexkit_direct) | #318 M08 / #333 A04 | 29 | 24 |
-| [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 70 |
+| [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 234 | 70 |
 | [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
-| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 221 | 57 |
-| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 146 | 43 |
+| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 226 | 57 |
+| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 144 | 43 |
 
 ## Legacy Xposed API surface
 
@@ -346,7 +346,7 @@ Legacy types in use:
 
 **End state:** Stays non-zero; every hook gains an owner that can report its own failure.
 
-**Current:** 235 occurrences across 70 files.
+**Current:** 234 occurrences across 70 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
@@ -354,7 +354,7 @@ Legacy types in use:
 | `XposedBridge.hookAllMethods` | 32 | 14 |
 | `XposedBridge.hookMethod` | 116 | 47 |
 | `XposedHelpers.findAndHookConstructor` | 3 | 2 |
-| `XposedHelpers.findAndHookMethod` | 56 | 25 |
+| `XposedHelpers.findAndHookMethod` | 55 | 25 |
 
 <details><summary>Files</summary>
 
@@ -462,14 +462,14 @@ Legacy types in use:
 
 **End state:** Contained in RuntimeGraph with an explicit lifetime.
 
-**Current:** 221 occurrences across 57 files.
+**Current:** 226 occurrences across 57 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
 | `@JvmStatic var` | 2 | 2 |
 | `lateinit var` | 32 | 11 |
-| `module-level nullable var` | 155 | 41 |
-| `object singleton` | 32 | 26 |
+| `module-level nullable var` | 158 | 41 |
+| `object singleton` | 34 | 27 |
 
 <details><summary>Files</summary>
 
@@ -541,12 +541,12 @@ Legacy types in use:
 
 **End state:** Every catch reports through the runtime health store.
 
-**Current:** 146 occurrences across 43 files.
+**Current:** 144 occurrences across 43 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `catch with discarded binding` | 92 | 38 |
-| `empty catch body` | 54 | 25 |
+| `catch with discarded binding` | 91 | 38 |
+| `empty catch body` | 53 | 25 |
 
 <details><summary>Files</summary>
 

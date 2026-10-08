@@ -322,7 +322,7 @@
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",
-    "defect_registry_sha256": "43f975e997515ff11328c6ab5d3bf129ad605c360461b22016f43cefcc161d6c",
+    "defect_registry_sha256": "4188468c7715ead2eb9500a5982ef333ab3e9636c4d1fd46d1b899456faa23bb",
     "test_matrix": "docs/modernization/test-matrix.json",
     "test_matrix_sha256": "a7a5221c8cdd8a8a9c124ff23546e4128accc6a831fceceeff8fb25f1f291dee"
   },
@@ -332,7 +332,7 @@
     "android_tests": 1,
     "cpp": 425,
     "java": 3,
-    "kotlin": 380,
+    "kotlin": 382,
     "unit_tests": 72
   },
   "static_analysis": {
@@ -345,7 +345,7 @@
     "composeBom": "2026.09.00",
     "composeMaterial3": "1.4.0",
     "detekt": "2.0.0-alpha.6",
-    "kotlin": "2.4.20",
+    "kotlin": "2.4.21",
     "ksp": "2.3.12",
     "spotless": "8.10.3",
     "xposed-legacy": "82"

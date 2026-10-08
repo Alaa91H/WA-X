@@ -99,6 +99,13 @@
         "platform"
       ]
     },
+    "bootstrap": {
+      "external": [],
+      "files": 3,
+      "first_party": [
+        "health"
+      ]
+    },
     "compat": {
       "external": [
         "okhttp3",
@@ -488,11 +495,12 @@
         "platform",
         "xposed"
       ],
-      "files": 6,
+      "files": 5,
       "first_party": [
         "<root>",
         "activation",
         "activities",
+        "bootstrap",
         "compat",
         "diagnostics",
         "health",
@@ -783,7 +791,7 @@
   },
   "schema": "wax.a00.dependency-graph/1",
   "totals": {
-    "files": 310,
-    "lines": 67889
+    "files": 312,
+    "lines": 68408
   }
 }
