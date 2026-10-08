@@ -70,3 +70,8 @@ Use an adaptive alternative on tablets/foldables; keep existing deep links/back 
 
 ## Non-goals
 This decision does not authorize rewriting the injected WhatsApp UI, adding more features, making unverified LSPosed activation claims, removing old settings, or bypassing the phase gates. The demo prototype is not production code.
+
+
+## Risk-aware optional catalog view (issue #378)
+
+The user-requested **Show lower-risk features only** preference lives in Manager App Settings → Safety & feature visibility, and applies to the Features catalog, search, categories, favorites, deep links and Customization entry points. In ON state, show only explicitly reviewed **low account-enforcement risk** AND technically compatible/implemented features, not everything with the current metadata `riskLevel = LOW` default. Risk UNKNOWN is hidden in filtered view but is **not** labeled proven dangerous. Display number of hidden entries and a way to discover why. Filter OFF restores visibility, not activation; technical gates still protect unsupported/incompatible features. When previously enabled hidden features exist, state clearly that visibility filtering **does not turn existing hooks off** and provide optional user-confirmed action. Avoid `safe forever` or `no ban` promises. Separate preference safety posture from runtime/compatibility evidence. Policy authoritative in A03/M12; UI bound to UDF; tested under the same package #371 gate. See [#378](https://github.com/Alaa91H/WA-X/issues/378).
