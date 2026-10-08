@@ -56,6 +56,8 @@ class CompatibilityReportTests(unittest.TestCase):
     def test_all_unknown_preserves_zero_evidence_message(self) -> None:
         report = sync_generated.render(fixture())
         self.assertIn("No cell in this matrix is resolver-verified yet.", report)
+        self.assertIn("they are **not** evidence", report)
+        self.assertIn("| Package | Declared versions | Resolver-verified |", report)
         self.assertIn("| WhatsApp | 3 | 0 / 3 cells |", report)
         self.assertIn("| WhatsApp Business | 2 | 0 / 2 cells |", report)
 
