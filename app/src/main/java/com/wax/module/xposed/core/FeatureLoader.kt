@@ -830,7 +830,7 @@ class FeatureLoader private constructor() {
                 context.sendBroadcast(wppIntent)
                 XposedBridge.log(
                     "WA X activation broadcast dispatched for ${context.packageName}: " +
-                        if (heartbeat == null) "heartbeat unavailable" else "heartbeat encoded",
+                        (if (heartbeat == null) "heartbeat unavailable" else "heartbeat encoded"),
                 )
             }.onFailure {
                 XposedBridge.log("WA X could not dispatch the activation report")
