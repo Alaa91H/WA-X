@@ -42,6 +42,9 @@ import com.wax.module.diagnostics.FailureReportCodec
 import com.wax.module.diagnostics.FailureReportStore
 import com.wax.module.diagnostics.FeatureFailureReport
 import com.wax.module.diagnostics.ReportRedactor
+import com.wax.module.graph.RuntimeGraph
+import com.wax.module.graph.RuntimeSlot
+import com.wax.module.graph.TargetIdentity
 import com.wax.module.health.RuntimeFailureCode
 import com.wax.module.health.RuntimeHealth
 import com.wax.module.health.RuntimeSubsystem
@@ -121,6 +124,7 @@ import com.wax.module.xposed.features.privacy.TypingPrivacy
 import com.wax.module.xposed.features.privacy.ViewOnce
 import com.wax.module.xposed.features.providers.ContextMenuActionProvider
 import com.wax.module.xposed.features.providers.MenuStatusProvider
+import com.wax.module.xposed.graph.RuntimeGraphs
 import com.wax.module.xposed.spoofer.HookBL
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.ReflectionUtils
@@ -324,6 +328,7 @@ class FeatureLoader private constructor() {
                         val application = param.args[0] as? Application ?: return
                         mApp = application
                         target.attach(application)
+                        attachRuntimeGraph(packageName, application, loader)
                         // The callback is not guaranteed to fire once. A second pass re-runs
                         // nothing that already finished - that is the runner's job - but the
                         // receivers and lifecycle callbacks below are registered here, and
@@ -452,9 +457,48 @@ class FeatureLoader private constructor() {
                         Context.CONTEXT_INCLUDE_CODE or Context.CONTEXT_IGNORE_SECURITY,
                     )
                 moduleContext = android.view.ContextThemeWrapper(context, R.style.AppTheme)
+                // The graph holds a reference to the same object the field does, so a holder that
+                // needs the module's own resources can ask the process for them without reaching
+                // into the loader. The field stays until A08 gives the feature layer a typed port;
+                // deleting it here would leave 3 files with no way to reach the module context.
+                RuntimeGraphs
+                    .current()
+                    ?.put(RuntimeSlot.MODULE_CONTEXT, moduleContext)
             } catch (_: PackageManager.NameNotFoundException) {
                 throw PackageManager.NameNotFoundException(Utils.application.getString(R.string.alert_module_notfound))
             }
+        }
+
+        /**
+         * Publishes the process's runtime graph.
+         *
+         * The first place the loader learns anything about the app it is running inside, so it is
+         * the first place that can say what that app is. Everything the graph will hold arrives
+         * after this: the preferences in the PREFERENCES stage, the module context in
+         * RESOLVER_CACHE, the feature context in ESSENTIAL. Attaching it here means a holder that
+         * looks can tell "bootstrap has not got there yet" from "bootstrap is not running".
+         *
+         * The version is not read here because it is not knowable here: this runs at the first
+         * framework callback, and the `PackageManager` has not been asked yet. The stage that asks
+         * records it on the graph, which is why [RuntimeGraph.recordTargetVersion] is one-way.
+         */
+        private fun attachRuntimeGraph(
+            packageName: String,
+            application: Application,
+            targetClassLoader: ClassLoader,
+        ) {
+            val graph =
+                RuntimeGraphs.attach(
+                    RuntimeGraph(
+                        TargetIdentity(
+                            packageName = packageName,
+                            versionName = null,
+                            sdkInt = Build.VERSION.SDK_INT,
+                            classLoader = targetClassLoader,
+                        ),
+                    ),
+                )
+            graph.put(RuntimeSlot.TARGET_APPLICATION, application)
         }
 
         private fun installCrashHandler(
@@ -855,6 +899,11 @@ class FeatureLoader private constructor() {
                 val pref = TargetSettingsBridge.install(getPreferences(app), TargetRuntime.target)
                 preferences = pref
                 Utils.xprefs = pref
+                // The graph holds the same object. Two owners of one reference is the situation
+                // A02 exists to end, but Utils.xprefs still has two readers (CustomPrivacy and
+                // Tasker) that only #342 can convert, and the honest count of one is worth more
+                // than a second reference nobody can see.
+                RuntimeGraphs.current()?.put(RuntimeSlot.TARGET_PREFERENCES, pref)
                 Feature.isDebug = pref.getBoolean("enablelogs", false)
                 if (pref.getBoolean("bootloader_spoofer", false)) {
                     HookBL.hook(loader, pref)
@@ -868,6 +917,11 @@ class FeatureLoader private constructor() {
                 val app = application ?: return StageOutcome.AWAITING
                 val pref = preferences ?: return StageOutcome.FAILED
                 targetVersion = runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull()
+                // The graph was created before the PackageManager had been asked, so this is where
+                // its identity stops being "unknown". Recorded on the graph rather than passed in
+                // because a holder that asks later must get the same answer a holder that asks now
+                // would get.
+                RuntimeGraphs.current()?.recordTargetVersion(targetVersion)
                 XposedBridge.log(targetVersion.orEmpty())
                 currentVersion = targetVersion
                 installCrashHandler(app, targetVersion.orEmpty())
@@ -979,13 +1033,19 @@ class FeatureLoader private constructor() {
                 // that does now: the contract path receives the snapshot.
                 legacyPreferences = pref
                 val debugEnabled = { pref.getBoolean("enablelogs", false) }
-                return RuntimeFeatureContexts.forTarget(
-                    settings = TargetSettingsBridge.snapshotFor(pref, TargetRuntime.target),
-                    classLoader = loader,
-                    targetVersionName = targetVersion,
-                    debugEnabled = debugEnabled,
-                    reportFailure = ::recordContractFailure,
-                )
+                val context =
+                    RuntimeFeatureContexts.forTarget(
+                        settings = TargetSettingsBridge.snapshotFor(pref, TargetRuntime.target),
+                        classLoader = loader,
+                        targetVersionName = targetVersion,
+                        debugEnabled = debugEnabled,
+                        reportFailure = ::recordContractFailure,
+                    )
+                // Published before the first feature starts, so that a failure inside one can be
+                // attributed to a process that knows what it is. A feature still receives the
+                // context directly; the graph is what anything *other* than a feature asks.
+                RuntimeGraphs.current()?.attachFeatureContext(context)
+                return context
             }
 
             /**

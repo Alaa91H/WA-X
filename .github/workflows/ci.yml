@@ -340,6 +340,13 @@ jobs:
               # quietly stopped matching reports a clean tree that is not clean.
               python3 tools/quality/test_check_feature_contracts.py || failures=$((failures + 1))
               python3 tools/quality/check_feature_contracts.py || failures=$((failures + 1))
+              # The A02 ratchet. Mutable global state in the injected process is meant to shrink, so
+              # the gate counts write *sites* rather than state: deleting one writer and adding
+              # another leaves a count unchanged while the module has got worse. Owners are keyed by
+              # file in tools/quality/legacy_global_writes.json, and a writer leaving that list is
+              # progress, not a failure.
+              python3 tools/quality/test_check_legacy_global_writes.py || failures=$((failures + 1))
+              python3 tools/quality/check_legacy_global_writes.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
           - name: Modernization evidence contracts
             shell: bash

@@ -1,0 +1,98 @@
+{
+  "note": "Every write site of a mutable global in the injected process, keyed by owner rather than by line number. check_legacy_global_writes.py fails when a write appears outside this list. Re-derive with `python3 tools/quality/check_legacy_global_writes.py --report` and review the diff: an entry leaving the list is progress and should be deleted, an entry appearing is a decision that needs a reason. Entries under `declare:` are declarations rather than writes; they are recorded so a second holder of the same state is a failure.",
+  "schema": "wax.legacy_global_writes/1",
+  "symbols": {
+    "Feature.isDebug": {
+      "owner": "#342 A08",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "FeatureLoader.mApp": {
+      "owner": "#342 A08 / #336 A02",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "FeatureLoader.moduleContext": {
+      "owner": "#342 A08",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "ModuleEntryPoint.pref": {
+      "owner": "#336 A02",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/ModuleEntryPoint.kt"
+      ]
+    },
+    "Utils.appClassLoader": {
+      "owner": "#336 A02",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "Utils.xprefs": {
+      "owner": "#342 A08",
+      "writeSites": 2,
+      "writers": [
+        "app/src/main/java/com/wax/module/settings/TargetSettingsBridge.kt",
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "declare:appClassLoader": {
+      "owner": "single declaration - must never be duplicated",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
+      ]
+    },
+    "declare:isDebug": {
+      "owner": "single declaration - must never be duplicated",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/Feature.kt"
+      ]
+    },
+    "declare:mApp": {
+      "owner": "single declaration - must never be duplicated",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "declare:mCurrentActivity": {
+      "owner": "single declaration - must never be duplicated",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt"
+      ]
+    },
+    "declare:moduleContext": {
+      "owner": "single declaration - must never be duplicated",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+      ]
+    },
+    "declare:xprefs": {
+      "owner": "single declaration - must never be duplicated",
+      "writeSites": 1,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
+      ]
+    },
+    "mCurrentActivity": {
+      "owner": "#336 A02",
+      "writeSites": 3,
+      "writers": [
+        "app/src/main/java/com/wax/module/xposed/core/WaCallback.kt"
+      ]
+    }
+  }
+}
