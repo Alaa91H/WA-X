@@ -54,13 +54,625 @@ PACKAGE_IMPORT = re.compile(r"^import\s+([\w.]+)\s*$")
 RESOLVER_CALL = re.compile(r"\bUnobfuscator\s*\.\s*(load\w+)")
 RESOLVER_DECL = re.compile(r"\bfun\s+(load\w+)\s*\(")
 ARRAY_ITEM = re.compile(r"<item>([^<]+)</item>")
-# Deliberately boolean switches only, as before. Widening this to every getter type
-# would rewrite the preferenceKeys of every feature in the matrix, which is a tooling
-# change in its own right and not part of a HD Status fix.
-GET_BOOLEAN = re.compile(r'\bgetBoolean\s*\(\s*"([^"]+)"')
-# A feature may name its preferences through a constant instead of an inline literal,
-# which is what keeps the key in one place. Both forms are read.
-PREF_CONST = re.compile(r'\bconst\s+val\s+PREF_[A-Z0-9_]+\s*=\s*"([^"]+)"')
+# Preference reads can use multiple typed SharedPreferences getters. Capture
+# literals and declared PREF_* constants only when passed to a read, not a write.
+PREF_READ = re.compile(
+    r'\b(?:getBoolean|getString|getInt|getLong|getFloat|getStringSet)\s*'
+    r'\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
+)
+PREF_CONST = re.compile(
+    r'\bconst\s+val\s+(PREF_[A-Z0-9_]+)\s*=\s*"([^"]+)"'
+)
+# Bare get()/read() are too generic: restrict them to known settings receivers.
+TYPED_SETTINGS_READ = re.compile(
+    r'\b(?:settingsStore|settings|preferences|prefs|sharedPreferences|store)'
+    r'\s*\.\s*(?:get|read|contains)\s*'
+    r'\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
+)
+KOTLIN_PACKAGE = re.compile(r'^\s*package\s+([\w.]+)\s*
+# A type token naming another Kotlin file in the feature tree.
+TYPE_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
+# A helper class is *owned* by a feature when the feature constructs it. A bare type
+# mention is not enough: a comment, a KDoc link or a static access such as
+# ``Others.propsInteger`` would otherwise drag a whole unrelated feature in.
+CONSTRUCTS = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\s*\(")
+BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT = re.compile(r"//[^\n]*")
+
+# A feature reaches its hook targets through one or more of these internal layers.
+# Recording which ones a feature touches is what makes its compatibility auditable:
+# a feature that only uses ReflectionUtils still depends on resolution succeeding.
+RESOLUTION_SOURCES = (
+    "Unobfuscator",
+    "UnobfuscatorCache",
+    "ReflectionUtils",
+    # Formerly WppCore; renamed to ModuleRuntime in the WA X identity migration.
+    "ModuleRuntime",
+)
+
+# Maps the feature source package to the user facing category name used by the
+# settings UI and by FeatureCatalog.
+CATEGORY_BY_PACKAGE = {
+    "customization": "customization",
+    "general": "general",
+    "media": "media",
+    "others": "others",
+    "privacy": "privacy",
+    "listeners": "listeners",
+    "providers": "providers",
+}
+
+
+def read(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as handle:
+        return handle.read()
+
+
+def find_feature_classes() -> list[tuple[str, str]]:
+    """Return ``(simpleName, importedPackage)`` for every feature loader import."""
+    found: list[tuple[str, str]] = []
+    for line in read(FEATURE_LOADER).splitlines():
+        match = PACKAGE_IMPORT.match(line)
+        if not match:
+            continue
+        full = match.group(1)
+        simple = full.rsplit(".", 1)[1]
+        package = full.rsplit(".", 1)[0]
+        if ".xposed.features." not in package:
+            continue
+        found.append((simple, package))
+    return found
+
+
+def find_registered_order() -> list[str]:
+    """Return feature simple names in the exact order ``plugins()`` installs them.
+
+    The whitespace between the assignment and the call is matched loosely: ktlint
+    rewraps ``val classes = arrayOf(`` into two lines when the list is long, so a
+    pattern that hardcodes the single-line form silently finds no features at all.
+    """
+    source = read(FEATURE_LOADER)
+    match = re.search(r"val\s+classes\s*=\s*arrayOf\((.*?)\n\s*\)", source, re.DOTALL)
+    if not match:
+        raise SystemExit("could not locate the plugins() array in FeatureLoader.kt")
+    return re.findall(r"([A-Za-z0-9_]+)::class\.java", match.group(1))
+
+
+def resolvers_declared() -> set[str]:
+    return set(RESOLVER_DECL.findall(read(UNOBFUSCATOR)))
+
+
+def feature_files() -> dict[str, str]:
+    """Map Kotlin stems to source; reject ambiguous names rather than drop files."""
+    files: dict[str, str] = {}
+    paths: dict[str, str] = {}
+    for dirpath, dirnames, filenames in os.walk(FEATURES_DIR):
+        dirnames.sort()
+        for filename in sorted(filenames):
+            if not filename.endswith(".kt"):
+                continue
+            stem = filename[:-3]
+            path = os.path.join(dirpath, filename)
+            if stem in files:
+                raise ValueError(
+                    "duplicate Kotlin file stem %r: %s and %s"
+                    % (stem, paths[stem], path)
+                )
+            paths[stem] = path
+            files[stem] = read(path)
+    return files
+
+
+def source_package(body: str) -> str | None:
+    match = KOTLIN_PACKAGE.search(body)
+    return match.group(1) if match else None
+
+
+def source_imports(body: str) -> dict[str, str]:
+    """Map imported Kotlin class names and aliases to qualified class names."""
+    return {
+        alias or qualified.rsplit(".", 1)[-1]: qualified
+        for qualified, alias in KOTLIN_IMPORT.findall(body)
+    }
+
+
+def strip_comments(body: str) -> str:
+    """Remove comments so a KDoc mention is not mistaken for a real reference."""
+    without_block = BLOCK_COMMENT.sub(" ", body)
+    return LINE_COMMENT.sub(" ", without_block)
+
+
+def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
+    """Files that make up one feature: its own file plus the helpers it constructs.
+
+    A feature is not always one file. HD Status, for example, keeps its target
+    resolution and its image and video hooks in sibling classes, and those files hold
+    the resolver calls. Reading only the entry file reported that the feature needed no
+    resolvers at all, which is exactly the kind of wrong-but-passing metadata this
+    matrix exists to prevent.
+
+    The closure follows constructor calls only. Matching every capitalised token would
+    be far too greedy: a KDoc reference, a log string or a static access such as
+    ``Others.propsInteger[...]`` is not ownership, and following those pulled three
+    unrelated features in.
+    """
+    if stem not in files:
+        return set()
+
+    closure: set[str] = set()
+    pending = [stem]
+    while pending:
+        current = pending.pop()
+        if current in closure or current not in files:
+            continue
+        closure.add(current)
+        code = strip_comments(files[current])
+        package = source_package(code)
+        imports = source_imports(code)
+        for token in set(CONSTRUCTS.findall(code)):
+            imported = imports.get(token)
+            target = imported.rsplit(".", 1)[-1] if imported else token
+            if target not in files or target in closure:
+                continue
+            target_package = source_package(files[target])
+            # A simple class name in another package is not owned unless the
+            # source explicitly imports it. Avoid unrelated same-named helpers.
+            if imported:
+                if target_package and imported != target_package + "." + target:
+                    continue
+            elif package and target_package and package != target_package:
+                continue
+            pending.append(target)
+    return closure
+
+
+def aggregate(files: dict[str, str], stems: set[str]) -> str:
+    return "\n".join(files[stem] for stem in sorted(stems) if stem in files)
+
+
+def feature_resolver_usage(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> sorted ``Unobfuscator.load*`` calls in its closure."""
+    usage: dict[str, list[str]] = {}
+    for stem in files:
+        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files)))))
+        if calls:
+            usage[stem] = calls
+    return usage
+
+
+def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> statically provable preference reads."""
+    keys: dict[str, list[str]] = {}
+    for stem in files:
+        body = strip_comments(aggregate(files, feature_closure(stem, files)))
+        constants = dict(PREF_CONST.findall(body))
+        found: set[str] = set()
+        for matcher in (PREF_READ, TYPED_SETTINGS_READ):
+            for literal, constant in matcher.findall(body):
+                if literal:
+                    found.add(literal)
+                elif constant in constants:
+                    found.add(constants[constant])
+        if found:
+            keys[stem] = sorted(found)
+    return keys
+
+
+def feature_resolution_sources(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> internal resolution layers its closure references."""
+    sources: dict[str, list[str]] = {}
+    for stem in files:
+        body = aggregate(files, feature_closure(stem, files))
+        found = [name for name in RESOLUTION_SOURCES if re.search(r"\b%s\b" % name, body)]
+        if found:
+            sources[stem] = found
+    return sources
+
+
+def supported_versions() -> dict[str, list[str]]:
+    """Return the version prefixes declared in res/values/arrays.xml."""
+    source = read(ARRAYS_XML)
+    result: dict[str, list[str]] = {}
+    for name in ("supported_versions_wpp", "supported_versions_business"):
+        block = re.search(
+            r'<string-array name="%s">(.*?)</string-array>' % name, source, re.DOTALL
+        )
+        if not block:
+            raise SystemExit("missing string-array %s in arrays.xml" % name)
+        result[name] = [item.strip() for item in ARRAY_ITEM.findall(block.group(1)) if item.strip()]
+    return result
+
+
+def module_facts() -> dict[str, Any]:
+    source = read(APP_BUILD_GRADLE)
+
+    def gradle_int(key: str) -> int | None:
+        match = re.search(r"%s\s*=\s*(\d+)" % re.escape(key), source)
+        return int(match.group(1)) if match else None
+
+    abis_block = re.search(r"abiFilters(.*?)\n\s*\}", source, re.DOTALL)
+    abis: list[str] = []
+    if abis_block:
+        abis = re.findall(r"[\"']([^\"']+)[\"']", abis_block.group(1))
+
+    return {
+        "minSdk": gradle_int("minSdk"),
+        "targetSdk": gradle_int("targetSdk"),
+        "compileSdk": gradle_int("compileSdk"),
+        "abis": sorted(abis),
+    }
+
+
+def package_for(package: str) -> str | None:
+    parts = package.split(".xposed.features.")[1].split(".")
+    return CATEGORY_BY_PACKAGE.get(parts[0])
+
+
+def build() -> dict[str, Any]:
+    declared = resolvers_declared()
+    order = find_registered_order()
+    imported = {simple: package for simple, package in find_feature_classes()}
+    files = feature_files()
+    usage = feature_resolver_usage(files)
+    sources = feature_resolution_sources(files)
+    pref_keys = feature_preference_keys(files)
+    versions = supported_versions()
+
+    missing = [name for name in order if name not in imported]
+    if missing:
+        raise SystemExit(
+            "features registered in plugins() but not imported by FeatureLoader: %s"
+            % ", ".join(missing)
+        )
+
+    unknown_resolvers: set[str] = set()
+    features: list[dict[str, Any]] = []
+    for name in order:
+        package = imported[name]
+        used = usage.get(name, [])
+        for resolver in used:
+            if resolver not in declared:
+                unknown_resolvers.add("%s -> %s" % (name, resolver))
+        features.append(
+            {
+                "id": name,
+                "category": package_for(package) or "unknown",
+                "sourcePackage": package,
+                "resolverDependencies": used,
+                "resolutionSources": sources.get(name, []),
+                "preferenceKeys": pref_keys.get(name, []),
+            }
+        )
+
+    if unknown_resolvers:
+        raise SystemExit(
+            "features reference resolvers that Unobfuscator does not declare: %s"
+            % ", ".join(sorted(unknown_resolvers))
+        )
+
+    return {
+        "module": module_facts(),
+        "packages": {
+            "whatsapp": {
+                "packageName": "com.whatsapp",
+                "applicationId": "com.wax.module",
+                "declaredVersions": versions["supported_versions_wpp"],
+            },
+            "business": {
+                "packageName": "com.whatsapp.w4b",
+                "applicationId": "com.wax.module",
+                "declaredVersions": versions["supported_versions_business"],
+            },
+        },
+        "featureCount": len(features),
+        "features": features,
+    }
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--out", help="write the derived facts to this file")
+    args = parser.parse_args(argv)
+
+    data = build()
+    rendered = json.dumps(data, indent=2, sort_keys=True) + "\n"
+
+    if args.out:
+        os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+        with open(args.out, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(rendered)
+        print("wrote %s (%d features)" % (args.out, data["featureCount"]))
+        return 0
+
+    sys.stdout.write(rendered)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
+, re.MULTILINE)
+KOTLIN_IMPORT = re.compile(
+    r'^\s*import\s+([\w.]+)(?:\s+as\s+(\w+))?\s*
+# A type token naming another Kotlin file in the feature tree.
+TYPE_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
+# A helper class is *owned* by a feature when the feature constructs it. A bare type
+# mention is not enough: a comment, a KDoc link or a static access such as
+# ``Others.propsInteger`` would otherwise drag a whole unrelated feature in.
+CONSTRUCTS = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\s*\(")
+BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT = re.compile(r"//[^\n]*")
+
+# A feature reaches its hook targets through one or more of these internal layers.
+# Recording which ones a feature touches is what makes its compatibility auditable:
+# a feature that only uses ReflectionUtils still depends on resolution succeeding.
+RESOLUTION_SOURCES = (
+    "Unobfuscator",
+    "UnobfuscatorCache",
+    "ReflectionUtils",
+    # Formerly WppCore; renamed to ModuleRuntime in the WA X identity migration.
+    "ModuleRuntime",
+)
+
+# Maps the feature source package to the user facing category name used by the
+# settings UI and by FeatureCatalog.
+CATEGORY_BY_PACKAGE = {
+    "customization": "customization",
+    "general": "general",
+    "media": "media",
+    "others": "others",
+    "privacy": "privacy",
+    "listeners": "listeners",
+    "providers": "providers",
+}
+
+
+def read(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as handle:
+        return handle.read()
+
+
+def find_feature_classes() -> list[tuple[str, str]]:
+    """Return ``(simpleName, importedPackage)`` for every feature loader import."""
+    found: list[tuple[str, str]] = []
+    for line in read(FEATURE_LOADER).splitlines():
+        match = PACKAGE_IMPORT.match(line)
+        if not match:
+            continue
+        full = match.group(1)
+        simple = full.rsplit(".", 1)[1]
+        package = full.rsplit(".", 1)[0]
+        if ".xposed.features." not in package:
+            continue
+        found.append((simple, package))
+    return found
+
+
+def find_registered_order() -> list[str]:
+    """Return feature simple names in the exact order ``plugins()`` installs them.
+
+    The whitespace between the assignment and the call is matched loosely: ktlint
+    rewraps ``val classes = arrayOf(`` into two lines when the list is long, so a
+    pattern that hardcodes the single-line form silently finds no features at all.
+    """
+    source = read(FEATURE_LOADER)
+    match = re.search(r"val\s+classes\s*=\s*arrayOf\((.*?)\n\s*\)", source, re.DOTALL)
+    if not match:
+        raise SystemExit("could not locate the plugins() array in FeatureLoader.kt")
+    return re.findall(r"([A-Za-z0-9_]+)::class\.java", match.group(1))
+
+
+def resolvers_declared() -> set[str]:
+    return set(RESOLVER_DECL.findall(read(UNOBFUSCATOR)))
+
+
+def feature_files() -> dict[str, str]:
+    """Map Kotlin file stem -> source text, for every file in the feature tree."""
+    files: dict[str, str] = {}
+    for dirpath, _dirnames, filenames in os.walk(FEATURES_DIR):
+        for filename in filenames:
+            if filename.endswith(".kt"):
+                stem = filename[:-3]
+                files.setdefault(stem, read(os.path.join(dirpath, filename)))
+    return files
+
+
+def strip_comments(body: str) -> str:
+    """Remove comments so a KDoc mention is not mistaken for a real reference."""
+    without_block = BLOCK_COMMENT.sub(" ", body)
+    return LINE_COMMENT.sub(" ", without_block)
+
+
+def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
+    """Files that make up one feature: its own file plus the helpers it constructs.
+
+    A feature is not always one file. HD Status, for example, keeps its target
+    resolution and its image and video hooks in sibling classes, and those files hold
+    the resolver calls. Reading only the entry file reported that the feature needed no
+    resolvers at all, which is exactly the kind of wrong-but-passing metadata this
+    matrix exists to prevent.
+
+    The closure follows constructor calls only. Matching every capitalised token would
+    be far too greedy: a KDoc reference, a log string or a static access such as
+    ``Others.propsInteger[...]`` is not ownership, and following those pulled three
+    unrelated features in.
+    """
+    if stem not in files:
+        return set()
+
+    closure: set[str] = set()
+    pending = [stem]
+    while pending:
+        current = pending.pop()
+        if current in closure or current not in files:
+            continue
+        closure.add(current)
+        code = strip_comments(files[current])
+        for token in set(CONSTRUCTS.findall(code)):
+            if token in files and token not in closure:
+                pending.append(token)
+    return closure
+
+
+def aggregate(files: dict[str, str], stems: set[str]) -> str:
+    return "\n".join(files[stem] for stem in sorted(stems) if stem in files)
+
+
+def feature_resolver_usage(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> sorted ``Unobfuscator.load*`` calls in its closure."""
+    usage: dict[str, list[str]] = {}
+    for stem in files:
+        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files)))))
+        if calls:
+            usage[stem] = calls
+    return usage
+
+
+def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> preference keys its closure reads."""
+    keys: dict[str, list[str]] = {}
+    for stem in files:
+        body = aggregate(files, feature_closure(stem, files))
+        found = sorted(set(GET_BOOLEAN.findall(body)) | set(PREF_CONST.findall(body)))
+        if found:
+            keys[stem] = found
+    return keys
+
+
+def feature_resolution_sources(files: dict[str, str]) -> dict[str, list[str]]:
+    """Map feature simple name -> internal resolution layers its closure references."""
+    sources: dict[str, list[str]] = {}
+    for stem in files:
+        body = aggregate(files, feature_closure(stem, files))
+        found = [name for name in RESOLUTION_SOURCES if re.search(r"\b%s\b" % name, body)]
+        if found:
+            sources[stem] = found
+    return sources
+
+
+def supported_versions() -> dict[str, list[str]]:
+    """Return the version prefixes declared in res/values/arrays.xml."""
+    source = read(ARRAYS_XML)
+    result: dict[str, list[str]] = {}
+    for name in ("supported_versions_wpp", "supported_versions_business"):
+        block = re.search(
+            r'<string-array name="%s">(.*?)</string-array>' % name, source, re.DOTALL
+        )
+        if not block:
+            raise SystemExit("missing string-array %s in arrays.xml" % name)
+        result[name] = [item.strip() for item in ARRAY_ITEM.findall(block.group(1)) if item.strip()]
+    return result
+
+
+def module_facts() -> dict[str, Any]:
+    source = read(APP_BUILD_GRADLE)
+
+    def gradle_int(key: str) -> int | None:
+        match = re.search(r"%s\s*=\s*(\d+)" % re.escape(key), source)
+        return int(match.group(1)) if match else None
+
+    abis_block = re.search(r"abiFilters(.*?)\n\s*\}", source, re.DOTALL)
+    abis: list[str] = []
+    if abis_block:
+        abis = re.findall(r"[\"']([^\"']+)[\"']", abis_block.group(1))
+
+    return {
+        "minSdk": gradle_int("minSdk"),
+        "targetSdk": gradle_int("targetSdk"),
+        "compileSdk": gradle_int("compileSdk"),
+        "abis": sorted(abis),
+    }
+
+
+def package_for(package: str) -> str | None:
+    parts = package.split(".xposed.features.")[1].split(".")
+    return CATEGORY_BY_PACKAGE.get(parts[0])
+
+
+def build() -> dict[str, Any]:
+    declared = resolvers_declared()
+    order = find_registered_order()
+    imported = {simple: package for simple, package in find_feature_classes()}
+    files = feature_files()
+    usage = feature_resolver_usage(files)
+    sources = feature_resolution_sources(files)
+    pref_keys = feature_preference_keys(files)
+    versions = supported_versions()
+
+    missing = [name for name in order if name not in imported]
+    if missing:
+        raise SystemExit(
+            "features registered in plugins() but not imported by FeatureLoader: %s"
+            % ", ".join(missing)
+        )
+
+    unknown_resolvers: set[str] = set()
+    features: list[dict[str, Any]] = []
+    for name in order:
+        package = imported[name]
+        used = usage.get(name, [])
+        for resolver in used:
+            if resolver not in declared:
+                unknown_resolvers.add("%s -> %s" % (name, resolver))
+        features.append(
+            {
+                "id": name,
+                "category": package_for(package) or "unknown",
+                "sourcePackage": package,
+                "resolverDependencies": used,
+                "resolutionSources": sources.get(name, []),
+                "preferenceKeys": pref_keys.get(name, []),
+            }
+        )
+
+    if unknown_resolvers:
+        raise SystemExit(
+            "features reference resolvers that Unobfuscator does not declare: %s"
+            % ", ".join(sorted(unknown_resolvers))
+        )
+
+    return {
+        "module": module_facts(),
+        "packages": {
+            "whatsapp": {
+                "packageName": "com.whatsapp",
+                "applicationId": "com.wax.module",
+                "declaredVersions": versions["supported_versions_wpp"],
+            },
+            "business": {
+                "packageName": "com.whatsapp.w4b",
+                "applicationId": "com.wax.module",
+                "declaredVersions": versions["supported_versions_business"],
+            },
+        },
+        "featureCount": len(features),
+        "features": features,
+    }
+
+
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--out", help="write the derived facts to this file")
+    args = parser.parse_args(argv)
+
+    data = build()
+    rendered = json.dumps(data, indent=2, sort_keys=True) + "\n"
+
+    if args.out:
+        os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+        with open(args.out, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(rendered)
+        print("wrote %s (%d features)" % (args.out, data["featureCount"]))
+        return 0
+
+    sys.stdout.write(rendered)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
+,
+    re.MULTILINE,
+)
 # A type token naming another Kotlin file in the feature tree.
 TYPE_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
 # A helper class is *owned* by a feature when the feature constructs it. A bare type
