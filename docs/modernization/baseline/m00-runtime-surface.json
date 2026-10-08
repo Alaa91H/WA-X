@@ -852,7 +852,6 @@
           "app/src/main/java/com/wax/module/ModuleApplication.kt",
           "app/src/main/java/com/wax/module/ModuleEntryPoint.kt",
           "app/src/main/java/com/wax/module/preference/ThemePreference.kt",
-          "app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt",
           "app/src/main/java/com/wax/module/ui/fragments/RecordingsFragment.kt",
           "app/src/main/java/com/wax/module/ui/fragments/base/BasePreferenceFragment.kt",
           "app/src/main/java/com/wax/module/utils/WhatsAppContactPickerLauncher.kt",
@@ -877,8 +876,8 @@
         ]
       },
       "by_pattern": {
-        "catch with discarded binding": 91,
-        "empty catch body": 53
+        "catch with discarded binding": 90,
+        "empty catch body": 52
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -925,7 +924,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 144,
+      "occurrences": 142,
       "owner": "#318 M03 / #333 A05",
       "target": "Every catch reports through the runtime health store.",
       "title": "Failures swallowed without reporting",

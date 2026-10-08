@@ -62,6 +62,12 @@ class HomeFragment : BaseFragment() {
     private var currentBinding: FragmentHomeBinding? = null
     private val binding get() = currentBinding!!
     private var statusReceiverRegistered = false
+    private val activationProbeHandler = Handler(Looper.getMainLooper())
+    private val pendingActivationProbes = mutableListOf<Runnable>()
+
+    // WhatsApp's initial DexKit / feature startup can outlast the Manager opening.
+    // Bound retries to the visible Home screen; do not poll in the background.
+    private val activationProbeRetryDelaysMillis = longArrayOf(4_000L, 12_000L, 24_000L)
 
     /**
      * The activation model this screen reads.
@@ -83,12 +89,19 @@ class HomeFragment : BaseFragment() {
                     // Filed before anything is rendered, so the reply the screen shows and the
                     // record it leaves behind cannot disagree. A payload this version cannot
                     // read is dropped rather than guessed at.
-                    activation.accept(TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT)))
-                    when (intent.getStringExtra("PKG")) {
-                        FeatureLoader.PACKAGE_WPP -> renderTarget(FeatureLoader.PACKAGE_WPP)
-                        FeatureLoader.PACKAGE_BUSINESS -> renderTarget(FeatureLoader.PACKAGE_BUSINESS)
+                    val reportedPackage = intent.getStringExtra("PKG")
+                    val heartbeat = TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT))
+                    if (heartbeat == null) {
+                        Log.w("WA-X Activation", "Probe reply from $reportedPackage has no valid runtime heartbeat")
+                    } else {
+                        activation.accept(heartbeat)
+                        Log.i("WA-X Activation", "Probe reply from $reportedPackage: stage=${heartbeat.stage}, state=${heartbeat.state}")
                     }
-                } catch (_: Exception) {
+                    // Both target and aggregate cards must reflect the received state. The old
+                    // receiver only repainted the target and left the module card red forever.
+                    renderActivation()
+                } catch (e: Exception) {
+                    Log.w("WA-X Activation", "Could not process runtime probe reply", e)
                 }
             }
         }
@@ -105,9 +118,28 @@ class HomeFragment : BaseFragment() {
             )
             statusReceiverRegistered = true
         }
+        // The receiver must exist BEFORE the first request. Sending in onCreateView lost
+        // fast replies on cold starts because the Fragment had not reached onStart yet.
+        checkWpp(requireActivity())
+        scheduleActivationProbeRetries()
+    }
+
+    private fun scheduleActivationProbeRetries() {
+        activationProbeRetryDelaysMillis.forEach { delayMillis ->
+            val retry =
+                Runnable {
+                    if (statusReceiverRegistered && currentBinding != null && isAdded) {
+                        checkWpp(requireActivity())
+                    }
+                }
+            pendingActivationProbes.add(retry)
+            activationProbeHandler.postDelayed(retry, delayMillis)
+        }
     }
 
     override fun onStop() {
+        pendingActivationProbes.forEach(activationProbeHandler::removeCallbacks)
+        pendingActivationProbes.clear()
         if (statusReceiverRegistered) {
             runCatching { requireContext().unregisterReceiver(statusReceiver) }
             statusReceiverRegistered = false
@@ -620,7 +652,6 @@ class HomeFragment : BaseFragment() {
         }
         binding.listBusiness.text = activity.resources.getStringArray(R.array.supported_versions_business).contentToString()
         updatePackageStatuses(activity)
-        checkWpp(activity)
     }
 
     private fun updatePackageStatuses(context: Context) {

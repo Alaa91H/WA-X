@@ -776,6 +776,7 @@ class FeatureLoader private constructor() {
                         context: Context,
                         intent: Intent,
                     ) {
+                        XposedBridge.log("WA X activation probe received for ${context.packageName}")
                         sendEnabledBroadcast(context)
                     }
                 }
@@ -811,6 +812,7 @@ class FeatureLoader private constructor() {
 
         private fun sendEnabledBroadcast(context: Context) {
             runCatching {
+                val heartbeat = encodeHeartbeat()
                 val wppIntent =
                     Intent("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP").apply {
                         putExtra(
@@ -822,11 +824,18 @@ class FeatureLoader private constructor() {
                         // the only code that can know: this process. The Manager used to be told
                         // it by a constant a hook installed in its own process, which is why a
                         // failure anywhere in here could present as "LSPosed is disabled".
-                        putExtra(EXTRA_HEARTBEAT, encodeHeartbeat())
+                        putExtra(EXTRA_HEARTBEAT, heartbeat)
                         setPackage(BuildConfig.APPLICATION_ID)
                     }
                 context.sendBroadcast(wppIntent)
-            }.onFailure { XposedBridge.log("WA X could not answer the activation probe") }
+                XposedBridge.log(
+                    "WA X activation broadcast dispatched for ${context.packageName}: " +
+                        (if (heartbeat == null) "heartbeat unavailable" else "heartbeat encoded"),
+                )
+            }.onFailure {
+                XposedBridge.log("WA X could not dispatch the activation report")
+                XposedBridge.log(it)
+            }
         }
 
         /**
