@@ -87,7 +87,8 @@ object BootIdentity {
         if (reported == current) return true
 
         fun bootTime(id: String): Long? =
-            id.takeIf { it.startsWith(PREFIX) }
+            id
+                .takeIf { it.startsWith(PREFIX) }
                 ?.removePrefix(PREFIX)
                 ?.toLongOrNull()
                 ?.takeIf { it >= MIN_REAL_BOOT_EPOCH_MILLIS }
