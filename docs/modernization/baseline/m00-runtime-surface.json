@@ -634,6 +634,7 @@
           "app/src/main/java/com/wax/module/xposed/features/privacy/CallPrivacy.kt",
           "app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt",
           "app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt",
+          "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
           "app/src/main/java/com/wax/module/xposed/utils/DesignUtils.kt",
           "app/src/main/java/com/wax/module/xposed/utils/ModuleContextWrapper.kt",
@@ -646,7 +647,6 @@
           "app/src/main/java/com/wax/module/xposed/bridge/service/HookBinder.kt",
           "app/src/main/java/com/wax/module/xposed/contract/RuntimeFeatureContext.kt",
           "app/src/main/java/com/wax/module/xposed/contract/SystemRuntimeClock.kt",
-          "app/src/main/java/com/wax/module/xposed/core/ActivityStateRegistry.kt",
           "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt",
           "app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt",
           "app/src/main/java/com/wax/module/xposed/core/components/FMessageWpp.kt",
@@ -662,6 +662,7 @@
           "app/src/main/java/com/wax/module/xposed/features/media/HdStatusVideoHook.kt",
           "app/src/main/java/com/wax/module/xposed/features/others/GoogleTranslateLanguages.kt",
           "app/src/main/java/com/wax/module/xposed/features/others/GoogleTranslateSettings.kt",
+          "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
           "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt",
@@ -674,8 +675,8 @@
       "by_pattern": {
         "@JvmStatic var": 2,
         "lateinit var": 32,
-        "module-level nullable var": 159,
-        "object singleton": 37
+        "module-level nullable var": 160,
+        "object singleton": 38
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -687,7 +688,6 @@
         "app/src/main/java/com/wax/module/xposed/bridge/service/HookBinder.kt",
         "app/src/main/java/com/wax/module/xposed/contract/RuntimeFeatureContext.kt",
         "app/src/main/java/com/wax/module/xposed/contract/SystemRuntimeClock.kt",
-        "app/src/main/java/com/wax/module/xposed/core/ActivityStateRegistry.kt",
         "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt",
         "app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt",
         "app/src/main/java/com/wax/module/xposed/core/components/AlertDialogWpp.kt",
@@ -729,6 +729,7 @@
         "app/src/main/java/com/wax/module/xposed/features/privacy/CustomPrivacy.kt",
         "app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt",
         "app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt",
+        "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
         "app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt",
         "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
         "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt",
@@ -738,7 +739,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 230,
+      "occurrences": 232,
       "owner": "#333 A02",
       "target": "Contained in RuntimeGraph with an explicit lifetime.",
       "title": "Global mutable state inside the injected process",
@@ -1030,5 +1031,5 @@
     }
   },
   "schema": "wax.m00.runtime-surface/1",
-  "source_files": 325
+  "source_files": 326
 }
