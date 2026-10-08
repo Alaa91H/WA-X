@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -150,6 +151,8 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(compare_observations(None, previous), ObservationDelta.NEW_VERSION)
         self.assertEqual(compare_observations(previous, current), ObservationDelta.VERSION_CHANGED)
         self.assertEqual(compare_observations(previous, previous), ObservationDelta.UNCHANGED)
+        changed_source = replace(previous, source_id="different_official_source")
+        self.assertEqual(compare_observations(previous, changed_source), ObservationDelta.UNKNOWN)
         unknown = discover(
             "business", transport=MockTransport(html_response("business", fixture("business-metadata-only.html"))),
             observed_at=self.observed_at,

@@ -83,7 +83,12 @@ def compare_observations(
         return ObservationDelta.NEW_VERSION
     if previous.state is not DiscoveryState.LATEST_FROM_SOURCE:
         return ObservationDelta.UNKNOWN
-    if previous.package_id != current.package_id or previous.channel is not current.channel:
+    if (
+        previous.package_id != current.package_id
+        or previous.channel is not current.channel
+        or previous.source_id != current.source_id
+        or previous.source_url != current.source_url
+    ):
         return ObservationDelta.UNKNOWN
     if previous.version_name == current.version_name:
         return ObservationDelta.UNCHANGED
