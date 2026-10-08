@@ -51,13 +51,13 @@ details{margin-top:12px;font-size:11px;color:var(--muted)}summary{cursor:pointer
 <div class="meta">الفئات والأعداد أدناه بيانات عرض افتراضية وليست دليلًا على التوافق في جهازك.</div>
 <div class="counts" id="counts" style="margin-top:12px"></div>
 <input id="search" class="search" placeholder="ابحث عن ميزة بالعربية أو الإنجليزية..." aria-label="البحث عن ميزة">
-<div class="filters" id="filters"></div>
+<div class="filters" id="filters"></div><div class="filters" id="categories"></div>
 <div id="list"></div>
 </div>
 </div>
 <script>
 (function(){
-"use strict"; var root=document.body,target="wa",scenario="stopped",filter="all",term="";
+"use strict"; var root=document.body,target="wa",scenario="stopped",filter="all",category="الكل",term="";
 var examples=[
 {id:"read",name:"إخفاء مؤشرات القراءة",en:"blue ticks",cat:"الخصوصية",wa:"verified",biz:"verified"},
 {id:"typing",name:"إخفاء الكتابة",en:"typing privacy",cat:"الخصوصية",wa:"verified",biz:"fallback"},
@@ -68,7 +68,7 @@ var examples=[
 ];
 var labels={verified:"متوافقة (مثال)",fallback:"مسار بديل",unknown:"غير متحقق",failed:"غير متوافقة",planned:"مخططة"};
 var scenarios={
-stopped:{title:"واتساب مثبت، لكن التشغيل غير مُثبت",summary:"لا توجد نبضة حقن حديثة. لا يمكن الجزم بأن LSPosed معطل.",kind:"warn",stage:5,cause:"التطبيق غير مشغّل في سيناريو المعاينة.",evidence:"آخر حالة: لا توجد جلسة حالية للتطبيق.",action:"افتح واتساب ثم اختر «تحقق الآن».",code:"TARGET_NOT_RUNNING"},
+stopped:{title:"واتساب مثبت، لكن التشغيل غير مُثبت",summary:"لا توجد نبضة حقن حديثة. لا يمكن الجزم بأن LSPosed معطل.",kind:"warn",stage:3,cause:"التطبيق غير مشغّل في سيناريو المعاينة.",evidence:"آخر حالة: لا توجد جلسة حالية للتطبيق.",action:"افتح واتساب ثم اختر «تحقق الآن».",code:"TARGET_NOT_RUNNING"},
 scope:{title:"نطاق LSPosed يحتاج مراجعة",summary:"في هذا المثال يوجد دليل تحقق يفيد أن حزمة واتساب ليست ضمن النطاق.",kind:"bad",stage:2,cause:"عدم إدراج الحزمة المستهدفة في نطاق الوحدة، وفق دليل إطار العمل.",evidence:"فحص النطاق الموثق أعاد غياب الحزمة.",action:"راجع LSPosed → WA X → Scope، ثم أعد تشغيل واتساب وتحقق مجددًا.",code:"SCOPE_MISSING_VERIFIED"},
 resolver:{title:"مشكلة توافق موضعية",summary:"يفترض المثال أن LSPosed والحقن يعملان، لكن Resolver لميزة واحدة فشل.",kind:"warn",stage:6,cause:"توقيع Resolver الخاص بميزة معينة تغيّر بعد تحديث واتساب.",evidence:"فشل تحقق Resolver محدد؛ لا دليل على فشل بقية الميزات.",action:"اعرض الميزات المتأثرة؛ اترك غيرها دون تغيير، وانتظر تحديث التوافق أو استخدم المسار البديل إذا ثبت دعمه.",code:"FEATURE_RESOLVER_MISMATCH"},
 ready:{title:"سليم في سيناريو المعاينة",summary:"جميع مراحل التحقق مصطنعة للشرح، وليست نتيجة فحص حقيقي.",kind:"ok",stage:8,cause:"لا مشكلة ضمن البيانات الافتراضية.",evidence:"نتائج تجريبية، وليست معلومات من LSPosed.",action:"في التطبيق الحقيقي ستظهر الأدلة والتاريخ لكل هدف.",code:"DEMO_OK_ONLY"}
@@ -87,10 +87,11 @@ selected("#stages").innerHTML=stages.map((a,i)=>'<div class="step"><span>'+a+'</
 selected("#issue").className="issue "+(s.kind==="ok"?"ok":s.kind==="bad"?"bad":"");
 selected("#issue").innerHTML="<strong>ما المشكلة؟</strong> "+s.cause+"<br><strong>الدليل:</strong> "+s.evidence+"<br><strong>الحل المقترح:</strong> "+s.action;
 selected("#technical").textContent="DEMO_FAILURE_CODE="+s.code+" · TARGET="+target+" · REAL_SESSION=NOT_AVAILABLE · SCAN=NOT_EXECUTED";
-var items=examples.filter(f=>(filter==="all"||f[target]===filter)&&(f.name.includes(term)||f.en.toLowerCase().includes(term.toLowerCase())||f.cat.includes(term)));
+var items=examples.filter(f=>(filter==="all"||f[target]===filter)&&(category==="الكل"||f.cat===category)&&(f.name.includes(term)||f.en.toLowerCase().includes(term.toLowerCase())||f.cat.includes(term)));
 const keys=["verified","fallback","unknown","failed","planned"];
 selected("#counts").innerHTML=keys.map(k=>'<div class="count"><strong>'+examples.filter(f=>f[target]===k).length+'</strong><span>'+labels[k]+'</span></div>').join("");
 selected("#filters").innerHTML=[["all","الكل"],...keys.map(k=>[k,labels[k]])].map(k=>'<button class="filter '+(filter===k[0]?"active":"")+'" data-filter="'+k[0]+'">'+k[1]+'</button>').join("");
+selected("#categories").innerHTML=["الكل","الخصوصية","التخصيص","الوسائط","المكالمات"].map(k=>'<button class="filter '+(category===k?"active":"")+'" data-category="'+k+'">'+k+'</button>').join("");
 selected("#list").innerHTML=items.length?items.map(f=>'<div class="feature"><div class="copy"><strong>'+f.name+'</strong><small>'+f.cat+' · '+f.en+'</small></div><span class="badge '+f[target]+'">'+labels[f[target]]+'</span></div>').join(""):'<p class="meta">لا توجد ميزات مطابقة لمعايير البحث في هذا المثال.</p>';
 }
 root.addEventListener("click",function(e){
@@ -98,6 +99,7 @@ var b=e.target.closest("button");if(!b)return;
 if(b.dataset.target){target=b.dataset.target;render()}
 else if(b.dataset.scenario){scenario=b.dataset.scenario;render()}
 else if(b.dataset.filter){filter=b.dataset.filter;render()}
+else if(b.dataset.category){category=b.dataset.category;render()}
 else if(b.id==="scan"){selected("#stamp").textContent="تم تحديث السيناريو التوضيحي فقط — لم يحدث اتصال بالتطبيق أو فحص LSPosed.";render()}
 else if(b.id==="details"){selected("#diag").scrollIntoView({behavior:"auto",block:"start"})}
 else if(b.id==="compat"){selected("#compatibility").scrollIntoView({behavior:"auto",block:"start"})}
