@@ -120,6 +120,14 @@
       "files": 2,
       "first_party": []
     },
+    "contract": {
+      "external": [],
+      "files": 9,
+      "first_party": [
+        "diagnostics",
+        "settings"
+      ]
+    },
     "diagnostics": {
       "external": [
         "platform"
@@ -488,6 +496,19 @@
         "xposed.bridge"
       ]
     },
+    "xposed.contract": {
+      "external": [
+        "platform",
+        "xposed"
+      ],
+      "files": 4,
+      "first_party": [
+        "contract",
+        "diagnostics",
+        "settings",
+        "xposed.core.devkit"
+      ]
+    },
     "xposed.core": {
       "external": [
         "com",
@@ -502,6 +523,7 @@
         "activities",
         "bootstrap",
         "compat",
+        "contract",
         "diagnostics",
         "health",
         "platform",
@@ -509,6 +531,7 @@
         "views.dialog",
         "xposed.bridge",
         "xposed.bridge.client",
+        "xposed.contract",
         "xposed.core.ActivityStateRegistry",
         "xposed.core.ModuleRuntime",
         "xposed.core.components",
@@ -697,6 +720,7 @@
       "files": 19,
       "first_party": [
         "<root>",
+        "contract",
         "model",
         "preference",
         "utils",
@@ -791,7 +815,7 @@
   },
   "schema": "wax.a00.dependency-graph/1",
   "totals": {
-    "files": 312,
-    "lines": 68408
+    "files": 325,
+    "lines": 69546
   }
 }

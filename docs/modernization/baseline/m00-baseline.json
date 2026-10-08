@@ -332,11 +332,11 @@
     "android_tests": 1,
     "cpp": 425,
     "java": 3,
-    "kotlin": 382,
-    "unit_tests": 72
+    "kotlin": 396,
+    "unit_tests": 73
   },
   "static_analysis": {
-    "detekt_config_sha256": "128b3810bf95a08589a52c5dd9f2a986ffd1aaeb8d7c44025b0f3c0a05c0329e",
+    "detekt_config_sha256": "8b4cf8b450cfc9ae6c27877f7b795678576454dba2154fb578089f81616f58bf",
     "lint_baseline_sha256": "3b059750b30ab46986d3c37a0f2b5343e5903b2f557a8b71bd644768d39a1125",
     "strict_policy_sha256": "6baded2ff84fc81ef1bafd1825de255ef6ee34bd0d6ffd65dda11ad88e031dff"
   },

@@ -6,16 +6,16 @@ the numbers.
 
 | Category | Owner | Occurrences | Files |
 | --- | --- | --- | --- |
-| [Legacy Xposed API surface](#legacy_api_surface) | #318 M04-M06 | 235 | 95 |
+| [Legacy Xposed API surface](#legacy_api_surface) | #318 M04-M06 | 239 | 97 |
 | [Preference reads inside the injected process](#runtime_preference_reads) | #318 M02 / #333 A08 | 12 | 3 |
 | [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 35 | 14 |
 | [World-readable preference compatibility](#world_readable_prefs) | #318 M02 / #333 A16 | 4 | 1 |
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
 | [Direct DexKit use](#dexkit_direct) | #318 M08 / #333 A04 | 29 | 24 |
-| [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 234 | 70 |
+| [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 71 |
 | [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
-| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 226 | 57 |
+| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 230 | 59 |
 | [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 144 | 43 |
 
 ## Legacy Xposed API surface
@@ -26,11 +26,11 @@ the numbers.
 
 **End state:** Only the modern API surface remains; these counts reach zero at M13.
 
-**Current:** 235 occurrences across 95 files.
+**Current:** 239 occurrences across 97 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `import` | 235 | 95 |
+| `import` | 239 | 97 |
 
 Legacy types in use:
 
@@ -60,6 +60,8 @@ Legacy types in use:
 - `app/src/main/java/com/wax/module/xposed/bridge/ScopeHook.java`
 - `app/src/main/java/com/wax/module/xposed/bridge/client/BridgeClientKt.kt`
 - `app/src/main/java/com/wax/module/xposed/bridge/client/ProviderClientKt.kt`
+- `app/src/main/java/com/wax/module/xposed/contract/XposedHookEngine.kt`
+- `app/src/main/java/com/wax/module/xposed/contract/XposedRuntimeLogger.kt`
 - `app/src/main/java/com/wax/module/xposed/core/Feature.kt`
 - `app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt`
 - `app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt`
@@ -346,7 +348,7 @@ Legacy types in use:
 
 **End state:** Stays non-zero; every hook gains an owner that can report its own failure.
 
-**Current:** 234 occurrences across 70 files.
+**Current:** 235 occurrences across 71 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
@@ -354,13 +356,14 @@ Legacy types in use:
 | `XposedBridge.hookAllMethods` | 32 | 14 |
 | `XposedBridge.hookMethod` | 116 | 47 |
 | `XposedHelpers.findAndHookConstructor` | 3 | 2 |
-| `XposedHelpers.findAndHookMethod` | 55 | 25 |
+| `XposedHelpers.findAndHookMethod` | 56 | 26 |
 
 <details><summary>Files</summary>
 
 - `app/src/main/java/com/wax/module/ModuleEntryPoint.kt`
 - `app/src/main/java/com/wax/module/xposed/AntiUpdater.kt`
 - `app/src/main/java/com/wax/module/xposed/bridge/ScopeHook.java`
+- `app/src/main/java/com/wax/module/xposed/contract/XposedHookEngine.kt`
 - `app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt`
 - `app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt`
 - `app/src/main/java/com/wax/module/xposed/core/components/FStatusWpp.kt`
@@ -462,14 +465,14 @@ Legacy types in use:
 
 **End state:** Contained in RuntimeGraph with an explicit lifetime.
 
-**Current:** 226 occurrences across 57 files.
+**Current:** 230 occurrences across 59 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
 | `@JvmStatic var` | 2 | 2 |
 | `lateinit var` | 32 | 11 |
-| `module-level nullable var` | 158 | 41 |
-| `object singleton` | 34 | 27 |
+| `module-level nullable var` | 159 | 41 |
+| `object singleton` | 37 | 29 |
 
 <details><summary>Files</summary>
 
@@ -480,6 +483,8 @@ Legacy types in use:
 - `app/src/main/java/com/wax/module/xposed/bridge/BridgeAccessPolicy.kt`
 - `app/src/main/java/com/wax/module/xposed/bridge/client/BridgeClientKt.kt`
 - `app/src/main/java/com/wax/module/xposed/bridge/service/HookBinder.kt`
+- `app/src/main/java/com/wax/module/xposed/contract/RuntimeFeatureContext.kt`
+- `app/src/main/java/com/wax/module/xposed/contract/SystemRuntimeClock.kt`
 - `app/src/main/java/com/wax/module/xposed/core/ActivityStateRegistry.kt`
 - `app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt`
 - `app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt`

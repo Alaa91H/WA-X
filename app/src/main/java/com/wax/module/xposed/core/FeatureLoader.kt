@@ -34,6 +34,10 @@ import com.wax.module.bootstrap.BootstrapState
 import com.wax.module.bootstrap.StageOutcome
 import com.wax.module.bootstrap.StageRunner
 import com.wax.module.compat.TargetVersions
+import com.wax.module.contract.FeatureContext
+import com.wax.module.contract.FeatureStartResult
+import com.wax.module.contract.WaFeature
+import com.wax.module.diagnostics.FailureCode
 import com.wax.module.diagnostics.FailureReportCodec
 import com.wax.module.diagnostics.FailureReportStore
 import com.wax.module.diagnostics.FeatureFailureReport
@@ -44,6 +48,7 @@ import com.wax.module.health.RuntimeSubsystem
 import com.wax.module.health.SubsystemState
 import com.wax.module.platform.SupportedPackages
 import com.wax.module.settings.TargetSettingsBridge
+import com.wax.module.xposed.contract.RuntimeFeatureContexts
 import com.wax.module.xposed.core.components.AlertDialogWpp
 import com.wax.module.xposed.core.components.FMessageWpp
 import com.wax.module.xposed.core.components.FStatusWpp
@@ -948,13 +953,39 @@ class FeatureLoader private constructor() {
             /**
              * The hook set.
              *
+             * The feature context is built here rather than per feature: its six capabilities are
+             * process-scoped, and a feature that hooked through one context and read the clock
+             * through another would be relying on two identities for one process.
+             *
              * Individual features are isolated inside [plugins], so this stage measures whether
              * the set as a whole was installed. One feature throwing cannot fail it, which is the
              * property the gate turns on.
              */
             private fun essential(): StageOutcome {
                 val pref = preferences ?: return StageOutcome.AWAITING
-                return if (plugins(loader, pref, targetVersion.orEmpty())) StageOutcome.SUCCEEDED else StageOutcome.FAILED
+                val context = featureContext(pref)
+                return if (plugins(loader, pref, targetVersion.orEmpty(), context)) StageOutcome.SUCCEEDED else StageOutcome.FAILED
+            }
+
+            /**
+             * The context handed to every contract-based feature.
+             *
+             * Built once and reused. The settings snapshot comes from the cache rather than from
+             * the raw preferences, which is what makes the context target-scoped: a feature that
+             * read the delegate directly could read WhatsApp's overrides into Business.
+             */
+            private fun featureContext(pref: SharedPreferences): FeatureContext {
+                // The reflective path still needs the raw preferences, and it is the only thing
+                // that does now: the contract path receives the snapshot.
+                legacyPreferences = pref
+                val debugEnabled = { pref.getBoolean("enablelogs", false) }
+                return RuntimeFeatureContexts.forTarget(
+                    settings = TargetSettingsBridge.snapshotFor(pref, TargetRuntime.target),
+                    classLoader = loader,
+                    targetVersionName = targetVersion,
+                    debugEnabled = debugEnabled,
+                    reportFailure = ::recordContractFailure,
+                )
             }
 
             /**
@@ -983,6 +1014,133 @@ class FeatureLoader private constructor() {
         }
 
         /**
+         * Starts one feature, whichever contract it is written against.
+         *
+         * The dispatch is on the *instance*, not on the declared type, because a feature written
+         * against [WaFeature] has no `(ClassLoader, SharedPreferences)` constructor to look up and
+         * the reflective path would fail on it with a `NoSuchMethodException` that says nothing
+         * about why.
+         *
+         * [legacy] is only called for a feature that is still an old [Feature], and it returns
+         * what the old path did so that both paths produce the same kind of record.
+         */
+        private inline fun startContractFeature(
+            clazz: Class<*>,
+            context: FeatureContext,
+            versionWpp: String,
+            legacy: (Feature) -> FeatureStartResult,
+        ): FeatureStartResult {
+            val instance =
+                if (WaFeature::class.java.isAssignableFrom(clazz)) {
+                    clazz.getDeclaredConstructor().newInstance() as WaFeature
+                } else {
+                    val preferences =
+                        legacyPreferences
+                            ?: throw IllegalStateException(
+                                "a legacy feature was started before the target settings were attached",
+                            )
+                    return legacy(
+                        clazz
+                            .getConstructor(
+                                ClassLoader::class.java,
+                                SharedPreferences::class.java,
+                            ).newInstance(context.targetClassLoader, preferences) as Feature,
+                    )
+                }
+            return recordStart(instance, context, versionWpp)
+        }
+
+        /**
+         * Starts a contract feature and records what it reported.
+         *
+         * A feature that skips itself says so with a result rather than by throwing, because an
+         * unsupported WhatsApp build is an ordinary outcome and reporting it as a failure is what
+         * makes a user's feature list look broken on a build it simply does not target.
+         */
+        private fun recordStart(
+            feature: WaFeature,
+            context: FeatureContext,
+            versionWpp: String,
+        ): FeatureStartResult =
+            try {
+                val result = feature.start(context)
+                when (result) {
+                    is FeatureStartResult.Installed -> {
+                        XposedBridge.log("${feature.featureId}: ${result.summary}")
+                    }
+
+                    is FeatureStartResult.Degraded -> {
+                        XposedBridge.log("${feature.featureId}: degraded, ${result.lost} - ${result.summary}")
+                    }
+
+                    is FeatureStartResult.Skipped -> {
+                        XposedBridge.log("${feature.featureId}: skipped, ${result.missing}")
+                    }
+
+                    is FeatureStartResult.Failed -> {
+                        recordFailure(
+                            featureId = feature.featureId,
+                            throwable = IllegalStateException(result.summary),
+                            whatsAppVersion = versionWpp,
+                            packageName = mApp?.packageName.orEmpty(),
+                            stage = result.code.name,
+                        )
+                    }
+                }
+                result
+            } catch (throwable: Throwable) {
+                recordFailure(
+                    featureId = feature.featureId,
+                    throwable = throwable,
+                    whatsAppVersion = versionWpp,
+                    packageName = mApp?.packageName.orEmpty(),
+                    stage = "start",
+                )
+                FeatureStartResult.Failed(feature.featureId, FailureCode.classify(throwable, "start"))
+            }
+
+        /** The preferences a legacy feature is constructed with. Set by the ESSENTIAL stage. */
+        @Volatile
+        private var legacyPreferences: SharedPreferences? = null
+
+        /**
+         * Records a failure on behalf of a contract feature.
+         *
+         * The same funnel every other failure uses, so a feature written against the contract has
+         * exactly the visibility a legacy one has. Making it a function reference rather than a
+         * public API on this object keeps [recordFailure] private.
+         */
+        private fun recordContractFailure(
+            featureId: String,
+            code: FailureCode,
+            message: String?,
+            stage: String?,
+        ): FeatureFailureReport =
+            recordFailure(
+                featureId = featureId,
+                throwable = IllegalStateException(message ?: code.name),
+                whatsAppVersion =
+                    mApp
+                        ?.packageManager
+                        ?.let {
+                            runCatching {
+                                it
+                                    .getPackageInfo(
+                                        mApp!!.packageName,
+                                        0,
+                                    ).versionName
+                            }.getOrNull()
+                        }.orEmpty(),
+                packageName = mApp?.packageName.orEmpty(),
+                stage = stage,
+            ).also { recorded ->
+                // The throwable above carries no code, so the classified code is attached here.
+                contractFailureCodes[recorded.timestampMillis] = code
+            }
+
+        private val contractFailureCodes = java.util.concurrent.ConcurrentHashMap<Long, FailureCode>()
+
+        /**
          * Whether the per-process bootstrap has already attached to its target.
          *
          * `callApplicationOnCreate` is not guaranteed to fire once, and everything a second
@@ -997,19 +1155,28 @@ class FeatureLoader private constructor() {
         /**
          * Installs the feature set, isolating each feature's failure.
          *
+         * Two kinds of feature go through here, and the split is visible rather than implicit:
+         *
+         * * a [WaFeature] is started with [context] and reports a [FeatureStartResult];
+         * * anything else is a legacy [Feature], constructed reflectively from
+         *   `(ClassLoader, SharedPreferences)` exactly as before.
+         *
+         * The legacy path is still the majority, and pretending otherwise would make this phase
+         * look like it finished the migration. [LEGACY_FEATURE_COUNT] records what is left, it is
+         * asserted by `FeatureContractTest` against the installed set, and it may only fall.
+         *
          * Returns whether the set was installed in full within [HOOK_INSTALL_BUDGET_MS]. That
-         * return value is new and it is the fix for a defect this phase found: the executor was
-         * awaited with a fifteen-second bound and the answer was discarded, so a single slow
-         * feature silently prevented every feature queued behind it from being installed, and
-         * nothing anywhere recorded that any of them had been dropped. A timeout now returns
-         * false, the stage reports it, and the count of what did install is what the
-         * diagnostics can be asked about.
+         * return value is the fix for a defect this phase found: the executor was awaited with a
+         * fifteen-second bound and the answer was discarded, so a single slow feature silently
+         * prevented every feature queued behind it from being installed, and nothing anywhere
+         * recorded that any of them had been dropped.
          */
         @Throws(Exception::class)
         private fun plugins(
             loader: ClassLoader,
             pref: SharedPreferences,
             versionWpp: String,
+            context: FeatureContext,
         ): Boolean {
             val classes =
                 arrayOf(
@@ -1092,13 +1259,15 @@ class FeatureLoader private constructor() {
                 CompletableFuture.runAsync({
                     val startTime = System.currentTimeMillis()
                     try {
-                        val constructor =
-                            clazz.getConstructor(
-                                ClassLoader::class.java,
-                                SharedPreferences::class.java,
-                            )
-                        val plugin = constructor.newInstance(loader, pref) as Feature
-                        plugin.doHook()
+                        startContractFeature(clazz, context, versionWpp) { legacy ->
+                            val constructor =
+                                clazz.getConstructor(
+                                    ClassLoader::class.java,
+                                    SharedPreferences::class.java,
+                                )
+                            (constructor.newInstance(loader, pref) as Feature).doHook()
+                            FeatureStartResult.Installed(summary = legacy.getPluginName())
+                        }
                     } catch (e: Throwable) {
                         XposedBridge.log(e)
                         recordFailure(
