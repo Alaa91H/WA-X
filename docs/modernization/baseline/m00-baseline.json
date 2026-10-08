@@ -348,7 +348,7 @@
     "strict_policy_sha256": "6baded2ff84fc81ef1bafd1825de255ef6ee34bd0d6ffd65dda11ad88e031dff"
   },
   "toolchain": {
-    "agp": "9.4.1",
+    "agp": "9.5.0-alpha08",
     "composeBom": "2026.09.00",
     "composeMaterial3": "1.4.0",
     "detekt": "2.0.0-alpha.6",
