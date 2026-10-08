@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WA X — Approved Customization Live Preview (UIX-01)</title>
+<style>
+:root{font-family:system-ui,"Segoe UI",Tahoma,sans-serif;color-scheme:light;--surface:#f3f6f4;--paper:#fff;--fg:#17251e;--sub:#738379;--border:#e4ebe6;--green:#158e59;--mint:#e7f5ed;--chat:#dcf5e5;--shadow:0 15px 40px #20342910}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface);color:var(--fg)}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #58a9ed;outline-offset:2px}
+header{max-width:980px;margin:auto;padding:28px 18px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:25px;margin:0 0 5px;font-weight:800}h2{font-size:14px;margin:0 0 11px}
+small,.muted{color:var(--sub);font-size:12px;line-height:1.6}
+.tag{font-size:11px;font-weight:650;border-radius:20px;padding:7px 10px;color:#0e7747;background:#e2f3e9}
+main{max-width:980px;margin:auto;padding:10px 18px 36px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,390px);gap:18px;align-items:start}
+.panel{background:var(--paper);border:1px solid var(--border);border-radius:21px;box-shadow:var(--shadow);padding:17px}
+.preview-panel{position:sticky;top:12px}.kicker{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:12px}
+.target{background:var(--surface);padding:4px;border-radius:12px;display:flex;margin-bottom:16px}
+.target button{flex:1;padding:10px;border:0;background:transparent;border-radius:9px;color:var(--sub);font-size:12px}
+.target button.selected{background:var(--paper);color:var(--fg);font-weight:800;box-shadow:0 2px 6px #0000000a}
+.phone{width:min(100%,294px);margin:0 auto;border:6px solid #252f2b;background:#f3f6f4;border-radius:34px;overflow:hidden;box-shadow:0 13px 33px #0d1b1330;min-height:375px;direction:rtl;--local-accent:#138c56}
+.phone.dark{background:#121b17;color:#eef6f1;border-color:#141d19;--phone-card:#25352e;--phone-muted:#b0c0b8;--phone-border:#405047}
+.phone:not(.dark){--phone-card:#fff;--phone-muted:#65736b;--phone-border:#e4ebe6}
+.phone-top{background:var(--phone-card);font-size:10px;padding:9px 13px 6px;display:flex;justify-content:space-between;color:var(--phone-muted)}
+.phone-toolbar{background:var(--phone-card);display:flex;align-items:center;justify-content:space-between;padding:13px 15px;color:var(--local-accent);font-weight:800}
+.phone-toolbar .actions{font-size:15px;letter-spacing:7px;color:var(--phone-muted)}
+.phone-tabs{background:var(--phone-card);display:flex;gap:15px;padding:11px 12px 0;border-bottom:1px solid var(--phone-border);font-size:11px}
+.phone-tabs button{border:0;border-bottom:3px solid transparent;background:none;padding:0 5px 10px;color:var(--phone-muted);font-size:11px}
+.phone-tabs button.selected{color:var(--local-accent);border-color:var(--local-accent);font-weight:750}
+.phone-body{min-height:213px;padding:13px 11px 8px}
+.mocksection{border-radius:12px;background:var(--phone-card);padding:11px;margin-bottom:9px;border:1px solid var(--phone-border)}
+.mocktitle{font-weight:700;font-size:11px;margin-bottom:8px}
+.mockline{display:flex;align-items:center;gap:9px;font-size:10px;color:var(--phone-muted);padding:4px 0}
+.avatar{width:25px;height:25px;border-radius:50%;background:linear-gradient(140deg,#89bcb0,#44827b);flex:none}
+.avatar.coral{background:linear-gradient(140deg,#e5baad,#c17e6d)}
+.avatar.blue{background:linear-gradient(140deg,#8bb8da,#6c83bb)}
+.bubble{display:inline-block;border-radius:12px;padding:9px 11px;margin:6px 0;font-size:10px;color:#214136;background:var(--chat)}
+.bubble.received{background:var(--phone-card);color:inherit;border:1px solid var(--phone-border)}
+.empty{padding:35px 10px;text-align:center;font-size:11px;color:var(--phone-muted)}
+.phone-nav{display:flex;gap:5px;background:var(--phone-card);border-top:1px solid var(--phone-border);justify-content:space-around;padding:12px 4px;font-size:9px;color:var(--phone-muted)}
+.phone-nav .current{color:var(--local-accent);font-weight:800}
+.phone-nav span{display:block;text-align:center}.phone-nav b{display:block;font-size:13px}
+.preview-legend{text-align:center;margin:11px 0 2px}
+.preset{display:flex;gap:8px;margin:12px 0 16px}.swatch{width:30px;height:30px;border-radius:50%;border:3px solid var(--paper);outline:1px solid var(--border)}
+.swatch.active{outline:2px solid var(--fg)}
+.controls{display:flex;gap:9px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
+.controls button,.smallbtn{border-radius:10px;border:1px solid var(--border);color:var(--fg);padding:9px 13px;background:var(--surface);font-size:12px}
+.controls button.primary{background:var(--green);border-color:var(--green);color:white;font-weight:750}
+.group{border:1px solid var(--border);border-radius:15px;overflow:hidden;margin-top:12px;background:var(--paper)}
+.group-title{font-size:12px;font-weight:800;padding:12px 13px 5px}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 13px;min-height:65px;border-top:1px solid var(--border)}
+.setting:first-child{border-top:0}.setting .title{font-size:12px;font-weight:680;margin-bottom:4px}.setting .desc{font-size:11px;color:var(--sub)}
+.switch{height:32px;width:53px;min-width:53px;border-radius:40px;border:1px solid #8b958f;background:#9ca5a0;position:relative;direction:ltr;padding:0;transition:background .19s,box-shadow .19s}
+.switch:before{content:"";position:absolute;width:24px;height:24px;top:3px;left:3px;background:#fff;border-radius:50%;box-shadow:0 1px 4px #0003;transition:transform .19s cubic-bezier(.2,.85,.25,1)}
+.switch[aria-checked=true]{background:#139557;border-color:#3ccd86;box-shadow:0 0 15px #2fc87e59}
+.switch[aria-checked=true]:before{transform:translateX(21px)}
+.switch:disabled{opacity:.43;cursor:not-allowed}
+.extra{font-size:11px;padding:10px 13px;background:var(--surface);color:var(--sub);line-height:1.7}
+.accordion{border:1px solid var(--border);background:var(--paper);width:100%;padding:14px;text-align:right;border-radius:13px;margin-top:12px;color:var(--fg)}
+.notes{font-size:11px;color:var(--sub);margin:8px 0}
+@media(max-width:710px){main{display:flex;flex-direction:column}.preview-panel{position:static;width:100%}.controls-panel{width:100%}header{padding:18px 16px 8px}}
+@media(prefers-reduced-motion:reduce){.switch,.switch:before{transition:none}}
+</style>
+</head>
+<body>
+<header><div><h1>WA X · التخصيص</h1><div class="muted">معاينة تصميمية معتمدة ضمن حزمة UIX-01</div></div><span class="tag">Design preview · Not applied</span></header>
+<main>
+<section class="panel preview-panel">
+<div class="kicker">01 — عرض الشكل المتوقع</div>
+<div class="target" role="group" aria-label="التطبيق المستهدف"><button class="selected" data-target="wa">WhatsApp</button><button data-target="biz">WhatsApp Business</button></div>
+<div class="phone" id="phone" aria-label="معاينة تقريبية لتخصيص واجهة واتساب">
+<div class="phone-top"><span>09:41</span><span>◕  ▂▃▅  ▰</span></div>
+<div class="phone-toolbar"><span id="preview-title">WhatsApp</span><span class="actions" id="toolbar-actions">⌕ ⋮</span></div>
+<div class="phone-tabs"><button data-previewtab="updates" class="selected">التحديثات</button><button data-previewtab="chats">المحادثات</button></div>
+<div class="phone-body" id="mock-body"></div>
+<div class="phone-nav" id="mock-nav"></div>
+</div>
+<div class="preview-legend muted">معاينة تقريبية تفاعلية فقط — لا تتصل بواتساب ولا تحفظ تفضيلاتك الحقيقية.</div>
+</section>
+<section class="panel controls-panel">
+<div class="kicker">02 — إعدادات المظهر</div>
+<h2>الألوان والسمة</h2><div class="muted">اختر لونًا لتشاهده مباشرة في الهاتف المصغّر.</div>
+<div class="preset" id="swatches"></div>
+<div class="setting" style="padding:8px 0"><div><div class="title">وضع المعاينة الداكن</div><div class="desc">مستقل عن مظهر تطبيق WA X</div></div><button class="switch" role="switch" id="dark" aria-checked="false" aria-label="وضع المعاينة الداكن"></button></div>
+<div class="controls"><button class="primary" id="apply">اعتماد اللون في النموذج</button><button id="undo">إلغاء تغيير اللون</button><button id="reset">إعادة ضبط النموذج</button></div>
+<div class="notes" id="apply-state">التغييرات هنا تجريبية؛ لا يتم تعديل إعدادات WA X الفعلية.</div>
+<div class="group">
+<div class="group-title">الأقسام والتبويبات</div>
+<div class="setting"><div><div class="title">إخفاء القنوات</div><div class="desc">مع بقاء حالات جهات الاتصال</div></div><button class="switch" role="switch" aria-label="إخفاء القنوات" data-key="channels" aria-checked="false"></button></div>
+<div class="setting"><div><div class="title">إخفاء قسم الحالات</div><div class="desc">دون إخفاء القنوات</div></div><button class="switch" role="switch" aria-label="إخفاء قسم الحالات" data-key="status" aria-checked="false"></button></div>
+<div class="setting"><div><div class="title">إخفاء المجتمعات</div><div class="desc">إخفاء التبويب فقط</div></div><button class="switch" role="switch" aria-label="إخفاء المجتمعات" data-key="communities" aria-checked="false"></button></div>
+<div class="setting"><div><div class="title">إخفاء المكالمات</div><div class="desc">لا يوقف استقبال المكالمات</div></div><button class="switch" role="switch" aria-label="إخفاء المكالمات" data-key="calls" aria-checked="false"></button></div>
+</div>
+<div class="group"><div class="group-title">الحالات وشريط الأدوات</div>
+<div class="setting"><div><div class="title">إخفاء توصيات القنوات</div><div class="desc">منفصل عن إخفاء الإعلانات</div></div><button class="switch" role="switch" aria-label="إخفاء توصيات القنوات" data-key="recommend" aria-checked="false"></button></div>
+<div class="setting"><div><div class="title">شريط أدوات مخصص</div><div class="desc">يغيّر معاينة الأيقونات العلوية</div></div><button class="switch" role="switch" aria-label="شريط أدوات مخصص" data-key="toolbar" aria-checked="false"></button></div>
+<div class="setting"><div><div class="title">فقاعات محادثة ملونة</div><div class="desc">شاهد الفرق في تبويب المحادثات</div></div><button class="switch" role="switch" aria-label="فقاعات محادثة ملونة" data-key="bubbles" aria-checked="false"></button></div>
+<div class="setting"><div><div class="title">حظر إعلانات الحالات</div><div class="desc">قيد تدقيق التوافق — مهمة #369</div></div><button class="switch" role="switch" aria-label="حظر إعلانات الحالات، غير متاح" aria-checked="false" disabled></button></div>
+</div>
+<button class="accordion" id="advanced" aria-expanded="false">الإعدادات المتقدمة ▾</button>
+<div class="extra" id="advanced-text" hidden>تحرير CSS، الشفافية، حجم الواجهة DPI، الأنماط القديمة؛ تُعرض بشروط التوافق والتحذيرات التقنية عند التنفيذ الفعلي.</div>
+</section>
+</main>
+<script>
+(function(){
+"use strict";
+var target="wa",view="updates",stagedColor="#158e59";
+var savedColors={wa:"#158e59",biz:"#1573c9"};
+var states={wa:{channels:false,status:false,communities:false,calls:false,recommend:false,toolbar:false,bubbles:false,dark:false},biz:{channels:false,status:false,communities:false,calls:false,recommend:false,toolbar:false,bubbles:false,dark:false}};
+var colors=["#158e59","#287bbf","#9867c8","#d78a35","#cb5a78"];
+var phone=document.getElementById("phone");
+function buildSwatches(){document.getElementById("swatches").innerHTML=colors.map(function(c){return '<button class="swatch'+(stagedColor===c?' active':'')+'" data-color="'+c+'" style="background:'+c+'" aria-label="لون '+c+'" aria-pressed="'+(stagedColor===c)+'"></button>'}).join("");}
+function section(title,lines){return '<div class="mocksection"><div class="mocktitle">'+title+'</div>'+lines.map(function(l,i){return '<div class="mockline"><span class="avatar '+(i%2?'coral':'blue')+'"></span>'+l+'</div>'}).join("")+'</div>';}
+function render(){
+ var s=states[target];phone.classList.toggle("dark",s.dark);
+ phone.style.setProperty("--local-accent",stagedColor);
+ phone.style.setProperty("--chat",s.bubbles?stagedColor:"#dcf5e5");
+ document.getElementById("preview-title").textContent=target==="wa"?"WhatsApp":"WhatsApp Business";
+ document.getElementById("toolbar-actions").textContent=s.toolbar?"◉ ✎ ⋮":"⌕ ⋮";
+ document.querySelectorAll("[data-target]").forEach(function(b){b.classList.toggle("selected",b.dataset.target===target)});
+ document.querySelectorAll("[data-previewtab]").forEach(function(b){b.classList.toggle("selected",b.dataset.previewtab===view)});
+ document.querySelectorAll("[data-key]").forEach(function(b){b.setAttribute("aria-checked",String(!!s[b.dataset.key]))});
+ document.getElementById("dark").setAttribute("aria-checked",String(s.dark));
+ var html="";
+ if(view==="updates"){
+  if(!s.status)html+=section("حالات جهات الاتصال",["أحمد — حالة جديدة","ليلى — تحديث اليوم"]);
+  if(!s.channels){html+=section("القنوات",["قناة تتابعها","آخر المنشورات"]);if(!s.recommend)html+=section("قنوات مقترحة",["اكتشف قنوات جديدة"]);}
+  if(!html)html='<div class="empty">لا توجد أقسام ظاهرة في التحديثات وفق اختيارات المعاينة</div>';
+ }else{
+  html=section("المحادثات",["محادثة خاصة","مجموعة الأصدقاء"]);
+  html+='<div class="bubble'+(s.bubbles?'':' received')+'" style="'+(s.bubbles?'color:white':'')+'">مرحبًا، كيف حالك؟</div>';
+  html+='<div class="bubble received">أهلًا! كل شيء جيد.</div>';
+ }
+ document.getElementById("mock-body").innerHTML=html;
+ var tabs=[["chats","المحادثات","▤"],["updates","التحديثات","◉"]];
+ if(!s.communities)tabs.push(["communities","المجتمعات","♧"]);
+ if(!s.calls)tabs.push(["calls","المكالمات","♧"]);
+ document.getElementById("mock-nav").innerHTML=tabs.map(function(t){return '<span class="'+(t[0]===view?'current':'')+'"><b>'+t[2]+'</b>'+t[1]+'</span>'}).join("");
+ buildSwatches();
+}
+document.body.addEventListener("click",function(e){
+ var b=e.target.closest("button");if(!b)return;
+ if(b.dataset.target){target=b.dataset.target;stagedColor=savedColors[target];render();}
+ else if(b.dataset.previewtab){view=b.dataset.previewtab;render();}
+ else if(b.dataset.color){stagedColor=b.dataset.color;render();}
+ else if(b.dataset.key){states[target][b.dataset.key]=!states[target][b.dataset.key];render();}
+ else if(b.id==="dark"){states[target].dark=!states[target].dark;render();}
+ else if(b.id==="apply"){savedColors[target]=stagedColor;document.getElementById("apply-state").textContent="تم اعتماد اللون داخل المعاينة فقط. لا توجد كتابة إلى WA X.";}
+ else if(b.id==="undo"){stagedColor=savedColors[target];render();document.getElementById("apply-state").textContent="أُلغيت تغييرات اللون غير المعتمدة في المعاينة.";}
+ else if(b.id==="reset"){states[target]={channels:false,status:false,communities:false,calls:false,recommend:false,toolbar:false,bubbles:false,dark:false};stagedColor=savedColors[target];render();document.getElementById("apply-state").textContent="أُعيدت إعدادات معاينة الهدف المحدد فقط.";}
+ else if(b.id==="advanced"){var box=document.getElementById("advanced-text"),open=box.hidden;box.hidden=!open;b.setAttribute("aria-expanded",String(open));b.textContent=open?"الإعدادات المتقدمة ▴":"الإعدادات المتقدمة ▾";}
+});
+render();
+}());
+</script>
+</body>
+</html>
