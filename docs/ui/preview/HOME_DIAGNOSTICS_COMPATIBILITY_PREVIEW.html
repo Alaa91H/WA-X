@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WA X — UIX-01 Home Health and Compatibility UX Reference</title>
+<style>
+:root{font-family:system-ui,Tahoma,sans-serif;color-scheme:light;--page:#f4f6f4;--card:#fff;--text:#172820;--muted:#6d8276;--line:#e5eae7;--green:#168653;--soft:#e5f4eb;--orange:#b36c25;--orange-soft:#fff2df;--red:#b24543;--red-soft:#fbeae9}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--text);padding:20px}
+.wrap{max-width:720px;margin:auto}.header{display:flex;justify-content:space-between;align-items:center}.title{font-size:26px;font-weight:800}.meta{font-size:11px;color:var(--muted);line-height:1.6}.pill{font-size:10px;background:var(--soft);color:var(--green);padding:6px 10px;border-radius:15px;font-weight:750}
+button,input{font:inherit}button{cursor:pointer;border:0}button:focus-visible,input:focus-visible{outline:2px solid #3e96e0;outline-offset:3px}
+.group{background:var(--card);border:1px solid var(--line);padding:15px;border-radius:18px;margin-top:13px}
+.target{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--line);padding:4px;border-radius:12px}
+.target button{padding:10px;border-radius:9px;background:transparent;font-size:12px;color:var(--muted)}
+.target button.active{background:var(--card);font-weight:750;color:var(--text)}
+.status{display:flex;align-items:flex-start;gap:11px}.statusicon{width:37px;height:37px;display:grid;place-items:center;background:var(--orange-soft);color:var(--orange);border-radius:12px;font-size:18px}
+.statusicon.ok{background:var(--soft);color:var(--green)}.statusicon.bad{background:var(--red-soft);color:var(--red)}
+.status-text{font-size:14px;font-weight:800}.subtext{color:var(--muted);font-size:11px;line-height:1.6;margin-top:5px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.button{padding:9px 12px;border-radius:10px;background:var(--page);color:var(--text);font-size:12px}.button.primary{background:var(--green);color:white;font-weight:750}
+.sectionlabel{font-size:13px;font-weight:800;margin:16px 2px 7px}.scenarios{display:flex;flex-wrap:wrap;gap:7px}.scenario{padding:6px 10px;font-size:11px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--muted)}.scenario.active{background:var(--soft);border-color:#b1d9c2;color:var(--green);font-weight:750}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}.step{padding:9px;border-radius:10px;background:var(--page);font-size:11px;display:flex;justify-content:space-between;gap:5px}.result{font-weight:700;color:var(--green)}.result.warn{color:var(--orange)}.result.fail{color:var(--red)}
+.issue{background:var(--orange-soft);padding:12px;border-radius:12px;font-size:12px;line-height:1.8}.issue.ok{background:var(--soft)}.issue.bad{background:var(--red-soft)}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.count{background:var(--page);padding:12px;border-radius:12px}.count strong{display:block;font-size:21px;font-weight:780}.count span{font-size:10px;color:var(--muted)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.filter{border-radius:15px;background:var(--page);padding:7px 10px;color:var(--muted);font-size:11px}.filter.active{background:var(--soft);color:var(--green);font-weight:800}
+.search{background:var(--page);width:100%;padding:11px;border:1px solid var(--line);border-radius:12px;margin-top:12px;font-size:12px;color:var(--text);outline:none}
+.feature{padding:11px 3px;border-bottom:1px solid var(--line);display:flex;gap:9px;align-items:center}.feature:last-child{border:0}.feature .copy{flex:1}.feature strong{font-size:12px}.feature small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.badge{font-size:10px;border-radius:9px;padding:6px;background:var(--page);color:var(--muted)}.badge.verified{background:var(--soft);color:var(--green)}.badge.failed{background:var(--red-soft);color:var(--red)}.badge.unknown{background:var(--orange-soft);color:var(--orange)}
+details{margin-top:12px;font-size:11px;color:var(--muted)}summary{cursor:pointer}
+@media(max-width:430px){body{padding:12px}.counts{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}}
+</style></head>
+<body>
+<div class="wrap">
+<div class="header"><div><div class="title">WA X</div><div class="meta">الرئيسية · فحص النظام وتوافق الميزات</div></div><span class="pill">نموذج توضيحي</span></div>
+<div class="group">
+<div class="target" role="group" aria-label="التطبيق المستهدف">
+<button class="active" data-target="wa">WhatsApp</button><button data-target="biz">WhatsApp Business</button>
+</div>
+<div class="meta" id="version" style="padding:11px 3px 0">نسخة افتراضية للمعاينة — لا توجد قراءة من الجهاز</div>
+<div class="sectionlabel">حالة التشغيل</div>
+<div class="status"><span class="statusicon" id="mainicon">!</span><div><div class="status-text" id="status">نتائج توضيحية فقط</div><div class="subtext" id="summary">لا يمكن للمعاينة فحص LSPosed أو إصدار واتساب الحقيقي.</div></div></div>
+<div class="actions"><button class="button primary" id="scan">معاينة «تحقق الآن»</button><button class="button" id="details">عرض السبب والحل</button><button class="button" id="compat">توافق الميزات ↓</button></div>
+<div class="meta" id="stamp" style="margin-top:10px">لم يُنفّذ فحص حقيقي.</div>
+</div>
+<div class="sectionlabel">حالات تجريبية — اختر نتيجة لعرضها</div>
+<div class="scenarios"><button class="scenario active" data-scenario="stopped">التطبيق متوقف</button><button class="scenario" data-scenario="scope">نطاق LSPosed غير مكتمل</button><button class="scenario" data-scenario="resolver">ميزة غير متوافقة</button><button class="scenario" data-scenario="ready">عمل موثق افتراضيًا</button></div>
+<div class="group" id="diag">
+<div class="sectionlabel" style="margin-top:0">نتيجة الفحص حسب المرحلة</div><div class="steps" id="stages"></div>
+<div class="sectionlabel">التشخيص المفصل</div><div class="issue" id="issue"></div>
+<details><summary>البيانات التقنية (بيانات نموذجية منقحة)</summary><p id="technical"></p></details>
+</div>
+<div class="group" id="compatibility">
+<div class="sectionlabel" style="margin-top:0">الميزات والتوافق مع الإصدار</div>
+<div class="meta">الفئات والأعداد أدناه بيانات عرض افتراضية وليست دليلًا على التوافق في جهازك.</div>
+<div class="counts" id="counts" style="margin-top:12px"></div>
+<input id="search" class="search" placeholder="ابحث عن ميزة بالعربية أو الإنجليزية..." aria-label="البحث عن ميزة">
+<div class="filters" id="filters"></div>
+<div id="list"></div>
+</div>
+</div>
+<script>
+(function(){
+"use strict"; var root=document.body,target="wa",scenario="stopped",filter="all",term="";
+var examples=[
+{id:"read",name:"إخفاء مؤشرات القراءة",en:"blue ticks",cat:"الخصوصية",wa:"verified",biz:"verified"},
+{id:"typing",name:"إخفاء الكتابة",en:"typing privacy",cat:"الخصوصية",wa:"verified",biz:"fallback"},
+{id:"status",name:"تنزيل الحالات",en:"download status",cat:"الوسائط",wa:"fallback",biz:"unknown"},
+{id:"channels",name:"إخفاء القنوات",en:"channels",cat:"التخصيص",wa:"unknown",biz:"failed"},
+{id:"ads",name:"حظر إعلانات الحالات",en:"status adblock",cat:"التخصيص",wa:"planned",biz:"planned"},
+{id:"calls",name:"التحكم بالمكالمات",en:"calls",cat:"المكالمات",wa:"failed",biz:"unknown"}
+];
+var labels={verified:"متوافقة (مثال)",fallback:"مسار بديل",unknown:"غير متحقق",failed:"غير متوافقة",planned:"مخططة"};
+var scenarios={
+stopped:{title:"واتساب مثبت، لكن التشغيل غير مُثبت",summary:"لا توجد نبضة حقن حديثة. لا يمكن الجزم بأن LSPosed معطل.",kind:"warn",stage:5,cause:"التطبيق غير مشغّل في سيناريو المعاينة.",evidence:"آخر حالة: لا توجد جلسة حالية للتطبيق.",action:"افتح واتساب ثم اختر «تحقق الآن».",code:"TARGET_NOT_RUNNING"},
+scope:{title:"نطاق LSPosed يحتاج مراجعة",summary:"في هذا المثال يوجد دليل تحقق يفيد أن حزمة واتساب ليست ضمن النطاق.",kind:"bad",stage:2,cause:"عدم إدراج الحزمة المستهدفة في نطاق الوحدة، وفق دليل إطار العمل.",evidence:"فحص النطاق الموثق أعاد غياب الحزمة.",action:"راجع LSPosed → WA X → Scope، ثم أعد تشغيل واتساب وتحقق مجددًا.",code:"SCOPE_MISSING_VERIFIED"},
+resolver:{title:"مشكلة توافق موضعية",summary:"يفترض المثال أن LSPosed والحقن يعملان، لكن Resolver لميزة واحدة فشل.",kind:"warn",stage:6,cause:"توقيع Resolver الخاص بميزة معينة تغيّر بعد تحديث واتساب.",evidence:"فشل تحقق Resolver محدد؛ لا دليل على فشل بقية الميزات.",action:"اعرض الميزات المتأثرة؛ اترك غيرها دون تغيير، وانتظر تحديث التوافق أو استخدم المسار البديل إذا ثبت دعمه.",code:"FEATURE_RESOLVER_MISMATCH"},
+ready:{title:"سليم في سيناريو المعاينة",summary:"جميع مراحل التحقق مصطنعة للشرح، وليست نتيجة فحص حقيقي.",kind:"ok",stage:8,cause:"لا مشكلة ضمن البيانات الافتراضية.",evidence:"نتائج تجريبية، وليست معلومات من LSPosed.",action:"في التطبيق الحقيقي ستظهر الأدلة والتاريخ لكل هدف.",code:"DEMO_OK_ONLY"}
+};
+function selected(q){return root.querySelector(q)}
+function render(){
+var s=scenarios[scenario];
+root.querySelectorAll("[data-target]").forEach(b=>b.classList.toggle("active",b.dataset.target===target));
+root.querySelectorAll("[data-scenario]").forEach(b=>b.classList.toggle("active",b.dataset.scenario===scenario));
+selected("#version").textContent=(target==="wa"?"WhatsApp":"WhatsApp Business")+" · إصدار مثبت: غير متاح في النموذج · حالة افتراضية";
+selected("#status").textContent=s.title;selected("#summary").textContent=s.summary;
+selected("#mainicon").className="statusicon "+(s.kind==="ok"?"ok":s.kind==="bad"?"bad":"");
+selected("#mainicon").textContent=s.kind==="ok"?"✓":"!";
+const stages=["الحزمة والإصدار","الإطار والوحدة","النطاق","العملية والنبضة","الحقن","اتصال الإعدادات","Resolvers","حالة الميزات"];
+selected("#stages").innerHTML=stages.map((a,i)=>'<div class="step"><span>'+a+'</span><b class="result '+(scenario!=="ready"&&i>=s.stage?(i===s.stage?"fail":"warn"):"")+'">'+(scenario==="ready"?"مثال ✓":i<s.stage?"مثال ✓":i===s.stage?"راجع":"غير مفحوص")+'</b></div>').join("");
+selected("#issue").className="issue "+(s.kind==="ok"?"ok":s.kind==="bad"?"bad":"");
+selected("#issue").innerHTML="<strong>ما المشكلة؟</strong> "+s.cause+"<br><strong>الدليل:</strong> "+s.evidence+"<br><strong>الحل المقترح:</strong> "+s.action;
+selected("#technical").textContent="DEMO_FAILURE_CODE="+s.code+" · TARGET="+target+" · REAL_SESSION=NOT_AVAILABLE · SCAN=NOT_EXECUTED";
+var items=examples.filter(f=>(filter==="all"||f[target]===filter)&&(f.name.includes(term)||f.en.toLowerCase().includes(term.toLowerCase())||f.cat.includes(term)));
+const keys=["verified","fallback","unknown","failed","planned"];
+selected("#counts").innerHTML=keys.map(k=>'<div class="count"><strong>'+examples.filter(f=>f[target]===k).length+'</strong><span>'+labels[k]+'</span></div>').join("");
+selected("#filters").innerHTML=[["all","الكل"],...keys.map(k=>[k,labels[k]])].map(k=>'<button class="filter '+(filter===k[0]?"active":"")+'" data-filter="'+k[0]+'">'+k[1]+'</button>').join("");
+selected("#list").innerHTML=items.length?items.map(f=>'<div class="feature"><div class="copy"><strong>'+f.name+'</strong><small>'+f.cat+' · '+f.en+'</small></div><span class="badge '+f[target]+'">'+labels[f[target]]+'</span></div>').join(""):'<p class="meta">لا توجد ميزات مطابقة لمعايير البحث في هذا المثال.</p>';
+}
+root.addEventListener("click",function(e){
+var b=e.target.closest("button");if(!b)return;
+if(b.dataset.target){target=b.dataset.target;render()}
+else if(b.dataset.scenario){scenario=b.dataset.scenario;render()}
+else if(b.dataset.filter){filter=b.dataset.filter;render()}
+else if(b.id==="scan"){selected("#stamp").textContent="تم تحديث السيناريو التوضيحي فقط — لم يحدث اتصال بالتطبيق أو فحص LSPosed.";render()}
+else if(b.id==="details"){selected("#diag").scrollIntoView({behavior:"auto",block:"start"})}
+else if(b.id==="compat"){selected("#compatibility").scrollIntoView({behavior:"auto",block:"start"})}
+});
+selected("#search").addEventListener("input",function(e){term=e.target.value.trim();render()});
+render();
+}());
+</script></body></html>
