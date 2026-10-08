@@ -1,3 +1,72 @@
+WA X 1.2.0-beta.5
+Release date: 2026-10-08
+
+Development package 5: startup is now a declared sequence of fourteen steps, and one failure
+no longer stops everything. The honest summary is that almost nothing you can see changed
+unless something was broken — and if something was broken, this is the first build that can
+tell you which part, and get on with the parts that do not need it.
+
+The specific thing this fixes: if WA X's engine for reading WhatsApp's internals failed to
+start, the previous build stopped, installed nothing at all, and — because the receivers that
+carry a report had not been registered yet — could not tell you that either. It looked, from
+the outside, like a module that was switched off. Now the failure names itself, the six steps
+that need the engine are recorded as skipped because of it, and the seven steps that do not
+need it still run. WA X still attaches, still answers the app, and still reports that the
+engine is what failed.
+
+THE STARTUP SEQUENCE
+- Fourteen named stages, in a fixed order, each with a declared dependency list and a declared
+  criticality. The order is no longer "wherever the code happened to be written".
+- Every one of the twelve subsystems the runtime tracks is now written by exactly one stage, and
+  a test fails if two stages claim the same one. Before, eleven of the twelve reported nothing.
+- Criticality says what a failure costs: CORE stops the runtime, ESSENTIAL makes it degraded,
+  OPTIONAL can never block anything. Every CORE stage has to carry a written reason for why
+  nothing below it can work without it, and a stage that cannot stop anything must not carry
+  one.
+- A stage that lost something does not stop the stages below it. Skipping everything downstream
+  of a degradation is how one lost capability becomes no runtime at all.
+- When a step is skipped, the card names the original cause, not the step immediately above it.
+- Startup runs the sequence twice — once before WhatsApp finishes starting and once after — and
+  a step that has already finished is never run again, so nothing is installed twice.
+
+FIXES FOUND WHILE DOING IT
+- A slow feature used to prevent every feature queued behind it from being installed at all,
+  and nothing recorded that any of them had been dropped. The budget is now named, it is
+  measured, and a timeout reports how many features were not installed.
+- A skipped step used to leave its subsystem reading "nothing reported", which is
+  indistinguishable from a module that had said nothing. It now reads as skipped.
+- A step that threw could be recorded without a failure code — the shape of every vague message
+  this project has removed. It cannot happen now.
+- The Kotlin toolchain moved from 2.4.20 to 2.4.21, because the build fails when a newer patch
+  exists and suppressing that warning is the wrong fix.
+
+VERIFICATION
+- 1281 unit tests run in this build, none failing. The previous release ran 1269.
+- Every clause of this phase's gate is a test: an engine failure is diagnosable, an optional
+  failure cannot block readiness, and the bootstrap is deterministic and idempotent.
+- Every coverage counter is above its recorded floor, with more code covered than before, not a
+  lower bar.
+- Formatting, static analysis and Android lint are clean, and the build fails on warnings rather
+  than collecting them. Lint has the same four accepted baseline entries as the previous
+  release.
+- Both APK variants were built locally and the entry-point check passes on both.
+
+KNOWN LIMITATIONS
+- No device verification is claimed for this beta. The startup sequence is verified by unit tests
+  and by the built artifact; whether it behaves correctly inside WhatsApp on your device is
+  unverified and is exactly what testing this build has to establish.
+- The individual feature classes do not carry their own criticality yet. When a feature fails you
+  get its error code and the criticality of the stage it belongs to, not its own classification.
+  Deciding which of the 67 features are essential is deliberately not guessed at here.
+- An unsupported WhatsApp build is still refused rather than allowed with a warning; the bypass
+  setting still works and is recorded as a degradation.
+- Recorded architectural debt is unchanged at 190 files.
+
+MIGRATION AND ROLLBACK
+- No settings, preference key or user-visible feature changed.
+- Rollback is installing the previous build; the update key is unchanged, so the downgrade
+  installs normally.
+
 WA X 1.2.0-beta.4
 Release date: 2026-10-08
 
