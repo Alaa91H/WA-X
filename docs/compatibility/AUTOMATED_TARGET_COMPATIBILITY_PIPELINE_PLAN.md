@@ -2,7 +2,7 @@
 
 **Decision date:** 2026-10-08  
 **Status:** SPECIFICATION / ISSUE EXECUTION PLAN ONLY — **NOT IMPLEMENTED OR VERIFIED**.  
-**Umbrella:** AUTO-COMPAT-01 (see newly linked Issue).  
+**Umbrella:** [#377 — AUTO-COMPAT-01](https://github.com/Alaa91H/WA-X/issues/377).  
 **Scope:** CI/quality pipeline + reproducible target artifact acquisition + static/dynamic capability verification + evidence-based compatibility updates for `com.whatsapp` and `com.whatsapp.w4b`.  
 **Binding phase order:** #318 M00→M13, especially M08 #327 (DexKit), M11 #330 (quality/release), M12 #331 (signed registry), M13 #332 (device matrix); #333 A04 #338, A05 #339, A14 #348, A17 #351, and Manager UI #371. **Do not bypass phase gates**.
 
