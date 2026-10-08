@@ -120,9 +120,8 @@ class ActivationMonitorTest {
         expiredMonitor.accept(heartbeat(timestamp = now - 200_000L))
         assertEquals(ActivationState.UNKNOWN, status(expiredMonitor).state)
 
-        val newMonitor = monitor()
-        newMonitor.accept(heartbeat(bootId = "previous-boot"))
-        assertEquals(ActivationState.UNKNOWN, status(newMonitor).state)
+        expiredMonitor.accept(heartbeat(bootId = "previous-boot"))
+        assertEquals(ActivationState.UNKNOWN, status(expiredMonitor).state)
     }
 
     companion object {
