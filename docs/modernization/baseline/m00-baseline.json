@@ -326,6 +326,8 @@
       "**.bin",
       "**.properties",
       "META-INF/**",
+      "META-INF/LICENSE*",
+      "META-INF/NOTICE*",
       "kotlin/**",
       "okhttp3/**",
       "org/**"
