@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">גיבוי שחזור כפוי</string>
     <string name="force_restore_backup_summary">הפעל את מסך שחזור הגיבוי באופן ידני. השתמש באפשרות זו אם דילגת על השחזור במהלך ההתקנה.</string>
-    <string name="app_desc">מודול Xposed מתקדם ל-WhatsApp</string>
     <string name="antirevoke">חסימת מחיקת הודעות</string>
     <string name="antirevoke_sum">הודעות לא יימחקו אצלך</string>
     <string name="ghostmode">הסתר הקלדה</string>

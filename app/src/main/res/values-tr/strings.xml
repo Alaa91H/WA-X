@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Yedeklemeyi Zorla Geri Yükle</string>
     <string name="force_restore_backup_summary">Yedek geri yükleme ekranını manuel olarak başlatın. Kurulum sırasında geri yüklemeyi atladıysanız bunu kullanın.</string>
-    <string name="app_desc">WhatsApp için gelişmiş Xposed modülü</string>
     <string name="antirevoke">Mesajların Silinmesini Engelle</string>
     <string name="antirevoke_sum">Mesajlar sizden silinmeyecektir</string>
     <string name="ghostmode">Yazıyor bilgisini gizle</string>

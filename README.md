@@ -54,7 +54,7 @@ Feature availability is version-dependent. A feature existing in source code or 
 ## Installation — official API 102 module
 
 Starting with **WA X 1.2.0-beta.9**, the only distributed WA X Android
-package is \`com.wax.module\` using modern **libxposed API 102**. The previous
+package is `com.wax.module` using modern **libxposed API 102**. The previous
 Legacy API 93 loader and the standalone Canary APK are no longer shipped.
 
 1. Use a Vector/LSPosed installation that actually supports libxposed API 102.
@@ -62,8 +62,8 @@ Legacy API 93 loader and the standalone Canary APK are no longer shipped.
 2. Get the officially signed module from [GitHub Releases](https://github.com/Alaa91H/WA-X/releases)
    or the signed Beta Testing channel; retain your installed app's data.
 3. Enable **WA X** in your Xposed manager, scoped **only** to:
-   - \`com.whatsapp\`
-   - \`com.whatsapp.w4b\` (only if you use WhatsApp Business)
+   - `com.whatsapp`
+   - `com.whatsapp.w4b` (only if you use WhatsApp Business)
 4. Reopen the target app and verify that the WA X Manager has received a
    current-boot runtime heartbeat. A Framework Service connection or an
    installed HookHandle alone does **not** prove features work.

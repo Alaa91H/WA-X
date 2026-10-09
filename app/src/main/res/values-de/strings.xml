@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Wiederherstellung der Sicherung erzwingen</string>
     <string name="force_restore_backup_summary">Starten Sie den Sicherungsbildschirm manuell. Verwenden Sie dies, wenn Sie die Wiederherstellung während des Setups übersprungen haben.</string>
-    <string name="app_desc">Erweitertes Xposed-Modul für WhatsApp</string>
     <string name="antirevoke">Gelöschte Nachrichten anzeigen</string>
     <string name="antirevoke_sum">Nachrichten werden für Sie nicht gelöscht</string>
     <string name="ghostmode">Schreiben verbergen</string>

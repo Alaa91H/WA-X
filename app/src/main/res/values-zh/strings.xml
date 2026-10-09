@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">强制恢复备份</string>
     <string name="force_restore_backup_summary">手动启动恢复备份界面。如果你在设置时跳过了恢复，请使用此项。</string>
-    <string name="app_desc">高级 WhatsApp Xposed 模块</string>
     <string name="antirevoke">防止消息撤回</string>
     <string name="antirevoke_sum">消息将不会在您的设备上删除</string>
     <string name="ghostmode">隐藏正在输入</string>
