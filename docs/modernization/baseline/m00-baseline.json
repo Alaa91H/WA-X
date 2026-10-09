@@ -7,6 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
+      "agent2-discovery-validation.yml": "bbaf570d67d443e5c6d1ed80c958d475ad990cd6203eb4ec77f4d79a28692a6b",
       "ci.yml": "9e2174eaff964699163f11e5fc6edb8f96034218bd0cba3d5ecce748fc060c6c",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
