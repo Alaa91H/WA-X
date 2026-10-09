@@ -41,6 +41,76 @@ class ModernManagerRuntimeStatusTest {
     }
 
     @Test
+    fun freshAuthenticatedHeartbeatKeepsRunningTargetActiveAfterStartupExpires() {
+        val now = 1_800_000_000_000L
+        val elapsed = 800_000L
+        val boot = now - elapsed
+        assertEquals(
+            ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT,
+            ModernManagerRuntimeStatus.classifyWithHeartbeat(
+                now - 500_000L, boot, now, boot,
+                elapsed - 45_000L, boot + 100L, elapsed,
+            ),
+        )
+        assertEquals(
+            ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP,
+            ModernManagerRuntimeStatus.classifyWithHeartbeat(
+                now - 500_000L, boot, now, boot,
+                elapsed - 160_000L, boot, elapsed,
+            ),
+        )
+    }
+
+    @Test
+    fun heartbeatNeverClaimsLiveFromPreviousBootOrFutureUptime() {
+        val now = 1_800_000_000_000L
+        val elapsed = 800_000L
+        val boot = now - elapsed
+        val original = now - 500_000L
+        val scenarios = listOf(
+            Triple(elapsed - 20_000L, boot - 100_000L, elapsed),
+            Triple(elapsed + 500L, boot, elapsed),
+            Triple(0L, boot, elapsed),
+            Triple(elapsed - 20_000L, 0L, elapsed),
+        )
+        scenarios.forEach { (last, recordedBoot, current) ->
+            assertEquals(
+                ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP,
+                ModernManagerRuntimeStatus.classifyWithHeartbeat(
+                    original, boot, now, boot, last, recordedBoot, current,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun heartbeatCannotRemainLiveAfterProcessStops() {
+        val now = 1_800_000_000_000L
+        val elapsed = 600_000L
+        val boot = now - elapsed
+        // Suspended target workers stop reporting: the Manager must not say live.
+        assertEquals(
+            ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP,
+            ModernManagerRuntimeStatus.classifyWithHeartbeat(
+                now - 300_000L, boot, now, boot,
+                elapsed - 150_001L, boot, elapsed,
+            ),
+        )
+    }
+
+    @Test
+    fun freshBootstrapStillWorksBeforeFirstScheduledHeartbeat() {
+        val now = 1_800_000_000_000L
+        val boot = now - 100_000L
+        assertEquals(
+            ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP,
+            ModernManagerRuntimeStatus.classifyWithHeartbeat(
+                now - 1000L, boot, now, boot, 0L, 0L, 100_000L,
+            ),
+        )
+    }
+
+    @Test
     fun lifecycleProofCannotBeInventedFromInstalledHook() {
         val now = 1_800_000_000_000L
         val stage = "modern.runtime.milestone.ATTACH_HOOK_INSTALLED.com.whatsapp"

@@ -12,6 +12,7 @@ object ModernManagerRuntimeStatus {
     enum class Evidence {
         NOT_REPORTED,
         FRESH_BOOTSTRAP,
+        LIVE_HEARTBEAT,
         STALE_BOOTSTRAP,
         BOOT_MISMATCH,
         CLOCK_MISMATCH,
@@ -25,6 +26,7 @@ object ModernManagerRuntimeStatus {
         val freezeInstallation: String?,
         val dndInstallation: String?,
         val bootstrapMilestones: List<String> = emptyList(),
+        val menuInstallation: String? = null,
     )
 
     data class Snapshot(
@@ -79,6 +81,34 @@ object ModernManagerRuntimeStatus {
         return if (delta <= 5_000L) Evidence.FRESH_BOOTSTRAP else Evidence.BOOT_MISMATCH
     }
 
+    /**
+     * Only a fresh heartbeat sent from WhatsApp's real UID proves recent process activity.
+     * A historical successful bootstrap must never be interpreted as current liveness.
+     * Use monotonic uptime as the freshness clock and a boot-epoch guard for restarts.
+     */
+    fun classifyWithHeartbeat(
+        lastReportMillis: Long,
+        recordedBootMillis: Long,
+        currentMillis: Long,
+        currentBootMillis: Long,
+        heartbeatElapsedMillis: Long,
+        heartbeatBootMillis: Long,
+        currentElapsedMillis: Long,
+    ): Evidence {
+        val bootstrap = classify(lastReportMillis, recordedBootMillis, currentMillis, currentBootMillis)
+        if (heartbeatElapsedMillis <= 0L || heartbeatBootMillis <= 0L) return bootstrap
+        if (currentElapsedMillis < heartbeatElapsedMillis) return bootstrap
+        if (currentElapsedMillis - heartbeatElapsedMillis > 150_000L) return bootstrap
+        val bootDifference =
+            if (heartbeatBootMillis >= currentBootMillis) {
+                heartbeatBootMillis - currentBootMillis
+            } else {
+                currentBootMillis - heartbeatBootMillis
+            }
+        if (bootDifference > 5_000L) return bootstrap
+        return Evidence.LIVE_HEARTBEAT
+    }
+
     /** Target reports live in Manager-owned preferences, not read-only Xposed target prefs. */
     fun inspect(context: Context): Snapshot {
         val framework = ModernFrameworkServiceBridge.currentState()
@@ -94,7 +124,8 @@ object ModernManagerRuntimeStatus {
         return try {
             val prefs = context.getSharedPreferences(ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE)
             val now = System.currentTimeMillis()
-            val boot = now - SystemClock.elapsedRealtime()
+            val elapsed = SystemClock.elapsedRealtime()
+            val boot = now - elapsed
             Snapshot(
                 connected = true,
                 frameworkApi = framework.apiVersion,
@@ -106,13 +137,23 @@ object ModernManagerRuntimeStatus {
                         val origin = prefs.getLong("modern.bootstrap.boot.$name", 0L)
                         Target(
                             packageName = name,
-                            evidence = classify(timestamp, origin, now, boot),
+                            evidence =
+                                classifyWithHeartbeat(
+                                    timestamp,
+                                    origin,
+                                    now,
+                                    boot,
+                                    prefs.getLong("modern.heartbeat.elapsed.$name", 0L),
+                                    prefs.getLong("modern.heartbeat.boot.$name", 0L),
+                                    elapsed,
+                                ),
                             customTimeInstallation = prefs.getString("modern.feature.custom_time.state.$name", null),
                             shareLimitInstallation = prefs.getString("modern.feature.share_limit.state.$name", null),
                             freezeInstallation = prefs.getString("modern.feature.freeze_last_seen.state.$name", null),
                             dndInstallation = prefs.getString("modern.feature.dnd_mode.state.$name", null),
                             bootstrapMilestones =
                                 observedMilestones(name, now) { key -> prefs.getLong(key, 0L) },
+                            menuInstallation = prefs.getString("modern.feature.menu_home.state.$name", null),
                         )
                     },
             )
