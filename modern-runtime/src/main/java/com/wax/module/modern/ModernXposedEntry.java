@@ -42,6 +42,9 @@ public final class ModernXposedEntry extends XposedModule {
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
         currentProcessName = param.getProcessName();
+        // Mirror bootstrap milestones to Android logcat: framework module logs can
+        // show a loaded class without exposing callback execution on some builds.
+        Log.i(TAG, "M06_LIFECYCLE_MODULE_CALLBACK process=" + currentProcessName);
         log(Log.INFO, TAG,
                 "Module loaded: API=" + getApiVersion() + ", process=" + currentProcessName);
         if (!ModernTargetPolicy.isMainTargetProcess(currentProcessName)) {
@@ -57,6 +60,7 @@ public final class ModernXposedEntry extends XposedModule {
         if (!ModernTargetPolicy.isTargetPackageForProcess(currentProcessName, packageName)) {
             return;
         }
+        Log.i(TAG, "M06_LIFECYCLE_PACKAGE_CALLBACK package=" + packageName);
         // Record this independently of the bootstrap. isFirstPackage is NOT required.
         log(Log.INFO, TAG, "Target package loaded: " + packageName
                 + ", firstPackage=" + param.isFirstPackage());
@@ -78,6 +82,7 @@ public final class ModernXposedEntry extends XposedModule {
                                             if (target != null && packageName.equals(target.getPackageName())
                                                     && started.add(packageName)) {
                                                 targetContext = target;
+                                                Log.i(TAG, "M06_LIFECYCLE_ATTACH_OBSERVED package=" + packageName);
                                                 log(Log.INFO, TAG,
                                                         "Application.attach observed inside " + packageName);
                                                 reportLifecycleStage(packageName, "ATTACH_OBSERVED");
@@ -92,11 +97,15 @@ public final class ModernXposedEntry extends XposedModule {
                         return handle::unhook;
                     }));
             if (installed) {
+                Log.i(TAG, "M06_LIFECYCLE_HOOK_INSTALLED package=" + packageName
+                        + " origin=" + origin);
                 log(Log.INFO, TAG, "Bootstrap installed via " + origin + ": " + packageName);
                 reportLifecycleStage(packageName, "ATTACH_HOOK_INSTALLED");
             }
         } catch (Throwable e) {
             if (e instanceof VirtualMachineError) throw (VirtualMachineError) e;
+            Log.e(TAG, "M06_LIFECYCLE_HOOK_FAILED package=" + packageName
+                    + " origin=" + origin, e);
             log(Log.ERROR, TAG, "Bootstrap install failed via " + origin + ": " + packageName, e);
             reportLifecycleStage(packageName, "ATTACH_HOOK_FAILED");
         }
@@ -140,9 +149,13 @@ public final class ModernXposedEntry extends XposedModule {
             boolean heartbeat = false;
             try {
                 heartbeat = ModernTargetTelemetry.send(target, packageName, "BOOTSTRAP", "ATTACHED");
+                Log.i(TAG, "M06_LIFECYCLE_PROVIDER_RESULT package=" + packageName
+                        + " accepted=" + heartbeat);
                 log(heartbeat ? Log.INFO : Log.ERROR, TAG,
                         "Target-to-Manager bootstrap delivery: " + heartbeat + " for " + packageName);
             } catch (RuntimeException telemetryFailure) {
+                Log.e(TAG, "M06_LIFECYCLE_PROVIDER_ERROR package=" + packageName,
+                        telemetryFailure);
                 log(Log.ERROR, TAG, "Target telemetry provider call failed: " + packageName,
                         telemetryFailure);
             }

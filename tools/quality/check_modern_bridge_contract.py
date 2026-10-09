@@ -48,6 +48,20 @@ def verify() -> None:
     assert not (ROOT / "modern-canary").exists()
     assert "extends XposedModule" in modern_entry
     assert "onPackageLoaded(" in modern_entry
+    # A Vector "Loaded module" line is only class-loader evidence. The hook
+    # callback and provider outcome must also be traceable through adb logcat.
+    for stage in (
+        "M06_LIFECYCLE_MODULE_CALLBACK",
+        "M06_LIFECYCLE_PACKAGE_CALLBACK",
+        "M06_LIFECYCLE_HOOK_INSTALLED",
+        "M06_LIFECYCLE_HOOK_FAILED",
+        "M06_LIFECYCLE_ATTACH_OBSERVED",
+        "M06_LIFECYCLE_PROVIDER_RESULT",
+        "M06_LIFECYCLE_PROVIDER_ERROR",
+    ):
+        assert stage in modern_entry, f"missing Android logcat proof: {stage}"
+    assert "Log.i(TAG," in modern_entry
+    assert "Log.e(TAG," in modern_entry
     assert "ModernTargetPolicy.isMainTarget" in modern_entry
     feature = source("modern-runtime/src/main/java/com/wax/module/modern/ModernCustomTimeFeature.kt")
     modern_home = source("app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt")
