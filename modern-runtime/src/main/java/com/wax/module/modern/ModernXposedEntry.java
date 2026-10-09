@@ -352,6 +352,26 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Status menu state delivery failed", error);
             }
+            // ActivityController is the Manager-driven contact-picker relay:
+            // it opens the target's own About picker and bypasses app-lock auth
+            // only for that window. Always-on infra, no user toggle.
+            String activityControllerState = ModernActivityControllerFeature.Outcome.ERROR.name();
+            try {
+                System.loadLibrary("dexkit");
+                activityControllerState = ModernActivityControllerFeature.INSTANCE
+                        .install(target, this, hookRegistry).name();
+                Log.i(TAG, "M06_ACTIVITY_CONTROLLER_RESULT package=" + packageName
+                        + " state=" + activityControllerState);
+            } catch (Throwable featureFailure) {
+                if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                activityControllerState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern ActivityController failed on " + packageName, featureFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "ACTIVITY_CONTROLLER", activityControllerState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Activity controller state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
