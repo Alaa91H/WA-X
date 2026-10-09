@@ -38,6 +38,18 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_MENU_STATUS_PROVIDER = "MENU_STATUS_PROVIDER";
     private static final String TAG = "WA-X TargetTelemetry";
 
+    /**
+     * The one string-valued preference the Control Center may write.
+     *
+     * It holds the comma-separated ids of the user's favourite controls, so
+     * the favourites filter is backed by real persisted state rather than a
+     * cosmetic toggle that forgets everything on restart.
+     */
+    public static final String CONTROL_CENTER_FAVORITES_KEY = "wax.control_center.favorites";
+
+    /** Upper bound on the favourites list, so the value stays a short string. */
+    static final int MAX_FAVORITES_LENGTH = 256;
+
     /** The only preference keys the embedded Control Center may read. */
     static final String[] CONTROL_CENTER_PREFERENCE_KEYS = {
         "modern.feature.custom_time.enabled",
@@ -185,6 +197,21 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "dndmode".equals(key);
     }
 
+    /** Favourites must be a short, comma-separated list of plain identifiers. */
+    static boolean isValidFavorites(String favorites) {
+        if (favorites == null || favorites.length() > MAX_FAVORITES_LENGTH) return false;
+        if (favorites.isEmpty()) return true;
+        for (String id : favorites.split(",", -1)) {
+            if (id.isEmpty() || id.length() > 64) return false;
+            for (int i = 0; i < id.length(); i++) {
+                char c = id.charAt(i);
+                boolean allowed = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
+                if (!allowed) return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Persists a target-originated toggle into the Manager default preferences
      * (the file {@code ModernRuntimePreferenceRelay} observes), so the
@@ -198,6 +225,17 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 context.getPackageManager().getPackagesForUid(Binder.getCallingUid()))) {
             Log.w(TAG, "Rejected settings write from unauthorized UID");
             return rejected();
+        }
+        if (CONTROL_CENTER_FAVORITES_KEY.equals(key)) {
+            String favorites = extras.getString("favorites", "");
+            if (!isValidFavorites(favorites)) return rejected();
+            boolean savedFavorites = PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(CONTROL_CENTER_FAVORITES_KEY, favorites)
+                    .commit();
+            Bundle favoritesResult = new Bundle();
+            favoritesResult.putBoolean("accepted", savedFavorites);
+            return favoritesResult;
         }
         if (!isWritableSettingKey(key)) {
             return rejected();
@@ -234,6 +272,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         for (String key : CONTROL_CENTER_PREFERENCE_KEYS) {
             result.putBoolean("pref." + key, manager.getBoolean(key, false));
         }
+        result.putString("pref." + CONTROL_CENTER_FAVORITES_KEY,
+                manager.getString(CONTROL_CENTER_FAVORITES_KEY, ""));
         for (String key : CONTROL_CENTER_EVIDENCE_KEYS) {
             String value = reports.getString(key + "." + target, null);
             if (value != null) {

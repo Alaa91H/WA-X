@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -46,6 +47,14 @@ class ModernControlCenterShell(
         Thread(task, "wax-api102-control-center-write").apply { isDaemon = true }
     }
 
+    /** Follows the device language WhatsApp is already running in. */
+    private val strings = ControlCenterStrings.forLanguage(
+        activity.resources.configuration.locales.get(0).language,
+    )
+
+    private var favorites = emptySet<String>()
+    private var favoritesOnly = false
+
     private val primary = themeColor(android.R.attr.textColorPrimary, Color.WHITE)
     private val secondary = themeColor(android.R.attr.textColorSecondary, Color.LTGRAY)
 
@@ -68,24 +77,33 @@ class ModernControlCenterShell(
 
     private fun buildAndShow() {
         val states = ModernTargetStateClient.read(activity, packageName)
+        favorites = ModernControlCenterCatalog.parseFavorites(
+            states.getString("pref." + ModernControlCenterCatalog.FAVORITES_KEY, null),
+        )
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(8))
         }
         val header = TextView(activity).apply {
-            text = activity.getString(android.R.string.dialog_alert_title)
+            text = strings.title
             setTextColor(primary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
         }
         root.addView(header)
 
+        val favoritesFilter = CheckBox(activity).apply {
+            text = strings.favoritesOnly
+            isChecked = favoritesOnly
+            setTextColor(secondary)
+        }
         val search = EditText(activity).apply {
-            hint = "Search WA X features"
+            hint = strings.searchHint
             setTextColor(primary)
             setSingleLine(true)
             imeOptions = EditorInfo.IME_ACTION_SEARCH
         }
         root.addView(search)
+        root.addView(favoritesFilter)
 
         val content = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
@@ -103,42 +121,53 @@ class ModernControlCenterShell(
             gravity = Gravity.END
         }
         val restart = Button(activity).apply {
-            text = "Restart WhatsApp"
+            text = strings.restart
             setOnClickListener { restartWhatsApp() }
         }
         val manager = Button(activity).apply {
-            text = "WA X Manager"
+            text = strings.openManager
             setOnClickListener { fallbackToManager() }
         }
         footer.addView(restart)
         footer.addView(manager)
         root.addView(footer)
 
+        val rowsInOrder = buildEntries(states, "")
+
         fun render(query: String) {
             content.removeAllViews()
-            val entries = ControlPolicy.group(buildEntries(states, query), query)
+            val matching = rowsInOrder.filter { ControlPolicy.matches(it, query) }
+            val filtered = if (favoritesOnly) matching.filter { it.id in favorites } else matching
+            val entries = ControlPolicy.group(filtered, query)
             if (entries.isEmpty()) {
                 content.addView(TextView(activity).apply {
-                    text = "No WA X feature matches your search"
+                    text = strings.noResults
                     setTextColor(secondary)
                     setPadding(0, dp(12), 0, dp(12))
                 })
                 return
             }
+            val favouriteRows = if (favoritesOnly) emptyList() else
+                matching.filter { it.id in favorites }
+            if (favouriteRows.isNotEmpty()) {
+                content.addView(sectionHeader(strings.favorites))
+                for (row in favouriteRows) content.addView(rowView(row))
+            }
+            val favouriteIds = favouriteRows.map { it.id }.toSet()
             for ((category, rows) in entries) {
-                content.addView(TextView(activity).apply {
-                    text = ControlStatusText.categoryTitle(category)
-                    setTextColor(secondary)
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-                    typeface = android.graphics.Typeface.DEFAULT_BOLD
-                    setPadding(0, dp(14), 0, dp(4))
-                })
+                content.addView(sectionHeader(ControlStatusText.categoryTitle(category)))
                 for (row in rows) {
+                    if (row.id in favouriteIds) continue
                     content.addView(rowView(row))
                 }
             }
         }
 
+        favoritesFilter.setOnCheckedChangeListener { button, checked ->
+            if (!button.isPressed) return@setOnCheckedChangeListener
+            favoritesOnly = checked
+            render(search.text.toString())
+        }
         render("")
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -154,10 +183,18 @@ class ModernControlCenterShell(
 
         dialog = Dialog(activity).apply {
             setContentView(root)
-            setTitle("WA X")
+            setTitle(strings.title)
             setOnDismissListener { dialog = null }
             show()
         }
+    }
+
+    private fun sectionHeader(label: String): View = TextView(activity).apply {
+        text = label
+        setTextColor(secondary)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        typeface = android.graphics.Typeface.DEFAULT_BOLD
+        setPadding(0, dp(14), 0, dp(4))
     }
 
     private fun buildEntries(states: Bundle, query: String): List<ControlEntry> {
@@ -219,6 +256,11 @@ class ModernControlCenterShell(
             setTextColor(secondary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
         }
+        if (!row.writable) {
+            // Pending / failed rows are inert by design; make that explicit to
+            // accessibility services instead of a dead switch.
+            container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
         if (row.writable && row.preferenceKey != null) {
             val toggle = Switch(activity).apply {
                 text = row.title
@@ -238,7 +280,28 @@ class ModernControlCenterShell(
             status.text = "${row.description} · ${ControlStatusText.status(row.effective)}"
         }
         container.addView(status)
+        if (row.writable) {
+            val star = Button(activity).apply {
+                text = if (row.id in favorites) strings.favoriteToggleOn else strings.favoriteToggleOff
+                isAllCaps = false
+                contentDescription = strings.markFavorite
+                setOnClickListener { toggleFavorite(row) }
+            }
+            container.addView(star)
+        }
         return container
+    }
+
+    private fun toggleFavorite(row: ControlEntry) {
+        val next = if (row.id in favorites) favorites - row.id else favorites + row.id
+        writer.execute {
+            ModernTargetSettingsClient.writeFavorites(activity, packageName,
+                ModernControlCenterCatalog.formatFavorites(next))
+            Handler(Looper.getMainLooper()).post {
+                favorites = next
+                Log.i(TAG, "Control centre favourite toggled: " + row.id)
+            }
+        }
     }
 
     private fun persist(

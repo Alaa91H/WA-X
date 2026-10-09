@@ -72,6 +72,21 @@ public final class ModernTargetTelemetryProviderTest {
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(""));
     }
 
+    @Test public void favouritesAreValidatedBeforePersistence() {
+        assertTrue(ModernTargetTelemetryProvider.isValidFavorites(""));
+        assertTrue(ModernTargetTelemetryProvider.isValidFavorites("custom_time,dnd_mode"));
+        assertFalse(ModernTargetTelemetryProvider.isValidFavorites(null));
+        assertFalse(ModernTargetTelemetryProvider.isValidFavorites("custom_time,,dnd_mode"));
+        assertFalse(ModernTargetTelemetryProvider.isValidFavorites("Custom Time"));
+        assertFalse(ModernTargetTelemetryProvider.isValidFavorites("custom time"));
+        assertFalse(ModernTargetTelemetryProvider.isValidFavorites("../etc/passwd"));
+        StringBuilder tooLong = new StringBuilder();
+        for (int i = 0; i < 40; i++) {
+            tooLong.append("aaaaaaaaaa,");
+        }
+        assertFalse(ModernTargetTelemetryProvider.isValidFavorites(tooLong.toString()));
+    }
+
     @Test public void controlCenterReadExposesOnlyAllowlistedKeys() {
         // The embedded Control Center may read exactly these keys and nothing else.
         assertTrue(ModernTargetTelemetryProvider.CONTROL_CENTER_EVIDENCE_KEYS.length > 0);
