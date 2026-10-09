@@ -26,11 +26,11 @@ def grouped_wired_ids(entry, sources):
     """Recognize an enum-based modern feature family only if the entry actually installs it."""
     wired = set()
     for source in sources.values():
-        for group in re.findall(r'\\bobject\\s+(Modern\\w+Features)\\b', source):
+        for group in re.findall(r'\bobject\s+(Modern\w+Features)\b', source):
             if (group + ".Pilot.values()" not in entry or group + ".INSTANCE" not in entry:
                 continue
             for _, identifier in re.findall(
-                r'\\b([A-Z][A-Z0-9_]+)\\s*\\(\\s*"([a-z][a-z0-9_]*)"',
+                r'\b([A-Z][A-Z0-9_]+)\s*\(\s*"([a-z][a-z0-9_]*)"',
                 source,
             ):
                 wired.add(identifier.replace("_", "").lower())
