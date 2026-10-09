@@ -134,10 +134,10 @@ object ModernTaskerFeature {
      * forwarded; otherwise nothing is sent, because guessing which argument
      * is the message would send the wrong content to a third-party app.
      */
-    private fun forward(application: Context, token: String, args: Array<Any?>) {
+    private fun forward(application: Context, token: String, args: List<Any?>) {
         try {
             val number = normalizeNumber(args.firstOrNull { it is String && it.all { c -> c.isDigit() } })
-            val message = args.firstOrNull { it is String && it.isNotBlank() && it != number }
+            val message = args.firstOrNull { it is String && it.isNotBlank() && it != number } as? String
             if (number == null || message == null) return
             val intent = Intent(ACTION_MESSAGE_RECEIVED).apply {
                 setPackage(TASKER_PACKAGE)
