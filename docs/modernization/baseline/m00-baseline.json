@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "52a06ddd8cada4ef96a83b1117391259fc676672b0f9b9f96539c3db83dcbdbb",
+      "ci.yml": "9e2174eaff964699163f11e5fc6edb8f96034218bd0cba3d5ecce748fc060c6c",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -283,10 +283,12 @@
   },
   "loader_contract": {
     "catalog_alias": "libxposed-legacy",
-    "entry_point": "com.wax.module.ModuleEntryPoint",
+    "entry_point": null,
     "legacy_api_coordinate": "de.robv.android.xposed:api",
-    "manifest_xposedminversion": 93,
-    "modern_metadata_directories": [],
+    "manifest_xposedminversion": null,
+    "modern_metadata_directories": [
+      "app/src/main/resources/META-INF/xposed"
+    ],
     "note": "xposedminversion is a runtime Xposed API level; xposed-legacy is a Maven artifact version. They are different numbering spaces, 93 and 82 are both correct, and the two must never be made equal. See docs/modernization/M00_EVIDENCE_LOCK.md.",
     "pinned_artifact_version": "82",
     "published_artifact_versions": [
@@ -325,7 +327,6 @@
     "packages_excluded_from_packaging": [
       "**.bin",
       "**.properties",
-      "META-INF/**",
       "META-INF/LICENSE*",
       "META-INF/NOTICE*",
       "kotlin/**",
@@ -333,8 +334,8 @@
       "org/**"
     ],
     "target_sdk": 34,
-    "version_code": "118",
-    "version_name": "1.2.0-beta.8"
+    "version_code": "119",
+    "version_name": "1.2.0-beta.9"
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",
