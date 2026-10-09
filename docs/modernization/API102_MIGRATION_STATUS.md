@@ -20,10 +20,12 @@
 - Legacy-only: 56 (55 once the in-flight branch merges)
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
-- In-WhatsApp settings surface: not built. The only in-WhatsApp affordance
-  is the `MenuHome` overflow-menu link that opens the external Manager
-  (`com.wax.module.activities.MainActivity`). Per-feature in-WhatsApp
-  controls are pending for all 64 features.
+- In-WhatsApp settings surface: BUILT as the embedded Control Center (#433,
+  branch `feat/issue-433-embedded-control-center`): exactly one WA X overflow
+  entry opening an in-process shell with categories, search, real toggles for
+  the wired adapters, an inert pending area, restart-required status and a
+  Manager fallback. Device validation PENDING_USER_DEVICE_TEST. Controls for
+  the still-legacy-only features stay pending until their own waves land.
 
 ## Wave / batch plan (M06.08 order, batches of 5 per task spec)
 
@@ -158,22 +160,25 @@ batch 12 = BackupRestore, CaptureDevice.
 
 ## Remaining work (updated every turn)
 
-1. IN FLIGHT (Phase 2, Batch 1): MenuStatusProvider modern bus
-   (branch `feat/m06-menu-status-provider`) — 3/5. Then ActivityController and
-   Tasker to finish Batch 1. —
-   an API 102 screen rendered inside WhatsApp listing features with honest
-   status (functional vs pending), controls wired to real settings, and a
-   "requires WhatsApp restart" indicator. `ModernMenuHomeFeature` entry is
-   present; the per-feature surface is the missing shell batches fill in.
-2. THEN (Phase 2, Batch 1): migrate the 5 W1 core/infra adapters
-   (ContactItemListener, ConversationItemListener, MenuStatusProvider,
-   ActivityController, Tasker) against the WA X hook abstraction, register
-   in the modern path, add in-WhatsApp controls with persistence + restart
-   indicator — one feature at a time, each verified (hook path, preference
-   path, UI wiring, tests, CI) before moving on.
+0. HIGHEST PRIORITY (#433, owner P0): embedded Control Center — branch
+   `feat/issue-433-embedded-control-center`. Vertical slice committed: exactly
+   one WA X overflow entry opening an in-process control-center shell (not a
+   Manager redirect), honest state model (requested vs verified effective vs
+   pending/error), verified-state read channel, Manager fallback. Next: CI
+   green, merge, then slices 2-3 (category navigation polish, favourites,
+   RTL/Arabic localization, themes, accessibility) and the Control Center
+   progress comments on #433.
+1. PAUSED (Phase 2, Batch 1): ActivityController is written and pushed on
+   branch `feat/m06-activity-controller` (PR #435, compile fix included) and
+   is deliberately not merged while #433 runs; Tasker is not started. Both
+   resume immediately after #433 merges, finishing Batch 1 at 5 features.
+2. THEN: continue Batch 2 and the rest of the wave plan in the table above,
+   one feature at a time, each with hook path + preference path + UI wiring +
+   tests + CI verified before the next.
 3. Device acceptance checklist for the user (consolidated, at the end):
-   all 5 wired features + MenuHome tap-to-Manager (#425) + every future
-   batch. Never a merge gate.
-4. Gate M06 / Gate C proof only after waves complete with CI + source
+   every wired feature, the single WA X entry opening the Control Center
+   (#433), each toggle applying after restart, and every later batch. Never a
+   merge gate.
+4. Gate M06 / Gate C proof only after the waves complete with CI + source
    evidence; hot reload stays disabled (M06.09); no dual-loader stable APK
    (M06.07).

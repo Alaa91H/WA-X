@@ -14,8 +14,13 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * WA X Manager link in the native WhatsApp home overflow menu.
- * Does not enable any unmigrated feature or call the legacy Xposed API.
+ * The single WA X entry in the native WhatsApp home overflow menu (#433).
+ *
+ * Tapping it opens the embedded WA X Control Center in-process; it never
+ * redirects straight to the Manager, and falls back to the Manager only when
+ * the embedded surface cannot be shown. Exactly one WA X item is contributed:
+ * no per-feature overflow clutter, no placeholder row. Does not enable any
+ * unmigrated feature or call the legacy Xposed API.
  */
 public final class ModernMenuHomeFeature {
     public static final String FEATURE_ID = "menu_home";
@@ -93,21 +98,41 @@ public final class ModernMenuHomeFeature {
         return installed ? Outcome.INSTALLED : Outcome.ALREADY_INSTALLED;
     }
 
+    /** Fallback path: only used when the embedded centre cannot be shown. */
+    private static void openManager(Activity activity) {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setClassName(MANAGER_PACKAGE, MANAGER_ACTIVITY);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        try {
+            activity.startActivity(intent);
+            Log.i(TAG, "M06_MENU_HOME_MANAGER_OPENED");
+        } catch (RuntimeException failure) {
+            Log.e(TAG, "WA X Manager launch unavailable", failure);
+            Toast.makeText(activity, "WA X Manager could not be opened",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void addManagerEntry(Menu menu, Activity activity, Runnable onMenuItemAdded) {
         if (menu.findItem(MENU_ITEM_ID) != null) return;
         MenuItem item = menu.add(Menu.NONE, MENU_ITEM_ID, 9999, "WA X");
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         item.setOnMenuItemClickListener(clicked -> {
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.setClassName(MANAGER_PACKAGE, MANAGER_ACTIVITY);
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            // Embedded first: the Control Center is the primary surface. It
+            // decides for itself whether it can render, and signals the
+            // fallback itself, so there is exactly one path to the Manager.
+            boolean opened;
             try {
-                activity.startActivity(intent);
-                Log.i(TAG, "M06_MENU_HOME_MANAGER_OPENED");
-            } catch (RuntimeException failure) {
-                Log.e(TAG, "WA X Manager launch unavailable", failure);
-                Toast.makeText(activity, "WA X Manager could not be opened",
-                        Toast.LENGTH_SHORT).show();
+                opened = new ModernControlCenterShell(activity, activity.getPackageName()).show();
+            } catch (Throwable failure) {
+                if (failure instanceof VirtualMachineError) throw (VirtualMachineError) failure;
+                Log.w(TAG, "Control center entry failed", failure);
+                opened = false;
+            }
+            if (opened) {
+                Log.i(TAG, "M06_CONTROL_CENTER_OPENED");
+            } else {
+                openManager(activity);
             }
             return true;
         });

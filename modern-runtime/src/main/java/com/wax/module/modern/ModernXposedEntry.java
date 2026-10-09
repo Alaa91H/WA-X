@@ -154,19 +154,6 @@ public final class ModernXposedEntry extends XposedModule {
         }
     }
 
-    private void sendSettingsEvidence(String packageName, String state) {
-        Context context = targetContext;
-        if (context == null) return;
-        try {
-            if (!ModernTargetTelemetry.send(context, packageName, "IN_WHATSAPP_SETTINGS", state)) {
-                Log.w(TAG, "M06_SETTINGS_EVIDENCE_REJECTED package=" + packageName);
-            }
-        } catch (RuntimeException deliveryFailure) {
-            Log.w(TAG, "M06_SETTINGS_EVIDENCE_UNAVAILABLE package=" + packageName,
-                    deliveryFailure);
-        }
-    }
-
     private void sendMenuHomeEvidence(String packageName, String state) {
         Context context = targetContext;
         if (context == null) return;
@@ -243,25 +230,6 @@ public final class ModernXposedEntry extends XposedModule {
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
             boolean canaryEnabled = preferences != null
                     && preferences.getBoolean("modern_canary_enabled", false);
-            // In-WhatsApp settings shell for migrated features only. Toggling
-            // persists through the Manager and applies after a WhatsApp
-            // restart; legacy-only features are listed as pending, never lit.
-            String settingsState = "ERROR";
-            if (preferences == null) {
-                Log.w(TAG, "M06_SETTINGS_PREFS_UNAVAILABLE package=" + packageName);
-            } else {
-                try {
-                    ModernInWhatsAppSettingsMenu.Outcome outcome = new ModernInWhatsAppSettingsMenu()
-                            .install(target, this, hookRegistry, preferences);
-                    settingsState = outcome.name();
-                    Log.i(TAG, "M06_SETTINGS_HOOK_RESULT package=" + packageName
-                            + " state=" + settingsState);
-                } catch (Throwable settingsFailure) {
-                    if (settingsFailure instanceof VirtualMachineError) throw (VirtualMachineError) settingsFailure;
-                    Log.e(TAG, "M06_SETTINGS_HOOK_FAILED package=" + packageName, settingsFailure);
-                }
-            }
-            sendSettingsEvidence(packageName, settingsState);
             // Optional, reversible first modern feature. Never affect WhatsApp by default.
             String customTimeState = ModernCustomTimeFeature.Outcome.DISABLED.name();
             if (preferences != null && preferences.getBoolean(ModernCustomTimeFeature.ENABLE_KEY, false)) {
