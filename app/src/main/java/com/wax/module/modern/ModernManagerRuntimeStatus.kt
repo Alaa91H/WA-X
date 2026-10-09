@@ -21,6 +21,7 @@ object ModernManagerRuntimeStatus {
         val evidence: Evidence,
         val customTimeInstallation: String?,
         val shareLimitInstallation: String?,
+        val bootstrapMilestones: List<String> = emptyList(),
     )
 
     data class Snapshot(
@@ -32,6 +33,30 @@ object ModernManagerRuntimeStatus {
     )
 
     private val targetNames = listOf("com.whatsapp", "com.whatsapp.w4b")
+
+    // Individual timestamped milestones cannot overwrite each other out of order.
+    // They are diagnostics ONLY; a milestone never sets evidence=FRESH_BOOTSTRAP.
+    private val bootstrapMilestones =
+        listOf(
+            "MODULE_LOADED",
+            "ATTACH_HOOK_INSTALLED",
+            "PACKAGE_LOADED",
+            "ATTACH_OBSERVED",
+            "HEARTBEAT_WRITE_CONFIRMED",
+            "HEARTBEAT_WRITE_REJECTED",
+            "ATTACH_HOOK_FAILED",
+        )
+
+    fun observedMilestones(
+        targetName: String,
+        nowMillis: Long,
+        timestampOf: (String) -> Long,
+    ): List<String> =
+        bootstrapMilestones.filter { stage ->
+            val at = timestampOf("modern.runtime.milestone.$stage.$targetName")
+            at > 0 && at <= nowMillis && nowMillis - at <= 120_000L
+        }
+
 
     fun classify(
         lastReportMillis: Long,
@@ -82,6 +107,8 @@ object ModernManagerRuntimeStatus {
                             evidence = classify(timestamp, origin, now, boot),
                             customTimeInstallation = prefs?.getString("modern.feature.custom_time.state.$name", null),
                             shareLimitInstallation = prefs?.getString("modern.feature.share_limit.state.$name", null),
+                            bootstrapMilestones =
+                                observedMilestones(name, now) { key -> prefs?.getLong(key, 0L) ?: 0L },
                         )
                     },
             )
