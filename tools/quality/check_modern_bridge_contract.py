@@ -132,6 +132,17 @@ def verify() -> None:
             if forbidden in content:
                 raise AssertionError(f"forbidden modern runtime dependency in {file}: {forbidden}")
 
+    # Target-side remote preferences are READ-ONLY. Enforce this for all future
+    # Java and Kotlin feature migrations, not just the entry implementation.
+    for file in modern_java.rglob("*"):
+        if file.suffix not in (".java", ".kt"):
+            continue
+        content = file.read_text(encoding="utf-8")
+        if ".edit()" in content or ".edit {" in content or ".edit(" in content:
+            raise AssertionError(
+                f"Modern target runtime cannot write read-only remote preferences: {file}"
+            )
+
     # Framework handshake is not proof that any feature works in WhatsApp.
     assert "NOT_CONNECTED" in manager
     assert "SERVICE_DISCONNECTED" in manager
