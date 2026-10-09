@@ -28,6 +28,9 @@ object ModernRuntimePreferenceRelay {
             "dndmode",
             "tasker",
             "tasker_auth_token",
+            "ghostmode",
+            "ghostmode_t",
+            "ghostmode_r",
         )
     private val worker =
         Executors.newSingleThreadExecutor { task ->
@@ -76,6 +79,12 @@ object ModernRuntimePreferenceRelay {
                     // Tasker automation: opt-in flag plus its auth token.
                     putBoolean("tasker", source.getBoolean("tasker", false))
                     putString("tasker_auth_token", source.getString("tasker_auth_token", "").orEmpty())
+                    // Typing/recording privacy: the three global switches the
+                    // migrated adapter reads. Per-contact rules stay in the
+                    // Manager and are fetched per contact on demand.
+                    putBoolean("ghostmode", source.getBoolean("ghostmode", false))
+                    putBoolean("ghostmode_t", source.getBoolean("ghostmode_t", false))
+                    putBoolean("ghostmode_r", source.getBoolean("ghostmode_r", false))
                 }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)

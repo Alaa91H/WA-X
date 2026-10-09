@@ -77,6 +77,14 @@ object ModernControlCenterCatalog {
             description = "Keep your last-seen value frozen",
         ),
         Wired(
+            id = "typing_privacy",
+            preferenceKey = ModernTypingPrivacyFeature.PREF_GHOSTMODE_TYPING,
+            evidenceKey = "modern.feature.typing_privacy.state",
+            category = ControlCategory.PRIVACY,
+            label = "Hide Typing",
+            description = "Do not tell contacts when you are typing",
+        ),
+        Wired(
             id = "tasker",
             preferenceKey = ModernTaskerFeature.PREF_ENABLED,
             evidenceKey = "modern.feature.tasker.state",

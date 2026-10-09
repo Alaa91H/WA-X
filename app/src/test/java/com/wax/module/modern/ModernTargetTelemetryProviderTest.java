@@ -65,8 +65,13 @@ public final class ModernTargetTelemetryProviderTest {
         assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("removeforwardlimit"));
         assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("freezelastseen"));
         assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("dndmode"));
+        // Typing/recording privacy is migrated, so its switches are writable.
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("ghostmode"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("ghostmode_t"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("ghostmode_r"));
+        // A formatting sub-key and any unmigrated switch stay refused.
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("segundos"));
-        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("ghostmode"));
+        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("show_dndmode"));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("EXECUTE_CODE"));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(null));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(""));
