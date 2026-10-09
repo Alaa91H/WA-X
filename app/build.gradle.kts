@@ -30,6 +30,50 @@ val releaseTag = providers.gradleProperty("releaseTag").orNull
 val releaseVersion = releaseTag?.removePrefix("v")
 val debugPackageName = providers.gradleProperty("debug_package_name")
 
+val modernXposedPackage = providers.gradleProperty("modernXposed").orNull == "true"
+val modernSourceOutput = layout.buildDirectory.dir("generated/modernXposed")
+
+if (modernXposedPackage) {
+    // The default WA X build is unchanged. Modern mode uses its SAME applicationId.
+    val prepareModernXposedSources = tasks.register("prepareModernXposedSources") {
+        val sourceManifest = file("src/main/AndroidManifest.xml")
+        val sourceAssets = file("src/main/assets")
+        inputs.file(sourceManifest)
+        inputs.dir(sourceAssets)
+        outputs.dir(modernSourceOutput)
+        doLast {
+            val destination = modernSourceOutput.get().asFile
+            val modernManifest = file("$destination/AndroidManifest.xml")
+            modernManifest.parentFile.mkdirs()
+            var xml = sourceManifest.readText(Charsets.UTF_8)
+            listOf(
+                "xposedmodule", "xposeddescription", "xposedminversion",
+                "xposedsharedprefs", "xposedscope",
+            ).forEach { name ->
+                val pattern = Regex("""(?s)\s*<meta-data\s+android:name="$name"\s+[^>]*?/>""")
+                check(pattern.findAll(xml).count() == 1) {
+                    "Exactly one legacy manifest metadata tag expected: $name"
+                }
+                xml = xml.replace(pattern, "")
+            }
+            modernManifest.writeText(xml, Charsets.UTF_8)
+            val outputAssets = file("$destination/assets")
+            if (outputAssets.exists()) outputAssets.deleteRecursively()
+            check(sourceAssets.copyRecursively(outputAssets, overwrite = true))
+            check(file("$outputAssets/xposed_init").delete()) {
+                "Modern mode must not contain the legacy xposed_init entry"
+            }
+        }
+    }
+    tasks.configureEach {
+        if ((name.startsWith("process") && name.contains("Manifest")) ||
+            (name.startsWith("merge") && name.endsWith("Assets"))) {
+            dependsOn(prepareModernXposedSources)
+        }
+    }
+}
+
+
 if (releaseTag != null && releaseTag != "v$baseVersionName") {
     throw GradleException("Release tag $releaseTag does not match configured version v$baseVersionName")
 }
@@ -76,11 +120,12 @@ android {
         }
 
         buildConfigField("Boolean", "RESET_ON_INSTALL", "true")
+        buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())
     }
 
     packaging {
         resources {
-            excludes += "META-INF/**"
+            if (!modernXposedPackage) excludes += "META-INF/**"
             excludes += "okhttp3/**"
             excludes += "kotlin/**"
             excludes += "org/**"
@@ -90,6 +135,14 @@ android {
 
         jniLibs {
             useLegacyPackaging = false
+        }
+    }
+
+    if (modernXposedPackage) {
+        sourceSets.getByName("main") {
+            manifest.srcFile(modernSourceOutput.map { it.file("AndroidManifest.xml") })
+            assets.setSrcDirs(listOf(modernSourceOutput.map { it.dir("assets") }))
+            resources.srcDir("../modern-canary/src/main/resources")
         }
     }
 
@@ -261,6 +314,10 @@ dependencies {
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
     compileOnly(libs.libxposed.legacy)
+    if (modernXposedPackage) {
+        implementation(project(":modern-runtime"))
+        compileOnly(libs.libxposed.modern.api)
+    }
     implementation(libs.libxposed.modern.service) // Manager-side API 102 bridge; legacy loader remains active.
     ksp(libs.androidx.room.compiler)
 
