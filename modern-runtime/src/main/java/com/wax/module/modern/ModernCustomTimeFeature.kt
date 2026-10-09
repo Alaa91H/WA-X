@@ -27,6 +27,7 @@ object ModernCustomTimeFeature {
         framework: XposedInterface,
         hooks: ModernHookRegistry,
         preferences: SharedPreferences,
+        onFormatted: Runnable,
     ): Outcome {
         if (!preferences.getBoolean(ENABLE_KEY, false)) return Outcome.DISABLED
 
@@ -62,7 +63,14 @@ object ModernCustomTimeFeature {
                             if (calendar == null) {
                                 original
                             } else {
-                                ModernTimeFormatter.render(calendar, seconds, amPm, template)
+                                val formatted = ModernTimeFormatter.render(calendar, seconds, amPm, template)
+                                // No Binder, file writes or DexKit scans on the hooked thread.
+                                try {
+                                    onFormatted.run()
+                                } catch (_: RuntimeException) {
+                                    // Telemetry must never change the user-facing timestamp.
+                                }
+                                formatted
                             }
                         }
                     ModernHookRegistry.Handle { handle.unhook() }

@@ -9,6 +9,9 @@ import io.github.libxposed.api.XposedModule;
 import io.github.libxposed.api.XposedModuleInterface;
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * API 102 entry, currently compiled as an isolated canary AAR.
@@ -23,6 +26,13 @@ public final class ModernXposedEntry extends XposedModule {
     private volatile String currentProcessName;
     private final Set<String> started = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final ModernHookRegistry hookRegistry = new ModernHookRegistry();
+    private final AtomicLong formattedCalls = new AtomicLong();
+    private final ModernInvocationThrottle invocationThrottle = new ModernInvocationThrottle(30_000L);
+    private final ExecutorService evidenceWorker = Executors.newSingleThreadExecutor(task -> {
+        Thread worker = new Thread(task, "wax-api102-feature-evidence");
+        worker.setDaemon(true);
+        return worker;
+    });
 
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
@@ -70,6 +80,31 @@ public final class ModernXposedEntry extends XposedModule {
         }
     }
 
+    private void recordFormattedInvocation(String packageName) {
+        long count = formattedCalls.incrementAndGet();
+        if (!invocationThrottle.accept(SystemClock.elapsedRealtime())) return;
+        // A confirmed Hooker invocation is stronger evidence than a registered HookHandle.
+        // No preference IPC or blocking work occurs inside WhatsApp's timestamp renderer.
+        try {
+            evidenceWorker.execute(() -> {
+                try {
+                    SharedPreferences prefs = getRemotePreferences(PREFS_GROUP);
+                    if (prefs == null) return;
+                    long now = System.currentTimeMillis();
+                    prefs.edit()
+                            .putLong(ModernInvocationEvidence.timeKey(packageName), now)
+                            .putLong(ModernInvocationEvidence.bootKey(packageName),
+                                    now - SystemClock.elapsedRealtime())
+                            .putLong(ModernInvocationEvidence.countKey(packageName), count)
+                            .apply();
+                } catch (RuntimeException e) {
+                    log(Log.WARN, TAG, "Modern feature invocation evidence write failed", e);
+                }
+            });
+        } catch (RuntimeException e) {
+            log(Log.WARN, TAG, "Modern feature invocation evidence queue unavailable", e);
+        }
+    }
     private void reportBootstrap(String packageName, Context target) {
         try {
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
@@ -90,7 +125,8 @@ public final class ModernXposedEntry extends XposedModule {
                 try {
                     System.loadLibrary("dexkit");
                     customTimeState = ModernCustomTimeFeature.INSTANCE
-                            .install(target, this, hookRegistry, preferences).name();
+                            .install(target, this, hookRegistry, preferences,
+                                    () -> recordFormattedInvocation(packageName)).name();
                 } catch (Throwable featureFailure) {
                     if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
                     customTimeState = "ERROR_" + featureFailure.getClass().getSimpleName();
@@ -100,7 +136,8 @@ public final class ModernXposedEntry extends XposedModule {
             if (preferences != null) {
                 preferences.edit().putString("modern.feature.custom_time.state." + packageName,
                         customTimeState).apply();
-            }            log(Log.INFO, TAG, "API102 attached: " + packageName
+            }
+            log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
             log(Log.ERROR, TAG, "Modern preferences unavailable: " + packageName, e);
