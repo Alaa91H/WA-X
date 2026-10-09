@@ -344,6 +344,25 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Contact bus state delivery failed", error);
             }
+            // ConversationItemListener is always-on infrastructure (no user
+            // toggle): the message-row bus six registered features subscribe
+            // to. Field interpretation stays with each consumer migration.
+            String conversationBusState = ModernConversationItemListenerFeature.Outcome.ERROR.name();
+            try {
+                conversationBusState = ModernConversationItemListenerFeature.INSTANCE
+                        .install(target, this, hookRegistry).name();
+                Log.i(TAG, "M06_CONVERSATION_BUS_HOOK_RESULT package=" + packageName
+                        + " state=" + conversationBusState);
+            } catch (Throwable featureFailure) {
+                if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                conversationBusState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern ConversationItemListener bus failed on " + packageName, featureFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "CONVERSATION_ITEM_LISTENER", conversationBusState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Conversation bus state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
