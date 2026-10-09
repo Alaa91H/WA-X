@@ -128,6 +128,15 @@ object ModernControlCenterCatalog {
             restartHint = false,
         ),
         Wired(
+            id = "jid_access",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.jid_access.state",
+            category = ControlCategory.ADVANCED,
+            label = "JID Access Layer",
+            description = "Required infrastructure for privacy rules",
+            restartHint = false,
+        ),
+        Wired(
             id = "contact_access",
             preferenceKey = "",
             evidenceKey = "modern.feature.contact_access.state",

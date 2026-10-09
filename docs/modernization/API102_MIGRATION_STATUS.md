@@ -183,10 +183,14 @@ batch 12 = BackupRestore, CaptureDevice.
    CustomThemeV2, one at a time, each with hook path + preference path + UI
    wiring + tests + CI verified before the next.
 2. DONE (Phase 2, Batch 2 infra): the **message/contact accessor layer**
-   (`ModernMessageAccess`, `ModernContactAccess`, #444) now exists and is
-   reported as CONTACT_ACCESS. NEXT: port the first consumer onto it —
-   ShowOnline (W3, a contact-list consumer) or CallPrivacy — using the
-   resolved JID/phone accessors instead of the legacy wrappers. Dependency finding, not a
+   (`ModernMessageAccess`, `ModernContactAccess`, #444) and the **JID accessor**
+   (`ModernJidAccess`, resolving the raw-string reader by signature instead of
+   the legacy literal `"getRawString"`, with `JidRules` pinning the phone-number
+   derivation branch by branch) now exist. NEXT: port the first privacy
+   consumer onto them — **TypingPrivacy** is the smallest complete one (its
+   hook target is the `HandleMeComposing/sendComposing` anchor with the
+   3rd-parameter int signature check); ShowOnline and CallPrivacy additionally
+   need presence/VoipManager layers that do not exist yet. Dependency finding, not a
    guess: after the five W1 buses, every remaining consumer feature needs one
    of two things that the modern module does not yet have:
    - the `FMessageWpp` / `WaContactWpp` accessor chain (JID, phone number,
