@@ -39,6 +39,7 @@ class ModernManagerRuntimeStatusTest {
             ModernManagerRuntimeStatus.classify(now - 1000L, 0L, now, boot),
         )
     }
+
     @Test
     fun lifecycleProofCannotBeInventedFromInstalledHook() {
         val now = 1_800_000_000_000L
@@ -69,5 +70,4 @@ class ModernManagerRuntimeStatusTest {
             }
         assertEquals(emptyList<String>(), stages)
     }
-
 }
