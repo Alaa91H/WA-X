@@ -27,7 +27,7 @@ def grouped_wired_ids(entry, sources):
     wired = set()
     for source in sources.values():
         for group in re.findall(r'\bobject\s+(Modern\w+Features)\b', source):
-            if (group + ".Pilot.values()" not in entry or group + ".INSTANCE" not in entry:
+            if group + ".Pilot.values()" not in entry or group + ".INSTANCE" not in entry:
                 continue
             for _, identifier in re.findall(
                 r'\b([A-Z][A-Z0-9_]+)\s*\(\s*"([a-z][a-z0-9_]*)"',
