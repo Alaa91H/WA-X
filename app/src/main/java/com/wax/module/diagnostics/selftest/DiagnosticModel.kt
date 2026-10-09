@@ -162,8 +162,13 @@ data class AtomicCheckResult(
     }
 }
 
-/** Minimal JSON string escaping, kept here so reports cannot be malformed. */
-internal fun StringBuilder.appendQuoted(value: String) {
+/**
+ * Minimal JSON string escaping, kept here so reports cannot be malformed.
+ *
+ * Returns the receiver so a caller can keep building the same object instead of
+ * splitting every entry into two statements.
+ */
+internal fun StringBuilder.appendQuoted(value: String): StringBuilder {
     append('"')
     for (character in value) {
         when (character) {
@@ -180,6 +185,7 @@ internal fun StringBuilder.appendQuoted(value: String) {
         }
     }
     append('"')
+    return this
 }
 
 internal fun jsonArray(values: List<String>): String =

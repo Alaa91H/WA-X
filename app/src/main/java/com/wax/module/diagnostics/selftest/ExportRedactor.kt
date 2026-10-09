@@ -129,4 +129,14 @@ class ExportRedactor {
         var tokens: Int = 0,
         var paths: Int = 0,
     )
+
+    private companion object {
+        /** A JID, i.e. a local part with a known WhatsApp domain. */
+        val JID_PATTERN = Regex(
+            "[A-Za-z0-9_.+-]+@(s\\.whatsapp\\.net|g\\.us|lid|broadcast|newsletter)",
+        )
+
+        /** The phone shapes `ReportRedactor` removes, counted for the report. */
+        val PHONE_PATTERN = Regex("\\+?\\d[\\d\\s().-]{6,}\\d|\\b\\d{6,}\\b")
+    }
 }
