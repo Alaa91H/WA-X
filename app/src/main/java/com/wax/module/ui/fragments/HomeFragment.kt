@@ -387,7 +387,8 @@ class HomeFragment : BaseFragment() {
                                 getString(
                                     R.string.modern_target_share_limit_status,
                                     target.shareLimitInstallation ?: "NOT_REPORTED",
-                                ) + "\n" + getString(
+                                ) + "\n" +
+                                getString(
                                     R.string.modern_target_presence_status,
                                     target.freezeInstallation ?: "NOT_REPORTED",
                                     target.dndInstallation ?: "NOT_REPORTED",
