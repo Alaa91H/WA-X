@@ -21,6 +21,14 @@ public final class ModernTargetTelemetryProviderTest {
                 "com.whatsapp", 10482, null));
     }
 
+    @Test public void menuEvidenceValuesAreFixedAndDoNotLeakAppData() {
+        assertTrue(ModernTargetTelemetryProvider.isSupportedMenuHomeState("INSTALLED"));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedMenuHomeState("ITEM_ADDED"));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedMenuHomeState("MENU_METHOD_MISSING"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedMenuHomeState("EXECUTE_CODE"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedMenuHomeState(null));
+    }
+
     @Test public void refusesUnrelatedPackagesAndArbitraryEventNames() {
         assertFalse(ModernTargetTelemetryProvider.isAuthorizedSender(
                 "com.whatsapp:push", 10482, new String[] {"com.whatsapp"}));
@@ -36,6 +44,8 @@ public final class ModernTargetTelemetryProviderTest {
                 ModernTargetTelemetryProvider.EVENT_DND_MODE));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_SHARE_LIMIT));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_MENU_HOME));
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent("EXECUTE_CODE"));
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent(null));
     }

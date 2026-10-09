@@ -28,6 +28,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_SHARE_LIMIT = "SHARE_LIMIT";
     public static final String EVENT_FREEZE_LAST_SEEN = "FREEZE_LAST_SEEN";
     public static final String EVENT_DND_MODE = "DND_MODE";
+    public static final String EVENT_MENU_HOME = "MENU_HOME";
     private static final String TAG = "WA-X TargetTelemetry";
 
     @Override
@@ -77,6 +78,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.freeze_last_seen.state." + target, value);
         } else if (EVENT_DND_MODE.equals(event)) {
             editor.putString("modern.feature.dnd_mode.state." + target, value);
+        } else if (EVENT_MENU_HOME.equals(event)) {
+            if (!isSupportedMenuHomeState(value)) return rejected();
+            editor.putString("modern.feature.menu_home.state." + target, value);
         } else {
             return rejected();
         }
@@ -97,7 +101,20 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_CUSTOM_TIME.equals(event)
                 || EVENT_SHARE_LIMIT.equals(event)
                 || EVENT_FREEZE_LAST_SEEN.equals(event)
-                || EVENT_DND_MODE.equals(event);
+                || EVENT_DND_MODE.equals(event)
+                || EVENT_MENU_HOME.equals(event);
+    }
+
+    static boolean isSupportedMenuHomeState(String value) {
+        return "INSTALLED".equals(value)
+                || "ALREADY_INSTALLED".equals(value)
+                || "UNSUPPORTED_TARGET".equals(value)
+                || "HOME_CLASS_MISSING".equals(value)
+                || "MENU_METHOD_MISSING".equals(value)
+                || "INVALID_HOME_TYPE".equals(value)
+                || "INVALID_MENU_SIGNATURE".equals(value)
+                || "ERROR".equals(value)
+                || "ITEM_ADDED".equals(value);
     }
 
     private static Bundle rejected() {
