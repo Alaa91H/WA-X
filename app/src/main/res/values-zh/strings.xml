@@ -584,4 +584,10 @@
     <string name="modern_target_boot_mismatch">报告来自另一轮设备启动，或系统时间无效。</string>
     <string name="modern_target_no_report">未收到 API 102 报告。请打开应用后重新检查。</string>
     <string name="modern_target_feature_status">实验性 CustomTime 功能：%1$s</string>
+    <string name="modern_pilot_title">CustomTime（实验性 API 102）</string>
+    <string name="modern_pilot_message">CustomTime 仅更改消息时间的显示格式，可能不兼容当前 WhatsApp 版本。其他旧版功能在 API 102 模式下仍不可用。</string>
+    <string name="modern_pilot_enable">启用实验功能</string>
+    <string name="modern_pilot_disable">停用实验功能</string>
+    <string name="modern_pilot_restart">关闭并重新打开 WhatsApp 以应用更改。</string>
+    <string name="modern_pilot_tap">点按此处配置实验性 CustomTime。</string>
 </resources>

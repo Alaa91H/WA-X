@@ -582,4 +582,10 @@
     <string name="modern_target_boot_mismatch">Laporan berasal dari proses boot lain atau waktu tidak valid.</string>
     <string name="modern_target_no_report">Belum ada laporan API 102. Buka aplikasi lalu periksa kembali.</string>
     <string name="modern_target_feature_status">Fitur percobaan CustomTime: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (eksperimental API 102)</string>
+    <string name="modern_pilot_message">CustomTime hanya mengubah tampilan waktu pesan. Fitur ini mungkin tidak bekerja dengan versi WhatsApp ini. Fitur lama lainnya belum tersedia dalam mode API 102.</string>
+    <string name="modern_pilot_enable">Aktifkan eksperimen</string>
+    <string name="modern_pilot_disable">Nonaktifkan eksperimen</string>
+    <string name="modern_pilot_restart">Tutup lalu buka kembali WhatsApp untuk menerapkan perubahan.</string>
+    <string name="modern_pilot_tap">Ketuk untuk mengatur CustomTime eksperimental.</string>
 </resources>
