@@ -77,8 +77,6 @@ public final class ModernTargetTelemetryProviderTest {
         assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("ALREADY_INSTALLED"));
         assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("HOME_CLASS_MISSING"));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
-                ModernTargetTelemetryProvider.EVENT_IN_WHATSAPP_SETTINGS));
-        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_CONTACT_ITEM_LISTENER));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_CONVERSATION_ITEM_LISTENER));

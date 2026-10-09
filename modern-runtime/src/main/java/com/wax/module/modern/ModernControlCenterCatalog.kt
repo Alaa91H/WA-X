@@ -1,0 +1,136 @@
+package com.wax.module.modern
+
+/**
+ * The single catalogue of features the embedded Control Center (#433) shows.
+ *
+ * Only features that are actually wired into the API 102 runtime appear as
+ * real, writable rows. Everything still legacy-only appears in the dedicated
+ * pending area as a non-actionable row, which is why the centre can honestly
+ * say "pending migration" instead of silently hiding the rest of WA X.
+ *
+ * Titles and descriptions are resolved through the target's own resources
+ * when a matching string exists, and fall back to short English labels, so
+ * the shell stays functional on a build whose resources are incomplete
+ * instead of crashing on a missing resource.
+ */
+object ModernControlCenterCatalog {
+    /** A control the user can actually switch. */
+    data class Wired(
+        val id: String,
+        val preferenceKey: String,
+        val evidenceKey: String,
+        val category: ControlCategory,
+        val label: String,
+        val description: String,
+        val restartHint: Boolean = true,
+    )
+
+    /** A feature whose migration has not landed yet. Never actionable. */
+    data class Pending(
+        val id: String,
+        val label: String,
+    )
+
+    /**
+     * The four migrated toggles plus the contact bus, which is always on.
+     */
+    val wired: List<Wired> = listOf(
+        Wired(
+            id = "custom_time",
+            preferenceKey = ModernCustomTimeFeature.ENABLE_KEY,
+            evidenceKey = "modern.feature.custom_time.state",
+            category = ControlCategory.APPEARANCE,
+            label = "Custom Time",
+            description = "Custom timestamp format in chats",
+        ),
+        Wired(
+            id = "share_limit",
+            preferenceKey = ModernShareLimitFeature.ENABLE_KEY,
+            evidenceKey = "modern.feature.share_limit.state",
+            category = ControlCategory.CHATS,
+            label = "Share Limit",
+            description = "Control how many chats can be selected for sharing",
+        ),
+        Wired(
+            id = "freeze_last_seen",
+            preferenceKey = ModernPresenceFeatures.FREEZE_KEY,
+            evidenceKey = "modern.feature.freeze_last_seen.state",
+            category = ControlCategory.PRIVACY,
+            label = "Freeze Last Seen",
+            description = "Keep your last-seen value frozen",
+        ),
+        Wired(
+            id = "dnd_mode",
+            preferenceKey = ModernPresenceFeatures.DND_KEY,
+            evidenceKey = "modern.feature.dnd_mode.state",
+            category = ControlCategory.PRIVACY,
+            label = "DND Mode",
+            description = "Hide your typing and online presence",
+        ),
+    )
+
+    /**
+     * The always-on infrastructure the migrated features depend on. Listed so
+     * the user can see what the runtime is doing without being able to switch
+     * it off, because switching it off would break the features above.
+     */
+    val alwaysOn: List<Wired> = listOf(
+        Wired(
+            id = "contact_item_listener",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.contact_item_listener.state",
+            category = ControlCategory.ADVANCED,
+            label = "Contact Item Listener",
+            description = "Required infrastructure for contact-based features",
+            restartHint = false,
+        ),
+        Wired(
+            id = "conversation_item_listener",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.conversation_item_listener.state",
+            category = ControlCategory.ADVANCED,
+            label = "Conversation Item Listener",
+            description = "Required infrastructure for message-row features",
+            restartHint = false,
+        ),
+        Wired(
+            id = "menu_status_provider",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.menu_status_provider.state",
+            category = ControlCategory.ADVANCED,
+            label = "Status Menu Provider",
+            description = "Required infrastructure for status-viewing features",
+            restartHint = false,
+        ),
+        Wired(
+            id = "activity_controller",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.activity_controller.state",
+            category = ControlCategory.TOOLS,
+            label = "Contact Picker Relay",
+            description = "Required for the Manager contact picker",
+            restartHint = false,
+        ),
+    )
+
+    /**
+     * Legacy-only features awaiting migration. Kept as a short, honest sample
+     * rather than a fake list: every entry is inert and says so.
+     */
+    val pending: List<Pending> = listOf(
+        Pending("MinorFixes", "Document picker / ML Kit repair"),
+        Pending("AntiRevoke", "Anti message revoke"),
+        Pending("TypingPrivacy", "Typing indicator privacy"),
+        Pending("HideChat", "Hide individual chats"),
+        Pending("HideSeen", "Hide blue ticks and read receipts"),
+        Pending("ViewOnce", "View-once handling"),
+        Pending("BubbleColors", "Custom bubble colours"),
+        Pending("StatusDownload", "Status download menu"),
+        Pending("GroupAdmin", "Group admin tools"),
+        Pending("CallPrivacy", "Call privacy rules"),
+    )
+
+    fun wiredById(id: String): Wired? = (wired + alwaysOn).firstOrNull { it.id == id }
+
+    fun pendingById(id: String): Pending? = pending.firstOrNull { it.id == id }
+}

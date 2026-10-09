@@ -24,6 +24,7 @@ import java.util.Arrays;
 public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String METHOD_REPORT = "report-target-event-v1";
     public static final String METHOD_WRITE_SETTING = "write-target-setting-v1";
+    public static final String METHOD_READ_STATES = "read-target-states-v1";
     public static final String LOCAL_PREFS = "modern_runtime_target_reports";
     public static final String EVENT_BOOTSTRAP = "BOOTSTRAP";
     public static final String EVENT_RUNTIME_HEARTBEAT = "RUNTIME_HEARTBEAT";
@@ -32,11 +33,31 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_FREEZE_LAST_SEEN = "FREEZE_LAST_SEEN";
     public static final String EVENT_DND_MODE = "DND_MODE";
     public static final String EVENT_MENU_HOME = "MENU_HOME";
-    public static final String EVENT_IN_WHATSAPP_SETTINGS = "IN_WHATSAPP_SETTINGS";
     public static final String EVENT_CONTACT_ITEM_LISTENER = "CONTACT_ITEM_LISTENER";
     public static final String EVENT_CONVERSATION_ITEM_LISTENER = "CONVERSATION_ITEM_LISTENER";
     public static final String EVENT_MENU_STATUS_PROVIDER = "MENU_STATUS_PROVIDER";
     private static final String TAG = "WA-X TargetTelemetry";
+
+    /** The only preference keys the embedded Control Center may read. */
+    static final String[] CONTROL_CENTER_PREFERENCE_KEYS = {
+        "modern.feature.custom_time.enabled",
+        "removeforwardlimit",
+        "freezelastseen",
+        "dndmode",
+    };
+
+    /** The only effective-state keys the embedded Control Center may read. */
+    static final String[] CONTROL_CENTER_EVIDENCE_KEYS = {
+        "modern.feature.custom_time.state",
+        "modern.feature.share_limit.state",
+        "modern.feature.freeze_last_seen.state",
+        "modern.feature.dnd_mode.state",
+        "modern.feature.menu_home.state",
+        "modern.feature.contact_item_listener.state",
+        "modern.feature.conversation_item_listener.state",
+        "modern.feature.menu_status_provider.state",
+        "modern.feature.activity_controller.state",
+    };
 
     @Override
     public boolean onCreate() {
@@ -50,6 +71,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         }
         if (METHOD_WRITE_SETTING.equals(method)) {
             return writeSetting(getContext(), extras);
+        }
+        if (METHOD_READ_STATES.equals(method)) {
+            return readStates(getContext(), extras);
         }
         if (!METHOD_REPORT.equals(method)) {
             return rejected();
@@ -99,9 +123,6 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         } else if (EVENT_MENU_HOME.equals(event)) {
             if (!isSupportedMenuHomeState(value)) return rejected();
             editor.putString("modern.feature.menu_home.state." + target, value);
-        } else if (EVENT_IN_WHATSAPP_SETTINGS.equals(event)) {
-            if (!isSupportedSettingsState(value)) return rejected();
-            editor.putString("modern.feature.in_whatsapp_settings.state." + target, value);
         } else if (EVENT_CONTACT_ITEM_LISTENER.equals(event)) {
             editor.putString("modern.feature.contact_item_listener.state." + target, value);
         } else if (EVENT_CONVERSATION_ITEM_LISTENER.equals(event)) {
@@ -135,7 +156,6 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_FREEZE_LAST_SEEN.equals(event)
                 || EVENT_DND_MODE.equals(event)
                 || EVENT_MENU_HOME.equals(event)
-                || EVENT_IN_WHATSAPP_SETTINGS.equals(event)
                 || EVENT_CONTACT_ITEM_LISTENER.equals(event)
                 || EVENT_CONVERSATION_ITEM_LISTENER.equals(event)
                 || EVENT_MENU_STATUS_PROVIDER.equals(event);
@@ -151,17 +171,6 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "INVALID_MENU_SIGNATURE".equals(value)
                 || "ERROR".equals(value)
                 || "ITEM_ADDED".equals(value);
-    }
-
-    static boolean isSupportedSettingsState(String value) {
-        return "INSTALLED".equals(value)
-                || "ALREADY_INSTALLED".equals(value)
-                || "UNSUPPORTED_TARGET".equals(value)
-                || "HOME_CLASS_MISSING".equals(value)
-                || "MENU_METHOD_MISSING".equals(value)
-                || "INVALID_HOME_TYPE".equals(value)
-                || "INVALID_MENU_SIGNATURE".equals(value)
-                || "ERROR".equals(value);
     }
 
     /**
@@ -200,6 +209,38 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 .commit();
         Bundle result = new Bundle();
         result.putBoolean("accepted", saved);
+        return result;
+    }
+
+    /**
+     * Answers the embedded Control Center with the Manager's verified state.
+     *
+     * Read-only, same UID authorization as the report/write paths. Only the
+     * fixed allowlisted keys are returned: the requested booleans and the
+     * last effective state per feature. No other preference, chat, contact or
+     * account data can cross this boundary.
+     */
+    private static Bundle readStates(Context context, Bundle extras) {
+        String target = extras.getString("target", "");
+        if (!isAuthorizedSender(target, Binder.getCallingUid(),
+                context.getPackageManager().getPackagesForUid(Binder.getCallingUid()))) {
+            Log.w(TAG, "Rejected state read from unauthorized UID");
+            return rejected();
+        }
+        SharedPreferences reports =
+                context.getSharedPreferences(LOCAL_PREFS, Context.MODE_PRIVATE);
+        SharedPreferences manager = PreferenceManager.getDefaultSharedPreferences(context);
+        Bundle result = new Bundle();
+        for (String key : CONTROL_CENTER_PREFERENCE_KEYS) {
+            result.putBoolean("pref." + key, manager.getBoolean(key, false));
+        }
+        for (String key : CONTROL_CENTER_EVIDENCE_KEYS) {
+            String value = reports.getString(key + "." + target, null);
+            if (value != null) {
+                result.putString("state." + key, value);
+            }
+        }
+        result.putBoolean("accepted", true);
         return result;
     }
 
