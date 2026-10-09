@@ -44,19 +44,22 @@ class ModernJidAccess private constructor(
     fun isBroadcast(jid: Any?): Boolean =
         rawString(jid)?.endsWith(JidRules.BROADCAST_SUFFIX) == true
 
+    enum class Outcome {
+        AVAILABLE,
+        RAW_STRING_METHOD_MISSING,
+        RAW_STRING_METHOD_AMBIGUOUS,
+        ERROR,
+    }
+
+    class Resolution(val access: ModernJidAccess?, val outcome: Outcome) {
+        val available: Boolean get() = access != null
+    }
+
     companion object {
         private const val TAG = "WA-X JidAccess"
 
-        enum class Outcome {
-            AVAILABLE,
-            RAW_STRING_METHOD_MISSING,
-            RAW_STRING_METHOD_AMBIGUOUS,
-            ERROR,
-        }
 
-        class Resolution(val access: ModernJidAccess?, val outcome: Outcome) {
-            val available: Boolean get() = access != null
-        }
+
 
         /** Resolves the raw-string accessor on an already-resolved JID class. */
         @JvmStatic
