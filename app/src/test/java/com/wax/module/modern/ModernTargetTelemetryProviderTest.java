@@ -80,6 +80,8 @@ public final class ModernTargetTelemetryProviderTest {
                 ModernTargetTelemetryProvider.EVENT_IN_WHATSAPP_SETTINGS));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_CONTACT_ITEM_LISTENER));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_CONVERSATION_ITEM_LISTENER));
         assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState("ITEM_ADDED"));
         assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState(null));
     }
