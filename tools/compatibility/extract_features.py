@@ -4,7 +4,7 @@
 This script does not invent compatibility data. It only *derives facts* that are
 provable by reading the source tree:
 
-  * the registered feature list, taken from the ``plugins()`` array in FeatureLoader
+  * the registered feature list, taken from ``RuntimeFeatureRegistry``
   * each feature's category, taken from its package
   * each feature's resolver dependencies, taken from the ``Unobfuscator.load*``
     calls inside that feature's own file
@@ -38,8 +38,8 @@ from typing import Any
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-FEATURE_LOADER = os.path.join(
-    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt"
+FEATURE_REGISTRY = os.path.join(
+    REPO_ROOT, "app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt"
 )
 FEATURES_DIR = os.path.join(
     REPO_ROOT, "app/src/main/java/com/wax/module/xposed/features"
@@ -102,7 +102,7 @@ def read(path: str) -> str:
 def find_feature_classes() -> list[tuple[str, str]]:
     """Return ``(simpleName, importedPackage)`` for every feature loader import."""
     found: list[tuple[str, str]] = []
-    for line in read(FEATURE_LOADER).splitlines():
+    for line in read(FEATURE_REGISTRY).splitlines():
         match = PACKAGE_IMPORT.match(line)
         if not match:
             continue
@@ -116,17 +116,29 @@ def find_feature_classes() -> list[tuple[str, str]]:
 
 
 def find_registered_order() -> list[str]:
-    """Return feature simple names in the exact order ``plugins()`` installs them.
+    """Return feature ids in the exact order the runtime installs them.
 
-    The whitespace between the assignment and the call is matched loosely: ktlint
-    rewraps ``val classes = arrayOf(`` into two lines when the list is long, so a
-    pattern that hardcodes the single-line form silently finds no features at all.
+    Read from ``RuntimeFeatureRegistry``, which is the one registration source. Before #337 this
+    parsed an ``arrayOf(...)`` inside ``FeatureLoader.plugins()``, which meant the compatibility
+    matrix was derived from a hand-maintained list that duplicated the runtime list and that
+    nothing checked against it: a feature added to one and not the other would have produced a
+    module that installs a different set of features than the matrix claims to describe.
+
+    The id is the ``featureId`` argument rather than the class reference, because that is the name
+    the runtime logs, the diagnostics dialog shows and the failure reports carry. A rename in the
+    registry therefore fails here rather than producing a matrix whose cells describe features that
+    no longer exist.
     """
-    source = read(FEATURE_LOADER)
-    match = re.search(r"val\s+classes\s*=\s*arrayOf\((.*?)\n\s*\)", source, re.DOTALL)
-    if not match:
-        raise SystemExit("could not locate the plugins() array in FeatureLoader.kt")
-    return re.findall(r"([A-Za-z0-9_]+)::class\.java", match.group(1))
+    source = read(FEATURE_REGISTRY)
+    body = source[source.index("val entries:") :]
+    ids = re.findall(r'FeatureFactory\.(?:Contract|Legacy)\("([A-Za-z0-9_]+)"\)', body)
+    if not ids:
+        raise SystemExit(
+            "could not locate the feature registry entries in %s; a compatibility matrix derived "
+            "from an empty list would report every cell unsupported for the wrong reason"
+            % os.path.relpath(FEATURE_REGISTRY, REPO_ROOT)
+        )
+    return ids
 
 
 def resolvers_declared() -> set[str]:
@@ -269,7 +281,7 @@ def build() -> dict[str, Any]:
     missing = [name for name in order if name not in imported]
     if missing:
         raise SystemExit(
-            "features registered in plugins() but not imported by FeatureLoader: %s"
+            "features registered in the runtime registry but not present as a source file: %s"
             % ", ".join(missing)
         )
 

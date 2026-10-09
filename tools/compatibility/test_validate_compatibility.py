@@ -86,6 +86,12 @@ class EvidenceGateTests(unittest.TestCase):
     def test_supported_requires_target_evidence(self):
         self.assertTrue(validate(supported(fixture())))
 
+    def test_exact_version_regex_rejects_wildcards_and_partial_versions(self):
+        self.assertTrue(validator._exact_version(VERSION))
+        for value in ("2.26.32", "2.26.32.xx", "2.26.32.123-extra", ""):
+            with self.subTest(version=value):
+                self.assertFalse(validator._exact_version(value))
+
     def test_same_target_complete_evidence_passes(self):
         matrix = supported(fixture())
         matrix["evidence"] = {"Example": {"targets": [observation()]}}

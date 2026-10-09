@@ -30,6 +30,11 @@ val releaseTag = providers.gradleProperty("releaseTag").orNull
 val releaseVersion = releaseTag?.removePrefix("v")
 val debugPackageName = providers.gradleProperty("debug_package_name")
 
+// WA X API 102 is now the sole packaging target. Refuse the obsolete legacy mode.
+if (providers.gradleProperty("modernXposed").orNull == "false") {
+    throw GradleException("Legacy Xposed APK packaging was removed. API 102 is mandatory.")
+}
+val modernXposedPackage = true
 if (releaseTag != null && releaseTag != "v$baseVersionName") {
     throw GradleException("Release tag $releaseTag does not match configured version v$baseVersionName")
 }
@@ -75,12 +80,15 @@ android {
             abiFilters.add("arm64-v8a")
         }
 
-        buildConfigField("Boolean", "RESET_ON_INSTALL", "true")
+        buildConfigField("Boolean", "RESET_ON_INSTALL", "false")
+        buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())
     }
 
     packaging {
         resources {
-            excludes += "META-INF/**"
+            // Keep META-INF/xposed; duplicate third-party licenses are not loader metadata.
+            excludes += "META-INF/LICENSE*"
+            excludes += "META-INF/NOTICE*"
             excludes += "okhttp3/**"
             excludes += "kotlin/**"
             excludes += "org/**"
@@ -114,6 +122,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            proguardFiles(file("proguard-modern-rules.pro"))
         }
 
         release {
@@ -126,6 +135,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            proguardFiles(file("proguard-modern-rules.pro"))
         }
     }
     compileOptions {
@@ -261,6 +271,9 @@ dependencies {
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
     compileOnly(libs.libxposed.legacy)
+    implementation(project(":modern-runtime"))
+    compileOnly(libs.libxposed.modern.api)
+    implementation(libs.libxposed.modern.service) // Manager-side API 102 bridge; legacy loader remains active.
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.core)

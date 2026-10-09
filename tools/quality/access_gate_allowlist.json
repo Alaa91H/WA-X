@@ -32,7 +32,10 @@
     {
       "path": "tools/settings/add_identity_strings.py",
       "category": "documentation",
-      "tokens": ["licence", "license"],
+      "tokens": [
+        "licence",
+        "license"
+      ],
       "reason": "Rewrites the GPL licence notice the About screen shows during the product-identity migration. It writes licence text and touches no feature access."
     },
     {
@@ -48,14 +51,26 @@
     {
       "path": "app/src/main/java/com/wax/module/xposed/core/devkit/Unobfuscator.kt",
       "category": "third-party",
-      "tokens": ["subscription"],
+      "tokens": [
+        "subscription"
+      ],
       "reason": "Reads WhatsApp's own presence-subscription protocol vocabulary from the installed client. This is another party's server-side concept, not a WA X feature gate."
     },
     {
       "path": "app/src/main/java/com/wax/module/platform/PlatformFeatureCatalog.kt",
       "category": "contract",
-      "tokens": ["paywall"],
+      "tokens": [
+        "paywall"
+      ],
       "reason": "Names NoPaywallContractTest as the test that covers the access contract. Only that token is exempt: a gated feature id added to the catalog still fails the scan."
+    },
+    {
+      "path": "app/build.gradle.kts",
+      "category": "contract",
+      "tokens": [
+        "license"
+      ],
+      "reason": "Android Gradle packaging excludes duplicate META-INF/LICENSE entries from third-party JARs in the modern Xposed APK, while explicitly retaining META-INF/xposed loader metadata. This token is a resource filename only and does not restrict any feature or entitlement."
     }
   ]
 }

@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">强制恢复备份</string>
     <string name="force_restore_backup_summary">手动启动恢复备份界面。如果你在设置时跳过了恢复，请使用此项。</string>
-    <string name="app_desc">高级 WhatsApp Xposed 模块</string>
     <string name="antirevoke">防止消息撤回</string>
     <string name="antirevoke_sum">消息将不会在您的设备上删除</string>
     <string name="ghostmode">隐藏正在输入</string>
@@ -574,4 +573,22 @@
     <string name="gt_translate_from">源语言</string>
     <string name="gt_translate_to">目标语言</string>
     <string name="gt_translate_action">翻译</string>
+    <string name="modern_framework_connected">libxposed API %1$s 已连接</string>
+    <string name="modern_framework_waiting">libxposed API 102：等待框架连接</string>
+    <string name="modern_framework_status">WA X %1$s — 现代 Runtime 诊断</string>
+    <string name="modern_framework_features_pending">框架连接不能证明 WhatsApp 功能正常运行。迁移仍处于试验阶段。</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">已收到近期 Runtime 启动报告，但这不代表功能已正常运行。</string>
+    <string name="modern_target_stale">之前的报告已过期。请打开 WhatsApp 并重新检查。</string>
+    <string name="modern_target_boot_mismatch">报告来自另一轮设备启动，或系统时间无效。</string>
+    <string name="modern_target_no_report">未收到 API 102 报告。请打开应用后重新检查。</string>
+    <string name="modern_target_feature_status">实验性 CustomTime 功能：%1$s</string>
+    <string name="modern_pilot_title">CustomTime（实验性 API 102）</string>
+    <string name="modern_pilot_message">CustomTime 仅更改消息时间的显示格式，可能不兼容当前 WhatsApp 版本。其他旧版功能在 API 102 模式下仍不可用。</string>
+    <string name="modern_pilot_enable">启用实验功能</string>
+    <string name="modern_pilot_disable">停用实验功能</string>
+    <string name="modern_pilot_restart">关闭并重新打开 WhatsApp 以应用更改。</string>
+    <string name="modern_pilot_tap">点按此处配置实验性 CustomTime。</string>
+    <string name="modern_target_share_limit_status">转发数量限制：%1$s</string>
+    <string name="modern_target_presence_status">冻结最后上线时间：%1$s | 请勿打扰：%2$s</string>
 </resources>

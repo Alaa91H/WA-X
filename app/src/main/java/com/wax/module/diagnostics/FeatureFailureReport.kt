@@ -82,10 +82,13 @@ data class FeatureFailureReport(
             stage: String? = null,
             timestampMillis: Long = 0L,
             threadName: String? = null,
+            code: FailureCode? = null,
         ): FeatureFailureReport =
             FeatureFailureReport(
                 featureId = featureId,
-                code = FailureCode.classify(throwable, stage),
+                // A caller that already knows why this failed says so. Otherwise the code is
+                // derived from the throwable, which is a guess about a message someone else wrote.
+                code = code ?: FailureCode.classify(throwable, stage),
                 moduleVersion = ReportRedactor.redactAndBound(moduleVersion),
                 whatsappVersion = ReportRedactor.redactAndBound(whatsappVersion),
                 packageName = ReportRedactor.redactAndBound(packageName),

@@ -221,44 +221,21 @@ jobs:
       - name: Make the Gradle wrapper executable
         run: chmod +x gradlew
       - name: Compile the debug APK
-        run: ./gradlew $GRADLE_ARGS assembleDebug
+        run: ./gradlew $GRADLE_ARGS assembleDebug :modern-runtime:testDebugUnitTest
 
-      # The declaration-level LSPosed contract check runs in strict-static and only reads
-      # gradle/libs.versions.toml, so it works on a cold checkout. This one opens the artifact
-      # this job just resolved and asserts it publishes every legacy type the module imports,
-      # which is the only way to prove the pin and the code agree. It lives here because this is
-      # the only job that has the jar, and it fails rather than skipping when the jar is absent:
-      # a step that can report "nothing to check" is exactly how the version-blind checker it
-      # replaced survived for as long as it did.
-      - name: Prove the pinned legacy API artifact matches the code
+      # The built MAIN WA X application is the only modern Xposed module.
+      # Its APK must contain one modern loader and the original Manager UI.
+      - name: Verify the actual WA X API 102 debug loader
         shell: bash
         run: |
           set -euo pipefail
-          JAR="$(
-            find "${GRADLE_USER_HOME:-$HOME/.gradle}/caches/modules-2/files-2.1/de.robv.android.xposed" \
-              -type f -name 'api-*.jar' ! -name '*-sources.jar' | sort | tail -n 1
-          )"
-          if [[ -z "$JAR" ]]; then
-            echo "::error::The resolved de.robv.android.xposed:api artifact was not found in the Gradle cache"
-            exit 1
-          fi
-          python3 tools/quality/check_lsposed_contract.py --verify-artifact --artifact "$JAR"
-
-      # The artifact-level half of the loader contract, on the build this job actually produced:
-      # the class named in the APK's own assets/xposed_init must be a class definition in its dex.
-      # This is the debug variant, which is not shrunk, so it cannot catch a keep-rule mistake -
-      # that is what the release step checks. What it does catch is the other silent failure: an
-      # entry point renamed, moved or mistyped so that the file and the code no longer agree.
-      - name: Prove the built APK declares an entry point it actually contains
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
-          if [[ -z "$APK" ]]; then
-            echo "::error::assembleDebug produced no APK to verify"
-            exit 1
-          fi
-          python3 tools/quality/check_apk_loader_contract.py --apk "$APK"
+          python3 tools/quality/check_modern_main_apk.py --source-only
+          python3 tools/quality/test_check_modern_main_apk.py
+          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | sort | head -n 1)"
+          test -n "$APK"
+          python3 tools/quality/check_modern_main_apk.py --apk "$APK"
+          SIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          "$SIGNER" verify --verbose "$APK"
 
       - name: Upload baseline APK input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -268,6 +245,8 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
+
+
   strict-static:
     name: Strict parallel static quality
     if: needs.preflight.result == 'success'
@@ -324,13 +303,11 @@ jobs:
               failures=0
               python3 tools/quality/test_scan_access_gates.py || failures=$((failures + 1))
               python3 tools/quality/scan_access_gates.py --check-mirror || failures=$((failures + 1))
-              python3 tools/quality/test_check_lsposed_contract.py || failures=$((failures + 1))
-              python3 tools/quality/check_lsposed_contract.py || failures=$((failures + 1))
-              # The keep rule is what holds the entry point against R8, which never reads
-              # assets/xposed_init. The source-level checker above asserts the rule exists; the
-              # artifact-level check that reads a built APK runs in the build and release steps,
-              # because a gate that only reads the tree is how the entry point was lost.
-              python3 tools/quality/test_check_apk_loader_contract.py || failures=$((failures + 1))
+              python3 tools/quality/check_modern_bridge_contract.py || failures=$((failures + 1))
+              # Strict modern-loader self-tests replace obsolete Legacy checks.
+              # Real built APKs are checked separately in debug AND signed release steps.
+              python3 tools/quality/test_check_modern_main_apk.py || failures=$((failures + 1))
+              python3 tools/quality/check_modern_main_apk.py --source-only || failures=$((failures + 1))
               python3 tools/quality/test_check_repository_urls.py || failures=$((failures + 1))
               python3 tools/quality/check_repository_urls.py || failures=$((failures + 1))
               # The feature-contract boundary. A platform type in a feature constructor compiles
@@ -347,6 +324,12 @@ jobs:
               # progress, not a failure.
               python3 tools/quality/test_check_legacy_global_writes.py || failures=$((failures + 1))
               python3 tools/quality/check_legacy_global_writes.py || failures=$((failures + 1))
+              # One registration source for the module's features. The runtime used to install from a
+              # hand-maintained array while the compatibility matrix was computed from a second list,
+              # and nothing compared them: a feature registered in one and not the other would have
+              # shipped a module whose behaviour the matrix does not describe.
+              python3 tools/quality/test_check_feature_registry.py || failures=$((failures + 1))
+              python3 tools/quality/check_feature_registry.py || failures=$((failures + 1))
               [[ "$failures" -eq 0 ]]
           - name: Modernization evidence contracts
             shell: bash
@@ -404,7 +387,35 @@ jobs:
       - *checkout_full
       - *setup_java
       - *setup_gradle
-      # Absolute 100% is not reachable for a hooked-process module and is not what this
+      # The unit-test runner also configures CMake despite executing JVM-only tests. Its
+      # ephemeral SDK may lack the pinned NDK, and an occasional CDN error returns a
+      # non-ZIP archive. Retry only that exact component instead of weakening coverage.
+      - name: Verify pinned NDK with bounded SDK-manager retries
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_VERSION="$(sed -nE 's/.*ndkVersion = "([0-9.]+)".*/\1/p' app/build.gradle.kts | head -n 1)"
+          [[ "$NDK_VERSION" =~ ^[0-9.]+$ ]]
+          NDK_PATH="$ANDROID_HOME/ndk/$NDK_VERSION"
+          if [[ -f "$NDK_PATH/source.properties" ]] && grep -Fq "Pkg.Revision = $NDK_VERSION" "$NDK_PATH/source.properties"; then
+            echo "Pinned NDK $NDK_VERSION already installed"
+            exit 0
+          fi
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          test -n "$SDKMANAGER"
+          for attempt in 1 2 3; do
+            echo "Installing pinned NDK $NDK_VERSION (attempt $attempt of 3)"
+            if timeout 600 "$SDKMANAGER" --install "ndk;$NDK_VERSION" && \
+                [[ -f "$NDK_PATH/source.properties" ]] && \
+                grep -Fq "Pkg.Revision = $NDK_VERSION" "$NDK_PATH/source.properties"; then
+              exit 0
+            fi
+            # Hosted runner only; a partial/corrupt install must not poison retries.
+            rm -rf "$NDK_PATH"
+            sleep $((attempt * 5))
+          done
+          echo "::error::Pinned NDK $NDK_VERSION could not be installed after 3 attempts"
+          exit 1      # Absolute 100% is not reachable for a hooked-process module and is not what this
       # checks. Every counter has a floor in quality/coverage-baseline.json, and a change
       # fails when the covered count falls (a lost test) or the percentage falls (production
       # code added without one). Both guards were verified to fire.
@@ -821,22 +832,14 @@ jobs:
 
           ls -l dist
 
-      # The gate that would have caught this before it shipped, and the reason it exists: R8 does
-      # not read assets/xposed_init, so a release build silently removed the entry point - and the
-      # whole injected runtime with it - while the APK still installed, still declared
-      # xposedmodule and still named the class. No other gate in this repository builds the release
-      # variant, so every one of them passed. This runs on the staged APK, before it is published,
-      # and it fails rather than skipping.
-      - name: Prove the release APK can be loaded as a legacy LSPosed module
+      - name: Verify signed production API 102 APK loader and Manager
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          python3 tools/quality/test_check_apk_loader_contract.py
+          python3 tools/quality/check_modern_main_apk.py --source-only
           for apk in dist/*.apk; do
-            python3 tools/quality/check_apk_loader_contract.py \
-              --apk "$apk" \
-              --expect-class com.wax.module.xposed.core.FeatureLoader
+            python3 tools/quality/check_modern_main_apk.py --apk "$apk"
           done
 
       - name: Verify the APK signatures and update certificate

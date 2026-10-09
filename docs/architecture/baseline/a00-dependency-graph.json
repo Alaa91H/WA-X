@@ -551,6 +551,7 @@
         "xposed.features.privacy",
         "xposed.features.providers",
         "xposed.graph",
+        "xposed.registry",
         "xposed.spoofer",
         "xposed.utils"
       ]
@@ -793,6 +794,23 @@
         "graph"
       ]
     },
+    "xposed.registry": {
+      "external": [
+        "platform"
+      ],
+      "files": 2,
+      "first_party": [
+        "contract",
+        "xposed.core",
+        "xposed.features.customization",
+        "xposed.features.general",
+        "xposed.features.listeners",
+        "xposed.features.media",
+        "xposed.features.others",
+        "xposed.features.privacy",
+        "xposed.features.providers"
+      ]
+    },
     "xposed.spoofer": {
       "external": [
         "org",
@@ -830,7 +848,7 @@
   },
   "schema": "wax.a00.dependency-graph/1",
   "totals": {
-    "files": 326,
-    "lines": 69911
+    "files": 328,
+    "lines": 70200
   }
 }

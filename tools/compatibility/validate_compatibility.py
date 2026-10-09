@@ -267,7 +267,7 @@ def _utc_timestamp(value: object) -> datetime | None:
 
 def _exact_version(value: object) -> bool:
     """Do not certify declared wildcard version families as tested builds."""
-    return isinstance(value, str) and re.fullmatch(r"\\d+\\.\\d+\\.\\d+\\.\\d+", value) is not None
+    return isinstance(value, str) and re.fullmatch(r"\d+\.\d+\.\d+\.\d+", value) is not None
 
 
 def _target_verified(

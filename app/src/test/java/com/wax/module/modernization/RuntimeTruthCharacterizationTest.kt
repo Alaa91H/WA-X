@@ -3,6 +3,7 @@ package com.wax.module.modernization
 import com.wax.module.bootstrap.BootstrapStage
 import com.wax.module.diagnostics.FailureCode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -329,5 +330,30 @@ class RuntimeTruthCharacterizationTest {
                 "either reports or does not exist. Update M00-DEF-05.",
             emptyCatches > 0,
         )
+    }
+
+    /**
+     * A runtime probe must never be sent before Home registered its response receiver.
+     * On Android 17 the injected runtime can be starting while the Manager Fragment is
+     * inflating: the old onCreateView broadcast raced the later onStart registration.
+     */
+    @Test
+    fun managerRegistersForActivationRepliesBeforeSendingTheProbe() {
+        val source = readSource("java/com/wax/module/ui/fragments/HomeFragment.kt")
+        val onStart = source.substringAfter("override fun onStart() {").substringBefore("private fun scheduleActivationProbeRetries()")
+        val onCreateView = source.substringAfter("override fun onCreateView(").substringBefore("private fun startCardAnimations()")
+        val onStop = source.substringAfter("override fun onStop() {").substringBefore("override fun onCreateView(")
+        val receiver = source.substringAfter("private val statusReceiver =").substringBefore("override fun onStart() {")
+
+        assertFalse("Cold-start probes must not be sent during view inflation.", onCreateView.contains("checkWpp("))
+        assertTrue("Missing receiver registration.", onStart.contains("ContextCompat.registerReceiver("))
+        assertTrue(
+            "A reply can race the receiver if the first probe is sent before registration.",
+            onStart.indexOf("statusReceiverRegistered = true") in 0 until onStart.indexOf("checkWpp(requireActivity())"),
+        )
+        assertTrue("Probe retry must be scheduled for slow WhatsApp bootstrap.", onStart.contains("scheduleActivationProbeRetries()"))
+        assertTrue("The delayed probes must be cancelled off-screen.", onStop.contains("pendingActivationProbes.clear()"))
+        assertTrue("An accepted reply must re-render both target and module cards.", receiver.contains("renderActivation()"))
+        assertTrue("Malformed or missing reports cannot be silently ignored.", receiver.contains("Log.w("))
     }
 }

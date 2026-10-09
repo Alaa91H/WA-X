@@ -23,3 +23,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "WA-X"
 include(":app")
+include(":modern-runtime")
+// Only one installable application is built: the full WA X Manager on API 102.

@@ -127,12 +127,15 @@ def bump_schema_version(document: dict) -> None:
 CASES: list[tuple[str, object, bool, str]] = [
     ("pristine document passes", None, True, ""),
     ("a feature dropped from the inventory", drop_a_feature, False, "stale"),
+    # These legacy mutation fixtures use wildcard versions. The stricter target
+    # gate must reject those claims before examining incomplete resolver data.
+    # Exact-version resolver failures are exercised by test_validate_compatibility.py.
     ("supported claimed with no evidence", claim_supported_without_evidence, False,
-     "no evidence for resolver"),
+     "without an exact target version"),
     ("supported claimed with partial evidence", claim_supported_with_partial_evidence, False,
-     "no evidence for resolver"),
+     "without an exact target version"),
     ("supported claimed without verifiedAt", claim_supported_with_unverified_timestamp, False,
-     "evidence is incomplete"),
+     "without an exact target version"),
     ("declared versions drift from arrays.xml", drift_declared_versions, False,
      "drifted from supported_versions_wpp"),
     ("module SDK drifts from build.gradle.kts", drift_module_sdk, False, "app/build.gradle.kts says"),
