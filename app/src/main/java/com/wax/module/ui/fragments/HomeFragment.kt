@@ -380,6 +380,11 @@ class HomeFragment : BaseFragment() {
                                     }
                                 }
                             evidence + "\n" +
+                                if (target.bootstrapMilestones.isNotEmpty()) {
+                                    target.bootstrapMilestones.joinToString(" → ") + "\n"
+                                } else {
+                                    "NO_TARGET_LIFECYCLE_SIGNAL\n"
+                                } +
                                 getString(
                                     R.string.modern_target_feature_status,
                                     target.customTimeInstallation ?: "NOT_REPORTED",
