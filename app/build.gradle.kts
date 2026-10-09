@@ -130,6 +130,11 @@ android {
     packaging {
         resources {
             if (!modernXposedPackage) excludes += "META-INF/**"
+            else {
+                // Preserve META-INF/xposed/*, exclude duplicate licenses from transitive JARs.
+                excludes += "META-INF/LICENSE*"
+                excludes += "META-INF/NOTICE*"
+            }
             excludes += "okhttp3/**"
             excludes += "kotlin/**"
             excludes += "org/**"
