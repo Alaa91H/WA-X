@@ -72,17 +72,16 @@ public final class ModernTargetTelemetryProviderTest {
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(""));
     }
 
-    @Test public void settingsEvidenceValuesAreFixed() {
-        assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("INSTALLED"));
-        assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("ALREADY_INSTALLED"));
-        assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("HOME_CLASS_MISSING"));
-        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
-                ModernTargetTelemetryProvider.EVENT_CONTACT_ITEM_LISTENER));
-        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
-                ModernTargetTelemetryProvider.EVENT_CONVERSATION_ITEM_LISTENER));
-        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
-                ModernTargetTelemetryProvider.EVENT_MENU_STATUS_PROVIDER));
-        assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState("ITEM_ADDED"));
-        assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState(null));
+    @Test public void controlCenterReadExposesOnlyAllowlistedKeys() {
+        // The embedded Control Center may read exactly these keys and nothing else.
+        assertTrue(ModernTargetTelemetryProvider.CONTROL_CENTER_EVIDENCE_KEYS.length > 0);
+        for (String key : ModernTargetTelemetryProvider.CONTROL_CENTER_EVIDENCE_KEYS) {
+            assertTrue(key.startsWith("modern.feature."));
+        }
+        assertTrue(ModernTargetTelemetryProvider.CONTROL_CENTER_PREFERENCE_KEYS.length > 0);
+        for (String key : ModernTargetTelemetryProvider.CONTROL_CENTER_PREFERENCE_KEYS) {
+            assertFalse(key.startsWith("segundos"));
+            assertFalse(key.startsWith("ampm"));
+        }
     }
 }
