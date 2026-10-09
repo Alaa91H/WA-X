@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Forcer la restauration de la sauvegarde</string>
     <string name="force_restore_backup_summary">Lancer manuellement l\'écran de restauration de la sauvegarde. À utiliser si vous avez ignoré la restauration lors de la configuration.</string>
-    <string name="app_desc">Module Xposed avancé pour WhatsApp</string>
     <string name="antirevoke">Anti-suppression de messages</string>
     <string name="antirevoke_sum">Lorsce qu\'activé, les messages ne seront pas effacé pour vous.</string>
     <string name="ghostmode">Masquer la saisie</string>

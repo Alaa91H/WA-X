@@ -34,24 +34,23 @@ def verify() -> None:
     assert 'include(":modern-runtime")' in source("settings.gradle.kts")
     assert "compileOnly(libs.libxposed.modern.api)" in modern_build
     assert "implementation(libs.libxposed.modern.service)" in app_build
-    # The default legacy release graph remains untouched. API 102 code enters the
-    # original applicationId only through the explicit modernXposed build gate.
-    if 'implementation(project(":modern-runtime"))' in app_build:
-        assert 'if (modernXposedPackage)' in app_build
-        assert 'providers.gradleProperty("modernXposed").orNull == "true"' in app_build
-        assert 'buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())' in app_build
+    # The original application is modern-only; legacy source hooks may remain
+    # compile-only during the migration but cannot be an APK entry point.
+    assert 'val modernXposedPackage = true' in app_build
+    assert 'implementation(project(":modern-runtime"))' in app_build
+    assert 'compileOnly(libs.libxposed.modern.api)' in app_build
+    assert 'buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())' in app_build
     assert "api(project(\":modern-runtime\"))" not in app_build
     assert "compileOnly(libs.libxposed.legacy)" in app_build
-    assert 'android:value="93"' in manifest
-    assert (ROOT / "app/src/main/assets/xposed_init").is_file()
-
-    # No modern metadata can enter the same APK as the old assets/xposed_init loader.
-    assert not list((ROOT / "app/src").glob("**/META-INF/xposed/java_init.list"))
+    assert 'android:value="93"' not in manifest
+    assert not (ROOT / "app/src/main/assets/xposed_init").exists()
+    assert (ROOT / "app/src/main/resources/META-INF/xposed/java_init.list").is_file()
+    assert not (ROOT / "modern-canary").exists()
     assert "extends XposedModule" in modern_entry
     assert "onPackageLoaded(" in modern_entry
     assert "ModernTargetPolicy.isMainTarget" in modern_entry
     feature = source("modern-runtime/src/main/java/com/wax/module/modern/ModernCustomTimeFeature.kt")
-    canary_ui = source("modern-canary/src/main/java/com/wax/module/modern/canary/CanaryActivity.java")
+    modern_home = source("app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt")
     invocation = source("modern-runtime/src/main/java/com/wax/module/modern/ModernInvocationEvidence.java")
     throttle = source("modern-runtime/src/main/java/com/wax/module/modern/ModernInvocationThrottle.java")
     assert "ModernInvocationEvidence.timeKey" in modern_entry
@@ -59,15 +58,15 @@ def verify() -> None:
     assert "invocationThrottle.accept" in modern_entry
     assert "evidenceWorker.execute" in modern_entry
     assert "onFormatted.run()" in feature
-    assert "ModernInvocationEvidence.classify" in source("modern-canary/src/main/java/com/wax/module/modern/canary/CanaryApplication.java")
+    assert "ModernManagerRuntimeStatus.inspect()" in modern_home
     assert "NOT_OBSERVED" in invocation and "INVOKED_FRESH" in invocation
     assert "AtomicLong" in throttle
     assert "ModernCustomTimeFeature.ENABLE_KEY" in modern_entry
     assert "modern.feature.custom_time.enabled" in feature
     assert "ModernHookRegistry.Registration" in feature
     assert "singleOrNull()" in feature
-    assert "setCustomTimeEnabled" in canary_ui
-    assert "CustomTime" in canary_ui
+    assert "showModernCustomTimeDialog" in modern_home
+    assert "ModernRuntimePreferenceRelay" in modern_home
     assert "PROTECTIVE" in facade
     lifecycle = source("modern-runtime/src/main/java/com/wax/module/modern/ModernHookRegistry.java")
     assert "hookRegistry.installOnce" in modern_entry
@@ -115,7 +114,7 @@ def verify() -> None:
     assert "connected: Boolean" in manager
     assert "READY" not in manager
 
-    print("Modern API102 staging contract OK: service attached, canary isolated, legacy APK preserved.")
+    print("Official API102-only runtime contract OK: main Manager and service wired, single loader enforced.")
 
 
 if __name__ == "__main__":

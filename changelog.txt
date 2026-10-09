@@ -1,3 +1,42 @@
+WA X 1.2.0-beta.9
+Release date: 2026-10-09
+
+FIRST OFFICIAL API 102 BETA — INCOMPLETE FEATURE MIGRATION
+
+WA X uses the original com.wax.module package identity and its existing Manager,
+but now ships ONLY the modern libxposed API 102 entry point.
+Legacy API 93 and the separate Canary app are no longer built or distributed.
+The official update signing certificate is preserved for Android in-place updates.
+
+WHAT IS VERIFIED
+- Exactly one modern META-INF/xposed loader, API102 entry class in the APK's DEX,
+  static WhatsApp/Business scope, no assets/xposed_init or xposedminversion=93.
+- A complete Manager app package, real framework Service connection reporting,
+  boot-scoped process heartbeat, and modern RemotePreferences for migrated settings.
+- A safe, explicit, default-OFF CustomTime pilot with a reversible hook registry.
+- GitHub builds both debug and R8-optimized release; runtime API and signing
+  checks enforce the APK actually produced rather than trusting source metadata.
+
+IMPORTANT LIMITATIONS — READ BEFORE TESTING
+- This is a developer beta, NOT a feature-complete migration or a stable module.
+- The old 63+ legacy feature hooks are NOT yet implemented on API 102. Their
+  settings may remain visible, but toggling them does NOT make them work.
+- Neither a successful CI build nor an installed hook proves WhatsApp visual
+  behavior; rooted Vector/LSPosed API102 real-device tests are still needed.
+- Back up preferences before upgrading. Do not uninstall the existing WA X
+  app or wipe its data to change signatures. The signed release must match
+  the previous WA X signing certificate; if Android refuses to upgrade,
+  stop and report the error rather than uninstalling.
+- Older WhatsApp versions and WhatsApp Business support remain unverified on
+  rooted phones. Stop testing if WhatsApp behaves unexpectedly.
+
+HOW TO TEST
+- Update via the normal WA X signed APK only, keeping the same applicationId.
+- Enable the WA X module for WhatsApp/WhatsApp Business in a compatible Vector
+  installation, restart target apps, and open WA X's status screen.
+- Use the experimental CustomTime toggle ONLY if needed. Its success must be
+  checked in the actual WhatsApp message UI. Submit diagnostics for failures.
+
 WA X 1.2.0-beta.8
 Release date: 2026-10-08
 

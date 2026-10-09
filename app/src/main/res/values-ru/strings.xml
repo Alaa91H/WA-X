@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Принудительно восстановить резервную копию</string>
     <string name="force_restore_backup_summary">Запустите экран восстановления резервной копии вручную. Используйте это, если пропустили восстановление при настройке.</string>
-    <string name="app_desc">Расширенный Xposed-модуль для WhatsApp</string>
     <string name="antirevoke">Защита от удаления сообщений</string>
     <string name="antirevoke_sum">Активирован, удаленные сообщения останутся у вас</string>
     <string name="ghostmode">Скрыть ввод</string>

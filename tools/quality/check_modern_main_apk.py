@@ -15,52 +15,53 @@ MANAGER_ENTRY = b"Lcom/wax/module/ModuleApplication;"
 
 def verify_sources():
     build = (ROOT / "app/build.gradle.kts").read_text(encoding="utf-8")
-    required = (
-        'providers.gradleProperty("modernXposed").orNull == "true"',
-        'implementation(project(":modern-runtime"))',
-        'compileOnly(libs.libxposed.modern.api)',
-        'MODERN_XPOSED',
-        "prepareModernXposedSources",
-        "outputAssets.copy",  # purposely checked below via alternative
-    )
-    for token in required[:-1]:
-        if token not in build:
-            raise ValueError(f"Modern production build contract missing: {token}")
-    # Kotlin formatters legitimately expand an if/else into multiple lines. Verify
-    # its structure rather than tying a security contract to exact whitespace.
-    if not re.search(
-        r'if\s*\(!modernXposedPackage\)\s*\{\s*excludes\s*\+=\s*"META-INF/\*\*"',
-        build,
-    ):
-        raise ValueError("Default Legacy package must exclude the entire META-INF tree")
-    if 'excludes += "META-INF/LICENSE*"' not in build or 'excludes += "META-INF/NOTICE*"' not in build:
-        raise ValueError("Modern package must explicitly discard duplicate dependency notices")
-    if 'sourceAssets.copyRecursively(outputAssets' not in build:
-        raise ValueError("Modern APK must copy existing Manager assets without xposed_init")
-    if 'file("$outputAssets/xposed_init").delete()' not in build:
-        raise ValueError("Modern APK must remove the legacy Xposed entry file")
-    if 'resources.directories.add(file("../modern-canary/src/main/resources").absolutePath)' not in build:
-        raise ValueError("Same-package modern loader metadata not included")
-    if not (ROOT / "app/src/main/assets/xposed_init").is_file():
-        raise ValueError("Do not disrupt the shipping Legacy APK")
+    settings = (ROOT / "settings.gradle.kts").read_text(encoding="utf-8")
     manifest = (ROOT / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
-    if 'android:name="xposedminversion"' not in manifest:
-        raise ValueError("Shipping manifest's Legacy loader changed")
-    print("Modern main APK opt-in sources OK; Legacy main build untouched")
-
-
-def verify_generated():
-    output = ROOT / "app/build/generated/modernXposed"
-    manifest = (output / "AndroidManifest.xml").read_text(encoding="utf-8")
-    for name in ("xposedmodule", "xposeddescription", "xposedminversion",
-                 "xposedsharedprefs", "xposedscope"):
-        if f'android:name="{name}"' in manifest:
-            raise ValueError(f"Modern manifest retains legacy metadata: {name}")
-    if not (output / "assets/www/prism.js").exists():
-        raise ValueError("Modern app lost its original UI assets")
-    if (output / "assets/xposed_init").exists():
-        raise ValueError("Modern app contains legacy loader")
-    print("Generated Manager manifest/assets validated for single modern loader")
+    required = (
+        "val modernXposedPackage = true",
+        'implementation(project(":modern-runtime"))',
+        "compileOnly(libs.libxposed.modern.api)",
+        "Legacy Xposed APK packaging was removed",
+        "proguardFiles(file(\"proguard-modern-rules.pro\"))",
+        "versionName = resolvedVersionName",
+        'buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())',
+        'excludes += "META-INF/LICENSE*"',
+        'excludes += "META-INF/NOTICE*"',
+    )
+    for token in required:
+        if token not in build:
+            raise ValueError(f"Official API102 build contract missing: {token}")
+    if "include(\":modern-canary\")" in settings or (ROOT / "modern-canary").exists():
+        raise ValueError("The obsolete Canary module must not remain in the project")
+    if "excludes += \"META-INF/**\"" in build:
+        raise ValueError("Modern loader metadata must not be stripped")
+    if (ROOT / "app/src/main/assets/xposed_init").exists():
+        raise ValueError("The original package still contains the obsolete Legacy loader")
+    for legacy in ("xposedmodule", "xposeddescription", "xposedminversion",
+                   "xposedsharedprefs", "xposedscope"):
+        if f'android:name="{legacy}"' in manifest:
+            raise ValueError(f"Legacy manifest module metadata remains: {legacy}")
+    metadata = ROOT / "app/src/main/resources/META-INF/xposed"
+    for name in ("java_init.list", "module.prop", "scope.list"):
+        if not (metadata / name).is_file():
+            raise ValueError(f"Missing production API102 loader metadata: {name}")
+    if (metadata / "java_init.list").read_text(encoding="utf-8").strip() != \
+            "com.wax.module.modern.ModernXposedEntry":
+        raise ValueError("Incorrect production modern entry point")
+    props = (metadata / "module.prop").read_text(encoding="utf-8").splitlines()
+    for required in ("minApiVersion=102", "targetApiVersion=102",
+                     "staticScope=true", "autoHotReload=false"):
+        if required not in props:
+            raise ValueError(f"Invalid production API102 property: {required}")
+    scope = (metadata / "scope.list").read_text(encoding="utf-8").splitlines()
+    if scope != ["com.whatsapp", "com.whatsapp.w4b"]:
+        raise ValueError("Invalid production API102 scope")
+    if "com.wax.module" not in build or "com.wax.module" not in manifest:
+        # The main manifest may use a relative application class, so the build
+        # applicationId is authoritative; no Canary application is acceptable.
+        if 'applicationId = "com.wax.module"' not in build:
+            raise ValueError("WA X original application identity changed")
+    print("Official WA X API102-only source and package contracts OK")
 
 
 def verify_apk(path):
@@ -101,14 +102,11 @@ def main():
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--source-only", action="store_true")
-    mode.add_argument("--generated-only", action="store_true")
     mode.add_argument("--apk", type=Path)
     args = parser.parse_args()
     try:
         if args.source_only:
             verify_sources()
-        elif args.generated_only:
-            verify_generated()
         else:
             verify_apk(args.apk)
     except (OSError, ValueError, UnicodeError, zipfile.BadZipFile) as exc:

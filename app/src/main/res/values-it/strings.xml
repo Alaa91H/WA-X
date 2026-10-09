@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Forza Ripristino Backup</string>
     <string name="force_restore_backup_summary">Avvia manualmente la schermata di ripristino backup. Usa questa opzione se hai saltato il ripristino durante la configurazione.</string>
-    <string name="app_desc">Modulo Xposed avanzato per WhatsApp</string>
     <string name="antirevoke">Anti-Elimina messaggi</string>
     <string name="antirevoke_sum">I messaggi non saranno eliminati per te</string>
     <string name="ghostmode">Nascondi digitazione</string>

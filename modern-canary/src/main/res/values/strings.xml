@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">WA X — Modern Canary</string>
-    <string name="app_description">Experimental API 102 loader diagnostics. Does not enable WA X feature hooks.</string>
-</resources>
