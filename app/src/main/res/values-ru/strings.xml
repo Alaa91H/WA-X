@@ -576,4 +576,14 @@
     <string name="gt_translate_from">Переводить с</string>
     <string name="gt_translate_to">Переводить на</string>
     <string name="gt_translate_action">Перевести</string>
+    <string name="modern_framework_connected">libxposed API %1$s подключён</string>
+    <string name="modern_framework_waiting">libxposed API 102: ожидание фреймворка</string>
+    <string name="modern_framework_status">WA X %1$s — диагностика современного Runtime</string>
+    <string name="modern_framework_features_pending">Соединение с фреймворком не подтверждает работу функций WhatsApp. Миграция пока экспериментальная.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Получен свежий отчёт о запуске Runtime. Он не доказывает работу функций.</string>
+    <string name="modern_target_stale">Предыдущий отчёт устарел. Откройте WhatsApp и проверьте снова.</string>
+    <string name="modern_target_boot_mismatch">Отчёт относится к другой загрузке устройства или неверному времени.</string>
+    <string name="modern_target_no_report">Отчёт API 102 не получен. Откройте приложение и проверьте снова.</string>
+    <string name="modern_target_feature_status">Экспериментальная функция CustomTime: %1$s</string>
 </resources>

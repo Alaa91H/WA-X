@@ -34,7 +34,12 @@ def verify() -> None:
     assert 'include(":modern-runtime")' in source("settings.gradle.kts")
     assert "compileOnly(libs.libxposed.modern.api)" in modern_build
     assert "implementation(libs.libxposed.modern.service)" in app_build
-    assert "implementation(project(\":modern-runtime\"))" not in app_build
+    # The default legacy release graph remains untouched. API 102 code enters the
+    # original applicationId only through the explicit modernXposed build gate.
+    if 'implementation(project(":modern-runtime"))' in app_build:
+        assert 'if (modernXposedPackage)' in app_build
+        assert 'providers.gradleProperty("modernXposed").orNull == "true"' in app_build
+        assert 'buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())' in app_build
     assert "api(project(\":modern-runtime\"))" not in app_build
     assert "compileOnly(libs.libxposed.legacy)" in app_build
     assert 'android:value="93"' in manifest

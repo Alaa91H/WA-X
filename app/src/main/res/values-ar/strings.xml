@@ -576,4 +576,15 @@
     <string name="gt_translate_from">الترجمة من</string>
     <string name="gt_translate_to">الترجمة إلى</string>
     <string name="gt_translate_action">ترجمة</string>
+
+    <string name="modern_framework_connected">libxposed API %1$s متصل</string>
+    <string name="modern_framework_waiting">libxposed API 102: بانتظار اتصال إطار العمل</string>
+    <string name="modern_framework_status">WA X %1$s — تشخيص Runtime الحديث</string>
+    <string name="modern_framework_features_pending">اتصال الإطار لا يثبت عمل ميزات واتساب. ترحيل الميزات ما زال تجريبيًا.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">ورد تقرير حديث عن بدء Runtime داخل هذا التطبيق، لكن هذا لا يثبت عمل الميزات.</string>
+    <string name="modern_target_stale">انتهت صلاحية تقرير Runtime السابق. افتح واتساب وتحقق مجددًا.</string>
+    <string name="modern_target_boot_mismatch">تقرير Runtime يعود إلى إقلاع مختلف أو وقت غير صحيح.</string>
+    <string name="modern_target_no_report">لم يصل تقرير عن Runtime API 102 من هذا التطبيق. افتحه ثم تحقق مجددًا.</string>
+    <string name="modern_target_feature_status">ميزة CustomTime التجريبية: %1$s</string>
 </resources>
