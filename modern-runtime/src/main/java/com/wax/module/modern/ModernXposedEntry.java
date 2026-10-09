@@ -155,6 +155,25 @@ public final class ModernXposedEntry extends XposedModule {
                         .putString("modern.feature.share_limit.state." + packageName, shareLimitState)
                         .apply();
             }
+            for (ModernPresenceFeatures.Pilot pilot : ModernPresenceFeatures.Pilot.values()) {
+                String state = ModernPresenceFeatures.Outcome.DISABLED.name();
+                if (preferences != null && preferences.getBoolean(pilot.getPreferenceKey(), false)) {
+                    try {
+                        System.loadLibrary("dexkit");
+                        state = ModernPresenceFeatures.INSTANCE
+                                .install(pilot, target, this, hookRegistry, preferences).name();
+                    } catch (Throwable featureFailure) {
+                        if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                        state = "ERROR_" + featureFailure.getClass().getSimpleName();
+                        log(Log.ERROR, TAG, "Modern presence/DND adapter failed: " + pilot.name(), featureFailure);
+                    }
+                }
+                if (preferences != null) {
+                    preferences.edit()
+                            .putString("modern.feature." + pilot.getFeatureId() + ".state." + packageName, state)
+                            .apply();
+                }
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
