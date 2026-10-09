@@ -22,6 +22,8 @@ object ModernManagerRuntimeStatus {
         val evidence: Evidence,
         val customTimeInstallation: String?,
         val shareLimitInstallation: String?,
+        val freezeInstallation: String?,
+        val dndInstallation: String?,
         val bootstrapMilestones: List<String> = emptyList(),
     )
 
@@ -86,7 +88,7 @@ object ModernManagerRuntimeStatus {
                 frameworkApi = framework.apiVersion,
                 frameworkName = framework.frameworkName,
                 connectionProblem = framework.error ?: "SERVICE_NOT_CONNECTED",
-                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null, null) },
+                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null, null, null, null) },
             )
         }
         return try {
@@ -107,6 +109,8 @@ object ModernManagerRuntimeStatus {
                             evidence = classify(timestamp, origin, now, boot),
                             customTimeInstallation = prefs.getString("modern.feature.custom_time.state.$name", null),
                             shareLimitInstallation = prefs.getString("modern.feature.share_limit.state.$name", null),
+                            freezeInstallation = prefs.getString("modern.feature.freeze_last_seen.state.$name", null),
+                            dndInstallation = prefs.getString("modern.feature.dnd_mode.state.$name", null),
                             bootstrapMilestones =
                                 observedMilestones(name, now) { key -> prefs.getLong(key, 0L) },
                         )
@@ -119,7 +123,7 @@ object ModernManagerRuntimeStatus {
                 frameworkApi = framework.apiVersion,
                 frameworkName = framework.frameworkName,
                 connectionProblem = "PREFERENCES_READ_FAILED",
-                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null, null) },
+                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null, null, null, null) },
             )
         }
     }

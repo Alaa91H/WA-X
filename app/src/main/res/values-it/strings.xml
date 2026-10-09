@@ -589,4 +589,5 @@
     <string name="modern_pilot_restart">Chiudi e riapri WhatsApp per applicare la modifica.</string>
     <string name="modern_pilot_tap">Tocca qui per configurare CustomTime sperimentale.</string>
     <string name="modern_target_share_limit_status">Limite di inoltro: %1$s</string>
+    <string name="modern_target_presence_status">Blocca ultimo accesso: %1$s | Non disturbare: %2$s</string>
 </resources>

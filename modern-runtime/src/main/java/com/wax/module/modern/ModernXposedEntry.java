@@ -199,6 +199,30 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "ShareLimit state delivery failed", error);
             }
+            for (ModernPresenceFeatures.Pilot pilot : ModernPresenceFeatures.Pilot.values()) {
+                String state = ModernPresenceFeatures.Outcome.DISABLED.name();
+                if (preferences != null && preferences.getBoolean(pilot.getPreferenceKey(), false)) {
+                    try {
+                        System.loadLibrary("dexkit");
+                        state = ModernPresenceFeatures.INSTANCE
+                                .install(pilot, target, this, hookRegistry, preferences).name();
+                    } catch (Throwable featureFailure) {
+                        if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                        state = "ERROR_" + featureFailure.getClass().getSimpleName();
+                        log(Log.ERROR, TAG, "Modern presence/DND adapter failed: " + pilot.name(), featureFailure);
+                    }
+                }
+                try {
+                    String event = pilot == ModernPresenceFeatures.Pilot.FREEZE_LAST_SEEN
+                            ? "FREEZE_LAST_SEEN" : "DND_MODE";
+                    boolean accepted = ModernTargetTelemetry.send(target, packageName, event, state);
+                    if (!accepted) {
+                        log(Log.WARN, TAG, "Modern presence state rejected: " + pilot.name());
+                    }
+                } catch (RuntimeException error) {
+                    log(Log.WARN, TAG, "Modern presence state delivery failed: " + pilot.name(), error);
+                }
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

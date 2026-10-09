@@ -591,4 +591,5 @@
     <string name="modern_pilot_restart">Değişikliği uygulamak için WhatsApp’ı kapatıp yeniden açın.</string>
     <string name="modern_pilot_tap">Deneysel CustomTime ayarları için dokunun.</string>
     <string name="modern_target_share_limit_status">İletme sınırı: %1$s</string>
+    <string name="modern_target_presence_status">Son görülmeyi dondur: %1$s | Rahatsız etmeyin: %2$s</string>
 </resources>

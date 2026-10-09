@@ -589,4 +589,5 @@
     <string name="modern_pilot_restart">WhatsApp schließen und erneut öffnen, um die Änderung anzuwenden.</string>
     <string name="modern_pilot_tap">Tippen, um CustomTime experimentell einzustellen.</string>
     <string name="modern_target_share_limit_status">Weiterleitungslimit: %1$s</string>
+    <string name="modern_target_presence_status">Zuletzt online einfrieren: %1$s | Nicht stören: %2$s</string>
 </resources>

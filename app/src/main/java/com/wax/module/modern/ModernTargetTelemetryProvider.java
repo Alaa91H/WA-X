@@ -26,6 +26,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_BOOTSTRAP = "BOOTSTRAP";
     public static final String EVENT_CUSTOM_TIME = "CUSTOM_TIME";
     public static final String EVENT_SHARE_LIMIT = "SHARE_LIMIT";
+    public static final String EVENT_FREEZE_LAST_SEEN = "FREEZE_LAST_SEEN";
+    public static final String EVENT_DND_MODE = "DND_MODE";
     private static final String TAG = "WA-X TargetTelemetry";
 
     @Override
@@ -69,8 +71,14 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             } else {
                 editor.putString("modern.feature.custom_time.state." + target, value);
             }
-        } else {
+        } else if (EVENT_SHARE_LIMIT.equals(event)) {
             editor.putString("modern.feature.share_limit.state." + target, value);
+        } else if (EVENT_FREEZE_LAST_SEEN.equals(event)) {
+            editor.putString("modern.feature.freeze_last_seen.state." + target, value);
+        } else if (EVENT_DND_MODE.equals(event)) {
+            editor.putString("modern.feature.dnd_mode.state." + target, value);
+        } else {
+            return rejected();
         }
         boolean saved = editor.commit();
         Bundle result = new Bundle();
@@ -87,7 +95,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     static boolean isSupportedEvent(String event) {
         return EVENT_BOOTSTRAP.equals(event)
                 || EVENT_CUSTOM_TIME.equals(event)
-                || EVENT_SHARE_LIMIT.equals(event);
+                || EVENT_SHARE_LIMIT.equals(event)
+                || EVENT_FREEZE_LAST_SEEN.equals(event)
+                || EVENT_DND_MODE.equals(event);
     }
 
     private static Bundle rejected() {

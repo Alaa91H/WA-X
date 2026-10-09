@@ -116,7 +116,7 @@ def verify() -> None:
     assert "ModernRuntimePreferenceRelay.start(this)" in manager_application
     assert "ModernFrameworkServiceBridge.remotePreferences()" in relay
     assert "ModernFrameworkServiceBridge.setOnConnectedListener" in relay
-    assert 'setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit")' in relay
+    assert 'setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit", "freezelastseen", "dndmode")' in relay
     assert "PreferenceManager.getDefaultSharedPreferences" in relay
     assert 'enabled = source.getBoolean(ENABLE_KEY, false)' in relay
     assert ".clear()" not in relay
@@ -129,6 +129,19 @@ def verify() -> None:
     assert "ModernHookRegistry.Registration" in share_limit
     assert "chain.proceed(" in share_limit
     assert "ModernShareLimitPolicy" in share_limit
+    presence = source("modern-runtime/src/main/java/com/wax/module/modern/ModernPresenceFeatures.kt")
+    assert 'FREEZE_KEY = "freezelastseen"' in presence
+    assert 'DND_KEY = "dndmode"' in presence
+    assert "ModernVoidReplacementPolicy.isSafe" in presence
+    assert "ModernPresenceFeatures.Pilot.values()" in modern_entry
+    assert "ModernTargetTelemetry.send" in modern_entry
+    assert '"FREEZE_LAST_SEEN"' in modern_entry
+    assert '"DND_MODE"' in modern_entry
+    provider = source("app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java")
+    assert "EVENT_FREEZE_LAST_SEEN" in provider and "EVENT_DND_MODE" in provider
+    assert 'putBoolean("freezelastseen", source.getBoolean("freezelastseen", false))' in relay
+    assert 'putBoolean("dndmode", source.getBoolean("dndmode", false))' in relay
+
 
     assert "XposedServiceHelper.registerListener" in manager
     assert "ModernFrameworkServiceBridge.register()" in application
