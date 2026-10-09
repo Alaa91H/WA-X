@@ -74,6 +74,10 @@ if (modernXposedPackage) {
 }
 
 
+if (modernXposedPackage && releaseTag != null) {
+    throw GradleException("Modern API102 preview cannot be packaged as a production release")
+}
+
 if (releaseTag != null && releaseTag != "v$baseVersionName") {
     throw GradleException("Release tag $releaseTag does not match configured version v$baseVersionName")
 }
@@ -99,7 +103,7 @@ android {
         //noinspection OldTargetApi
         targetSdk = 34
         versionCode = baseVersionCode
-        versionName = resolvedVersionName
+        versionName = if (modernXposedPackage) "$resolvedVersionName-api102-experimental" else resolvedVersionName
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -119,7 +123,7 @@ android {
             abiFilters.add("arm64-v8a")
         }
 
-        buildConfigField("Boolean", "RESET_ON_INSTALL", "true")
+        buildConfigField("Boolean", "RESET_ON_INSTALL", if (modernXposedPackage) "false" else "true")
         buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())
     }
 
