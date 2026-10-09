@@ -89,9 +89,10 @@ class ModernContactAccess private constructor(
                         matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
                     }.firstOrNull() ?: return Pair(null, Outcome.JID_CLASS_MISSING)
                     val jidClass = jidData.getInstance(classLoader)
+                    // DexKit's returnType is a ClassData, not a Class.
                     val phoneJidClass = dex.findMethod {
                         matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
-                    }.firstOrNull()?.returnType
+                    }.firstOrNull()?.returnType?.getInstance(classLoader)
 
                     // Mirror the legacy decision: the JID field lives on the
                     // contact-data class when the contact has no phone-JID
