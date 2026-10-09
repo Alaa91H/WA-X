@@ -12,13 +12,14 @@
 ## Headline counts (2026-10-09, main @ 5251fe12 + Tasker branch)
 
 - Total registered features: 64
-- Source-wired to API 102 runtime (device UNVERIFIED): 10
+- Source-wired to API 102 runtime (device UNVERIFIED): 11
   (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome, ContactItemListener,
-  ConversationItemListener, MenuStatusProvider, ActivityController, Tasker)
+  ConversationItemListener, MenuStatusProvider, ActivityController, Tasker,
+  ContextMenuActionProvider)
 - Tasker is forward-direction only; its reverse send direction is reported
   honestly as Partial until the send pipeline migrates.
 - Modern adapter present but NOT wired into `ModernXposedEntry`: 1 (MinorFixes)
-- Legacy-only: 53
+- Legacy-only: 52
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
 - In-WhatsApp settings surface: BUILT as the embedded Control Center (#433,
@@ -64,6 +65,8 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #436 | Embedded Control Center, single WA X entry (#433 slice 1) | MERGED, main CI green |
 | #439 | Control Center localization, favourites, accessibility (#433 slice 2) | MERGED, main CI green |
 | #435 | ActivityController contact-picker relay | MERGED, main CI green |
+| #441 | Release 1.2.0-beta.10 (120), tag v1.2.0-beta.10 | MERGED, signed APK published |
+| #442 | ContextMenuActionProvider message-selection popup bus | MERGED, main CI green |
 | #431 | ContactItemListener bind fan-out bus (W1 infra, consumer pending) | MERGED, main CI green |
 | #432 | ConversationItemListener row bus (W1 infra, consumers pending) | MERGED, main CI green |
 | #421 | Derived source-wiring ledger (anti-false-claim guard) | MERGED, main CI green |
@@ -144,7 +147,7 @@ every row; status = honest roll-up.
 | 61 | AboutContactPicker | W2 | 7 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 62 | DefaultEmoji | W2 | 7 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 63 | CaptureDevice | W4 | 12 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 64 | ContextMenuActionProvider | W1 | 2 | 1 | wired (device UNVERIFIED) | infra (no user control) | feat/m06-context-menu-provider | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 64 | ContextMenuActionProvider | W1 | 2 | 1 | wired (device UNVERIFIED) | infra (no user control) | #442 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 
 Batch map (mechanical chunks of the W1 → W2 → W3 → W4 registry order):
 batch 1 = ContactItemListener, ConversationItemListener, MenuStatusProvider,
@@ -178,10 +181,24 @@ batch 12 = BackupRestore, CaptureDevice.
    ContextMenuActionProvider, CustomToolbar, CustomView, CallPrivacy,
    CustomThemeV2, one at a time, each with hook path + preference path + UI
    wiring + tests + CI verified before the next.
-2. IN FLIGHT (Phase 2, Batch 2, 1/5): ContextMenuActionProvider
-   (branch `feat/m06-context-menu-provider`). Then CustomToolbar, CustomView,
-   CallPrivacy, CustomThemeV2 — one at a time, each with hook path +
-   preference path + UI wiring + tests + CI verified before the next.
+2. NEXT (Phase 2, Batch 2): build the **message/contact accessor layer** in the
+   modern runtime before more consumer features. Dependency finding, not a
+   guess: after the five W1 buses, every remaining consumer feature needs one
+   of two things that the modern module does not yet have:
+   - the `FMessageWpp` / `WaContactWpp` accessor chain (JID, phone number,
+     message id, display name) that ShowOnline, CallPrivacy,
+     CopySelectionMessage, CaptureDevice, TagMessage, TextStatusComposer and
+     the rest read. Porting a consumer without it would mean guessing which
+     hook argument is the message, which the Tasker port deliberately refuses
+     to do.
+   - module **resource injection** (drawables, layouts, string resources via
+     `DesignUtils` / `ModuleContextWrapper` / `R.*`). CustomToolbar and
+     CustomThemeV2 depend on this and are therefore deferred to the resource
+     bridge wave (M06.07 / M07), not silently shipped stripped: a feature
+     with no real wiring is forbidden, and shipping a cosmetic variant would
+     be exactly that.
+   ContextMenuActionProvider is already merged (#442); its consumers follow the
+   accessor layer.
 3. Device acceptance checklist for the user (consolidated, at the end):
    every wired feature, the single WA X entry opening the Control Center
    (#433), each toggle applying after restart, and every later batch. Never a
