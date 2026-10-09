@@ -89,7 +89,7 @@ every row; status = honest roll-up.
 | 10 | SeenTick | W3 | 8 | 7 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 11 | BubbleColors | W3 | 8 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 12 | CallPrivacy | W2 | 2 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 13 | ActivityController | W1 | 1 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 13 | ActivityController | W1 | 1 | 1 | wired (device UNVERIFIED) | infra (Manager-driven) | feat/m06-activity-controller (PR #435) | in progress | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 14 | CustomThemeV2 | W2 | 2 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 15 | FloatingBottomBar | W2 | 3 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 16 | ChatLimit | W3 | 8 | 5 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |

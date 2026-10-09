@@ -36,6 +36,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_CONTACT_ITEM_LISTENER = "CONTACT_ITEM_LISTENER";
     public static final String EVENT_CONVERSATION_ITEM_LISTENER = "CONVERSATION_ITEM_LISTENER";
     public static final String EVENT_MENU_STATUS_PROVIDER = "MENU_STATUS_PROVIDER";
+    public static final String EVENT_ACTIVITY_CONTROLLER = "ACTIVITY_CONTROLLER";
     private static final String TAG = "WA-X TargetTelemetry";
 
     /**
@@ -141,6 +142,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.conversation_item_listener.state." + target, value);
         } else if (EVENT_MENU_STATUS_PROVIDER.equals(event)) {
             editor.putString("modern.feature.menu_status_provider.state." + target, value);
+        } else if (EVENT_ACTIVITY_CONTROLLER.equals(event)) {
+            editor.putString("modern.feature.activity_controller.state." + target, value);
         } else {
             return rejected();
         }
@@ -170,7 +173,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_MENU_HOME.equals(event)
                 || EVENT_CONTACT_ITEM_LISTENER.equals(event)
                 || EVENT_CONVERSATION_ITEM_LISTENER.equals(event)
-                || EVENT_MENU_STATUS_PROVIDER.equals(event);
+                || EVENT_MENU_STATUS_PROVIDER.equals(event)
+                || EVENT_ACTIVITY_CONTROLLER.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
