@@ -312,8 +312,9 @@ class HomeFragment : BaseFragment() {
      */
     private fun renderModernActivation() {
         if (!isAdded || currentBinding == null) return
+        val applicationContext = requireContext().applicationContext
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val snapshot = ModernManagerRuntimeStatus.inspect()
+            val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
             withContext(Dispatchers.Main) {
                 if (!isAdded || currentBinding == null) return@withContext
                 binding.statusTitle.text =
