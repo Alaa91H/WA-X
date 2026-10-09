@@ -78,6 +78,7 @@ public final class ModernXposedEntry extends XposedModule {
                                                     && started.add(packageName)) {
                                                 log(Log.INFO, TAG,
                                                         "Application.attach observed inside " + packageName);
+                                                reportLifecycleStage(packageName, "ATTACH_OBSERVED");
                                                 Thread reporter = new Thread(
                                                         () -> reportBootstrap(packageName, target),
                                                         "wax-api102-target-proof");
@@ -109,8 +110,7 @@ public final class ModernXposedEntry extends XposedModule {
                 SharedPreferences prefs = getRemotePreferences(PREFS_GROUP);
                 if (prefs != null) {
                     prefs.edit()
-                            .putString("modern.runtime.stage." + packageName, stage)
-                            .putLong("modern.runtime.stage_at." + packageName,
+                            .putLong("modern.runtime.milestone." + stage + "." + packageName,
                                     System.currentTimeMillis())
                             .apply();
                 } else {
@@ -158,12 +158,20 @@ public final class ModernXposedEntry extends XposedModule {
             boolean canaryEnabled = preferences != null
                     && preferences.getBoolean("modern_canary_enabled", false);
             if (preferences != null) {
-                preferences.edit()
+                boolean persisted = preferences.edit()
                         .putLong(ModernRuntimeProof.heartbeatKey(packageName), System.currentTimeMillis())
                         .putLong(ModernRuntimeProof.bootEpochKey(packageName),
                                 System.currentTimeMillis() - SystemClock.elapsedRealtime())
                         .putString(ModernRuntimeProof.processKey(packageName), currentProcessName)
-                        .apply();
+                        .commit();
+                if (persisted) {
+                    reportLifecycleStage(packageName, "HEARTBEAT_WRITE_CONFIRMED");
+                } else {
+                    reportLifecycleStage(packageName, "HEARTBEAT_WRITE_REJECTED");
+                    log(Log.ERROR, TAG, "RemotePreferences refused heartbeat write: " + packageName);
+                }
+            } else {
+                log(Log.ERROR, TAG, "RemotePreferences group missing: " + packageName);
             }
             // Optional, reversible first modern feature. Never affect WhatsApp by default.
             String customTimeState = ModernCustomTimeFeature.Outcome.DISABLED.name();
