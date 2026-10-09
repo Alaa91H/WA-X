@@ -2,6 +2,7 @@ package com.wax.module.modern
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import android.util.Log
 import androidx.preference.PreferenceManager
 import java.util.concurrent.Executors
@@ -52,12 +53,12 @@ object ModernRuntimePreferenceRelay {
                         template = source.getString("text_in_hour", "[TIME]"),
                     )
                 // Never clear remote preferences: other target-specific/runtime keys live there.
-                remote.edit()
-                    .putBoolean(ENABLE_KEY, values.enabled)
-                    .putBoolean("segundos", values.seconds)
-                    .putBoolean("ampm", values.amPm)
-                    .putString("text_in_hour", values.template)
-                    .apply()
+                remote.edit {
+                    putBoolean(ENABLE_KEY, values.enabled)
+                    putBoolean("segundos", values.seconds)
+                    putBoolean("ampm", values.amPm)
+                    putString("text_in_hour", values.template)
+                }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)
             }
