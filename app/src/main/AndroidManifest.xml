@@ -57,7 +57,8 @@
             android:name=".modern.ModernTargetTelemetryProvider"
             android:authorities="${applicationId}.runtime.telemetry"
             android:exported="true"
-            android:grantUriPermissions="false" />
+            android:grantUriPermissions="false"
+            tools:ignore="ExportedContentProvider" />
 
         <!--suppress AndroidDomInspection -->
         <service
