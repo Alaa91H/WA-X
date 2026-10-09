@@ -5,6 +5,9 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# The relay's own opt-in key, named here so this checker does not restate it.
+ENABLE_KEY_FOR_RELAY = "modern.feature.custom_time.enabled"
+
 
 def source(path: str) -> str:
     file = ROOT / path
@@ -116,7 +119,24 @@ def verify() -> None:
     assert "ModernRuntimePreferenceRelay.start(this)" in manager_application
     assert "ModernFrameworkServiceBridge.remotePreferences()" in relay
     assert "ModernFrameworkServiceBridge.setOnConnectedListener" in relay
-    assert 'setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit", "freezelastseen", "dndmode")' in relay
+    # Assert each relayed key individually: the set literal's exact layout is a
+    # formatting detail, but every key that a migrated feature reads must stay
+    # listed or the modern runtime silently reads a default.
+    for relayed_key in (
+        ENABLE_KEY_FOR_RELAY,
+        '"segundos"',
+        '"ampm"',
+        '"text_in_hour"',
+        '"removeforwardlimit"',
+        '"freezelastseen"',
+        '"dndmode"',
+        '"tasker"',
+        '"tasker_auth_token"',
+    ):
+        assert relayed_key in relay, f"modern preference relay is missing {relayed_key}"
+    # The Tasker switch and its token must be written, not only observed.
+    assert 'putBoolean("tasker", source.getBoolean("tasker", false))' in relay
+    assert 'putString("tasker_auth_token", source.getString("tasker_auth_token"' in relay
     assert "PreferenceManager.getDefaultSharedPreferences" in relay
     assert 'enabled = source.getBoolean(ENABLE_KEY, false)' in relay
     assert ".clear()" not in relay
