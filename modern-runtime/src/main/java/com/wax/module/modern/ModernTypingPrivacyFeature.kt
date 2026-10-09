@@ -44,6 +44,7 @@ object ModernTypingPrivacyFeature {
 
     enum class Outcome {
         DISABLED,
+        INSTALLED,
         RESOLVER_MISSING,
         RESOLVER_AMBIGUOUS,
         UNSAFE_SIGNATURE,

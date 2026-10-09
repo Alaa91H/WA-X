@@ -68,7 +68,8 @@ class ModernTypingPrivacyFeatureTest {
     @Test fun outcomeSetCoversResolverAndSignatureFailures() {
         val outcomes = ModernTypingPrivacyFeature.Outcome.values().map { it.name }
         assertTrue(outcomes.containsAll(listOf(
-            "DISABLED", "RESOLVER_MISSING", "RESOLVER_AMBIGUOUS", "UNSAFE_SIGNATURE", "ERROR",
+            "DISABLED", "INSTALLED", "RESOLVER_MISSING", "RESOLVER_AMBIGUOUS",
+            "UNSAFE_SIGNATURE", "ERROR",
         )))
     }
 
