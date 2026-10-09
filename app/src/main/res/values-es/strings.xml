@@ -573,4 +573,14 @@
     <string name="gt_translate_from">Traducir de</string>
     <string name="gt_translate_to">Traducir a</string>
     <string name="gt_translate_action">Traducir</string>
+    <string name="modern_framework_connected">libxposed API %1$d conectado</string>
+    <string name="modern_framework_waiting">libxposed API 102: esperando al framework</string>
+    <string name="modern_framework_status">WA X %1$s — diagnóstico del Runtime moderno</string>
+    <string name="modern_framework_features_pending">La conexión con el framework no demuestra que las funciones de WhatsApp funcionen. La migración sigue en pruebas.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Se recibió un informe reciente del Runtime. No demuestra que las funciones operen.</string>
+    <string name="modern_target_stale">El informe anterior caducó. Abre WhatsApp y vuelve a comprobar.</string>
+    <string name="modern_target_boot_mismatch">El informe pertenece a otro arranque o tiene una hora no válida.</string>
+    <string name="modern_target_no_report">No se recibió informe de API 102. Abre la aplicación y vuelve a comprobar.</string>
+    <string name="modern_target_feature_status">Función experimental CustomTime: %1$s</string>
 </resources>
