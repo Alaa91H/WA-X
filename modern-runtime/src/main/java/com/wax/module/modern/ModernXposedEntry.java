@@ -22,6 +22,7 @@ public final class ModernXposedEntry extends XposedModule {
     private static final String PREFS_GROUP = "wax.runtime.v1";
     private volatile String currentProcessName;
     private final Set<String> started = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final ModernHookRegistry hookRegistry = new ModernHookRegistry();
 
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
@@ -42,7 +43,10 @@ public final class ModernXposedEntry extends XposedModule {
         }
         try {
             Method attach = Application.class.getDeclaredMethod("attach", Context.class);
-            new ModernHookBridge(this).intercept(
+            hookRegistry.installOnce("runtime.bootstrap",
+                    new ModernHookRegistry.Registration("application.attach", () -> {
+                        io.github.libxposed.api.XposedInterface.HookHandle handle =
+                                new ModernHookBridge(this).intercept(
                     attach,
                     "wax.modern.application.attach",
                     chain -> {
@@ -57,7 +61,10 @@ public final class ModernXposedEntry extends XposedModule {
                         }
                         return result;
                     });
-        } catch (ReflectiveOperationException | RuntimeException e) {
+                        return handle::unhook;
+                    }));
+        } catch (Throwable e) {
+            if (e instanceof VirtualMachineError) throw (VirtualMachineError) e;
             started.remove(packageName);
             log(Log.ERROR, TAG, "Modern package attach hook unavailable: " + packageName, e);
         }
