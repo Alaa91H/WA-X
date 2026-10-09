@@ -37,6 +37,7 @@ android {
 
 dependencies {
     implementation(project(":modern-runtime"))
+    implementation(files("../app/libs/dexkit-android.aar"))
     // API is furnished by Vector/LSPosed in the hooked target (never bundled in the APK).
     compileOnly(libs.libxposed.modern.api)
     implementation(libs.libxposed.modern.service)

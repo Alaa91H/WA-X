@@ -45,6 +45,14 @@ def verify() -> None:
     assert "extends XposedModule" in modern_entry
     assert "onPackageLoaded(" in modern_entry
     assert "ModernTargetPolicy.isMainTarget" in modern_entry
+    feature = source("modern-runtime/src/main/java/com/wax/module/modern/ModernCustomTimeFeature.kt")
+    canary_ui = source("modern-canary/src/main/java/com/wax/module/modern/canary/CanaryActivity.java")
+    assert "ModernCustomTimeFeature.ENABLE_KEY" in modern_entry
+    assert "modern.feature.custom_time.enabled" in feature
+    assert "ModernHookRegistry.Registration" in feature
+    assert "singleOrNull()" in feature
+    assert "setCustomTimeEnabled" in canary_ui
+    assert "CustomTime" in canary_ui
     assert "PROTECTIVE" in facade
     lifecycle = source("modern-runtime/src/main/java/com/wax/module/modern/ModernHookRegistry.java")
     assert "hookRegistry.installOnce" in modern_entry
