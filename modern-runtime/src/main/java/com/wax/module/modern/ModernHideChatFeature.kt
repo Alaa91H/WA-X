@@ -30,12 +30,15 @@ object ModernHideChatFeature {
     const val FEATURE_ID = "hide_chat"
     const val PREF_ARCHIVE_MODE = "typearchive"
     const val MODE_DISABLED = "0"
+    const val MODE_CLICK_TIMES = "1"
+    const val MODE_HOLD_TITLE = "2"
     const val ANCHOR_PRIMARY = "archive/set-content-indicator-to-empty"
     const val ANCHOR_FALLBACK = "archive/Unsupported mode in ArchivePreviewView:"
     private const val TAG = "WA-X HideChat102"
 
     enum class Outcome {
         DISABLED,
+        INSTALLED,
         RESOLVER_MISSING,
         RESOLVER_AMBIGUOUS,
         VIEW_FIELD_MISSING,
@@ -98,7 +101,7 @@ object ModernHideChatFeature {
                             val result = chain.proceed()
                             if (instance != null) {
                                 try {
-                                    viewField.set(instance, HiddenView(chain.thisObject))
+                                    viewField.set(instance, HiddenView(target))
                                 } catch (failure: Throwable) {
                                     if (failure is VirtualMachineError) throw failure
                                     Log.w(TAG, "Could not hide the archive view", failure)
