@@ -46,9 +46,11 @@ class ExportRedactor {
     /** Cleans one free-form value and accumulates what was removed. */
     fun redact(value: String, state: MutableReportState = MutableReportState()): String {
         var text = value
-        text = replaceWithCount(pathPattern, text, ReportRedactor.PLACEHOLDER, state.paths)
-        text = replaceWithCount(dataPathPattern, text, ReportRedactor.PLACEHOLDER, state.paths)
-        text = replaceWithCount(tokenPattern, text, ReportRedactor.PLACEHOLDER, state.tokens)
+        text = redactAndCount(pathPattern, text, state)
+        text = redactAndCount(dataPathPattern, text, state)
+        val tokenCount = tokenPattern.findAll(text).count()
+        text = tokenPattern.replace(text, ReportRedactor.PLACEHOLDER)
+        state.tokens += tokenCount
         val jids = JID_PATTERN.findAll(text).count()
         text = JID_PATTERN.replace(text, ReportRedactor.PLACEHOLDER)
         state.jids += jids
@@ -60,6 +62,17 @@ class ExportRedactor {
         state.numbers += numbers
         state.messages += if (messageLike == text) 0 else 1
         return messageLike
+    }
+
+    /** Replaces every match and records how many were removed. */
+    private fun redactAndCount(
+        pattern: Regex,
+        text: String,
+        state: MutableReportState,
+    ): String {
+        val removed = pattern.findAll(text).count()
+        state.paths += removed
+        return pattern.replace(text, ReportRedactor.PLACEHOLDER)
     }
 
     fun redactAll(values: Collection<String>): Redacted {
@@ -116,27 +129,4 @@ class ExportRedactor {
         var tokens: Int = 0,
         var paths: Int = 0,
     )
-
-    private fun replaceWithCount(
-        pattern: Regex,
-        text: String,
-        replacement: String,
-        counter: MutableInt,
-    ): String {
-        val matches = pattern.findAll(text).count()
-        if (matches > 0) counter.value += matches
-        return pattern.replace(text, replacement)
-    }
-
-    private class MutableInt(var value: Int)
-
-    private companion object {
-        /** A JID, i.e. a local part with a known WhatsApp domain. */
-        val JID_PATTERN = Regex(
-            "[A-Za-z0-9_.+-]+@(s\\.whatsapp\\.net|g\\.us|lid|broadcast|newsletter)",
-        )
-
-        /** The same phone shapes `ReportRedactor` removes, for counting. */
-        val PHONE_PATTERN = Regex("\\+?\\d[\\d\\s().-]{6,}\\d|\\b\\d{6,}\\b")
-    }
 }

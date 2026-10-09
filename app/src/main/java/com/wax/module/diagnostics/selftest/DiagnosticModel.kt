@@ -141,7 +141,7 @@ data class AtomicCheckResult(
         appendField("expected", expected)
         appendField("observed", observedEvidence)
         appendField("verification", verification.name)
-        appendField("timestamp_millis", timestampMillis)
+        append("\"timestamp_millis\":").append(timestampMillis).append(',')
         appendField("whatsapp_build", whatsappBuild)
         appendField("severity", severity)
         append("\"confidence\":").append(confidence)

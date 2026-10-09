@@ -136,32 +136,13 @@ class DiagnosticEngine(
             val dependencyFailed = dependencies.any {
                 it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
             }
-            val result = if (dependencyFailed) {
+            if (dependencyFailed) {
                 // Blocked, not failed: the failure belongs to the dependency
                 // and the cluster must not multiply it.
-                record(definition, AtomicCheckResult(
-                    id = definition.id,
-                    title = definition.title,
-                    scope = definition.scope,
-                    status = DiagnosticStatus.BLOCKED,
-                    evidenceLevel = definition.level,
-                    expected = definition.expected,
-                    observedEvidence = "blocked by " + definition.dependsOn
-                        .filter { observed[it]?.status == DiagnosticStatus.FAIL || observed[it]?.status == DiagnosticStatus.BLOCKED },
-                    verification = VerificationState.NOT_OBSERVED,
-                    timestampMillis = System.currentTimeMillis(),
-                    whatsappBuild = config.whatsappBuild,
-                    severity = definition.severity,
-                    confidence = 1.0,
-                    failureClass = FailureClass.DEPENDENCY_MISSING,
-                    remediation = definition.remediation,
-                    dependsOn = definition.dependsOn,
-                    externalConfirmationRequired = definition.externalConfirmationRequired,
-                ))
+                record(definition, blockedResult(definition, config))
             } else {
                 runProbe(definition, config, probes[definition.id])
             }
-            record(definition, result)
             completed.incrementAndGet()
             progress.add(definition.id)
             onProgress(completed.get(), total, definition.id)
@@ -299,6 +280,38 @@ class DiagnosticEngine(
             },
             remediation = definition.remediation,
             durationMillis = observation.durationMillis,
+            dependsOn = definition.dependsOn,
+            externalConfirmationRequired = definition.externalConfirmationRequired,
+        )
+    }
+
+    /**
+     * The honest result for a check whose dependency did not pass: it names the
+     * dependants it could not run, and carries no confidence of its own.
+     */
+    private fun blockedResult(
+        definition: AtomicCheckInventory.Definition,
+        config: RunConfig,
+    ): AtomicCheckResult {
+        val blocking = definition.dependsOn.filter { id ->
+            val status = observed[id]?.status
+            status == DiagnosticStatus.FAIL || status == DiagnosticStatus.BLOCKED
+        }
+        return AtomicCheckResult(
+            id = definition.id,
+            title = definition.title,
+            scope = definition.scope,
+            status = DiagnosticStatus.BLOCKED,
+            evidenceLevel = definition.level,
+            expected = definition.expected,
+            observedEvidence = "blocked by " + blocking.joinToString(", "),
+            verification = VerificationState.NOT_OBSERVED,
+            timestampMillis = System.currentTimeMillis(),
+            whatsappBuild = config.whatsappBuild,
+            severity = definition.severity,
+            confidence = 1.0,
+            failureClass = FailureClass.DEPENDENCY_MISSING,
+            remediation = definition.remediation,
             dependsOn = definition.dependsOn,
             externalConfirmationRequired = definition.externalConfirmationRequired,
         )

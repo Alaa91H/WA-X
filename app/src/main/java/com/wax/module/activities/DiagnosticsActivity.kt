@@ -222,6 +222,9 @@ class DiagnosticsActivity : BaseActivity() {
             sanitizedLog = null,
         )
 
+    /** Held between launching the SAF picker and writing to the chosen document. */
+    private var pendingBytes: ByteArray? = null
+
     private fun writeZip(redactedEntries: List<DiagnosticZipExporter.Entry>) {
         val exporter = DiagnosticZipExporter()
         val built = try {

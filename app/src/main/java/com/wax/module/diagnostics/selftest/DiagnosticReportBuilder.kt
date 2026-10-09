@@ -1,5 +1,8 @@
 package com.wax.module.diagnostics.selftest
 
+import com.wax.module.diagnostics.selftest.appendQuoted
+import com.wax.module.diagnostics.selftest.jsonArray
+
 /**
  * Assembles the exact file set the issue's ZIP contract requires.
  *
