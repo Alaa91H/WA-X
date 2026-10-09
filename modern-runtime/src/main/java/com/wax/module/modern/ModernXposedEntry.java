@@ -433,6 +433,31 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Contact access state delivery failed", error);
             }
+            // JID accessor: resolves the raw-string reader by signature rather
+            // than by a literal member name, then derives phone numbers with
+            // the legacy rules. Consumers need it for every privacy rule.
+            String jidAccessState = ModernJidAccess.Outcome.ERROR.name();
+            try {
+                ModernContactAccess.Resolution contactResolution =
+                        ModernContactAccess.resolve(target);
+                if (contactResolution.getAccess() != null) {
+                    jidAccessState = ModernJidAccess.resolve(contactResolution.getAccess().getJidClass())
+                            .getOutcome().name();
+                } else {
+                    jidAccessState = "JID_CLASS_UNRESOLVED";
+                }
+                Log.i(TAG, "M06_JID_ACCESS_RESULT package=" + packageName
+                        + " state=" + jidAccessState);
+            } catch (Throwable jidFailure) {
+                if (jidFailure instanceof VirtualMachineError) throw (VirtualMachineError) jidFailure;
+                jidAccessState = "ERROR_" + jidFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern JID access failed on " + packageName, jidFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "JID_ACCESS", jidAccessState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "JID access state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

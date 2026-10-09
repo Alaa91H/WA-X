@@ -28,6 +28,8 @@ import org.luckypray.dexkit.query.enums.StringMatchType
  */
 class ModernMessageAccess private constructor(
     val messageClass: Class<*>,
+    /** The JID class the sender field is typed to, when it was resolvable. */
+    val jidClass: Class<*>?,
     private val keyField: java.lang.reflect.Field,
     private val messageIdField: java.lang.reflect.Field?,
     private val senderJidField: java.lang.reflect.Field?,
@@ -137,7 +139,7 @@ class ModernMessageAccess private constructor(
                     )
                     Resolution(
                         ModernMessageAccess(
-                            messageClass, keyField, messageIdField,
+                            messageClass, jidClass, keyField, messageIdField,
                             senderJidField, fromMeField,
                         ),
                         Outcome.AVAILABLE,

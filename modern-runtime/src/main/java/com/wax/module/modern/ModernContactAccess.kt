@@ -31,7 +31,8 @@ import org.luckypray.dexkit.query.enums.StringMatchType
 class ModernContactAccess private constructor(
     val contactClass: Class<*>,
     private val contactDataClass: Class<*>?,
-    private val jidClass: Class<*>,
+    /** The JID class, exposed so a JID accessor can be resolved from it. */
+    val jidClass: Class<*>,
     private val phoneUserJidClass: Class<*>?,
     private val userJidField: java.lang.reflect.Field,
 ) {
