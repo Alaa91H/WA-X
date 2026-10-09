@@ -12,11 +12,12 @@
 ## Headline counts (2026-10-09, main @ 007f93c1)
 
 - Total registered features: 64
-- Source-wired to API 102 runtime (device UNVERIFIED): 6 + 1 in flight
-  (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome, ContactItemListener;
-  ConversationItemListener on branch `feat/m06-conversation-item-listener`)
+- Source-wired to API 102 runtime (device UNVERIFIED): 7 + 1 in flight
+  (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome, ContactItemListener,
+  ConversationItemListener; MenuStatusProvider on branch
+  `feat/m06-menu-status-provider`)
 - Modern adapter present but NOT wired into `ModernXposedEntry`: 1 (MinorFixes)
-- Legacy-only: 57 (56 once the in-flight branch merges)
+- Legacy-only: 56 (55 once the in-flight branch merges)
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
 - In-WhatsApp settings surface: not built. The only in-WhatsApp affordance
@@ -58,6 +59,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #427 | Authenticated runtime heartbeat + accurate Manager target state | MERGED, main CI green |
 | #429 | In-WhatsApp settings shell (4 wired toggles + restart + pending note) | MERGED, main CI green |
 | #431 | ContactItemListener bind fan-out bus (W1 infra, consumer pending) | MERGED, main CI green |
+| #432 | ConversationItemListener row bus (W1 infra, consumers pending) | MERGED, main CI green |
 | #421 | Derived source-wiring ledger (anti-false-claim guard) | MERGED, main CI green |
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
@@ -76,8 +78,8 @@ every row; status = honest roll-up.
 | 1 | DebugFeature | W0 | 0 | 0 | legacy-only (contract test double) | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 2 | MinorFixes | W0 | 0 | 0 | adapter present, NOT wired | pending | #423 MERGED | main green | PENDING_USER_DEVICE_TEST | staged, not active |
 | 3 | ContactItemListener | W1 | 1 | 3 | wired (device UNVERIFIED) | infra (no user control) | #431 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 4 | ConversationItemListener | W1 | 1 | 0 | wired (device UNVERIFIED) | infra (no user control) | feat/m06-conversation-item-listener | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 5 | MenuStatusProvider | W1 | 1 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 4 | ConversationItemListener | W1 | 1 | 0 | wired (device UNVERIFIED) | infra (no user control) | #432 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 5 | MenuStatusProvider | W1 | 1 | 3 | wired (device UNVERIFIED) | infra (no user control) | feat/m06-menu-status-provider | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 6 | ShowEditMessage | W3 | 7 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 7 | AntiRevoke | W3 | 8 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 8 | CustomToolbar | W2 | 2 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -156,11 +158,9 @@ batch 12 = BackupRestore, CaptureDevice.
 
 ## Remaining work (updated every turn)
 
-1. IN FLIGHT (Phase 2, Batch 1): ConversationItemListener modern bus
-   (branch `feat/m06-conversation-item-listener`) — ListView.setAdapter hook,
-   reflective getView hook, WeakHashMap binding store (replaces XposedHelpers
-   additional fields), 6-consumer bus API. Next: implement, test, push, PR,
-   CI, merge. Then: MenuStatusProvider, ActivityController, Tasker. —
+1. IN FLIGHT (Phase 2, Batch 1): MenuStatusProvider modern bus
+   (branch `feat/m06-menu-status-provider`) — 3/5. Then ActivityController and
+   Tasker to finish Batch 1. —
    an API 102 screen rendered inside WhatsApp listing features with honest
    status (functional vs pending), controls wired to real settings, and a
    "requires WhatsApp restart" indicator. `ModernMenuHomeFeature` entry is

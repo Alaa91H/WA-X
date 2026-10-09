@@ -363,6 +363,27 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Conversation bus state delivery failed", error);
             }
+            // MenuStatusProvider is always-on infrastructure (no user toggle):
+            // the status-playback menu bus StatusDownload, SeenTick and
+            // DeleteStatus subscribe to. StatusItemWpp interpretation stays
+            // with each consumer migration.
+            String statusMenuState = ModernMenuStatusProviderFeature.Outcome.ERROR.name();
+            try {
+                System.loadLibrary("dexkit");
+                statusMenuState = ModernMenuStatusProviderFeature.INSTANCE
+                        .install(target, this, hookRegistry).name();
+                Log.i(TAG, "M06_STATUS_MENU_HOOK_RESULT package=" + packageName
+                        + " state=" + statusMenuState);
+            } catch (Throwable featureFailure) {
+                if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                statusMenuState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern MenuStatusProvider bus failed on " + packageName, featureFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "MENU_STATUS_PROVIDER", statusMenuState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Status menu state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
