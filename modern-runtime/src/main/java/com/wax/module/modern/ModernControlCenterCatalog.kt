@@ -128,6 +128,15 @@ object ModernControlCenterCatalog {
             restartHint = false,
         ),
         Wired(
+            id = "context_menu_action_provider",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.context_menu_action_provider.state",
+            category = ControlCategory.TOOLS,
+            label = "Context Menu Actions",
+            description = "Required infrastructure for message-selection actions",
+            restartHint = false,
+        ),
+        Wired(
             id = "activity_controller",
             preferenceKey = "",
             evidenceKey = "modern.feature.activity_controller.state",

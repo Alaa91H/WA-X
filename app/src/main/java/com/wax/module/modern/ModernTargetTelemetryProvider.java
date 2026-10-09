@@ -38,6 +38,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_MENU_STATUS_PROVIDER = "MENU_STATUS_PROVIDER";
     public static final String EVENT_ACTIVITY_CONTROLLER = "ACTIVITY_CONTROLLER";
     public static final String EVENT_TASKER = "TASKER";
+    public static final String EVENT_CONTEXT_MENU_ACTION_PROVIDER = "CONTEXT_MENU_ACTION_PROVIDER";
     private static final String TAG = "WA-X TargetTelemetry";
 
     /**
@@ -73,6 +74,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.menu_status_provider.state",
         "modern.feature.activity_controller.state",
         "modern.feature.tasker.state",
+        "modern.feature.context_menu_action_provider.state",
     };
 
     @Override
@@ -149,6 +151,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.activity_controller.state." + target, value);
         } else if (EVENT_TASKER.equals(event)) {
             editor.putString("modern.feature.tasker.state." + target, value);
+        } else if (EVENT_CONTEXT_MENU_ACTION_PROVIDER.equals(event)) {
+            editor.putString("modern.feature.context_menu_action_provider.state." + target, value);
         } else {
             return rejected();
         }
@@ -180,7 +184,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_CONVERSATION_ITEM_LISTENER.equals(event)
                 || EVENT_MENU_STATUS_PROVIDER.equals(event)
                 || EVENT_ACTIVITY_CONTROLLER.equals(event)
-                || EVENT_TASKER.equals(event);
+                || EVENT_TASKER.equals(event)
+                || EVENT_CONTEXT_MENU_ACTION_PROVIDER.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
