@@ -45,6 +45,9 @@ enum class ControlEffective {
 
     /** Installed, but the user must restart WhatsApp to see the change. */
     RESTART_REQUIRED,
+
+    /** Working in one direction only; the rest still needs migration. */
+    PARTIAL,
 }
 
 /** Grouping used by the control center list. */
@@ -93,6 +96,7 @@ object ControlStatusText {
         ControlEffective.PENDING_MIGRATION -> "Pending migration"
         ControlEffective.ERROR -> "Runtime error"
         ControlEffective.RESTART_REQUIRED -> "Restart WhatsApp to apply"
+        ControlEffective.PARTIAL -> "Partial: part still pending migration"
     }
 
     fun categoryTitle(category: ControlCategory): String = when (category) {
@@ -127,13 +131,17 @@ object ControlStatusText {
  * working toggles as active" is enforced here rather than in the UI.
  */
 object ControlPolicy {
-    private val WORKING_STATES = setOf(
-        ControlEffective.NOT_OBSERVED,
-        ControlEffective.WORKING,
-        ControlEffective.INSTALLED,
-        ControlEffective.DISABLED,
-        ControlEffective.RESTART_REQUIRED,
-    )
+    private val WORKING_STATES =
+        setOf(
+            ControlEffective.NOT_OBSERVED,
+            ControlEffective.WORKING,
+            ControlEffective.INSTALLED,
+            ControlEffective.DISABLED,
+            ControlEffective.RESTART_REQUIRED,
+            // A partially migrated feature still has a live direction, so its row
+            // stays switchable while the status text says what is missing.
+            ControlEffective.PARTIAL,
+        )
 
     /**
      * A row is writable only with a real, non-blank preference key and a
@@ -162,6 +170,7 @@ object ControlPolicy {
                 reported.startsWith("INSTALLED") -> ControlEffective.INSTALLED
             reported.startsWith("RESOLVER_") -> ControlEffective.RESOLVER_FAILED
             reported == "UNSAFE_SIGNATURE" -> ControlEffective.UNSAFE_SIGNATURE
+            reported == "SEND_DIRECTION_PENDING" -> ControlEffective.PARTIAL
             reported.startsWith("ERROR") -> ControlEffective.ERROR
             else -> ControlEffective.NOT_OBSERVED
         }

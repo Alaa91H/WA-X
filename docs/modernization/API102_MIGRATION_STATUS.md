@@ -9,15 +9,15 @@
 > compatibility: every device cell is `PENDING_USER_DEVICE_TEST`.
 > Device testing is the user's job and never blocks migration or merges.
 
-## Headline counts (2026-10-09, main @ 007f93c1)
+## Headline counts (2026-10-09, main @ 5251fe12 + Tasker branch)
 
 - Total registered features: 64
-- Source-wired to API 102 runtime (device UNVERIFIED): 7 + 1 in flight
+- Source-wired to API 102 runtime (device UNVERIFIED): 9
   (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome, ContactItemListener,
-  ConversationItemListener; MenuStatusProvider on branch
-  `feat/m06-menu-status-provider`)
+  ConversationItemListener, MenuStatusProvider, ActivityController)
+- Plus 1 in flight: Tasker on branch `feat/m06-tasker`, forward direction only
 - Modern adapter present but NOT wired into `ModernXposedEntry`: 1 (MinorFixes)
-- Legacy-only: 56 (55 once the in-flight branch merges)
+- Legacy-only: 54 (53 once the in-flight branch merges)
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
 - In-WhatsApp settings surface: BUILT as the embedded Control Center (#433,
@@ -59,7 +59,10 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #423 | MinorFixes adapter, source-stage only, NOT wired | MERGED, main CI green |
 | #426 | MenuHome overflow-menu entry (access part of #425) | MERGED, main CI green |
 | #427 | Authenticated runtime heartbeat + accurate Manager target state | MERGED, main CI green |
-| #429 | In-WhatsApp settings shell (4 wired toggles + restart + pending note) | MERGED, main CI green |
+| #429 | In-WhatsApp settings shell (superseded by #436's single entry) | MERGED, main CI green |
+| #436 | Embedded Control Center, single WA X entry (#433 slice 1) | MERGED, main CI green |
+| #439 | Control Center localization, favourites, accessibility (#433 slice 2) | MERGED, main CI green |
+| #435 | ActivityController contact-picker relay | MERGED, main CI green |
 | #431 | ContactItemListener bind fan-out bus (W1 infra, consumer pending) | MERGED, main CI green |
 | #432 | ConversationItemListener row bus (W1 infra, consumers pending) | MERGED, main CI green |
 | #421 | Derived source-wiring ledger (anti-false-claim guard) | MERGED, main CI green |
@@ -89,7 +92,7 @@ every row; status = honest roll-up.
 | 10 | SeenTick | W3 | 8 | 7 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 11 | BubbleColors | W3 | 8 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 12 | CallPrivacy | W2 | 2 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 13 | ActivityController | W1 | 1 | 1 | wired (device UNVERIFIED) | infra (Manager-driven) | feat/m06-activity-controller (PR #435) | in progress | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 13 | ActivityController | W1 | 1 | 1 | wired (device UNVERIFIED) | infra (Manager-driven) | #435 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 14 | CustomThemeV2 | W2 | 2 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 15 | FloatingBottomBar | W2 | 3 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 16 | ChatLimit | W3 | 8 | 5 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -115,7 +118,7 @@ every row; status = honest roll-up.
 | 36 | CallType | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 37 | MediaPreview | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 38 | FilterGroups | W3 | 10 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 39 | Tasker | W1 | 1 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 39 | Tasker | W1 | 1 | 1 | wired, forward direction only | in-WhatsApp toggle (partial status) | feat/m06-tasker | in progress | PENDING_USER_DEVICE_TEST | migrated-partial (send direction pending) |
 | 40 | DeleteStatus | W2 | 5 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 41 | DownloadViewOnce | W2 | 5 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 42 | Channels | W3 | 10 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -168,10 +171,11 @@ batch 12 = BackupRestore, CaptureDevice.
    green, merge, then slices 2-3 (category navigation polish, favourites,
    RTL/Arabic localization, themes, accessibility) and the Control Center
    progress comments on #433.
-1. PAUSED (Phase 2, Batch 1): ActivityController is written and pushed on
-   branch `feat/m06-activity-controller` (PR #435, compile fix included) and
-   is deliberately not merged while #433 runs; Tasker is not started. Both
-   resume immediately after #433 merges, finishing Batch 1 at 5 features.
+1. IN FLIGHT (Phase 2, Batch 1, 5/5): Tasker modern port (branch
+   `feat/m06-tasker`) — receipt-method hook from repo-derived anchors,
+   authenticated Tasker broadcast relay in both directions, sender-side
+   receiver. After it merges, Batch 1 is complete at 5 verified features and
+   the release cadence applies (version bump + test APK).
 2. THEN: continue Batch 2 and the rest of the wave plan in the table above,
    one feature at a time, each with hook path + preference path + UI wiring +
    tests + CI verified before the next.
