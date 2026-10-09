@@ -1493,6 +1493,165 @@ jobs:
               echo "- Result: existing publication marker found; Telegram post skipped"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+  telegram-experimental:
+    name: Telegram experimental API102 (${{ matrix.variant }})
+    if: >-
+      ${{
+        !cancelled() &&
+        github.event_name != 'pull_request' &&
+        github.event_name != 'schedule' &&
+        needs.build.result == 'success' &&
+        needs.strict-verdict.result == 'success' &&
+        needs.package.result == 'success' &&
+        (github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/v')) &&
+        (github.event_name != 'workflow_dispatch' || inputs.publish_to_telegram)
+      }}
+    needs: [preflight, build, strict-verdict, package]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: modern-canary
+            artifact: modern-api102-canary
+            package: com.wax.module.modern.canary
+          - variant: modern-main
+            artifact: experimental-same-package-api102
+            package: com.wax.module
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout publisher source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tools/ci/telegram-requirements.txt
+      - name: Download verified variant artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ matrix.artifact }}-${{ github.sha }}
+          path: experimental-input
+      - name: Verify loader, package and debug signing
+        id: metadata
+        env:
+          VARIANT: ${{ matrix.variant }}
+          PACKAGE: ${{ matrix.package }}
+          VERSION: ${{ needs.preflight.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t apks < <(find experimental-input -type f -name '*.apk' | sort)
+          if [[ "${#apks[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one $VARIANT APK"
+            exit 1
+          fi
+          APK="${apks[0]}"
+          if [[ "$VARIANT" == "modern-main" ]]; then
+            python3 tools/quality/check_modern_main_apk.py --apk "$APK"
+          else
+            python3 tools/quality/check_modern_canary_apk.py --apk "$APK"
+          fi
+          SIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n 1)"
+          test -n "$SIGNER" && test -n "$AAPT"
+          "$SIGNER" verify --verbose "$APK"
+          "$AAPT" dump badging "$APK" | grep -Fq "package: name='$PACKAGE'"
+          mkdir -p dist
+          DEST="dist/WA-X-$VERSION-$VARIANT-EXPERIMENTAL-DEBUG-${GITHUB_SHA:0:8}.apk"
+          cp "$APK" "$DEST"
+          echo "apk=$DEST" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$DEST" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "size=$(numfmt --to=iec-i --suffix=B "$(stat -c '%s' "$DEST")")" >> "$GITHUB_OUTPUT"
+          echo "marker=telegram-published-experimental-$VARIANT-18-$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          echo "workflow=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+      - name: Changelog and safe dry-run
+        env:
+          VARIANT: ${{ matrix.variant }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/ci/test_publish_telegram_mtproto.py
+          python3 tools/ci/test_telegram_changelog.py
+          BASE="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+          if [[ -z "$BASE" ]]; then
+            BASE="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+          fi
+          python3 tools/ci/generate_telegram_changelog.py --base "$BASE" --head HEAD --output telegram-changelog.txt
+          {
+            echo "Experimental API102 $VARIANT, commit ${GITHUB_SHA:0:8}"
+            echo "Not fully migrated or verified on a rooted WhatsApp device."
+            if [[ "$VARIANT" == modern-main ]]; then
+              echo "DEBUG SIGNATURE: not an in-place update to WA X. DO NOT uninstall production WA X."
+            else
+              echo "Separate app: does not replace installed WA X."
+            fi
+          } >> telegram-changelog.txt
+          python3 tools/ci/publish_telegram_mtproto.py             --file "${{ steps.metadata.outputs.apk }}"             --type development --variant "$VARIANT"             --version "${{ needs.preflight.outputs.version }}"             --commit "$GITHUB_SHA" --branch "$GITHUB_REF_NAME"             --sha256 "${{ steps.metadata.outputs.sha256 }}"             --size "${{ steps.metadata.outputs.size }}"             --changelog-file telegram-changelog.txt             --workflow-url "${{ steps.metadata.outputs.workflow }}"             --chat-id "@WAXposed" --thread-id 18 --dry-run
+      - name: Check duplicate Telegram marker
+        id: guard
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARKER: ${{ steps.metadata.outputs.marker }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force_publish || false }}
+        run: |
+          set -euo pipefail
+          PUBLISH=true
+          if [[ "$FORCE" != true ]]; then
+            COUNT="$(gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts?name=$MARKER&per_page=1" --jq '.total_count')"
+            if [[ "$COUNT" != 0 ]]; then PUBLISH=false; fi
+          fi
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
+      - name: Verify Telegram secrets
+        if: steps.guard.outputs.publish == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for key in TELEGRAM_BOT_TOKEN TELEGRAM_API_ID TELEGRAM_API_HASH; do
+            if [[ -z "${!key:-}" ]]; then echo "::error::Missing $key"; exit 1; fi
+          done
+      - name: Install pinned Telegram transport
+        if: steps.guard.outputs.publish == 'true'
+        run: python3 -m pip install --disable-pip-version-check --no-input -r tools/ci/telegram-requirements.txt
+      - name: Publish verified experimental APK to Beta Testing
+        if: steps.guard.outputs.publish == 'true'
+        id: posted
+        shell: bash
+        env:
+          VARIANT: ${{ matrix.variant }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          set -euo pipefail
+          set +x
+          python3 tools/ci/publish_telegram_mtproto.py             --file "${{ steps.metadata.outputs.apk }}"             --type development --variant "$VARIANT"             --version "${{ needs.preflight.outputs.version }}"             --commit "$GITHUB_SHA" --branch "$GITHUB_REF_NAME"             --sha256 "${{ steps.metadata.outputs.sha256 }}"             --size "${{ steps.metadata.outputs.size }}"             --changelog-file telegram-changelog.txt             --workflow-url "${{ steps.metadata.outputs.workflow }}"             --chat-id "@WAXposed" --thread-id 18
+      - name: Write Telegram publication marker
+        if: steps.guard.outputs.publish == 'true' && steps.posted.outcome == 'success'
+        run: |
+          mkdir -p telegram-marker
+          printf '%s\n' "commit=$GITHUB_SHA" "variant=${{ matrix.variant }}"             "sha256=${{ steps.metadata.outputs.sha256 }}"             "message=${{ steps.posted.outputs.document_message_id }}" > telegram-marker/published.txt
+      - name: Upload publication marker
+        if: steps.guard.outputs.publish == 'true' && steps.posted.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.metadata.outputs.marker }}
+          path: telegram-marker/published.txt
+          if-no-files-found: error
+          retention-days: 30
+
   ubuntu26-canary:
     name: Ubuntu 26.04 forward-compatibility canary
     if: github.event_name == 'schedule'
