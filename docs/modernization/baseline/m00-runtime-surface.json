@@ -502,6 +502,7 @@
           "app/src/main/java/com/wax/module/activities/TextEditorActivity.kt",
           "app/src/main/java/com/wax/module/activities/base/BaseActivity.kt",
           "app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt",
+          "app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt",
           "app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt",
           "app/src/main/java/com/wax/module/preference/FileReaderPreference.kt",
           "app/src/main/java/com/wax/module/preference/FileSelectPreference.kt",
@@ -512,13 +513,15 @@
           "app/src/main/java/com/wax/module/ui/targets/TargetSettingsViewModel.kt"
         ],
         "getSharedPreferences()": [
+          "app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt",
+          "app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java",
           "app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt",
           "app/src/main/java/com/wax/module/preference/FileSelectPreference.kt"
         ]
       },
       "by_pattern": {
-        "PreferenceManager": 32,
-        "getSharedPreferences()": 3
+        "PreferenceManager": 35,
+        "getSharedPreferences()": 6
       },
       "files": [
         "app/src/main/java/com/wax/module/AppLanguage.kt",
@@ -527,6 +530,9 @@
         "app/src/main/java/com/wax/module/activities/TextEditorActivity.kt",
         "app/src/main/java/com/wax/module/activities/base/BaseActivity.kt",
         "app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt",
+        "app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt",
+        "app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt",
+        "app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java",
         "app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt",
         "app/src/main/java/com/wax/module/preference/FileReaderPreference.kt",
         "app/src/main/java/com/wax/module/preference/FileSelectPreference.kt",
@@ -536,7 +542,7 @@
         "app/src/main/java/com/wax/module/ui/fragments/base/BasePreferenceFragment.kt",
         "app/src/main/java/com/wax/module/ui/targets/TargetSettingsViewModel.kt"
       ],
-      "occurrences": 35,
+      "occurrences": 41,
       "owner": "#333 A09",
       "target": "Not a target of this program. Listed so the asymmetry stays visible.",
       "title": "Preference reads inside the Manager process",
@@ -634,6 +640,7 @@
           "app/src/main/java/com/wax/module/xposed/features/privacy/CallPrivacy.kt",
           "app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt",
           "app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt",
+          "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
           "app/src/main/java/com/wax/module/xposed/utils/DesignUtils.kt",
           "app/src/main/java/com/wax/module/xposed/utils/ModuleContextWrapper.kt",
@@ -646,7 +653,6 @@
           "app/src/main/java/com/wax/module/xposed/bridge/service/HookBinder.kt",
           "app/src/main/java/com/wax/module/xposed/contract/RuntimeFeatureContext.kt",
           "app/src/main/java/com/wax/module/xposed/contract/SystemRuntimeClock.kt",
-          "app/src/main/java/com/wax/module/xposed/core/ActivityStateRegistry.kt",
           "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt",
           "app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt",
           "app/src/main/java/com/wax/module/xposed/core/components/FMessageWpp.kt",
@@ -662,6 +668,9 @@
           "app/src/main/java/com/wax/module/xposed/features/media/HdStatusVideoHook.kt",
           "app/src/main/java/com/wax/module/xposed/features/others/GoogleTranslateLanguages.kt",
           "app/src/main/java/com/wax/module/xposed/features/others/GoogleTranslateSettings.kt",
+          "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
+          "app/src/main/java/com/wax/module/xposed/registry/FeatureFactory.kt",
+          "app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt",
           "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
           "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt",
@@ -674,8 +683,8 @@
       "by_pattern": {
         "@JvmStatic var": 2,
         "lateinit var": 32,
-        "module-level nullable var": 159,
-        "object singleton": 37
+        "module-level nullable var": 160,
+        "object singleton": 40
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -687,7 +696,6 @@
         "app/src/main/java/com/wax/module/xposed/bridge/service/HookBinder.kt",
         "app/src/main/java/com/wax/module/xposed/contract/RuntimeFeatureContext.kt",
         "app/src/main/java/com/wax/module/xposed/contract/SystemRuntimeClock.kt",
-        "app/src/main/java/com/wax/module/xposed/core/ActivityStateRegistry.kt",
         "app/src/main/java/com/wax/module/xposed/core/FeatureLoader.kt",
         "app/src/main/java/com/wax/module/xposed/core/ModuleRuntime.kt",
         "app/src/main/java/com/wax/module/xposed/core/components/AlertDialogWpp.kt",
@@ -729,6 +737,9 @@
         "app/src/main/java/com/wax/module/xposed/features/privacy/CustomPrivacy.kt",
         "app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt",
         "app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt",
+        "app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt",
+        "app/src/main/java/com/wax/module/xposed/registry/FeatureFactory.kt",
+        "app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt",
         "app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt",
         "app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt",
         "app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt",
@@ -738,7 +749,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 230,
+      "occurrences": 234,
       "owner": "#333 A02",
       "target": "Contained in RuntimeGraph with an explicit lifetime.",
       "title": "Global mutable state inside the injected process",
@@ -847,7 +858,6 @@
           "app/src/main/java/com/wax/module/ModuleApplication.kt",
           "app/src/main/java/com/wax/module/ModuleEntryPoint.kt",
           "app/src/main/java/com/wax/module/preference/ThemePreference.kt",
-          "app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt",
           "app/src/main/java/com/wax/module/ui/fragments/RecordingsFragment.kt",
           "app/src/main/java/com/wax/module/ui/fragments/base/BasePreferenceFragment.kt",
           "app/src/main/java/com/wax/module/utils/WhatsAppContactPickerLauncher.kt",
@@ -872,8 +882,8 @@
         ]
       },
       "by_pattern": {
-        "catch with discarded binding": 91,
-        "empty catch body": 53
+        "catch with discarded binding": 90,
+        "empty catch body": 52
       },
       "files": [
         "app/src/main/java/com/wax/module/ModuleApplication.kt",
@@ -920,7 +930,7 @@
         "app/src/main/java/com/wax/module/xposed/utils/ReflectionUtils.kt",
         "app/src/main/java/com/wax/module/xposed/utils/Utils.kt"
       ],
-      "occurrences": 144,
+      "occurrences": 142,
       "owner": "#318 M03 / #333 A05",
       "target": "Every catch reports through the runtime health store.",
       "title": "Failures swallowed without reporting",
@@ -1030,5 +1040,5 @@
     }
   },
   "schema": "wax.m00.runtime-surface/1",
-  "source_files": 325
+  "source_files": 332
 }

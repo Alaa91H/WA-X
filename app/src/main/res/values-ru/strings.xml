@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Принудительно восстановить резервную копию</string>
     <string name="force_restore_backup_summary">Запустите экран восстановления резервной копии вручную. Используйте это, если пропустили восстановление при настройке.</string>
-    <string name="app_desc">Расширенный Xposed-модуль для WhatsApp</string>
     <string name="antirevoke">Защита от удаления сообщений</string>
     <string name="antirevoke_sum">Активирован, удаленные сообщения останутся у вас</string>
     <string name="ghostmode">Скрыть ввод</string>
@@ -576,4 +575,22 @@
     <string name="gt_translate_from">Переводить с</string>
     <string name="gt_translate_to">Переводить на</string>
     <string name="gt_translate_action">Перевести</string>
+    <string name="modern_framework_connected">libxposed API %1$s подключён</string>
+    <string name="modern_framework_waiting">libxposed API 102: ожидание фреймворка</string>
+    <string name="modern_framework_status">WA X %1$s — диагностика современного Runtime</string>
+    <string name="modern_framework_features_pending">Соединение с фреймворком не подтверждает работу функций WhatsApp. Миграция пока экспериментальная.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Получен свежий отчёт о запуске Runtime. Он не доказывает работу функций.</string>
+    <string name="modern_target_stale">Предыдущий отчёт устарел. Откройте WhatsApp и проверьте снова.</string>
+    <string name="modern_target_boot_mismatch">Отчёт относится к другой загрузке устройства или неверному времени.</string>
+    <string name="modern_target_no_report">Отчёт API 102 не получен. Откройте приложение и проверьте снова.</string>
+    <string name="modern_target_feature_status">Экспериментальная функция CustomTime: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (экспериментальный API 102)</string>
+    <string name="modern_pilot_message">CustomTime меняет только отображение времени сообщений. Функция может не работать с этой версией WhatsApp. Остальные старые функции пока недоступны в режиме API 102.</string>
+    <string name="modern_pilot_enable">Включить эксперимент</string>
+    <string name="modern_pilot_disable">Выключить эксперимент</string>
+    <string name="modern_pilot_restart">Закройте и снова откройте WhatsApp для применения.</string>
+    <string name="modern_pilot_tap">Нажмите, чтобы настроить экспериментальный CustomTime.</string>
+    <string name="modern_target_share_limit_status">Лимит пересылки: %1$s</string>
+    <string name="modern_target_presence_status">Заморозка последнего посещения: %1$s | Не беспокоить: %2$s</string>
 </resources>

@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Yedeklemeyi Zorla Geri Yükle</string>
     <string name="force_restore_backup_summary">Yedek geri yükleme ekranını manuel olarak başlatın. Kurulum sırasında geri yüklemeyi atladıysanız bunu kullanın.</string>
-    <string name="app_desc">WhatsApp için gelişmiş Xposed modülü</string>
     <string name="antirevoke">Mesajların Silinmesini Engelle</string>
     <string name="antirevoke_sum">Mesajlar sizden silinmeyecektir</string>
     <string name="ghostmode">Yazıyor bilgisini gizle</string>
@@ -575,4 +574,22 @@
     <string name="gt_translate_from">Kaynak dil</string>
     <string name="gt_translate_to">Hedef dil</string>
     <string name="gt_translate_action">Çevir</string>
+    <string name="modern_framework_connected">libxposed API %1$s bağlı</string>
+    <string name="modern_framework_waiting">libxposed API 102: çerçeve bekleniyor</string>
+    <string name="modern_framework_status">WA X %1$s — modern Runtime tanılama</string>
+    <string name="modern_framework_features_pending">Çerçeve bağlantısı WhatsApp özelliklerinin çalıştığını kanıtlamaz. Geçiş deneyseldir.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Güncel Runtime başlatma raporu alındı. Bu, özelliklerin çalıştığını kanıtlamaz.</string>
+    <string name="modern_target_stale">Önceki raporun süresi doldu. WhatsApp’ı açıp yeniden kontrol edin.</string>
+    <string name="modern_target_boot_mismatch">Rapor farklı bir açılışa ait ya da saat geçersiz.</string>
+    <string name="modern_target_no_report">API 102 raporu alınmadı. Uygulamayı açıp yeniden kontrol edin.</string>
+    <string name="modern_target_feature_status">Deneysel CustomTime özelliği: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (deneysel API 102)</string>
+    <string name="modern_pilot_message">CustomTime yalnızca mesajların zaman gösterimini değiştirir. Bu WhatsApp sürümünde çalışmayabilir. Diğer eski özellikler API 102 modunda henüz kullanılabilir değildir.</string>
+    <string name="modern_pilot_enable">Deneyi etkinleştir</string>
+    <string name="modern_pilot_disable">Deneyi devre dışı bırak</string>
+    <string name="modern_pilot_restart">Değişikliği uygulamak için WhatsApp’ı kapatıp yeniden açın.</string>
+    <string name="modern_pilot_tap">Deneysel CustomTime ayarları için dokunun.</string>
+    <string name="modern_target_share_limit_status">İletme sınırı: %1$s</string>
+    <string name="modern_target_presence_status">Son görülmeyi dondur: %1$s | Rahatsız etmeyin: %2$s</string>
 </resources>

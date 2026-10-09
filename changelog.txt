@@ -1,57 +1,98 @@
-WA X 1.2.0-beta.6
+WA X 1.2.0-beta.9
+Release date: 2026-10-09
+
+FIRST OFFICIAL API 102 BETA — INCOMPLETE FEATURE MIGRATION
+
+WA X uses the original com.wax.module package identity and its existing Manager,
+but now ships ONLY the modern libxposed API 102 entry point.
+Legacy API 93 and the separate Canary app are no longer built or distributed.
+The official update signing certificate is preserved for Android in-place updates.
+
+WHAT IS VERIFIED
+- Exactly one modern META-INF/xposed loader, API102 entry class in the APK's DEX,
+  static WhatsApp/Business scope, no assets/xposed_init or xposedminversion=93.
+- A complete Manager app package, real framework Service connection reporting,
+  boot-scoped process heartbeat, and modern RemotePreferences for migrated settings.
+- A safe, explicit, default-OFF CustomTime pilot with a reversible hook registry.
+- GitHub builds both debug and R8-optimized release; runtime API and signing
+  checks enforce the APK actually produced rather than trusting source metadata.
+
+IMPORTANT LIMITATIONS — READ BEFORE TESTING
+- This is a developer beta, NOT a feature-complete migration or a stable module.
+- The old 63+ legacy feature hooks are NOT yet implemented on API 102. Their
+  settings may remain visible, but toggling them does NOT make them work.
+- Neither a successful CI build nor an installed hook proves WhatsApp visual
+  behavior; rooted Vector/LSPosed API102 real-device tests are still needed.
+- Back up preferences before upgrading. Do not uninstall the existing WA X
+  app or wipe its data to change signatures. The signed release must match
+  the previous WA X signing certificate; if Android refuses to upgrade,
+  stop and report the error rather than uninstalling.
+- Older WhatsApp versions and WhatsApp Business support remain unverified on
+  rooted phones. Stop testing if WhatsApp behaves unexpectedly.
+
+HOW TO TEST
+- Update via the normal WA X signed APK only, keeping the same applicationId.
+- Enable the WA X module for WhatsApp/WhatsApp Business in a compatible Vector
+  installation, restart target apps, and open WA X's status screen.
+- Use the experimental CustomTime toggle ONLY if needed. Its success must be
+  checked in the actual WhatsApp message UI. Submit diagnostics for failures.
+
+WA X 1.2.0-beta.8
 Release date: 2026-10-08
 
-Development package 6: WA X features can now be written against something other than a
-SharedPreferences object, and the first one has been rewritten that way. Nothing you can see
-changed. The point of this build is that the next one can be tested.
+Development package 8: WA X's features are now registered in exactly one place, and the place the
+compatibility matrix is computed from is that same place. Nothing you can see changed. The point of
+this build is that the module and its own documentation can no longer quietly disagree about which
+features exist.
 
-THE THING THAT WAS WRONG
-- Every feature in WA X extended one class whose constructor was a class loader and a
-  SharedPreferences, and whose only method was doHook(), which returns nothing.
-- Sixty-four features did that. Every one of them was constructed reflectively from those two
-  arguments, so none of them could be given anything else: not a clock, not a logger, not a
-  recording of what it hooked.
-- The practical cost was that the entire feature layer had no unit tests at all - not a low
-  number, zero. Twelve hundred and fifteen classes, no way to run any of them off a device.
-- doHook() returning nothing was the other half of it. "I installed", "this build does not have
-  the thing I hook", "I installed but half of it is unavailable" and "I failed" were the same
-  event, and the only way to make any of them visible was to throw.
+TWO LISTS, AND NOBODY COMPARED THEM
+- The runtime installed features from a hand-written list of 64 class names. The compatibility matrix
+  was computed from a second list of 64 names.
+- They held the same names in the same order. That is the part worth being precise about: this was
+  never a case of the two disagreeing. It was a case of them being free to disagree without anything
+  noticing.
+- A feature added to one list and not the other would have shipped a build that installs a different
+  set of features than the compatibility documentation says it does. You would have found out by
+  installing it.
+- The second list was not even independent. The tool that produced it did not look for features; it
+  read the first list and attached extra facts to the names in it. So the documentation was a copy of
+  the code with comments.
 
-THE NEW CONTRACTS
-- Nine contracts, in one package, that name no platform type at all: WaFeature, FeatureContext,
-  FeatureStartResult, HookEngine, CapabilityProvider, DiagnosticSink, RuntimeClock, RuntimeLogger,
-  and the settings snapshot that already existed.
-- FeatureStartResult is the part worth noticing. Installed, degraded, skipped and failed are now
-  four different answers, so a feature can say "this WhatsApp version does not have the hook I
-  wanted" without pretending it succeeded and without crashing.
-- A feature no longer receives preferences. It receives an immutable, target-scoped snapshot of
-  the settings, so a test can hand it real settings over an in-memory store.
-- A feature still gets the target's ClassLoader, because reflecting on the target's classes is
-  the entire job - but it is handed to the feature rather than read from a global, so a test
-  controls it.
-- There is deliberately no Context. A feature that wants to show a dialog would be asking for
-  something a module cannot honestly provide, and leaving that impossible is what keeps the rest
-  of it testable.
+WHAT IS DIFFERENT NOW
+- There is one list, in one file, and it says which features exist and in what order they install.
+- The tool that builds the compatibility matrix reads that list. It still works out each feature's
+  preference keys and resolver dependencies by reading that feature's own code, because those are
+  facts about what the feature does rather than declarations anyone should have to maintain twice.
+- A check runs in every build. It fails if a feature exists in the code but is not registered, if two
+  features share an id, if the documentation's list has drifted from the code's, or if anything goes
+  back to building features by looking constructors up at runtime.
+- Adding a feature is now: write it, add one line. Nothing else.
 
-THE PROOF, NOT THE PROMISE
-- One real feature, taken straight from the shipped code, is now started in a plain JVM test with
-  fakes and a real settings snapshot. No device. No framework. If that test compiles and passes,
-  the claim holds, and CI runs it.
-- A gate in CI fails if a platform type appears anywhere in that contract package - as an import or
-  as a fully qualified name - and it fails if the contracts stop being implemented. A checker
-  nobody runs is a comment, so it runs in every build from this one onwards.
-- Test count: 1290, up from 1281. None failing.
+REFLECTION IS GONE FROM FEATURE STARTUP
+- Every feature used to be built by searching for a constructor with the right parameter types and
+  calling it. If a feature's constructor ever changed shape, that failed at runtime with an error
+  naming neither the feature nor the reason.
+- Each registered entry now names the constructor directly, so changing a feature's shape fails the
+  build at the entry that has to change with it.
+- That also removed a real fault. Each of the 63 older features was being built twice, once and then
+  discarded, before the one that was actually used was started. Two copies of every feature, one
+  thrown away, and nothing in the test suite could have noticed.
+
+A FAILURE REASON THAT WAS BEING THROTTEN AWAY
+- When a feature told WA X why it had failed, that reason was written into a list that nothing ever
+  read, and the reason that actually got stored and shown was one guessed back out of the error text.
+- A feature that says "the class I need does not exist on this build" now has exactly that recorded.
+  If you send a diagnostics report, that sentence is now in it.
 
 WHAT DID NOT CHANGE
-- Sixty-three of the sixty-four features still use the old contract, and WA X starts them exactly
-  as it always has. One was migrated: the debug feature, chosen because it does nothing, so if the
-  migration were wrong the only thing that could be wrong is the migration.
-- Nothing on screen behaves differently. There is no new setting, and no feature was added, removed
-  or changed.
-- The boundary between the app's own code and the code that runs inside WhatsApp is unchanged and
-  still has three known leaks. They are now filed with the exact files involved instead of being
-  quietly counted.
+- The same 64 features install, in the same order, with the same settings. No feature behaves
+  differently and nothing on screen moves.
+- Sixty-three of them still take the same two arguments they always did. That changes next, in the
+  settings package, and because they are now named rather than looked up, that change will be caught
+  by the compiler in one file at a time instead of failing on a user's phone.
+- There is still no per-feature safety assessment on anything. The field is deliberately absent until
+  there is real evidence to put in it, because an invented assessment is worse than none.
 
 UPGRADE
-- Install over 1.2.0-beta.5. Same signature, so Android keeps the module's settings; nothing in
-  this build migrates or rewrites anything you have configured.
+- Install over 1.2.0-beta.7. Same signature, so Android keeps the module's settings. Nothing in this
+  build migrates or rewrites anything you have configured.

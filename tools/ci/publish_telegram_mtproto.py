@@ -34,6 +34,7 @@ class PublishArgs:
     workflow_url: str
     chat_id: str
     thread_id: int
+    variant: str = "legacy"
 
 
 def require_env(name: str) -> str:
@@ -77,6 +78,10 @@ def split_text(text: str, limit: int = TEXT_CHUNK_LIMIT) -> list[str]:
 
 
 def title_for(args: PublishArgs) -> str:
+    if args.variant == "modern-main":
+        return "🧪 WA X API 102 — Experimental Main APK"
+    if args.variant == "modern-canary":
+        return "🧪 WA X API 102 — Separate Canary APK"
     if args.publish_type == "stable":
         return f"🚀 WA X v{args.version}"
     return "🧪 WA X Beta Testing Build"
@@ -95,6 +100,12 @@ def build_caption(args: PublishArgs) -> str:
         f"🔒 SHA-256: {args.sha256}",
     ]
 
+    if args.variant == "modern-main":
+        lines.extend(["", "⚠️ DEBUG-SIGNED: NOT an in-place update to WA X. Do not uninstall WA X.",
+                      "⚠️ Migration incomplete: legacy features are not yet ported."])
+    elif args.variant == "modern-canary":
+        lines.extend(["", "⚠️ Separate testing app. Does not replace WA X.",
+                      "⚠️ Hooks are experimental; on-device compatibility is unverified."])
     if args.release_url:
         lines.extend(["", f"GitHub Release: {args.release_url}"])
     elif args.workflow_url:
@@ -109,6 +120,8 @@ def build_caption(args: PublishArgs) -> str:
 
 
 def build_changelog_intro(args: PublishArgs) -> str:
+    if args.variant != "legacy":
+        return "📝 Experimental API 102 snapshot — not a feature-complete release"
     if args.publish_type == "stable":
         return "📝 Changelog"
     return "📝 Changes since the latest stable release"
@@ -117,6 +130,10 @@ def build_changelog_intro(args: PublishArgs) -> str:
 def validate_local_inputs(args: PublishArgs) -> int:
     if args.publish_type not in {"development", "stable"}:
         raise ValueError(f"Unsupported publish type: {args.publish_type}")
+    if args.variant not in {"legacy", "modern-main", "modern-canary"}:
+        raise ValueError(f"Unsupported APK variant: {args.variant}")
+    if args.variant != "legacy" and args.publish_type == "stable":
+        raise ValueError("Experimental API 102 variants cannot be called stable")
     if not args.file.is_file():
         raise FileNotFoundError(args.file)
     if not args.changelog_file.is_file():
@@ -281,6 +298,7 @@ def parse_args() -> tuple[PublishArgs, bool]:
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", required=True, type=Path)
     parser.add_argument("--type", dest="publish_type", choices=("development", "stable"), required=True)
+    parser.add_argument("--variant", choices=("legacy", "modern-main", "modern-canary"), default="legacy")
     parser.add_argument("--version", required=True)
     parser.add_argument("--commit", required=True)
     parser.add_argument("--branch", required=True)
@@ -311,6 +329,7 @@ def parse_args() -> tuple[PublishArgs, bool]:
         workflow_url=ns.workflow_url,
         chat_id=ns.chat_id,
         thread_id=ns.thread_id,
+        variant=ns.variant,
     )
     return args, ns.dry_run
 

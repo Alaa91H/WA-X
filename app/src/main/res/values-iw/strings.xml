@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">גיבוי שחזור כפוי</string>
     <string name="force_restore_backup_summary">הפעל את מסך שחזור הגיבוי באופן ידני. השתמש באפשרות זו אם דילגת על השחזור במהלך ההתקנה.</string>
-    <string name="app_desc">מודול Xposed מתקדם ל-WhatsApp</string>
     <string name="antirevoke">חסימת מחיקת הודעות</string>
     <string name="antirevoke_sum">הודעות לא יימחקו אצלך</string>
     <string name="ghostmode">הסתר הקלדה</string>
@@ -575,4 +574,22 @@
     <string name="gt_translate_from">תרגום מ־</string>
     <string name="gt_translate_to">תרגום אל</string>
     <string name="gt_translate_action">תרגום</string>
+    <string name="modern_framework_connected">libxposed API %1$s מחובר</string>
+    <string name="modern_framework_waiting">libxposed API 102: ממתין למסגרת</string>
+    <string name="modern_framework_status">WA X %1$s — אבחון סביבת הריצה החדשה</string>
+    <string name="modern_framework_features_pending">החיבור למסגרת אינו מוכיח שתכונות WhatsApp פועלות. המעבר עדיין ניסיוני.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">התקבל דוח הפעלה עדכני. אין בכך הוכחה שהתכונות פועלות.</string>
+    <string name="modern_target_stale">תוקף הדוח הקודם פג. יש לפתוח את WhatsApp ולבדוק שוב.</string>
+    <string name="modern_target_boot_mismatch">הדוח שייך לאתחול אחר או מכיל זמן לא תקין.</string>
+    <string name="modern_target_no_report">לא התקבל דוח API 102. יש לפתוח את היישום ולבדוק שוב.</string>
+    <string name="modern_target_feature_status">תכונת CustomTime ניסיונית: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (ניסיוני, API 102)</string>
+    <string name="modern_pilot_message">CustomTime משנה רק את תצוגת זמני ההודעות. ייתכן שלא יעבוד בגרסת WhatsApp זו. שאר התכונות הישנות עדיין אינן זמינות במצב API 102.</string>
+    <string name="modern_pilot_enable">הפעלת ניסיון</string>
+    <string name="modern_pilot_disable">השבתת ניסיון</string>
+    <string name="modern_pilot_restart">יש לסגור ולפתוח מחדש את WhatsApp כדי להחיל את השינוי.</string>
+    <string name="modern_pilot_tap">יש להקיש כדי להגדיר CustomTime ניסיוני.</string>
+    <string name="modern_target_share_limit_status">מגבלת העברה: %1$s</string>
+    <string name="modern_target_presence_status">הקפאת נראה לאחרונה: %1$s | נא לא להפריע: %2$s</string>
 </resources>

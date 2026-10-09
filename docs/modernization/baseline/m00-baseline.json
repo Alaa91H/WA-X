@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "8195dfd9f987c9f98a15a602ce1b9e6da358c3f03bbfb8453784c0f1ae3d4656",
+      "ci.yml": "9e2174eaff964699163f11e5fc6edb8f96034218bd0cba3d5ecce748fc060c6c",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -224,6 +224,20 @@
         "ref": "xposed-legacy"
       }
     },
+    "libxposed-modern-api": {
+      "group": "io.github.libxposed",
+      "name": "api",
+      "version": {
+        "ref": "libxposed-modern"
+      }
+    },
+    "libxposed-modern-service": {
+      "group": "io.github.libxposed",
+      "name": "service",
+      "version": {
+        "ref": "libxposed-modern"
+      }
+    },
     "markwon-core": {
       "module": "io.noties.markwon:core",
       "version": {
@@ -269,10 +283,12 @@
   },
   "loader_contract": {
     "catalog_alias": "libxposed-legacy",
-    "entry_point": "com.wax.module.ModuleEntryPoint",
+    "entry_point": null,
     "legacy_api_coordinate": "de.robv.android.xposed:api",
-    "manifest_xposedminversion": 93,
-    "modern_metadata_directories": [],
+    "manifest_xposedminversion": null,
+    "modern_metadata_directories": [
+      "app/src/main/resources/META-INF/xposed"
+    ],
     "note": "xposedminversion is a runtime Xposed API level; xposed-legacy is a Maven artifact version. They are different numbering spaces, 93 and 82 are both correct, and the two must never be made equal. See docs/modernization/M00_EVIDENCE_LOCK.md.",
     "pinned_artifact_version": "82",
     "published_artifact_versions": [
@@ -311,14 +327,15 @@
     "packages_excluded_from_packaging": [
       "**.bin",
       "**.properties",
-      "META-INF/**",
+      "META-INF/LICENSE*",
+      "META-INF/NOTICE*",
       "kotlin/**",
       "okhttp3/**",
       "org/**"
     ],
     "target_sdk": 34,
-    "version_code": "116",
-    "version_name": "1.2.0-beta.6"
+    "version_code": "119",
+    "version_name": "1.2.0-beta.9"
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",
@@ -331,9 +348,9 @@
   "source_counts": {
     "android_tests": 1,
     "cpp": 425,
-    "java": 3,
-    "kotlin": 396,
-    "unit_tests": 73
+    "java": 5,
+    "kotlin": 408,
+    "unit_tests": 80
   },
   "static_analysis": {
     "detekt_config_sha256": "8b4cf8b450cfc9ae6c27877f7b795678576454dba2154fb578089f81616f58bf",
@@ -347,7 +364,7 @@
     "detekt": "2.0.0-alpha.6",
     "kotlin": "2.4.21",
     "ksp": "2.3.12",
-    "spotless": "8.10.3",
+    "spotless": "8.10.4",
     "xposed-legacy": "82"
   }
 }

@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Forzar restauración de copia de seguridad</string>
     <string name="force_restore_backup_summary">Inicie la pantalla de restauración de copia de seguridad manualmente. Use esto si omitió la restauración durante la configuración.</string>
-    <string name="app_desc">Módulo Xposed avanzado para WhatsApp</string>
     <string name="antirevoke">Anti-Eliminar Mensajes</string>
     <string name="antirevoke_sum">Cuando está activo, evita que los mensajes sean eliminados</string>
     <string name="ghostmode">Ocultar \"escribiendo\"</string>
@@ -573,4 +572,22 @@
     <string name="gt_translate_from">Traducir de</string>
     <string name="gt_translate_to">Traducir a</string>
     <string name="gt_translate_action">Traducir</string>
+    <string name="modern_framework_connected">libxposed API %1$s conectado</string>
+    <string name="modern_framework_waiting">libxposed API 102: esperando al framework</string>
+    <string name="modern_framework_status">WA X %1$s — diagnóstico del Runtime moderno</string>
+    <string name="modern_framework_features_pending">La conexión con el framework no demuestra que las funciones de WhatsApp funcionen. La migración sigue en pruebas.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Se recibió un informe reciente del Runtime. No demuestra que las funciones operen.</string>
+    <string name="modern_target_stale">El informe anterior caducó. Abre WhatsApp y vuelve a comprobar.</string>
+    <string name="modern_target_boot_mismatch">El informe pertenece a otro arranque o tiene una hora no válida.</string>
+    <string name="modern_target_no_report">No se recibió informe de API 102. Abre la aplicación y vuelve a comprobar.</string>
+    <string name="modern_target_feature_status">Función experimental CustomTime: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (API 102 experimental)</string>
+    <string name="modern_pilot_message">CustomTime solo cambia la hora mostrada en mensajes. Puede no funcionar con esta versión de WhatsApp. Las demás funciones antiguas aún no están disponibles en API 102.</string>
+    <string name="modern_pilot_enable">Activar experimento</string>
+    <string name="modern_pilot_disable">Desactivar experimento</string>
+    <string name="modern_pilot_restart">Cierra WhatsApp y vuelve a abrirlo para aplicar el cambio.</string>
+    <string name="modern_pilot_tap">Toca aquí para configurar CustomTime experimental.</string>
+    <string name="modern_target_share_limit_status">Límite de reenvío: %1$s</string>
+    <string name="modern_target_presence_status">Congelar última conexión: %1$s | No molestar: %2$s</string>
 </resources>

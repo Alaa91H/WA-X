@@ -1,5 +1,6 @@
 package com.wax.module.activation
 
+import com.wax.module.health.BootIdentity
 import com.wax.module.health.HealthFreshness
 import com.wax.module.health.RuntimeFailureCode
 import com.wax.module.health.SubsystemState
@@ -82,7 +83,7 @@ data class TargetHeartbeat(
      * A heartbeat that predates a reboot describes a machine that no longer exists in the same
      * state, so it must not be aged by the same clock as one from this boot.
      */
-    fun isFromBoot(bootId: String): Boolean = this.bootId == bootId
+    fun isFromBoot(bootId: String): Boolean = BootIdentity.isSameBoot(this.bootId, bootId)
 
     /**
      * Whether [other] is this same reporting session.

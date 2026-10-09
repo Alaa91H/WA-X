@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Paksa Pulihkan Cadangan</string>
     <string name="force_restore_backup_summary">Luncurkan layar pemulihan cadangan secara manual. Gunakan ini jika Anda melewatkan pemulihan selama pencadangan</string>
-    <string name="app_desc">Modul Xposed Cadvanced untuk WhatsApp</string>
     <string name="antirevoke">Anti Hapus Pesan</string>
     <string name="antirevoke_sum">Pesan tidak akan dihapus untuk Anda</string>
     <string name="ghostmode">Sembunyikan mengetik…</string>
@@ -572,4 +571,22 @@
     <string name="gt_translate_from">Terjemahkan dari</string>
     <string name="gt_translate_to">Terjemahkan ke</string>
     <string name="gt_translate_action">Terjemahkan</string>
+    <string name="modern_framework_connected">libxposed API %1$s terhubung</string>
+    <string name="modern_framework_waiting">libxposed API 102: menunggu framework</string>
+    <string name="modern_framework_status">WA X %1$s — diagnostik Runtime modern</string>
+    <string name="modern_framework_features_pending">Koneksi framework tidak membuktikan fitur WhatsApp berfungsi. Migrasi masih eksperimental.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Laporan mulai Runtime terbaru diterima. Ini belum membuktikan fitur berfungsi.</string>
+    <string name="modern_target_stale">Laporan sebelumnya kedaluwarsa. Buka WhatsApp lalu periksa kembali.</string>
+    <string name="modern_target_boot_mismatch">Laporan berasal dari proses boot lain atau waktu tidak valid.</string>
+    <string name="modern_target_no_report">Belum ada laporan API 102. Buka aplikasi lalu periksa kembali.</string>
+    <string name="modern_target_feature_status">Fitur percobaan CustomTime: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (eksperimental API 102)</string>
+    <string name="modern_pilot_message">CustomTime hanya mengubah tampilan waktu pesan. Fitur ini mungkin tidak bekerja dengan versi WhatsApp ini. Fitur lama lainnya belum tersedia dalam mode API 102.</string>
+    <string name="modern_pilot_enable">Aktifkan eksperimen</string>
+    <string name="modern_pilot_disable">Nonaktifkan eksperimen</string>
+    <string name="modern_pilot_restart">Tutup lalu buka kembali WhatsApp untuk menerapkan perubahan.</string>
+    <string name="modern_pilot_tap">Ketuk untuk mengatur CustomTime eksperimental.</string>
+    <string name="modern_target_share_limit_status">Batas penerusan: %1$s</string>
+    <string name="modern_target_presence_status">Bekukan terakhir dilihat: %1$s | Jangan ganggu: %2$s</string>
 </resources>
