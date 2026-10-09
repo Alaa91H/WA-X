@@ -14,6 +14,23 @@ package com.wax.module.modern
  * instead of crashing on a missing resource.
  */
 object ModernControlCenterCatalog {
+    /**
+     * Preference key holding the user's favourite control ids. Must stay in
+     * step with the Manager-side allowlist, which validates the value.
+     */
+    const val FAVORITES_KEY = "wax.control_center.favorites"
+
+    /** Parses the persisted favourites list, ignoring unknown or malformed ids. */
+    @JvmStatic
+    fun parseFavorites(value: String?): Set<String> {
+        if (value.isNullOrBlank()) return emptySet()
+        return value.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+    }
+
+    @JvmStatic
+    fun formatFavorites(ids: Collection<String>): String =
+        ids.filter { it.isNotBlank() }.sorted().joinToString(",")
+
     /** A control the user can actually switch. */
     data class Wired(
         val id: String,

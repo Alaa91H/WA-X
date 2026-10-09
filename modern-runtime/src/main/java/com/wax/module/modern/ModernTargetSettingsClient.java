@@ -23,6 +23,24 @@ public final class ModernTargetSettingsClient {
 
     private ModernTargetSettingsClient() {}
 
+    /** Persists the Control Center favourites list (comma-separated control ids). */
+    public static boolean writeFavorites(Context context, String packageName, String favorites) {
+        if (context == null || packageName == null || favorites == null) return false;
+        if (!ModernTargetPolicy.isTargetPackageForProcess(context.getPackageName(), packageName)) {
+            return false;
+        }
+        Bundle extras = new Bundle();
+        extras.putString("target", packageName);
+        extras.putString("key", ModernControlCenterCatalog.FAVORITES_KEY);
+        extras.putString("favorites", favorites);
+        try {
+            Bundle response = context.getContentResolver().call(PROVIDER, METHOD, null, extras);
+            return response != null && response.getBoolean("accepted", false);
+        } catch (RuntimeException deliveryFailure) {
+            return false;
+        }
+    }
+
     public static boolean write(Context context, String packageName, String key, boolean enabled) {
         if (context == null || packageName == null || key == null) return false;
         if (!ModernTargetPolicy.isTargetPackageForProcess(context.getPackageName(), packageName)) {

@@ -73,3 +73,30 @@ no pending/wired overlap, no duplicate ids, category coverage), plus the
 provider allowlist test. Real rendering, RTL/theme rendering and the
 Android 17 / WhatsApp 2.26.39.74 acceptance run are
 `PENDING_USER_DEVICE_TEST`. Full CI must pass before merging.
+## Slice 2 — localization, favourites, accessibility
+
+Slice 1 shipped with hardcoded English labels, no favourites and thin
+accessibility. Slice 2 replaces that with real behaviour:
+
+- **Localization (`ControlCenterStrings`)**: an explicit EN/AR table chosen
+  from the target's own current locale, because the modern runtime module
+  carries no AndroidX and no bundled resource table and therefore cannot
+  resolve layout strings. Unknown languages fall back to English rather than
+  rendering blanks. Tests assert the tables are complete and that Arabic is
+  translated rather than copied.
+- **Favourites with real persistence**: the favourite list is stored through
+  the authenticated write channel in the Manager preference file the relay
+  syncs, as a comma-separated id list under
+  `wax.control_center.favorites`. The Manager validates it before persisting:
+  lowercase/digits/underscore only, bounded length, no empty segments — a
+  path-traversal or injection-shaped value is rejected. A "Favourites only"
+  filter and a per-row favourite button operate on that persisted state, so
+  the feature survives a restart instead of being cosmetic.
+- **Accessibility**: switches and the favourite button carry content
+  descriptions built from the row's real status, and non-actionable rows are
+  marked not-important for accessibility so a pending row cannot be announced
+  as a switch.
+
+Honesty boundary: RTL rendering on the device, TalkBack traversal and the
+Android 17 / WhatsApp 2.26.39.74 acceptance run remain
+`PENDING_USER_DEVICE_TEST`.
