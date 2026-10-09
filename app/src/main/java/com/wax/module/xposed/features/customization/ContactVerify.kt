@@ -62,7 +62,9 @@ class ContactVerify(
     private fun registerActivityListener() {
         ModuleRuntime.addListenerActivity { activity, state ->
             if (activity.javaClass.simpleName == "Conversation" && state == ModuleRuntime.ActivityChangeState.ChangeType.STARTED) {
-                CompletableFuture.runAsync { onConversationStarted(activity) }
+                // Adding the contact-checker View must run on the UI thread.
+                // The profile-photo lookup inside the callback remains asynchronous.
+                activity.runOnUiThread { onConversationStarted(activity) }
             }
         }
     }
