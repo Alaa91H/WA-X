@@ -49,4 +49,30 @@ class ExportRedactorTest {
         val cleaned = redactor.redact("WhatsApp 2.26.39.74 build 4501")
         assertTrue(cleaned.contains("2.26.39.74"))
     }
+
+    @Test fun archivedEntriesAreRedactedForRealNotPreviewed() {
+        // The written archive must be the redacted one: a preview that does not
+        // match the bytes on disk would be a privacy claim, not a guarantee.
+        val entries = listOf(
+            DiagnosticZipExporter.Entry("results.json", "{\"jid\":\"4915112345678@s.whatsapp.net\"}"),
+            DiagnosticZipExporter.Entry("environment.json", "path=/data/data/com.whatsapp/databases/wa.db"),
+            DiagnosticZipExporter.Entry("summary.md", "no user data here"),
+        )
+        val redacted = redactor.redactEntries(entries)
+        assertEquals(entries.map { it.name }, redacted.entries.map { it.name })
+        val jids = String(redacted.entries.first { it.name == "results.json" }.content)
+        val environment = String(redacted.entries.first { it.name == "environment.json" }.content)
+        assertFalse(jids.contains("4915112345678"))
+        assertFalse(environment.contains("/data/data"))
+        assertTrue(String(redacted.entries.first { it.name == "summary.md" }.content).isNotBlank())
+        assertTrue("the export report must describe the whole archive", redacted.report.total >= 2)
+    }
+
+    @Test fun phoneNumbersAreCountedInTheExportReport() {
+        val redacted = redactor.redactAll(listOf("msisdn 4915112345678"))
+        assertTrue(
+            "a removed phone number must appear in the report, not just vanish",
+            redacted.report.numbersRedacted >= 1,
+        )
+    }
 }

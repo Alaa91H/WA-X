@@ -148,6 +148,54 @@ class DiagnosticZipExporterTest {
         assertTrue("the contract requires Arabic and English", summary.contains("الجذر"))
     }
 
+    @Test fun aReportArchiveVerifiesEndToEndBeforeItIsOffered() {
+        val inputs = DiagnosticReportBuilder.Inputs(
+            report = sampleReport(),
+            environment = DiagnosticReportBuilder.Environment(
+                "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+            ),
+            hooks = listOf("wax.modern.typing_privacy.composing"),
+            resolverStates = mapOf("jid_class" to "AVAILABLE"),
+            sanitizedLog = "sanitized line\n",
+        )
+        val built = exporter.build(DiagnosticReportBuilder.entries(inputs))
+        val verification = exporter.verify(built.bytes)
+        assertTrue("manifest", verification.manifestPresent)
+        assertTrue("checksums", verification.checksumsPresent)
+        assertTrue("checksum mismatch", verification.checksumMatches)
+        assertTrue(
+            "an export that cannot be verified must not be offered as a report",
+            verification.valid,
+        )
+    }
+
+    @Test fun anArchiveWhosePayloadDoesNotMatchItsChecksumsIsRejected() {
+        // A checksum file that parses but does not describe the payload is the
+        // exact corruption a user would otherwise discover after sharing it.
+        val payload = listOf(entry("manifest.json", "a"), entry("results.json", "b"))
+        val wrong = payload.map {
+            DiagnosticZipExporter.Entry(
+                it.name,
+                if (it.name == "results.json") "tampered".toByteArray() else it.content,
+            )
+        }
+        val built = exporter.build(
+            wrong + DiagnosticZipExporter.Entry("checksums.sha256", exporter.checksums(payload)),
+        )
+        val verification = exporter.verify(built.bytes)
+        assertTrue("the manifest is still readable", verification.manifestPresent)
+        assertFalse(
+            "checksums that do not match the payload must fail verification",
+            verification.checksumMatches,
+        )
+        assertFalse(verification.valid)
+    }
+
+    @Test fun anArchiveWithoutAChecksumFileIsNotValid() {
+        val built = exporter.build(listOf(entry("manifest.json", "{}"), entry("results.json", "[]")))
+        assertFalse("verification requires the declared checksums", exporter.verify(built.bytes).valid)
+    }
+
     private fun sampleReport(): DiagnosticEngine.Report {
         val engine = DiagnosticEngine()
         try {

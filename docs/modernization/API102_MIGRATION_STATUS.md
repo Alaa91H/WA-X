@@ -70,6 +70,12 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #431 | ContactItemListener bind fan-out bus (W1 infra, consumer pending) | MERGED, main CI green |
 | #432 | ConversationItemListener row bus (W1 infra, consumers pending) | MERGED, main CI green |
 | #421 | Derived source-wiring ledger (anti-false-claim guard) | MERGED, main CI green |
+| #445 | Modern resolver dependency findings (reads `modern-runtime`, no guessed names) | MERGED, main CI green |
+| #446 | JID accessor (API102 replacement for `WaContactWpp.getJid`) | MERGED, main CI green |
+| #447 | TypingPrivacy (privacy pair) | MERGED, main CI green |
+| #453 | HideChat (privacy pair) | MERGED, main CI green |
+| #454 | ViewOnce (privacy pair) | MERGED, main CI green |
+| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | in progress, CI pending |
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
 exists (the Manager link alone is not the full acceptance criterion).

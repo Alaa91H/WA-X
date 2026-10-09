@@ -2,12 +2,10 @@ package com.wax.module.diagnostics.selftest
 
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import com.wax.module.BuildConfig
 import com.wax.module.modern.ModernManagerRuntimeStatus
 import com.wax.module.modern.ModernTargetTelemetryProvider
 import com.wax.module.platform.SupportedPackages
-import java.io.File
 
 /**
  * Supplies the F155 probes from state that already exists.
@@ -19,8 +17,6 @@ import java.io.File
  * `NOT_TESTED` — the difference between "not measured" and "broken".
  */
 object DiagnosticProbeSource {
-    private const val TAG = "WA-X Diagnostics"
-
     const val TARGET_PACKAGE = "com.whatsapp"
 
     fun whatsappBuild(): String = runCatching {
@@ -127,13 +123,26 @@ object DiagnosticProbeSource {
                 failureClass = FailureClass.DEPENDENCY_MISSING,
             )
         },
-        AtomicCheckInventory.REGISTRY to DiagnosticEngine.Probe {
-            val registered = registrySize()
+        AtomicCheckInventory.ENV_SCOPE to DiagnosticEngine.Probe {
+            val packages = SupportedPackages.ALL
+            if (!packages.contains(TARGET_PACKAGE)) return@Probe null
             DiagnosticEngine.Observation(
-                evidence = "registered features=$registered",
+                evidence = "supported=${packages.joinToString(",")}",
+                level = EvidenceLevel.L0_PACKAGE,
+                verification = VerificationState.LOCALLY_VERIFIED,
+            )
+        },
+        AtomicCheckInventory.REGISTRY to DiagnosticEngine.Probe {
+            // The registry lives in the hooked process, so the honest answer
+            // here is whatever the target reported back, not a source file and
+            // not an assumed count.
+            val reported = reportedFeatureStates().size
+            if (reported == 0) return@Probe null
+            DiagnosticEngine.Observation(
+                evidence = "features reported by the target=$reported",
                 level = EvidenceLevel.L2_RESOLVER,
                 verification = VerificationState.LOCALLY_VERIFIED,
-                expectedMatch = registered > 0,
+                expectedMatch = reported > 0,
                 failureClass = FailureClass.DEPENDENCY_MISSING,
             )
         },
@@ -155,9 +164,9 @@ object DiagnosticProbeSource {
      */
     private fun resolverProbe(stateKey: String) = DiagnosticEngine.Probe {
         val reported = reportedState(stateKey) ?: return@Probe null
-        val failed = reported.startsWith("_MISSING") || reported.startsWith("_UNRESOLVED") ||
-            reported.startsWith("_AMBIGUOUS") || reported.startsWith("ERROR") ||
-            reported == "UNSUPPORTED_TARGET"
+        val failed = reported.contains("_MISSING") || reported.contains("_UNRESOLVED") ||
+            reported.contains("_AMBIGUOUS") || reported.contains("_UNSUPPORTED") ||
+            reported.startsWith("ERROR") || reported == "UNSUPPORTED_TARGET"
         DiagnosticEngine.Observation(
             evidence = reported,
             level = EvidenceLevel.L2_RESOLVER,
@@ -179,26 +188,25 @@ object DiagnosticProbeSource {
     private fun target(): ModernManagerRuntimeStatus.Target? =
         snapshot()?.targets?.firstOrNull { it.packageName == TARGET_PACKAGE }
 
-    private fun reportedState(key: String): String? {
-        val context = context() ?: return null
-        return runCatching {
-            context.getSharedPreferences(
-                ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE,
-            ).getString("modern.feature.$key.state.$TARGET_PACKAGE", null)
-        }.getOrNull()
-    }
+    private fun reportedState(key: String): String? =
+        runCatching { targetPrefs()?.getString("modern.feature.$key.state.$TARGET_PACKAGE", null) }
+            .getOrNull()
 
-    private fun registrySize(): Int = runCatching {
-        val source = File(
-            File(System.getProperty("user.dir") ?: ".", "app/src/main/java/com/wax/module/xposed/registry"),
-            "RuntimeFeatureRegistry.kt",
-        )
-        if (source.isFile) {
-            Regex("FeatureFactory\\.(?:Legacy|Contract)\\(").findAll(source.readText()).count()
-        } else {
-            -1
-        }
-    }.getOrDefault(-1)
+    private fun targetPrefs() = context()?.getSharedPreferences(
+        ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE,
+    )
+
+    /** Feature states the target reported, keyed by feature id. */
+    private fun reportedFeatureStates(): Map<String, String> {
+        val prefs = targetPrefs() ?: return emptyMap()
+        return prefs.all
+            .filter { it.key.startsWith("modern.feature.") && it.key.contains(".state.$TARGET_PACKAGE") }
+            .mapNotNull { (key, value) ->
+                val feature = value as? String ?: return@mapNotNull null
+                key.substringAfter("modern.feature.").substringBefore(".state.") to feature
+            }
+            .toMap()
+    }
 
     fun environment(): DiagnosticReportBuilder.Environment {
         val context = context()
@@ -213,35 +221,14 @@ object DiagnosticProbeSource {
         )
     }
 
-    fun supportedPackages(): List<String> = SupportedPackages.ALL.toList()
-
     /** Hook ids currently reported by the target, for `hooks.json`. */
-    fun reportedHooks(): List<String> {
-        val context = context() ?: return emptyList()
-        val reports = runCatching {
-            context.getSharedPreferences(
-                ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE,
-            )
-        }.getOrNull() ?: return emptyList()
-        return reports.all
-            .filter { it.key.startsWith("modern.feature.") && it.key.contains(".state.") }
-            .map { it.key }
-            .sorted()
-    }
+    fun reportedHooks(): List<String> = targetPrefs()
+        ?.all
+        ?.keys
+        ?.filter { it.startsWith("modern.feature.") && it.contains(".state.$TARGET_PACKAGE") }
+        ?.sorted()
+        ?: emptyList()
 
     /** Resolver states the target reported, for `resolvers.json`. */
-    fun reportedResolvers(): Map<String, String> =
-        reportedHooks().mapNotNull { key ->
-            val context = context() ?: return@mapNotNull null
-            val value = runCatching {
-                context.getSharedPreferences(
-                    ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE,
-                ).getString(key, null)
-            }.getOrNull()
-            value?.let { key.substringAfter("modern.feature.").substringBefore(".state.") to it }
-        }.toMap()
-
-    fun log(message: String) {
-        Log.i(TAG, message)
-    }
+    fun reportedResolvers(): Map<String, String> = reportedFeatureStates()
 }

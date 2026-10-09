@@ -2,15 +2,11 @@ package com.wax.module.activities
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -22,7 +18,6 @@ import com.wax.module.diagnostics.selftest.DiagnosticEngine
 import com.wax.module.diagnostics.selftest.DiagnosticProbeSource
 import com.wax.module.diagnostics.selftest.DiagnosticReportBuilder
 import com.wax.module.diagnostics.selftest.DiagnosticZipExporter
-import com.wax.module.diagnostics.selftest.DiagnosticStatus
 import com.wax.module.diagnostics.selftest.ExportRedactor
 
 /**
@@ -166,40 +161,42 @@ class DiagnosticsActivity : BaseActivity() {
     private fun exportWithConfirmation() {
         val report = latest
         if (report == null) {
-            Toast(getString(R.string.diagnostics_run_first))
+            toast(getString(R.string.diagnostics_run_first))
             return
         }
-        val inputs = DiagnosticReportBuilder.Inputs(
-            report = report,
-            environment = DiagnosticProbeSource.environment(),
-            hooks = DiagnosticProbeSource.reportedHooks(),
-            resolverStates = DiagnosticProbeSource.reportedResolvers(),
-            sanitizedLog = null,
-        )
-        val entries = DiagnosticReportBuilder.entries(inputs)
-        val preview = ExportRedactor().redactAll(entries.map { String(it.content) })
+        val entries = DiagnosticReportBuilder.entries(reportInputs(report))
+        // The archive that gets written is the redacted one. The preview and
+        // the export are produced from the same pass, so what the user confirms
+        // is exactly what lands on storage.
+        val redactor = ExportRedactor()
+        val redacted = redactor.redactEntries(entries)
+        val preview = redactor.redactAll(entries.map { String(it.content) })
         AlertDialog.Builder(this)
             .setTitle(R.string.diagnostics_redaction_preview)
             .setMessage(
-                getString(R.string.diagnostics_redaction_summary, preview.report.total) +
+                getString(R.string.diagnostics_redaction_summary, redacted.report.total) +
                     "\n\n" + preview.text.take(1200),
             )
-            .setPositiveButton(R.string.diagnostics_export) { _, _ -> writeZip(entries) }
+            .setPositiveButton(R.string.diagnostics_export) { _, _ ->
+                writeZip(redacted.entries)
+            }
             .setNegativeButton(R.string.diagnostics_cancel, null)
             .show()
     }
 
-    private fun writeZip(entries: List<DiagnosticZipExporter.Entry>) {
-        val declaredMissing = entries.filter { it.name == "manifest.json" }.map {
-            it.content.toString(Charsets.UTF_8)
-        }
-        val withChecksums = entries + DiagnosticZipExporter.Entry(
-            "checksums.sha256",
-            DiagnosticZipExporter().checksums(entries),
-        )
-        val name = DiagnosticZipExporter().fileName(System.currentTimeMillis())
+    private fun reportInputs(report: DiagnosticEngine.Report): DiagnosticReportBuilder.Inputs =
+        DiagnosticReportBuilder.Inputs(
+        report = report,
+        environment = DiagnosticProbeSource.environment(),
+        hooks = DiagnosticProbeSource.reportedHooks(),
+        resolverStates = DiagnosticProbeSource.reportedResolvers(),
+        sanitizedLog = null,
+    )
+
+    private fun writeZip(redactedEntries: List<DiagnosticZipExporter.Entry>) {
+        val exporter = DiagnosticZipExporter()
         val built = try {
-            DiagnosticZipExporter().build(withChecksums, declaredMissing)
+            exporter.build(redactedEntries)
         } catch (failure: RuntimeException) {
             Log.w("WA-X Diagnostics", "export failed", failure)
             AlertDialog.Builder(this)
@@ -209,21 +206,23 @@ class DiagnosticsActivity : BaseActivity() {
             return
         }
         // Verified before the user is offered anything: an archive that cannot
-        // be re-opened must never be presented as a finished report.
-        if (!DiagnosticZipExporter().verify(built.bytes).manifestPresent) {
+        // be re-opened, or whose checksums do not match, must never be
+        // presented as a finished report.
+        val verification = exporter.verify(built.bytes)
+        if (!verification.valid) {
             AlertDialog.Builder(this)
                 .setTitle(R.string.diagnostics_export_failed)
                 .setMessage(getString(R.string.diagnostics_manifest_missing))
                 .show()
             return
         }
+        pendingBytes = built.bytes
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/zip"
-            putExtra(Intent.EXTRA_TITLE, name)
+            putExtra(Intent.EXTRA_TITLE, exporter.fileName(System.currentTimeMillis()))
         }
         startActivityForResult(intent, REQUEST_EXPORT)
-        pendingBytes = built.bytes
     }
 
     private var pendingBytes: ByteArray? = null
@@ -234,7 +233,9 @@ class DiagnosticsActivity : BaseActivity() {
         val bytes = pendingBytes ?: return
         val uri = data?.data ?: return
         try {
-            contentResolver.openOutputStream(uri)?.use { stream ->
+            val stream = contentResolver.openOutputStream(uri)
+                ?: throw IllegalStateException("storage provider returned no stream")
+            stream.use {
                 DiagnosticZipExporter().writeTo(
                     object : DiagnosticZipExporter.OutputStreamTarget {
                         override fun write(buffer: ByteArray, offset: Int, length: Int) {
@@ -263,7 +264,7 @@ class DiagnosticsActivity : BaseActivity() {
         }
     }
 
-    private fun Toast(message: String) =
+    private fun toast(message: String) =
         android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()

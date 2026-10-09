@@ -53,6 +53,12 @@ object DiagnosticReportBuilder {
         inputs.sanitizedLog?.takeIf { it.isNotBlank() }?.let {
             entries += entry("logs/sanitized-runtime.log", it)
         }
+        // Digests cover the payload above. The checksum file cannot contain its
+        // own digest, so it is appended last and excluded from itself.
+        entries += DiagnosticZipExporter.Entry(
+            "checksums.sha256",
+            DiagnosticZipExporter().checksums(entries),
+        )
         return entries
     }
 

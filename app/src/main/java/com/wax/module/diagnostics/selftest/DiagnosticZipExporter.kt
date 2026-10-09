@@ -101,27 +101,45 @@ class DiagnosticZipExporter(
      */
     fun verify(bytes: ByteArray): Verification {
         var manifestPresent = false
-        var checksumsPresent = false
         val names = mutableListOf<String>()
+        val payloads = mutableMapOf<String, ByteArray>()
         ZipInputStream(bytes.inputStream()).use { zip ->
             var entry: ZipEntry? = zip.nextEntry
             while (entry != null) {
                 names.add(entry.name)
-                when (entry.name) {
-                    "manifest.json" -> manifestPresent = true
-                    "checksums.sha256" -> checksumsPresent = true
-                    else -> {}
+                val content = zip.readBytes()
+                if (entry.name == "manifest.json") {
+                    manifestPresent = true
+                } else {
+                    payloads[entry.name] = content
                 }
-                zip.readBytes()
                 entry = zip.nextEntry
             }
         }
+        val checksumsPresent = payloads.containsKey("checksums.sha256")
         return Verification(
             manifestPresent = manifestPresent,
             checksumsPresent = checksumsPresent,
             entryNames = names,
-            checksumMatches = sha256(bytes).isNotBlank(),
+            // Every declared digest must match the bytes actually written. A
+            // checksum file that parses but does not match is a corrupt export,
+            // and corruption has to be caught here rather than by the user.
+            checksumMatches = checksumsPresent &&
+                checksumsMatch(payloads["checksums.sha256"]!!, payloads),
         )
+    }
+
+    private fun checksumsMatch(declared: ByteArray, payloads: Map<String, ByteArray>): Boolean {
+        val rows = declared.toString(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.toList()
+        if (rows.isEmpty()) return false
+        for (row in rows) {
+            val parts = row.split("  ", limit = 2)
+            if (parts.size != 2) return false
+            val (digest, name) = parts
+            val content = payloads[name] ?: return false
+            if (sha256(content) != digest) return false
+        }
+        return true
     }
 
     /** Per-entry checksums, written next to the payload as `checksums.sha256`. */

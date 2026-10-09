@@ -86,6 +86,30 @@ class DiagnosticEngineTest {
         )
     }
 
+    @Test fun aPassBehindAnUnverifiedDependencyIsAlsoBlocked() {
+        // "We did not measure the resolver" is not "the resolver works".
+        val root = AtomicCheckResult(
+            id = "root", title = "root", scope = "resolver",
+            status = DiagnosticStatus.NOT_TESTED, evidenceLevel = EvidenceLevel.L2_RESOLVER,
+            expected = "e", observedEvidence = "no observation",
+            verification = VerificationState.NOT_OBSERVED,
+            timestampMillis = 0, whatsappBuild = "b", severity = "high", confidence = 1.0,
+            failureClass = FailureClass.NONE, remediation = "",
+        )
+        val dependent = AtomicCheckResult(
+            id = "dependent", title = "dependent", scope = "feature",
+            status = DiagnosticStatus.PASS, evidenceLevel = EvidenceLevel.L3_HOOK,
+            expected = "e", observedEvidence = "installed",
+            verification = VerificationState.HOOKED, timestampMillis = 0, whatsappBuild = "b",
+            severity = "high", confidence = 1.0, failureClass = FailureClass.NONE,
+            remediation = "", dependsOn = listOf("root"),
+        )
+        assertEquals(
+            DiagnosticStatus.BLOCKED,
+            dependent.honestStatus(mapOf("root" to root)),
+        )
+    }
+
     @Test fun aMissingProbeIsNotTestedRatherThanPassed() {
         val definition = AtomicCheckInventory.byId(AtomicCheckInventory.HEARTBEAT)!!
         val engine = engine()

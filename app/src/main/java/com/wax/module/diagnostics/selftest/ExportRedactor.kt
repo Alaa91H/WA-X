@@ -52,7 +52,12 @@ class ExportRedactor {
         val jids = JID_PATTERN.findAll(text).count()
         text = JID_PATTERN.replace(text, ReportRedactor.PLACEHOLDER)
         state.jids += jids
+        // Count before delegating: `ReportRedactor` collapses both phone
+        // numbers and message-like payloads, and a redaction report that
+        // reported neither would understate what the export removed.
+        val numbers = PHONE_PATTERN.findAll(text).count()
         val messageLike = ReportRedactor.redact(text)
+        state.numbers += numbers
         state.messages += if (messageLike == text) 0 else 1
         return messageLike
     }
@@ -71,6 +76,38 @@ class ExportRedactor {
             ),
         )
     }
+
+    /**
+     * Redacts archive entries for real, sharing one accumulator across them so
+     * `redaction-report.json` describes the whole export and not just one file.
+     *
+     * There is deliberately no unredacted alternative here: an export that
+     * offered one would turn a diagnostics feature into a data-exfiltration
+     * path.
+     */
+    fun redactEntries(
+        entries: List<DiagnosticZipExporter.Entry>,
+    ): RedactedEntries {
+        val state = MutableReportState()
+        val cleaned = entries.map { entry ->
+            DiagnosticZipExporter.Entry(entry.name, redact(String(entry.content), state).toByteArray())
+        }
+        return RedactedEntries(
+            entries = cleaned,
+            report = RedactionReport(
+                jidsRedacted = state.jids,
+                numbersRedacted = state.numbers,
+                messageLikeRedacted = state.messages,
+                tokensRedacted = state.tokens,
+                pathsRedacted = state.paths,
+            ),
+        )
+    }
+
+    data class RedactedEntries(
+        val entries: List<DiagnosticZipExporter.Entry>,
+        val report: RedactionReport,
+    )
 
     class MutableReportState(
         var jids: Int = 0,
@@ -98,5 +135,8 @@ class ExportRedactor {
         val JID_PATTERN = Regex(
             "[A-Za-z0-9_.+-]+@(s\\.whatsapp\\.net|g\\.us|lid|broadcast|newsletter)",
         )
+
+        /** The same phone shapes `ReportRedactor` removes, for counting. */
+        val PHONE_PATTERN = Regex("\\+?\\d[\\d\\s().-]{6,}\\d|\\b\\d{6,}\\b")
     }
 }
