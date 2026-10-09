@@ -22,9 +22,25 @@ def registry_names(content):
     return names
 
 
+def grouped_wired_ids(entry, sources):
+    """Recognize an enum-based modern feature family only if the entry actually installs it."""
+    wired = set()
+    for source in sources.values():
+        for group in re.findall(r'\\bobject\\s+(Modern\\w+Features)\\b', source):
+            if (group + ".Pilot.values()" not in entry or group + ".INSTANCE" not in entry:
+                continue
+            for _, identifier in re.findall(
+                r'\\b([A-Z][A-Z0-9_]+)\\s*\\(\\s*"([a-z][a-z0-9_]*)"',
+                source,
+            ):
+                wired.add(identifier.replace("_", "").lower())
+    return wired
+
+
 def inspect(registry, entry, sources):
     """'Wired' is a source-level fact, never a claim that WhatsApp executes a hook."""
     names = registry_names(registry)
+    grouped = grouped_wired_ids(entry, sources)
     features = []
     for name in names:
         symbol = "Modern" + name + "Feature"
@@ -33,7 +49,7 @@ def inspect(registry, entry, sources):
             for source in sources.values()
         )
         referenced_by_entry = re.search(r'\b' + re.escape(symbol) + r'\b', entry) is not None
-        if has_definition and referenced_by_entry:
+        if (has_definition and referenced_by_entry) or name.lower() in grouped:
             status = "API102_SOURCE_WIRED_DEVICE_UNVERIFIED"
         elif has_definition:
             status = "API102_SOURCE_NOT_WIRED"
