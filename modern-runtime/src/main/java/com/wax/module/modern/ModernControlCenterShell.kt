@@ -265,6 +265,26 @@ class ModernControlCenterShell(
             // accessibility services instead of a dead switch.
             container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
+        if (row.id == "diagnostics") {
+            // The self-test engine lives in the Manager, where the sanitized
+            // export and the SAF writer are; this row is the in-WhatsApp door.
+            container.addView(
+                Button(activity).apply {
+                    text = strings.runDiagnostics
+                    isAllCaps = false
+                    contentDescription = strings.runDiagnostics
+                    setOnClickListener { openManager() }
+                },
+            )
+            container.addView(
+                TextView(activity).apply {
+                    text = row.description
+                    setTextColor(secondary)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                },
+            )
+            return container
+        }
         val modeControl = row.preferenceKey == ModernHideChatFeature.PREF_ARCHIVE_MODE
         if (modeControl && row.preferenceKey != null) {
             // A three-state mode, not an on/off switch: tapping cycles

@@ -598,4 +598,25 @@
     <string name="modern_pilot_tap">اضغط هنا لضبط ميزة CustomTime التجريبية.</string>
     <string name="modern_target_share_limit_status">حد إعادة التوجيه: %1$s</string>
     <string name="modern_target_presence_status">تجميد آخر ظهور: %1$s | عدم الإزعاج: %2$s</string>
+
+    <string name="diagnostics_title">تشخيص WA X</string>
+    <string name="diagnostics_explain">يجري فحوصات ذرية للوحدة وبيئتها ومحركات البحث. الفحص الذي لا يملك دليلًا يُعرض كغير مُختبر وليس كعامل. سلوك الخصوصية الكامل يحتاج حسابًا ثانيًا ولا يُؤكَّد تلقائيًا.</string>
+    <string name="diagnostics_quick">فحص سريع</string>
+    <string name="diagnostics_deep">فحص ذري شامل</string>
+    <string name="diagnostics_cancel">إلغاء</string>
+    <string name="diagnostics_close">إغلاق</string>
+    <string name="diagnostics_export">تصدير ZIP</string>
+    <string name="diagnostics_running">جارٍ تنفيذ الفحوصات\u2026</string>
+    <string name="diagnostics_cancelled">تم الإلغاء</string>
+    <string name="diagnostics_finished">اكتمل</string>
+    <string name="diagnostics_scan">المسح</string>
+    <string name="diagnostics_counts">العدادات:</string>
+    <string name="diagnostics_first_failed">أول تبعية فاشلة:</string>
+    <string name="diagnostics_root_causes">الأسباب الجذرية</string>
+    <string name="diagnostics_run_first">نفّذ مسحًا قبل التصدير.</string>
+    <string name="diagnostics_redaction_preview">معاينة الإخفاء</string>
+    <string name="diagnostics_redaction_summary">العناصر المخفية: %1$d</string>
+    <string name="diagnostics_export_done">تم تصدير التشخيص</string>
+    <string name="diagnostics_export_failed">فشل التصدير</string>
+    <string name="diagnostics_manifest_missing">تعذّر التحقق من الأرشيف ولم يُكتب.</string>
 </resources>

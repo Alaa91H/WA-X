@@ -152,6 +152,15 @@ object ModernControlCenterCatalog {
             restartHint = false,
         ),
         Wired(
+            id = "diagnostics",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.diagnostics.state",
+            category = ControlCategory.TOOLS,
+            label = "Run Diagnostics",
+            description = "Atomic self-test of the module, runtime and resolvers",
+            restartHint = false,
+        ),
+        Wired(
             id = "message_access",
             preferenceKey = "",
             evidenceKey = "modern.feature.message_access.state",
