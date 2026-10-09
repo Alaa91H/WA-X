@@ -17,7 +17,10 @@ import java.util.concurrent.Executors
 object ModernRuntimePreferenceRelay {
     const val ENABLE_KEY = "modern.feature.custom_time.enabled"
     private const val TAG = "WA-X ModernPrefs"
-    private val observedKeys = setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit", "freezelastseen", "dndmode")
+    private val observedKeys = setOf(
+        ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit",
+        "freezelastseen", "dndmode", "tasker", "tasker_auth_token",
+    )
     private val worker =
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "wax-api102-settings-relay").apply { isDaemon = true }
@@ -62,6 +65,9 @@ object ModernRuntimePreferenceRelay {
                     putBoolean("removeforwardlimit", source.getBoolean("removeforwardlimit", false))
                     putBoolean("freezelastseen", source.getBoolean("freezelastseen", false))
                     putBoolean("dndmode", source.getBoolean("dndmode", false))
+                    // Tasker automation: opt-in flag plus its auth token.
+                    putBoolean("tasker", source.getBoolean("tasker", false))
+                    putString("tasker_auth_token", source.getString("tasker_auth_token", "").orEmpty())
                 }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)

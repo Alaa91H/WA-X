@@ -62,6 +62,18 @@ class ControlCenterModelTest {
         assertFalse(ControlPolicy.isWritable("   ", ControlEffective.WORKING))
     }
 
+    @Test fun sendDirectionPendingIsReportedAsPartialAndStillSwitchable() {
+        val state = ControlPolicy.effectiveFrom(
+            "SEND_DIRECTION_PENDING", false, ControlRequested.ENABLED,
+        )
+        assertEquals(ControlEffective.PARTIAL, state)
+        assertTrue("the forward direction still works", ControlPolicy.isWritable("tasker", state))
+        assertEquals(
+            "Partial: part still pending migration",
+            ControlStatusText.status(state),
+        )
+    }
+
     @Test fun reportedResolverFailureIsNotHiddenAsWorking() {
         assertEquals(
             ControlEffective.RESOLVER_FAILED,

@@ -372,6 +372,26 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Activity controller state delivery failed", error);
             }
+            // Tasker automation: user-enabled in the Manager, opt-in at runtime.
+            String taskerState = ModernTaskerFeature.Outcome.DISABLED.name();
+            if (preferences != null && preferences.getBoolean(ModernTaskerFeature.PREF_ENABLED, false)) {
+                try {
+                    System.loadLibrary("dexkit");
+                    taskerState = ModernTaskerFeature.INSTANCE
+                            .install(target, this, hookRegistry, preferences).name();
+                    Log.i(TAG, "M06_TASKER_HOOK_RESULT package=" + packageName
+                            + " state=" + taskerState);
+                } catch (Throwable featureFailure) {
+                    if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                    taskerState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                    log(Log.ERROR, TAG, "Modern Tasker bridge failed on " + packageName, featureFailure);
+                }
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "TASKER", taskerState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Tasker state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

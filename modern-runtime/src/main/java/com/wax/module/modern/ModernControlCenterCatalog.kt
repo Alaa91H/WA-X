@@ -77,6 +77,14 @@ object ModernControlCenterCatalog {
             description = "Keep your last-seen value frozen",
         ),
         Wired(
+            id = "tasker",
+            preferenceKey = ModernTaskerFeature.PREF_ENABLED,
+            evidenceKey = "modern.feature.tasker.state",
+            category = ControlCategory.TOOLS,
+            label = "Tasker Automation",
+            description = "Forward received messages to Tasker (send direction still pending)",
+        ),
+        Wired(
             id = "dnd_mode",
             preferenceKey = ModernPresenceFeatures.DND_KEY,
             evidenceKey = "modern.feature.dnd_mode.state",
