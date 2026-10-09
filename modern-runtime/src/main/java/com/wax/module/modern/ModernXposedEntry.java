@@ -23,6 +23,7 @@ public final class ModernXposedEntry extends XposedModule {
     private static final String TAG = "WA-X Modern";
     private static final String PREFS_GROUP = "wax.runtime.v1";
     private volatile String currentProcessName;
+    private volatile Context targetContext;
     private final Set<String> started = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final ModernHookRegistry hookRegistry = new ModernHookRegistry();
     private final AtomicLong formattedCalls = new AtomicLong();
@@ -76,6 +77,7 @@ public final class ModernXposedEntry extends XposedModule {
                                             Context target = (Context) chain.getArg(0);
                                             if (target != null && packageName.equals(target.getPackageName())
                                                     && started.add(packageName)) {
+                                                targetContext = target;
                                                 log(Log.INFO, TAG,
                                                         "Application.attach observed inside " + packageName);
                                                 reportLifecycleStage(packageName, "ATTACH_OBSERVED");
@@ -101,78 +103,52 @@ public final class ModernXposedEntry extends XposedModule {
     }
 
     /**
-     * Diagnostic evidence is separate from bootstrap heartbeat: merely loading the
-     * module or installing a HookHandle must never be shown as target READY.
+     * Early stages are written only to Vector's process logs: no target Context
+     * exists before Application.attach and target RemotePreferences is read-only.
      */
     private void reportLifecycleStage(String packageName, String stage) {
-        Thread worker = new Thread(() -> {
-            try {
-                SharedPreferences prefs = getRemotePreferences(PREFS_GROUP);
-                if (prefs != null) {
-                    prefs.edit()
-                            .putLong("modern.runtime.milestone." + stage + "." + packageName,
-                                    System.currentTimeMillis())
-                            .apply();
-                } else {
-                    log(Log.WARN, TAG, "RemotePreferences unavailable for " + stage
-                            + " in " + packageName);
-                }
-            } catch (RuntimeException e) {
-                log(Log.ERROR, TAG, "Lifecycle evidence write failed for " + packageName
-                        + " at " + stage, e);
-            }
-        }, "wax-api102-stage");
-        worker.setDaemon(true);
-        worker.start();
+        log(Log.INFO, TAG, "Bootstrap lifecycle [" + packageName + "]: " + stage);
     }
 
     private void recordFormattedInvocation(String packageName) {
         long count = formattedCalls.incrementAndGet();
         if (!invocationThrottle.accept(SystemClock.elapsedRealtime())) return;
-        // A confirmed Hooker invocation is stronger evidence than a registered HookHandle.
-        // No preference IPC or blocking work occurs inside WhatsApp's timestamp renderer.
+        // The hooked timestamp-rendering thread only enqueues background work.
         try {
             evidenceWorker.execute(() -> {
+                Context context = targetContext;
+                if (context == null) return;
                 try {
-                    SharedPreferences prefs = getRemotePreferences(PREFS_GROUP);
-                    if (prefs == null) return;
-                    long now = System.currentTimeMillis();
-                    prefs.edit()
-                            .putLong(ModernInvocationEvidence.timeKey(packageName), now)
-                            .putLong(ModernInvocationEvidence.bootKey(packageName),
-                                    now - SystemClock.elapsedRealtime())
-                            .putLong(ModernInvocationEvidence.countKey(packageName), count)
-                            .apply();
+                    boolean delivered = ModernTargetTelemetry.send(
+                            context, packageName, "CUSTOM_TIME", "INVOKED");
+                    if (!delivered) {
+                        log(Log.WARN, TAG, "Target invocation report rejected, count=" + count);
+                    }
                 } catch (RuntimeException e) {
-                    log(Log.WARN, TAG, "Modern feature invocation evidence write failed", e);
+                    log(Log.WARN, TAG, "Could not deliver CustomTime invocation evidence", e);
                 }
             });
         } catch (RuntimeException e) {
             log(Log.WARN, TAG, "Modern feature invocation evidence queue unavailable", e);
         }
     }
+
     private void reportBootstrap(String packageName, Context target) {
         try {
+            // XposedModule.getRemotePreferences() is READ-ONLY in hooked apps.
+            // Send lifecycle evidence to the Manager through a UID-authenticated provider.
+            boolean heartbeat = false;
+            try {
+                heartbeat = ModernTargetTelemetry.send(target, packageName, "BOOTSTRAP", "ATTACHED");
+                log(heartbeat ? Log.INFO : Log.ERROR, TAG,
+                        "Target-to-Manager bootstrap delivery: " + heartbeat + " for " + packageName);
+            } catch (RuntimeException telemetryFailure) {
+                log(Log.ERROR, TAG, "Target telemetry provider call failed: " + packageName,
+                        telemetryFailure);
+            }
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
-            // Only report target-originated canary evidence: never claim feature readiness.
             boolean canaryEnabled = preferences != null
                     && preferences.getBoolean("modern_canary_enabled", false);
-            if (preferences != null) {
-                boolean persisted = preferences.edit()
-                        .putLong(ModernRuntimeProof.heartbeatKey(packageName), System.currentTimeMillis())
-                        .putLong(ModernRuntimeProof.bootEpochKey(packageName),
-                                System.currentTimeMillis() - SystemClock.elapsedRealtime())
-                        .putString(ModernRuntimeProof.processKey(packageName), currentProcessName)
-                        .commit();
-                if (persisted) {
-                    reportLifecycleStage(packageName, "HEARTBEAT_WRITE_CONFIRMED");
-                } else {
-                    reportLifecycleStage(packageName, "HEARTBEAT_WRITE_REJECTED");
-                    log(Log.ERROR, TAG, "RemotePreferences refused heartbeat write: " + packageName);
-                }
-            } else {
-                log(Log.ERROR, TAG, "RemotePreferences group missing: " + packageName);
-            }
             // Optional, reversible first modern feature. Never affect WhatsApp by default.
             String customTimeState = ModernCustomTimeFeature.Outcome.DISABLED.name();
             if (preferences != null && preferences.getBoolean(ModernCustomTimeFeature.ENABLE_KEY, false)) {
@@ -187,9 +163,10 @@ public final class ModernXposedEntry extends XposedModule {
                     log(Log.ERROR, TAG, "Modern CustomTime pilot failed on " + packageName, featureFailure);
                 }
             }
-            if (preferences != null) {
-                preferences.edit().putString("modern.feature.custom_time.state." + packageName,
-                        customTimeState).apply();
+            try {
+                ModernTargetTelemetry.send(target, packageName, "CUSTOM_TIME", customTimeState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "CustomTime state delivery failed", error);
             }
             // ShareLimit is migrated with the SAME user setting (off by default).
             String shareLimitState = ModernShareLimitFeature.Outcome.DISABLED.name();
@@ -204,10 +181,10 @@ public final class ModernXposedEntry extends XposedModule {
                     log(Log.ERROR, TAG, "Modern ShareLimit hook failed on " + packageName, featureFailure);
                 }
             }
-            if (preferences != null) {
-                preferences.edit()
-                        .putString("modern.feature.share_limit.state." + packageName, shareLimitState)
-                        .apply();
+            try {
+                ModernTargetTelemetry.send(target, packageName, "SHARE_LIMIT", shareLimitState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "ShareLimit state delivery failed", error);
             }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
