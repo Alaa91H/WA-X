@@ -419,7 +419,7 @@ public final class ModernXposedEntry extends XposedModule {
             try {
                 System.loadLibrary("dexkit");
                 ModernContactAccess.Resolution contactAccess =
-                        ModernContactAccess.Companion.resolve(target);
+                        ModernContactAccess.resolve(target);
                 contactAccessState = contactAccess.getOutcome().name();
                 Log.i(TAG, "M06_CONTACT_ACCESS_RESULT package=" + packageName
                         + " state=" + contactAccessState);

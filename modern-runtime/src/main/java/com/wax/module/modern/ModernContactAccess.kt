@@ -50,6 +50,20 @@ class ModernContactAccess private constructor(
     /** Unwraps the contact-data holder when the contact stores one. */
     fun contactData(contact: Any): Any = contact
 
+    enum class Outcome {
+        AVAILABLE,
+        CONTACT_CLASS_MISSING,
+        CONTACT_DATA_CLASS_MISSING,
+        JID_CLASS_MISSING,
+        USER_JID_FIELD_MISSING,
+        ERROR,
+    }
+
+    /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
+    class Resolution(val access: ModernContactAccess?, val outcome: Outcome) {
+        val available: Boolean get() = access != null
+    }
+
     companion object {
         private const val TAG = "WA-X ContactAccess"
 
@@ -58,18 +72,7 @@ class ModernContactAccess private constructor(
         const val JID_SUFFIX = "jid.Jid"
         const val ANCHOR_PHONE_JID = "WaJidMapRepository/getPhoneJidByAccountUserJid"
 
-        enum class Outcome {
-            AVAILABLE,
-            CONTACT_CLASS_MISSING,
-            CONTACT_DATA_CLASS_MISSING,
-            JID_CLASS_MISSING,
-            USER_JID_FIELD_MISSING,
-            ERROR,
-        }
-        /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
-        class Resolution(val access: ModernContactAccess?, val outcome: Outcome) {
-            val available: Boolean get() = access != null
-        }
+
 
         /**
          * Resolves the access chain once per process. Returns null together

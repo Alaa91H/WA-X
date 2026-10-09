@@ -63,6 +63,19 @@ class ModernMessageAccess private constructor(
         null
     }
 
+    enum class Outcome {
+        AVAILABLE,
+        MESSAGE_CLASS_MISSING,
+        KEY_CLASS_MISSING,
+        KEY_FIELD_MISSING,
+        ERROR,
+    }
+
+    /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
+    class Resolution(val access: ModernMessageAccess?, val outcome: Outcome) {
+        val available: Boolean get() = access != null
+    }
+
     companion object {
         private const val TAG = "WA-X MessageAccess"
 
@@ -71,17 +84,7 @@ class ModernMessageAccess private constructor(
         const val KEY_FIELD_COUNT = 3
         const val JID_SUFFIX = "jid.Jid"
 
-        enum class Outcome {
-            AVAILABLE,
-            MESSAGE_CLASS_MISSING,
-            KEY_CLASS_MISSING,
-            KEY_FIELD_MISSING,
-            ERROR,
-        }
-        /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
-        class Resolution(val access: ModernMessageAccess?, val outcome: Outcome) {
-            val available: Boolean get() = access != null
-        }
+
 
         /**
          * Resolves the access chain once per process. Returns null with the
