@@ -2,8 +2,8 @@ package com.wax.module.modern
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.core.content.edit
 import android.util.Log
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import java.util.concurrent.Executors
 

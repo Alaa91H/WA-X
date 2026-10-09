@@ -413,8 +413,7 @@ class HomeFragment : BaseFragment() {
                 }
                 Toast.makeText(requireContext(), R.string.modern_pilot_restart, Toast.LENGTH_LONG).show()
                 renderModernActivation()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
+            }.setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
