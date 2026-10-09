@@ -1,6 +1,7 @@
 package com.wax.module.modern
 
 import android.os.SystemClock
+import android.util.Log
 
 /**
  * Runtime truth for the actual com.wax.module package's optional API 102 build.
@@ -83,6 +84,7 @@ object ModernManagerRuntimeStatus {
                     },
             )
         } catch (error: RuntimeException) {
+            Log.w("WA-X Modern", "Modern runtime preference read failed", error)
             Snapshot(
                 connected = false,
                 frameworkApi = framework.apiVersion,
