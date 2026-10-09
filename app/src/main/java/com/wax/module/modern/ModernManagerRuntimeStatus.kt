@@ -58,7 +58,6 @@ object ModernManagerRuntimeStatus {
             at > 0 && at <= nowMillis && nowMillis - at <= 120_000L
         }
 
-
     fun classify(
         lastReportMillis: Long,
         recordedBootMillis: Long,
