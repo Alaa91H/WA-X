@@ -167,6 +167,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            if (modernXposedPackage) proguardFiles(file("../modern-canary/proguard-rules.pro"))
         }
 
         release {
@@ -179,6 +180,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            if (modernXposedPackage) proguardFiles(file("../modern-canary/proguard-rules.pro"))
         }
     }
     compileOptions {
