@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "57d5720b28e25ff3727398621d6052eff1348f2a690e364574c8cfac4b9e0fee",
+      "ci.yml": "64f3dc0a2ea6e443f898864e3da99d903e60ebb6d98ea5135a99b91c523634fc",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },

@@ -260,6 +260,30 @@ jobs:
           fi
           python3 tools/quality/check_apk_loader_contract.py --apk "$APK"
 
+      - name: Compile and verify separate API 102 canary APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/quality/test_check_modern_canary_apk.py
+          python3 tools/quality/check_modern_canary_apk.py --source-only
+          # The canary module is explicitly absent from the regular release graph.
+          ./gradlew $GRADLE_ARGS -PenableModernCanary=true :modern-canary:assembleDebug :modern-canary:assembleRelease :modern-canary:lintDebug
+          CANARY_APK="$(find modern-canary/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
+          CANARY_RELEASE="$(find modern-canary/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
+          test -n "$CANARY_APK" && test -n "$CANARY_RELEASE"
+          python3 tools/quality/check_modern_canary_apk.py --apk "$CANARY_APK"
+          python3 tools/quality/check_modern_canary_apk.py --apk "$CANARY_RELEASE"
+          SIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          test -n "$SIGNER"
+          "$SIGNER" verify --verbose "$CANARY_APK"
+
+      - name: Upload separate modern API 102 canary debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: modern-api102-canary-${{ github.sha }}
+          path: modern-canary/build/outputs/apk/debug/
+          if-no-files-found: error
+          retention-days: 5
       - name: Upload baseline APK input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -327,6 +351,8 @@ jobs:
               python3 tools/quality/test_check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_modern_bridge_contract.py || failures=$((failures + 1))
+              python3 tools/quality/check_modern_canary_apk.py --source-only || failures=$((failures + 1))
+              python3 tools/quality/test_check_modern_canary_apk.py || failures=$((failures + 1))
               # The keep rule is what holds the entry point against R8, which never reads
               # assets/xposed_init. The source-level checker above asserts the rule exists; the
               # artifact-level check that reads a built APK runs in the build and release steps,
@@ -411,7 +437,35 @@ jobs:
       - *checkout_full
       - *setup_java
       - *setup_gradle
-      # Absolute 100% is not reachable for a hooked-process module and is not what this
+      # The unit-test runner also configures CMake despite executing JVM-only tests. Its
+      # ephemeral SDK may lack the pinned NDK, and an occasional CDN error returns a
+      # non-ZIP archive. Retry only that exact component instead of weakening coverage.
+      - name: Verify pinned NDK with bounded SDK-manager retries
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_VERSION="$(sed -nE 's/.*ndkVersion = "([0-9.]+)".*/\1/p' app/build.gradle.kts | head -n 1)"
+          [[ "$NDK_VERSION" =~ ^[0-9.]+$ ]]
+          NDK_PATH="$ANDROID_HOME/ndk/$NDK_VERSION"
+          if [[ -f "$NDK_PATH/source.properties" ]] && grep -Fq "Pkg.Revision = $NDK_VERSION" "$NDK_PATH/source.properties"; then
+            echo "Pinned NDK $NDK_VERSION already installed"
+            exit 0
+          fi
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          test -n "$SDKMANAGER"
+          for attempt in 1 2 3; do
+            echo "Installing pinned NDK $NDK_VERSION (attempt $attempt of 3)"
+            if timeout 600 "$SDKMANAGER" --install "ndk;$NDK_VERSION" && \
+                [[ -f "$NDK_PATH/source.properties" ]] && \
+                grep -Fq "Pkg.Revision = $NDK_VERSION" "$NDK_PATH/source.properties"; then
+              exit 0
+            fi
+            # Hosted runner only; a partial/corrupt install must not poison retries.
+            rm -rf "$NDK_PATH"
+            sleep $((attempt * 5))
+          done
+          echo "::error::Pinned NDK $NDK_VERSION could not be installed after 3 attempts"
+          exit 1      # Absolute 100% is not reachable for a hooked-process module and is not what this
       # checks. Every counter has a floor in quality/coverage-baseline.json, and a change
       # fails when the covered count falls (a lost test) or the percentage falls (production
       # code added without one). Both guards were verified to fire.

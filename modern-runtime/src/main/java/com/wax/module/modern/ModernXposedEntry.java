@@ -3,6 +3,7 @@ package com.wax.module.modern;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.util.Log;
 import io.github.libxposed.api.XposedModule;
 import io.github.libxposed.api.XposedModuleInterface;
@@ -48,7 +49,11 @@ public final class ModernXposedEntry extends XposedModule {
                         Object result = chain.proceed();
                         Context target = (Context) chain.getArg(0);
                         if (target != null && packageName.equals(target.getPackageName())) {
-                            reportBootstrap(packageName);
+                            // Remote framework IPC must never block WhatsApp Application.attach.
+                            Thread reporter = new Thread(() -> reportBootstrap(packageName),
+                                    "wax-api102-target-proof");
+                            reporter.setDaemon(true);
+                            reporter.start();
                         }
                         return result;
                     });
@@ -61,9 +66,17 @@ public final class ModernXposedEntry extends XposedModule {
     private void reportBootstrap(String packageName) {
         try {
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
-            // Report only loader evidence. Do not mark 64 legacy features READY.
+            // Only report target-originated canary evidence: never claim feature readiness.
             boolean canaryEnabled = preferences != null
                     && preferences.getBoolean("modern_canary_enabled", false);
+            if (preferences != null) {
+                preferences.edit()
+                        .putLong(ModernRuntimeProof.heartbeatKey(packageName), System.currentTimeMillis())
+                        .putLong(ModernRuntimeProof.bootEpochKey(packageName),
+                                System.currentTimeMillis() - SystemClock.elapsedRealtime())
+                        .putString(ModernRuntimeProof.processKey(packageName), currentProcessName)
+                        .apply();
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
