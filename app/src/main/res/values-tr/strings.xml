@@ -575,4 +575,14 @@
     <string name="gt_translate_from">Kaynak dil</string>
     <string name="gt_translate_to">Hedef dil</string>
     <string name="gt_translate_action">Çevir</string>
+    <string name="modern_framework_connected">libxposed API %1$d bağlı</string>
+    <string name="modern_framework_waiting">libxposed API 102: çerçeve bekleniyor</string>
+    <string name="modern_framework_status">WA X %1$s — modern Runtime tanılama</string>
+    <string name="modern_framework_features_pending">Çerçeve bağlantısı WhatsApp özelliklerinin çalıştığını kanıtlamaz. Geçiş deneyseldir.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Güncel Runtime başlatma raporu alındı. Bu, özelliklerin çalıştığını kanıtlamaz.</string>
+    <string name="modern_target_stale">Önceki raporun süresi doldu. WhatsApp’ı açıp yeniden kontrol edin.</string>
+    <string name="modern_target_boot_mismatch">Rapor farklı bir açılışa ait ya da saat geçersiz.</string>
+    <string name="modern_target_no_report">API 102 raporu alınmadı. Uygulamayı açıp yeniden kontrol edin.</string>
+    <string name="modern_target_feature_status">Deneysel CustomTime özelliği: %1$s</string>
 </resources>
