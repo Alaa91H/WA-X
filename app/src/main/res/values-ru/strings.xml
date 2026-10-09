@@ -592,4 +592,5 @@
     <string name="modern_pilot_restart">Закройте и снова откройте WhatsApp для применения.</string>
     <string name="modern_pilot_tap">Нажмите, чтобы настроить экспериментальный CustomTime.</string>
     <string name="modern_target_share_limit_status">Лимит пересылки: %1$s</string>
+    <string name="modern_target_presence_status">Заморозка последнего посещения: %1$s | Не беспокоить: %2$s</string>
 </resources>
