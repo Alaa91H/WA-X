@@ -59,6 +59,27 @@ class TelegramPublisherTests(unittest.TestCase):
         args = module.PublishArgs(**{**args.__dict__, "publish_type": "stable", "version": "2.0.0"})
         self.assertEqual(module.title_for(args), "🚀 WA X v2.0.0")
 
+    def test_modern_variants_show_explicit_warnings_and_labels(self) -> None:
+        sample = self.make_args()
+        modern_main = module.PublishArgs(**{**sample.__dict__, "variant": "modern-main"})
+        canary = module.PublishArgs(**{**sample.__dict__, "variant": "modern-canary"})
+        self.assertIn("API 102", module.title_for(modern_main))
+        self.assertIn("Main APK", module.title_for(modern_main))
+        self.assertIn("Separate Canary", module.title_for(canary))
+        self.assertIn("DEBUG-SIGNED", module.build_caption(modern_main))
+        self.assertIn("Do not uninstall WA X", module.build_caption(modern_main))
+        self.assertIn("Does not replace WA X", module.build_caption(canary))
+        self.assertIn("not a feature-complete release", module.build_changelog_intro(canary))
+        self.assertLessEqual(len(module.build_caption(modern_main)), 1024)
+        self.assertLessEqual(len(module.build_caption(canary)), 1024)
+
+    def test_experimental_variant_cannot_be_declared_stable(self) -> None:
+        sample = self.make_args()
+        with self.assertRaises(ValueError):
+            module.validate_local_inputs(
+                module.PublishArgs(**{**sample.__dict__, "variant": "modern-main", "publish_type": "stable"})
+            )
+
     def test_caption_contains_integrity_metadata(self) -> None:
         args = self.make_args()
         caption = module.build_caption(args)
