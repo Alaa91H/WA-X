@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "WA-X"
 include(":app")
+include(":modern-runtime")

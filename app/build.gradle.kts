@@ -261,6 +261,7 @@ dependencies {
     implementation(files("libs/dexkit-android.aar"))
     implementation(libs.flatbuffers)
     compileOnly(libs.libxposed.legacy)
+    implementation(libs.libxposed.modern.service) // Manager-side API 102 bridge; legacy loader remains active.
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.core)

@@ -9,6 +9,7 @@ flatbuffers = "25.2.10"
 jstyleparser = "4.0.1"
 okhttp = "5.5.0"
 xposed-legacy = "82"
+libxposed-modern = "102.0.0"
 agp = "9.4.1"
 colorpicker = "1.1.0"
 roomRuntime = "2.8.5"
@@ -54,6 +55,8 @@ filepicker = { module = "io.github.tutorialsandroid:filepicker", version.ref = "
 flatbuffers = { module = "com.google.flatbuffers:flatbuffers-java", version.ref = "flatbuffers" }
 jstyleparser = { module = "net.sf.cssbox:jstyleparser", version.ref = "jstyleparser" }
 libxposed-legacy = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed-legacy" }
+libxposed-modern-api = { group = "io.github.libxposed", name = "api", version.ref = "libxposed-modern" }
+libxposed-modern-service = { group = "io.github.libxposed", name = "service", version.ref = "libxposed-modern" }
 
 androidx-activity = { module = "androidx.activity:activity", version = "1.13.0" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.2" }
@@ -92,6 +95,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 # version tracks the Kotlin version, so it is derived rather than pinned separately.
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kspPlugin = { id = "com.google.devtools.ksp", version = "2.3.12" }
 # T09: static analysis and formatting, both pinned so a build never silently changes rules.

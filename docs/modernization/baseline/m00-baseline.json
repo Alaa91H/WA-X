@@ -7,7 +7,7 @@
     "gradle_wrapper": "9.7.0",
     "jvm_version": "21",
     "workflows_sha256": {
-      "ci.yml": "a46404470251e83d53a856f372d798fb31415f92a95d82f7107b977ac6465f10",
+      "ci.yml": "57d5720b28e25ff3727398621d6052eff1348f2a690e364574c8cfac4b9e0fee",
       "codeql.yml": "52631131dd87ffc9dfeb9145a235d62a2749ebe5c5f80b6ad922935482a58dee"
     }
   },
@@ -224,6 +224,20 @@
         "ref": "xposed-legacy"
       }
     },
+    "libxposed-modern-api": {
+      "group": "io.github.libxposed",
+      "name": "api",
+      "version": {
+        "ref": "libxposed-modern"
+      }
+    },
+    "libxposed-modern-service": {
+      "group": "io.github.libxposed",
+      "name": "service",
+      "version": {
+        "ref": "libxposed-modern"
+      }
+    },
     "markwon-core": {
       "module": "io.noties.markwon:core",
       "version": {
@@ -332,7 +346,7 @@
     "android_tests": 1,
     "cpp": 425,
     "java": 3,
-    "kotlin": 403,
+    "kotlin": 404,
     "unit_tests": 77
   },
   "static_analysis": {

@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wax.module.activities.CrashReportActivity
+import com.wax.module.modern.ModernFrameworkServiceBridge
 import com.wax.module.xposed.utils.Utils
 import rikka.material.app.LocaleDelegate.Companion.defaultLocale
 import java.io.File
@@ -27,6 +28,7 @@ class ModuleApplication : Application() {
         super.onCreate()
         instance = this
         installCrashHandler()
+        ModernFrameworkServiceBridge.register()
         var sharedPreferences: SharedPreferences? = null
 
         try {
