@@ -35,6 +35,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_IN_WHATSAPP_SETTINGS = "IN_WHATSAPP_SETTINGS";
     public static final String EVENT_CONTACT_ITEM_LISTENER = "CONTACT_ITEM_LISTENER";
     public static final String EVENT_CONVERSATION_ITEM_LISTENER = "CONVERSATION_ITEM_LISTENER";
+    public static final String EVENT_MENU_STATUS_PROVIDER = "MENU_STATUS_PROVIDER";
     private static final String TAG = "WA-X TargetTelemetry";
 
     @Override
@@ -105,6 +106,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.contact_item_listener.state." + target, value);
         } else if (EVENT_CONVERSATION_ITEM_LISTENER.equals(event)) {
             editor.putString("modern.feature.conversation_item_listener.state." + target, value);
+        } else if (EVENT_MENU_STATUS_PROVIDER.equals(event)) {
+            editor.putString("modern.feature.menu_status_provider.state." + target, value);
         } else {
             return rejected();
         }
@@ -134,7 +137,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_MENU_HOME.equals(event)
                 || EVENT_IN_WHATSAPP_SETTINGS.equals(event)
                 || EVENT_CONTACT_ITEM_LISTENER.equals(event)
-                || EVENT_CONVERSATION_ITEM_LISTENER.equals(event);
+                || EVENT_CONVERSATION_ITEM_LISTENER.equals(event)
+                || EVENT_MENU_STATUS_PROVIDER.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {

@@ -82,6 +82,8 @@ public final class ModernTargetTelemetryProviderTest {
                 ModernTargetTelemetryProvider.EVENT_CONTACT_ITEM_LISTENER));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_CONVERSATION_ITEM_LISTENER));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_MENU_STATUS_PROVIDER));
         assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState("ITEM_ADDED"));
         assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState(null));
     }
