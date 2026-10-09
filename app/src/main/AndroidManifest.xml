@@ -51,6 +51,14 @@
         android:supportsRtl="true"
         tools:targetApi="30">
 
+        <!-- Target UID is verified inside the provider before accepting any report.
+             No signature permission: injected hooks run as WhatsApp's UID, not WA X's. -->
+        <provider
+            android:name=".modern.ModernTargetTelemetryProvider"
+            android:authorities="${applicationId}.runtime.telemetry"
+            android:exported="true"
+            android:grantUriPermissions="false" />
+
         <!--suppress AndroidDomInspection -->
         <service
             android:name="com.google.android.gms.metadata.ModuleDependencies"
