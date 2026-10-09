@@ -30,7 +30,7 @@ def verify_sources():
         raise ValueError("Modern APK must copy existing Manager assets without xposed_init")
     if 'file("$outputAssets/xposed_init").delete()' not in build:
         raise ValueError("Modern APK must remove the legacy Xposed entry file")
-    if 'resources.srcDir("../modern-canary/src/main/resources")' not in build:
+    if 'resources.directories.add(file("../modern-canary/src/main/resources").absolutePath)' not in build:
         raise ValueError("Same-package modern loader metadata not included")
     if not (ROOT / "app/src/main/assets/xposed_init").is_file():
         raise ValueError("Do not disrupt the shipping Legacy APK")
