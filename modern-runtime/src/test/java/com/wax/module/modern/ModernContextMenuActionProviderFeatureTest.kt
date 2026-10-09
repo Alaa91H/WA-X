@@ -27,7 +27,10 @@ class ModernContextMenuActionProviderFeatureTest {
     @Test fun providersCanDeclineToContribute() {
         // A provider returning null must simply add nothing; the data class
         // defaults keep the common "auto-dismiss on click" case short.
-        val action = ModernContextMenuActionProviderFeature.ContextMenuAction(title = "Forward")
+        val action = ModernContextMenuActionProviderFeature.ContextMenuAction(
+            title = "Forward",
+            onClick = {},
+        )
         assertEquals("Forward", action.title)
         assertTrue(action.autoDismiss)
     }
