@@ -77,7 +77,7 @@ class ModernContactAccess private constructor(
          * pretending a feature is wired.
          */
         @JvmStatic
-        fun resolve(context: android.content.Context): Pair<ModernContactAccess?, Outcome> {
+        fun resolve(context: android.content.Context): Resolution {
             val classLoader = context.classLoader
             return try {
                 DexKitBridge.create(context.applicationInfo.sourceDir).use { dex ->

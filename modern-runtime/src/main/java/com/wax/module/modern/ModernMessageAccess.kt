@@ -88,7 +88,7 @@ class ModernMessageAccess private constructor(
          * reason when a step fails, so callers report an honest state.
          */
         @JvmStatic
-        fun resolve(context: android.content.Context): Pair<ModernMessageAccess?, Outcome> {
+        fun resolve(context: android.content.Context): Resolution {
             val classLoader = context.classLoader
             return try {
                 DexKitBridge.create(context.applicationInfo.sourceDir).use { dex ->
