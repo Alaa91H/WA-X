@@ -142,6 +142,19 @@ public final class ModernXposedEntry extends XposedModule {
         }
     }
 
+    private void sendMenuHomeEvidence(String packageName, String state) {
+        Context context = targetContext;
+        if (context == null) return;
+        try {
+            if (!ModernTargetTelemetry.send(context, packageName, "MENU_HOME", state)) {
+                Log.w(TAG, "M06_MENU_HOME_EVIDENCE_REJECTED package=" + packageName);
+            }
+        } catch (RuntimeException deliveryFailure) {
+            Log.w(TAG, "M06_MENU_HOME_EVIDENCE_UNAVAILABLE package=" + packageName,
+                    deliveryFailure);
+        }
+    }
+
     private void reportBootstrap(String packageName, Context target) {
         try {
             // XposedModule.getRemotePreferences() is READ-ONLY in hooked apps.
@@ -159,6 +172,28 @@ public final class ModernXposedEntry extends XposedModule {
                 log(Log.ERROR, TAG, "Target telemetry provider call failed: " + packageName,
                         telemetryFailure);
             }
+            // An in-WhatsApp WA X menu link is a core capability, not an opt-in
+            // pilot. Install it without touching or activating legacy feature toggles.
+            String menuHomeState = "ERROR";
+            try {
+                ModernMenuHomeFeature.Outcome outcome = new ModernMenuHomeFeature()
+                        .install(target, this, hookRegistry, () -> {
+                            try {
+                                evidenceWorker.execute(() ->
+                                        sendMenuHomeEvidence(packageName, "ITEM_ADDED"));
+                            } catch (RuntimeException queueFailure) {
+                                Log.w(TAG, "M06_MENU_HOME_EVIDENCE_QUEUE_FAILED", queueFailure);
+                            }
+                        });
+                menuHomeState = outcome.name();
+                Log.i(TAG, "M06_MENU_HOME_HOOK_RESULT package=" + packageName
+                        + " state=" + menuHomeState);
+            } catch (Throwable menuFailure) {
+                if (menuFailure instanceof VirtualMachineError) throw (VirtualMachineError) menuFailure;
+                Log.e(TAG, "M06_MENU_HOME_HOOK_FAILED package=" + packageName, menuFailure);
+            }
+            sendMenuHomeEvidence(packageName, menuHomeState);
+
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
             boolean canaryEnabled = preferences != null
                     && preferences.getBoolean("modern_canary_enabled", false);

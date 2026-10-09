@@ -1,0 +1,120 @@
+package com.wax.module.modern;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Looper;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
+import io.github.libxposed.api.XposedInterface;
+import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * WA X Manager link in the native WhatsApp home overflow menu.
+ * Does not enable any unmigrated feature or call the legacy Xposed API.
+ */
+public final class ModernMenuHomeFeature {
+    public static final String FEATURE_ID = "menu_home";
+    public static final int MENU_ITEM_ID = 0x57415821;
+    private static final String TAG = "WA-X MenuHome102";
+    private static final String MANAGER_PACKAGE = "com.wax.module";
+    private static final String MANAGER_ACTIVITY = "com.wax.module.activities.MainActivity";
+    private final AtomicBoolean reportedVisible = new AtomicBoolean(false);
+
+    public enum Outcome {
+        INSTALLED,
+        ALREADY_INSTALLED,
+        UNSUPPORTED_TARGET,
+        HOME_CLASS_MISSING,
+        MENU_METHOD_MISSING,
+        INVALID_HOME_TYPE,
+        INVALID_MENU_SIGNATURE
+    }
+
+    public Outcome install(
+            Context target,
+            XposedInterface framework,
+            ModernHookRegistry registry,
+            Runnable onMenuItemAdded) throws Throwable {
+        Objects.requireNonNull(target, "target");
+        Objects.requireNonNull(framework, "framework");
+        Objects.requireNonNull(registry, "registry");
+        Objects.requireNonNull(onMenuItemAdded, "onMenuItemAdded");
+        String targetPackage = target.getPackageName();
+        String className = ModernMenuHomePolicy.homeClassName(targetPackage);
+        if (className == null) return Outcome.UNSUPPORTED_TARGET;
+
+        Class<?> homeClass;
+        try {
+            homeClass = Class.forName(className, false, target.getClassLoader());
+        } catch (ClassNotFoundException missing) {
+            return Outcome.HOME_CLASS_MISSING;
+        }
+        if (!Activity.class.isAssignableFrom(homeClass)) return Outcome.INVALID_HOME_TYPE;
+        Method method;
+        try {
+            method = homeClass.getDeclaredMethod("onCreateOptionsMenu", Menu.class);
+        } catch (NoSuchMethodException missing) {
+            return Outcome.MENU_METHOD_MISSING;
+        }
+        if (method.getReturnType() != boolean.class) return Outcome.INVALID_MENU_SIGNATURE;
+
+        boolean installed = registry.installOnce(FEATURE_ID,
+                new ModernHookRegistry.Registration("home.options_menu", () -> {
+                    XposedInterface.HookHandle handle =
+                            new ModernHookBridge(framework).intercept(
+                                    method, "wax.modern.menu_home.options_menu", chain -> {
+                                        Object result = chain.proceed();
+                                        Object receiver = chain.getThisObject();
+                                        Object argument = chain.getArg(0);
+                                        if (receiver instanceof Activity && argument instanceof Menu) {
+                                            Activity activity = (Activity) receiver;
+                                            Menu menu = (Menu) argument;
+                                            if (ModernMenuHomePolicy.isTargetHome(
+                                                        targetPackage, activity.getClass().getName())
+                                                    && Looper.myLooper() == Looper.getMainLooper()
+                                                    && ModernMenuHomePolicy.shouldContribute(
+                                                        result, menu.size())) {
+                                                try {
+                                                    addManagerEntry(menu, activity, onMenuItemAdded);
+                                                } catch (RuntimeException failure) {
+                                                    Log.e(TAG, "Could not add WA X menu entry", failure);
+                                                }
+                                            }
+                                        }
+                                        return result;
+                                    });
+                    return handle::unhook;
+                }));
+        return installed ? Outcome.INSTALLED : Outcome.ALREADY_INSTALLED;
+    }
+
+    private void addManagerEntry(Menu menu, Activity activity, Runnable onMenuItemAdded) {
+        if (menu.findItem(MENU_ITEM_ID) != null) return;
+        MenuItem item = menu.add(Menu.NONE, MENU_ITEM_ID, 9999, "WA X");
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        item.setOnMenuItemClickListener(clicked -> {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setClassName(MANAGER_PACKAGE, MANAGER_ACTIVITY);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            try {
+                activity.startActivity(intent);
+                Log.i(TAG, "M06_MENU_HOME_MANAGER_OPENED");
+            } catch (RuntimeException failure) {
+                Log.e(TAG, "WA X Manager launch unavailable", failure);
+                Toast.makeText(activity, "WA X Manager could not be opened",
+                        Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        });
+        Log.i(TAG, "M06_MENU_HOME_ITEM_ADDED package=" + activity.getPackageName());
+        if (reportedVisible.compareAndSet(false, true)) {
+            // Caller enqueues evidence I/O. Never make Binder calls in the UI hook.
+            onMenuItemAdded.run();
+        }
+    }
+}
