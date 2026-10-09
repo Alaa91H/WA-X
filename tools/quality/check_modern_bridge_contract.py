@@ -47,6 +47,16 @@ def verify() -> None:
     assert "ModernTargetPolicy.isMainTarget" in modern_entry
     feature = source("modern-runtime/src/main/java/com/wax/module/modern/ModernCustomTimeFeature.kt")
     canary_ui = source("modern-canary/src/main/java/com/wax/module/modern/canary/CanaryActivity.java")
+    invocation = source("modern-runtime/src/main/java/com/wax/module/modern/ModernInvocationEvidence.java")
+    throttle = source("modern-runtime/src/main/java/com/wax/module/modern/ModernInvocationThrottle.java")
+    assert "ModernInvocationEvidence.timeKey" in modern_entry
+    assert "ModernInvocationEvidence.bootKey" in modern_entry
+    assert "invocationThrottle.accept" in modern_entry
+    assert "evidenceWorker.execute" in modern_entry
+    assert "onFormatted.run()" in feature
+    assert "ModernInvocationEvidence.classify" in source("modern-canary/src/main/java/com/wax/module/modern/canary/CanaryApplication.java")
+    assert "NOT_OBSERVED" in invocation and "INVOKED_FRESH" in invocation
+    assert "AtomicLong" in throttle
     assert "ModernCustomTimeFeature.ENABLE_KEY" in modern_entry
     assert "modern.feature.custom_time.enabled" in feature
     assert "ModernHookRegistry.Registration" in feature

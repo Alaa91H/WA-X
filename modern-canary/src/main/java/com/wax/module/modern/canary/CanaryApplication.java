@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import com.wax.module.modern.ModernRuntimeProof;
+import com.wax.module.modern.ModernInvocationEvidence;
 import io.github.libxposed.service.HookedTarget;
 import io.github.libxposed.service.XposedService;
 import io.github.libxposed.service.XposedServiceHelper;
@@ -132,6 +133,18 @@ public final class CanaryApplication extends Application {
                     String featureState = prefs == null ? "UNREPORTED"
                             : prefs.getString("modern.feature.custom_time.state." + target, "UNREPORTED");
                     message.append("\n CustomTime: ").append(customTimeEnabled ? featureState : "DISABLED");
+                    if (customTimeEnabled) {
+                        long executedAt = prefs == null ? 0L : prefs.getLong(ModernInvocationEvidence.timeKey(target), 0L);
+                        long executedBoot = prefs == null ? 0L : prefs.getLong(ModernInvocationEvidence.bootKey(target), 0L);
+                        long count = prefs == null ? 0L : prefs.getLong(ModernInvocationEvidence.countKey(target), 0L);
+                        ModernInvocationEvidence.Status invocation = ModernInvocationEvidence.classify(
+                                executedAt, executedBoot, count, now, now - SystemClock.elapsedRealtime());
+                        message.append("\n  Actual hook callbacks: ").append(invocation);
+                        if (invocation == ModernInvocationEvidence.Status.INVOKED_FRESH) {
+                            message.append(" (in-process calls: ").append(count).append(")");
+                        }
+                        message.append("\n  This does not prove visible UI output.");
+                    }
                 }
                 publish(new Status(true, message.toString(), enabled, customTimeEnabled));
             } catch (RuntimeException error) {
