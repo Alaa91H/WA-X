@@ -1,0 +1,210 @@
+"""Focused regression tests for Issues #394 and #395.
+
+Run: python3 -m unittest discover -s tools/compatibility/tests -p 'test_extract_features.py'
+"""
+import importlib.util
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+EXTRACTOR_PATH = Path(__file__).resolve().parents[1] / "extract_features.py"
+SPEC = importlib.util.spec_from_file_location("wa_x_feature_extractor", EXTRACTOR_PATH)
+extractor = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(extractor)
+
+
+class PreferenceReadTests(unittest.TestCase):
+    def test_typed_shared_preferences_and_settings_reads(self):
+        files = {
+            "Demo": """
+                package com.wax.module.xposed.features.general
+                const val PREF_COUNT = "count_pref"
+                fun install() {
+                    prefs.getBoolean("bool_key", false)
+                    prefs.getString("string_key", null)
+                    prefs.getInt(PREF_COUNT, 0)
+                    prefs.getLong("long_key", 0)
+                    prefs.getFloat("float_key", 0f)
+                    prefs.getStringSet("set_key", null)
+                    settingsStore.read("typed_key")
+                    prefs.contains("contains_key")
+                    prefs.edit().putBoolean("write_only", true)
+                    // prefs.getString("comment_key", null)
+                    /* prefs.getLong("block_comment_key", 0) */
+                }
+            """
+        }
+        keys = extractor.feature_preference_keys(files)["Demo"]
+        self.assertEqual(
+            keys,
+            sorted([
+                "bool_key", "string_key", "count_pref", "long_key",
+                "float_key", "set_key", "typed_key", "contains_key",
+            ]),
+        )
+
+    def test_no_read_does_not_claim_preference(self):
+        files = {
+            "WriteOnly": """
+                const val PREF_UNUSED = "unused"
+                fun install() {
+                    prefs.edit().putString("written", "value")
+                    // prefs.getBoolean("comment", false)
+                }
+            """
+        }
+        self.assertNotIn("WriteOnly", extractor.feature_preference_keys(files))
+
+
+class OwnershipTests(unittest.TestCase):
+    def test_duplicate_file_stems_fail_loudly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for subdir in ("general", "privacy"):
+                folder = root / subdir
+                folder.mkdir()
+                (folder / "Helper.kt").write_text(
+                    "package com.wax.module.xposed.features." + subdir + "\n",
+                    encoding="utf-8",
+                )
+            with patch.object(extractor, "FEATURES_DIR", str(root)):
+                with self.assertRaisesRegex(ValueError, "duplicate Kotlin file stem"):
+                    extractor.feature_files()
+
+    def test_same_package_helper_and_explicit_cross_package_import(self):
+        files = {
+            "Feature": """
+                package com.wax.module.xposed.features.media
+                import com.wax.module.xposed.features.general.CrossHelper as AliasHelper
+                fun install() { LocalHelper(); AliasHelper(); Unrelated() }
+            """,
+            "LocalHelper": """
+                package com.wax.module.xposed.features.media
+                class LocalHelper { fun apply() { Unobfuscator.loadMedia() } }
+            """,
+            "CrossHelper": """
+                package com.wax.module.xposed.features.general
+                class CrossHelper { fun apply() { Unobfuscator.loadGeneral() } }
+            """,
+            "Unrelated": """
+                package com.wax.module.xposed.features.others
+                class Unrelated { fun apply() { Unobfuscator.loadUnrelated() } }
+            """,
+        }
+        self.assertEqual(
+            extractor.feature_closure("Feature", files),
+            {"Feature", "LocalHelper", "CrossHelper"},
+        )
+        self.assertEqual(
+            extractor.feature_resolver_usage(files)["Feature"],
+            ["loadGeneral", "loadMedia"],
+        )
+
+
+
+class DefensiveExtractionTests(unittest.TestCase):
+    def test_unrelated_typed_getters_and_dynamic_keys_are_not_certified(self):
+        files = {
+            "Feature": """
+                package com.wax.module.xposed.features.media
+                const val PREF_REAL = "real_pref"
+                fun install() {
+                    jsonObject.getString("json_field")
+                    bundle.getInt("bundle_field", 0)
+                    prefs.getString("real_literal", null)
+                    prefs.getLong(PREF_REAL, 0L)
+                    prefs.getInt(dynamicKey(), 0)
+                    prefs.edit().putString("write_only", "value")
+                }
+            """
+        }
+        self.assertEqual(
+            extractor.feature_preference_keys(files)["Feature"],
+            ["real_literal", "real_pref"],
+        )
+
+    def test_class_declared_in_differently_named_file(self):
+        files = {
+            "Feature": """
+                package com.wax.module.xposed.features.media
+                import com.wax.module.xposed.features.general.CrossHelper as AliasHelper
+                fun install() { LocalHelper(); AliasHelper(); AmbiguousHelper() }
+            """,
+            "Helpers": """
+                package com.wax.module.xposed.features.media
+                class LocalHelper { fun apply() { Unobfuscator.loadMedia() } }
+            """,
+            "DifferentFilename": """
+                package com.wax.module.xposed.features.general
+                class CrossHelper { fun apply() { Unobfuscator.loadGeneral() } }
+            """,
+            "Foreign": """
+                package com.wax.module.xposed.features.privacy
+                class AmbiguousHelper { fun apply() { Unobfuscator.loadPrivacy() } }
+            """,
+        }
+        unresolved = set()
+        self.assertEqual(
+            extractor.feature_closure("Feature", files, unresolved),
+            {"Feature", "Helpers", "DifferentFilename"},
+        )
+        self.assertIn("Feature: AmbiguousHelper", unresolved)
+        self.assertEqual(
+            extractor.feature_resolver_usage(files)["Feature"],
+            ["loadGeneral", "loadMedia"],
+        )
+
+    def test_owner_index_reused_across_feature_scans(self):
+        files = {
+            "A": "package com.wax.module.xposed.features.general\nclass A {}",
+            "B": "package com.wax.module.xposed.features.general\nclass B {}",
+        }
+        with patch.object(extractor, "declared_classes", wraps=extractor.declared_classes) as owners:
+            extractor.feature_resolver_usage(files)
+            self.assertEqual(1, owners.call_count)
+
+    def test_nested_provider_interfaces_do_not_claim_top_level_ownership(self):
+        files = {
+            "ContextMenuActionProvider": """
+                package com.wax.module.xposed.features.providers
+                class ContextMenuActionProvider {
+                    fun interface Provider { fun apply() }
+                }
+            """,
+            "MenuStatusProvider": """
+                package com.wax.module.xposed.features.providers
+                class MenuStatusProvider {
+                    interface Provider { fun addMenu() }
+                }
+            """,
+        }
+        owners = extractor.declared_classes(files)
+        self.assertNotIn("com.wax.module.xposed.features.providers.Provider", owners)
+        self.assertEqual(
+            owners["com.wax.module.xposed.features.providers.MenuStatusProvider"],
+            "MenuStatusProvider",
+        )
+
+    def test_string_literal_braces_cannot_change_top_level_class_depth(self):
+        files = {
+            "A": """package com.wax.module.xposed.features.general
+                val sample = "{ class Fake {}"
+                class Actual {}
+            """,
+        }
+        owners = extractor.declared_classes(files)
+        self.assertIn("com.wax.module.xposed.features.general.Actual", owners)
+        self.assertNotIn("com.wax.module.xposed.features.general.Fake", owners)
+
+    def test_ambiguous_qualified_class_definitions_fail(self):
+        files = {
+            "A": "package com.wax.module.xposed.features.media\nclass Helper {}",
+            "B": "package com.wax.module.xposed.features.media\nclass Helper {}",
+        }
+        with self.assertRaisesRegex(ValueError, "ambiguous Kotlin class ownership"):
+            extractor.feature_closure("A", files)
+
+
+if __name__ == "__main__":
+    unittest.main()
