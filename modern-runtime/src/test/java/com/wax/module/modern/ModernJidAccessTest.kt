@@ -47,7 +47,15 @@ class ModernJidAccessTest {
     @Test fun emptyAndNullAreNeverTurnedIntoNumbers() {
         assertNull(JidRules.phoneNumber(null))
         assertNull(JidRules.phoneNumber(""))
-        assertNull(JidRules.phoneNumber("@s.whatsapp.net"))
+    }
+
+    @Test fun jidWithoutALocalPartIsFlaggedRatherThanSilentlyNumbered() {
+        // The legacy derivation returns the raw string here (the '@' index is 0,
+        // so the known-domain branch does not apply). Keeping that exact
+        // behaviour avoids changing feature decisions during a migration, and
+        // isInvalid() is what callers must use before trusting a "number".
+        assertEquals("@s.whatsapp.net", JidRules.phoneNumber("@s.whatsapp.net"))
+        assertTrue(JidRules.isInvalid("@s.whatsapp.net"))
     }
 
     @Test fun invalidJidsAreDetected() {

@@ -101,8 +101,15 @@ object JidRules {
         raw.replaceFirst(Regex("\\.[\\d:]+@"), "@")
 
     /**
-     * Mirrors the legacy rules: a dot before the `@` wins, then the known JID
-     * domains take the part before the `@`, otherwise the raw string is used.
+     * Mirrors the legacy rules exactly: a dot before the `@` wins, then the
+     * known JID domains take the part before the `@`, otherwise the raw string
+     * is used.
+     *
+     * Note the consequence the tests pin: a JID with no local part
+     * (`@s.whatsapp.net`) has an `@` index of 0, so the known-domain branch
+     * does not apply and the raw string comes back. That is what the legacy
+     * code did, and a migration must not silently change which contacts a rule
+     * matches — so callers that need a real number check [isInvalid] first.
      */
     fun phoneNumber(raw: String?): String? {
         if (raw.isNullOrEmpty()) return null
