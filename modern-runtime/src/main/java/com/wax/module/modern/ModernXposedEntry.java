@@ -416,10 +416,12 @@ public final class ModernXposedEntry extends XposedModule {
             // WaContactWpp wrapper. Every consumer feature that needs a name, a
             // JID or a phone number reads this, so its state is reported.
             String contactAccessState = ModernContactAccess.Outcome.ERROR.name();
+            ModernContactAccess resolvedContactAccess = null;
             try {
                 System.loadLibrary("dexkit");
                 ModernContactAccess.Resolution contactAccess =
                         ModernContactAccess.resolve(target);
+                resolvedContactAccess = contactAccess.getAccess();
                 contactAccessState = contactAccess.getOutcome().name();
                 Log.i(TAG, "M06_CONTACT_ACCESS_RESULT package=" + packageName
                         + " state=" + contactAccessState);
@@ -441,9 +443,9 @@ public final class ModernXposedEntry extends XposedModule {
             try {
                 ModernContactAccess.Resolution contactResolution =
                         ModernContactAccess.resolve(target);
-                if (contactResolution.getAccess() != null) {
+                if (resolvedContactAccess != null) {
                     ModernJidAccess.Resolution jidResolution = ModernJidAccess.resolve(
-                            contactResolution.getAccess().getJidClass());
+                            resolvedContactAccess.getJidClass());
                     resolvedJidAccess = jidResolution.getAccess();
                     jidAccessState = jidResolution.getOutcome().name();
                 } else {
@@ -483,6 +485,51 @@ public final class ModernXposedEntry extends XposedModule {
                 ModernTargetTelemetry.send(target, packageName, "TYPING_PRIVACY", typingPrivacyState);
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Typing privacy state delivery failed", error);
+            }
+            // Message accessor chain, reused by every message consumer.
+            String messageAccessState = ModernMessageAccess.Outcome.ERROR.name();
+            ModernMessageAccess resolvedMessageAccess = null;
+            try {
+                System.loadLibrary("dexkit");
+                ModernMessageAccess.Resolution messageAccess =
+                        ModernMessageAccess.resolve(target);
+                resolvedMessageAccess = messageAccess.getAccess();
+                messageAccessState = messageAccess.getOutcome().name();
+                Log.i(TAG, "M06_MESSAGE_ACCESS_RESULT package=" + packageName
+                        + " state=" + messageAccessState);
+            } catch (Throwable messageFailure) {
+                if (messageFailure instanceof VirtualMachineError) throw (VirtualMachineError) messageFailure;
+                messageAccessState = "ERROR_" + messageFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern message access failed on " + packageName, messageFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "MESSAGE_ACCESS", messageAccessState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Message access state delivery failed", error);
+            }
+            // ViewOnce: keeps a viewed view-once message open by rewriting the
+            // caller's view state when the message is not from this account.
+            String viewOnceState = ModernViewOnceFeature.Outcome.DISABLED.name();
+            if (resolvedMessageAccess != null) {
+                try {
+                    System.loadLibrary("dexkit");
+                    viewOnceState = ModernViewOnceFeature.INSTANCE
+                            .install(target, this, hookRegistry, preferences,
+                                    resolvedMessageAccess).name();
+                    Log.i(TAG, "M06_VIEW_ONCE_RESULT package=" + packageName
+                            + " state=" + viewOnceState);
+                } catch (Throwable viewOnceFailure) {
+                    if (viewOnceFailure instanceof VirtualMachineError) throw (VirtualMachineError) viewOnceFailure;
+                    viewOnceState = "ERROR_" + viewOnceFailure.getClass().getSimpleName();
+                    log(Log.ERROR, TAG, "Modern ViewOnce failed on " + packageName, viewOnceFailure);
+                }
+            } else {
+                viewOnceState = "MESSAGE_ACCESS_UNAVAILABLE";
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "VIEW_ONCE", viewOnceState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "View-once state delivery failed", error);
             }
             // HideChat: hides archived chats by swapping the archive view for
             // one that stays GONE. Driven by the user's existing typearchive mode.

@@ -73,6 +73,7 @@ public final class ModernTargetTelemetryProviderTest {
         // A formatting sub-key and any unmigrated switch stay refused.
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("segundos"));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("show_dndmode"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("viewonce"));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("EXECUTE_CODE"));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(null));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(""));

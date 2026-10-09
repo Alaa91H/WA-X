@@ -77,6 +77,23 @@ object ModernControlCenterCatalog {
             description = "Keep your last-seen value frozen",
         ),
         Wired(
+            id = "message_access",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.message_access.state",
+            category = ControlCategory.ADVANCED,
+            label = "Message Access Layer",
+            description = "Required infrastructure for message-based features",
+            restartHint = false,
+        ),
+        Wired(
+            id = "view_once",
+            preferenceKey = ModernViewOnceFeature.PREF_ENABLE,
+            evidenceKey = "modern.feature.view_once.state",
+            category = ControlCategory.PRIVACY,
+            label = "Keep View Once Open",
+            description = "Keep a viewed view-once message open instead of expiring",
+        ),
+        Wired(
             id = "hide_chat",
             preferenceKey = ModernHideChatFeature.PREF_ARCHIVE_MODE,
             evidenceKey = "modern.feature.hide_chat.state",

@@ -118,7 +118,7 @@ every row; status = honest roll-up.
 | 32 | CustomTime | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #411 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 33 | ShareLimit | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #417 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 34 | StatusDownload | W2 | 4 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 35 | ViewOnce | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 35 | ViewOnce | W2 | 4 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle (Privacy) | feat/m06-view-once | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 36 | CallType | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 37 | MediaPreview | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 38 | FilterGroups | W3 | 10 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -189,7 +189,9 @@ batch 12 = BackupRestore, CaptureDevice.
    consumers now run on it: **TypingPrivacy** (#447) and **HideChat** (branch
    `feat/m06-hide-chat`, a self-contained feature needing no accessor layer, and
    a three-state control because the Manager setting is a list preference, not a
-   boolean). NEXT in the queue:
+   boolean) and **ViewOnce** (branch `feat/m06-view-once`, the first consumer of
+   the *message* accessor layer, rewriting the caller's view state only when the
+   message key resolves). NEXT in the queue:
    hook target from the `HandleMeComposing/sendComposing` anchor with the
    3rd-parameter int guard, recipient located by JID type rather than argument
    position, per-contact rules fetched one contact at a time through the new
