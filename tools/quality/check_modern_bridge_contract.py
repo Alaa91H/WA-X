@@ -46,6 +46,13 @@ def verify() -> None:
     assert "onPackageLoaded(" in modern_entry
     assert "ModernTargetPolicy.isMainTarget" in modern_entry
     assert "PROTECTIVE" in facade
+    lifecycle = source("modern-runtime/src/main/java/com/wax/module/modern/ModernHookRegistry.java")
+    assert "hookRegistry.installOnce" in modern_entry
+    assert "handle::unhook" in modern_entry
+    assert "installFeature(" in lifecycle and "removeFeature(" in lifecycle
+    assert "requireUnclaimedId" in lifecycle and "failure.addSuppressed" in lifecycle
+    # minSdk 28: java.lang.String.isBlank() was not in older Android core libraries.
+    assert ".isBlank()" not in lifecycle
     assert "com.whatsapp.w4b" in scope
     assert "com.whatsapp" in scope
     assert "XposedServiceHelper.registerListener" in manager
