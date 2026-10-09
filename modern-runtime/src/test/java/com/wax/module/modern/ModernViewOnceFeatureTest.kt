@@ -55,7 +55,8 @@ class ModernViewOnceFeatureTest {
     @Test fun outcomeSetCoversEveryResolverStage() {
         val outcomes = ModernViewOnceFeature.Outcome.values().map { it.name }
         assertTrue(outcomes.containsAll(listOf(
-            "DISABLED", "RESOLVER_MISSING", "RESOLVER_AMBIGUOUS", "NO_TARGETS", "ERROR",
+            "DISABLED", "INSTALLED", "RESOLVER_MISSING", "RESOLVER_AMBIGUOUS",
+            "NO_TARGETS", "ERROR",
         )))
     }
 }
