@@ -288,7 +288,7 @@ class ModernControlCenterShell(
             container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
         val modeControl = row.preferenceKey == ModernHideChatFeature.PREF_ARCHIVE_MODE
-        if (modeControl && row.preferenceKey != null) {
+        if (modeControl) {
             // A three-state mode, not an on/off switch: tapping cycles
             // disabled -> hide -> hold, which is what the Manager list offers.
             val button = Button(activity).apply {

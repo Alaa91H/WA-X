@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import com.wax.module.R
 import com.wax.module.activities.base.BaseActivity
 import com.wax.module.diagnostics.selftest.AtomicCheckInventory
 import com.wax.module.diagnostics.selftest.DiagnosticEngine
