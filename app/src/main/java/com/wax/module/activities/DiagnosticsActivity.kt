@@ -1,7 +1,5 @@
 package com.wax.module.activities
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import com.wax.module.R
 import com.wax.module.activities.base.BaseActivity
@@ -79,8 +78,7 @@ class DiagnosticsActivity : BaseActivity() {
             setPadding(dp(16), dp(16), dp(16), dp(16))
         }
 
-    private fun horizontal(): LinearLayout =
-        LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+    private fun horizontal(): LinearLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
 
     private fun label(value: String): TextView =
         TextView(this).apply {
@@ -96,7 +94,10 @@ class DiagnosticsActivity : BaseActivity() {
 
     private fun body(): TextView = label(getString(R.string.diagnostics_explain))
 
-    private fun button(labelRes: Int, onClick: () -> Unit): Button =
+    private fun button(
+        labelRes: Int,
+        onClick: () -> Unit,
+    ): Button =
         Button(this).apply {
             text = getString(labelRes)
             setOnClickListener { onClick() }
@@ -243,19 +244,14 @@ class DiagnosticsActivity : BaseActivity() {
             return
         }
         pendingBytes = built.bytes
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = ZIP_MIME_TYPE
-            putExtra(Intent.EXTRA_TITLE, exporter.fileName(System.currentTimeMillis()))
-        }
-        startActivityForResult(intent, REQUEST_EXPORT)
+        createDocument.launch(exporter.fileName(System.currentTimeMillis()))
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != REQUEST_EXPORT || resultCode != Activity.RESULT_OK) return
-        val bytes = pendingBytes ?: return
-        val uri = data?.data ?: return
+    /** Writes the verified archive to the document the user picked, or reports why not. */
+    private val createDocument = registerForActivityResult(ActivityResultContracts.CreateDocument(ZIP_MIME_TYPE)) { uri ->
+        val bytes = pendingBytes
+        pendingBytes = null
+        if (uri == null || bytes == null) return@registerForActivityResult
         try {
             val stream = contentResolver.openOutputStream(uri)
                 ?: throw IllegalStateException("storage provider returned no stream")
@@ -267,8 +263,6 @@ class DiagnosticsActivity : BaseActivity() {
         } catch (failure: Exception) {
             Log.w(TAG, "could not write the export", failure)
             showFailure(failure.message ?: "")
-        } finally {
-            pendingBytes = null
         }
     }
 
@@ -305,6 +299,5 @@ class DiagnosticsActivity : BaseActivity() {
     private companion object {
         const val TAG = "WA-X Diagnostics"
         const val ZIP_MIME_TYPE = "application/zip"
-        const val REQUEST_EXPORT = 0x0D19
     }
 }
