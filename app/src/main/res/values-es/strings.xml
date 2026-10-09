@@ -573,7 +573,7 @@
     <string name="gt_translate_from">Traducir de</string>
     <string name="gt_translate_to">Traducir a</string>
     <string name="gt_translate_action">Traducir</string>
-    <string name="modern_framework_connected">libxposed API %1$d conectado</string>
+    <string name="modern_framework_connected">libxposed API %1$s conectado</string>
     <string name="modern_framework_waiting">libxposed API 102: esperando al framework</string>
     <string name="modern_framework_status">WA X %1$s — diagnóstico del Runtime moderno</string>
     <string name="modern_framework_features_pending">La conexión con el framework no demuestra que las funciones de WhatsApp funcionen. La migración sigue en pruebas.</string>

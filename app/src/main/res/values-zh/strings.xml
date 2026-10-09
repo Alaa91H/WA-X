@@ -574,7 +574,7 @@
     <string name="gt_translate_from">源语言</string>
     <string name="gt_translate_to">目标语言</string>
     <string name="gt_translate_action">翻译</string>
-    <string name="modern_framework_connected">libxposed API %1$d 已连接</string>
+    <string name="modern_framework_connected">libxposed API %1$s 已连接</string>
     <string name="modern_framework_waiting">libxposed API 102：等待框架连接</string>
     <string name="modern_framework_status">WA X %1$s — 现代 Runtime 诊断</string>
     <string name="modern_framework_features_pending">框架连接不能证明 WhatsApp 功能正常运行。迁移仍处于试验阶段。</string>

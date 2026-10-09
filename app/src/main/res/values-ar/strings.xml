@@ -577,7 +577,7 @@
     <string name="gt_translate_to">الترجمة إلى</string>
     <string name="gt_translate_action">ترجمة</string>
 
-    <string name="modern_framework_connected">libxposed API %1$d متصل</string>
+    <string name="modern_framework_connected">libxposed API %1$s متصل</string>
     <string name="modern_framework_waiting">libxposed API 102: بانتظار اتصال إطار العمل</string>
     <string name="modern_framework_status">WA X %1$s — تشخيص Runtime الحديث</string>
     <string name="modern_framework_features_pending">اتصال الإطار لا يثبت عمل ميزات واتساب. ترحيل الميزات ما زال تجريبيًا.</string>

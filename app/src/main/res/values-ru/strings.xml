@@ -576,7 +576,7 @@
     <string name="gt_translate_from">Переводить с</string>
     <string name="gt_translate_to">Переводить на</string>
     <string name="gt_translate_action">Перевести</string>
-    <string name="modern_framework_connected">libxposed API %1$d подключён</string>
+    <string name="modern_framework_connected">libxposed API %1$s подключён</string>
     <string name="modern_framework_waiting">libxposed API 102: ожидание фреймворка</string>
     <string name="modern_framework_status">WA X %1$s — диагностика современного Runtime</string>
     <string name="modern_framework_features_pending">Соединение с фреймворком не подтверждает работу функций WhatsApp. Миграция пока экспериментальная.</string>

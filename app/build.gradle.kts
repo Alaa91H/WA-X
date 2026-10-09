@@ -35,44 +35,48 @@ val modernSourceOutput = layout.buildDirectory.dir("generated/modernXposed")
 
 if (modernXposedPackage) {
     // The default WA X build is unchanged. Modern mode uses its SAME applicationId.
-    val prepareModernXposedSources = tasks.register("prepareModernXposedSources") {
-        val sourceManifest = file("src/main/AndroidManifest.xml")
-        val sourceAssets = file("src/main/assets")
-        inputs.file(sourceManifest)
-        inputs.dir(sourceAssets)
-        outputs.dir(modernSourceOutput)
-        doLast {
-            val destination = modernSourceOutput.get().asFile
-            val modernManifest = file("$destination/AndroidManifest.xml")
-            modernManifest.parentFile.mkdirs()
-            var xml = sourceManifest.readText(Charsets.UTF_8)
-            listOf(
-                "xposedmodule", "xposeddescription", "xposedminversion",
-                "xposedsharedprefs", "xposedscope",
-            ).forEach { name ->
-                val pattern = Regex("""(?s)\s*<meta-data\s+android:name="$name"\s+[^>]*?/>""")
-                check(pattern.findAll(xml).count() == 1) {
-                    "Exactly one legacy manifest metadata tag expected: $name"
+    val prepareModernXposedSources =
+        tasks.register("prepareModernXposedSources") {
+            val sourceManifest = file("src/main/AndroidManifest.xml")
+            val sourceAssets = file("src/main/assets")
+            inputs.file(sourceManifest)
+            inputs.dir(sourceAssets)
+            outputs.dir(modernSourceOutput)
+            doLast {
+                val destination = modernSourceOutput.get().asFile
+                val modernManifest = file("$destination/AndroidManifest.xml")
+                modernManifest.parentFile.mkdirs()
+                var xml = sourceManifest.readText(Charsets.UTF_8)
+                listOf(
+                    "xposedmodule",
+                    "xposeddescription",
+                    "xposedminversion",
+                    "xposedsharedprefs",
+                    "xposedscope",
+                ).forEach { name ->
+                    val pattern = Regex("""(?s)\s*<meta-data\s+android:name="$name"\s+[^>]*?/>""")
+                    check(pattern.findAll(xml).count() == 1) {
+                        "Exactly one legacy manifest metadata tag expected: $name"
+                    }
+                    xml = xml.replace(pattern, "")
                 }
-                xml = xml.replace(pattern, "")
-            }
-            modernManifest.writeText(xml, Charsets.UTF_8)
-            val outputAssets = file("$destination/assets")
-            if (outputAssets.exists()) outputAssets.deleteRecursively()
-            check(sourceAssets.copyRecursively(outputAssets, overwrite = true))
-            check(file("$outputAssets/xposed_init").delete()) {
-                "Modern mode must not contain the legacy xposed_init entry"
+                modernManifest.writeText(xml, Charsets.UTF_8)
+                val outputAssets = file("$destination/assets")
+                if (outputAssets.exists()) outputAssets.deleteRecursively()
+                check(sourceAssets.copyRecursively(outputAssets, overwrite = true))
+                check(file("$outputAssets/xposed_init").delete()) {
+                    "Modern mode must not contain the legacy xposed_init entry"
+                }
             }
         }
-    }
     tasks.configureEach {
         if ((name.startsWith("process") && name.contains("Manifest")) ||
-            (name.startsWith("merge") && name.endsWith("Assets"))) {
+            (name.startsWith("merge") && name.endsWith("Assets"))
+        ) {
             dependsOn(prepareModernXposedSources)
         }
     }
 }
-
 
 if (modernXposedPackage && releaseTag != null) {
     throw GradleException("Modern API102 preview cannot be packaged as a production release")
@@ -129,8 +133,9 @@ android {
 
     packaging {
         resources {
-            if (!modernXposedPackage) excludes += "META-INF/**"
-            else {
+            if (!modernXposedPackage) {
+                excludes += "META-INF/**"
+            } else {
                 // Preserve META-INF/xposed/*, exclude duplicate licenses from transitive JARs.
                 excludes += "META-INF/LICENSE*"
                 excludes += "META-INF/NOTICE*"
@@ -151,7 +156,12 @@ android {
         sourceSets.getByName("main") {
             manifest.srcFile(modernSourceOutput.map { it.file("AndroidManifest.xml") })
             assets.directories.clear()
-            assets.directories.add(modernSourceOutput.get().dir("assets").asFile.absolutePath)
+            assets.directories.add(
+                modernSourceOutput
+                    .get()
+                    .dir("assets")
+                    .asFile.absolutePath,
+            )
             resources.directories.add(file("../modern-canary/src/main/resources").absolutePath)
         }
     }

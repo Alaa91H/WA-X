@@ -313,7 +313,7 @@ class HomeFragment : BaseFragment() {
                 if (!isAdded || currentBinding == null) return@withContext
                 binding.statusTitle.text =
                     if (snapshot.connected) {
-                        getString(R.string.modern_framework_connected, snapshot.frameworkApi ?: 102)
+                        getString(R.string.modern_framework_connected, (snapshot.frameworkApi ?: 102).toString())
                     } else {
                         getString(R.string.modern_framework_waiting)
                     }
@@ -341,8 +341,11 @@ class HomeFragment : BaseFragment() {
                     val card = if (business) binding.status3 else binding.status2
                     val restart = if (business) binding.rebootBtn2 else binding.rebootBtn
                     val label =
-                        if (business) getString(R.string.whatsapp_business_package)
-                        else getString(R.string.whatsapp_app_label)
+                        if (business) {
+                            getString(R.string.whatsapp_business_package)
+                        } else {
+                            getString(R.string.whatsapp_app_label)
+                        }
                     val installed = isInstalled(target.packageName)
                     title.text = getString(R.string.modern_target_title, label)
                     summary.text =
@@ -351,15 +354,23 @@ class HomeFragment : BaseFragment() {
                         } else {
                             val evidence =
                                 when (target.evidence) {
-                                    ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP ->
+                                    ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP -> {
                                         getString(R.string.modern_target_loaded)
-                                    ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP ->
+                                    }
+
+                                    ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP -> {
                                         getString(R.string.modern_target_stale)
+                                    }
+
                                     ModernManagerRuntimeStatus.Evidence.BOOT_MISMATCH,
-                                    ModernManagerRuntimeStatus.Evidence.CLOCK_MISMATCH ->
+                                    ModernManagerRuntimeStatus.Evidence.CLOCK_MISMATCH,
+                                    -> {
                                         getString(R.string.modern_target_boot_mismatch)
-                                    ModernManagerRuntimeStatus.Evidence.NOT_REPORTED ->
+                                    }
+
+                                    ModernManagerRuntimeStatus.Evidence.NOT_REPORTED -> {
                                         getString(R.string.modern_target_no_report)
+                                    }
                                 }
                             evidence + "\n" +
                                 getString(

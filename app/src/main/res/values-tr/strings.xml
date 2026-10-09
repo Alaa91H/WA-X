@@ -575,7 +575,7 @@
     <string name="gt_translate_from">Kaynak dil</string>
     <string name="gt_translate_to">Hedef dil</string>
     <string name="gt_translate_action">Çevir</string>
-    <string name="modern_framework_connected">libxposed API %1$d bağlı</string>
+    <string name="modern_framework_connected">libxposed API %1$s bağlı</string>
     <string name="modern_framework_waiting">libxposed API 102: çerçeve bekleniyor</string>
     <string name="modern_framework_status">WA X %1$s — modern Runtime tanılama</string>
     <string name="modern_framework_features_pending">Çerçeve bağlantısı WhatsApp özelliklerinin çalıştığını kanıtlamaz. Geçiş deneyseldir.</string>
