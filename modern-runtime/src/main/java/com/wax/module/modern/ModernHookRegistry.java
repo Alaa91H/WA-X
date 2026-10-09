@@ -39,7 +39,7 @@ public final class ModernHookRegistry {
     private final Map<String, LinkedHashMap<String, Handle>> installed = new LinkedHashMap<>();
 
     private static String requireId(String value) {
-        if (value == null || value.isBlank() || !value.equals(value.trim())) {
+        if (value == null || value.trim().isEmpty() || !value.equals(value.trim())) {
             throw new IllegalArgumentException("Hook ID must be nonblank and stable");
         }
         return value;
