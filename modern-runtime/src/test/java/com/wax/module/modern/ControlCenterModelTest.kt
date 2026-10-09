@@ -56,6 +56,10 @@ class ControlCenterModelTest {
 
     @Test fun aRowWithoutPreferenceKeyIsNotWritable() {
         assertFalse(ControlPolicy.isWritable(null, ControlEffective.INSTALLED))
+        // An empty key is how always-on infrastructure is declared; treating it
+        // as writable would put a live switch on something that cannot be set.
+        assertFalse(ControlPolicy.isWritable("", ControlEffective.INSTALLED))
+        assertFalse(ControlPolicy.isWritable("   ", ControlEffective.WORKING))
     }
 
     @Test fun reportedResolverFailureIsNotHiddenAsWorking() {

@@ -135,8 +135,14 @@ object ControlPolicy {
         ControlEffective.RESTART_REQUIRED,
     )
 
+    /**
+     * A row is writable only with a real, non-blank preference key and a
+     * non-failed runtime state. Always-on infrastructure passes an empty key,
+     * and an empty key must never be treated as writable just because it is
+     * not null.
+     */
     fun isWritable(preferenceKey: String?, effective: ControlEffective): Boolean =
-        preferenceKey != null && effective in WORKING_STATES
+        preferenceKey != null && preferenceKey.isNotBlank() && effective in WORKING_STATES
 
     fun effectiveFrom(
         reported: String?,
