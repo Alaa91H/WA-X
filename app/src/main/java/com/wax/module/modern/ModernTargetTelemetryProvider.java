@@ -55,9 +55,20 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         if (EVENT_BOOTSTRAP.equals(event)) {
             if (!"ATTACHED".equals(value)) return rejected();
             editor.putLong("modern.bootstrap.last." + target, now)
-                    .putLong("modern.bootstrap.boot." + target, now - SystemClock.elapsedRealtime());
+                    .putLong("modern.bootstrap.boot." + target, now - SystemClock.elapsedRealtime())
+                    .putLong("modern.runtime.milestone.ATTACH_OBSERVED." + target, now);
         } else if (EVENT_CUSTOM_TIME.equals(event)) {
-            editor.putString("modern.feature.custom_time.state." + target, value);
+            if ("INVOKED".equals(value)) {
+                SharedPreferences current =
+                        context.getSharedPreferences(LOCAL_PREFS, Context.MODE_PRIVATE);
+                editor.putLong("modern.feature.custom_time.last_invoked." + target, now)
+                        .putLong("modern.feature.custom_time.invocation_boot." + target,
+                                now - SystemClock.elapsedRealtime())
+                        .putLong("modern.feature.custom_time.invocation_count." + target,
+                                current.getLong("modern.feature.custom_time.invocation_count." + target, 0) + 1);
+            } else {
+                editor.putString("modern.feature.custom_time.state." + target, value);
+            }
         } else {
             editor.putString("modern.feature.share_limit.state." + target, value);
         }
