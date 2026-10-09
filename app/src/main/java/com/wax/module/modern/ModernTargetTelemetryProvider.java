@@ -10,6 +10,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import androidx.preference.PreferenceManager;
 import java.util.Arrays;
 
 /**
@@ -22,6 +23,7 @@ import java.util.Arrays;
  */
 public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String METHOD_REPORT = "report-target-event-v1";
+    public static final String METHOD_WRITE_SETTING = "write-target-setting-v1";
     public static final String LOCAL_PREFS = "modern_runtime_target_reports";
     public static final String EVENT_BOOTSTRAP = "BOOTSTRAP";
     public static final String EVENT_RUNTIME_HEARTBEAT = "RUNTIME_HEARTBEAT";
@@ -30,6 +32,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_FREEZE_LAST_SEEN = "FREEZE_LAST_SEEN";
     public static final String EVENT_DND_MODE = "DND_MODE";
     public static final String EVENT_MENU_HOME = "MENU_HOME";
+    public static final String EVENT_IN_WHATSAPP_SETTINGS = "IN_WHATSAPP_SETTINGS";
     private static final String TAG = "WA-X TargetTelemetry";
 
     @Override
@@ -39,7 +42,13 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
 
     @Override
     public Bundle call(String method, String arg, Bundle extras) {
-        if (!METHOD_REPORT.equals(method) || extras == null || getContext() == null) {
+        if (getContext() == null || extras == null) {
+            return rejected();
+        }
+        if (METHOD_WRITE_SETTING.equals(method)) {
+            return writeSetting(getContext(), extras);
+        }
+        if (!METHOD_REPORT.equals(method)) {
             return rejected();
         }
         Context context = getContext();
@@ -87,6 +96,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         } else if (EVENT_MENU_HOME.equals(event)) {
             if (!isSupportedMenuHomeState(value)) return rejected();
             editor.putString("modern.feature.menu_home.state." + target, value);
+        } else if (EVENT_IN_WHATSAPP_SETTINGS.equals(event)) {
+            if (!isSupportedSettingsState(value)) return rejected();
+            editor.putString("modern.feature.in_whatsapp_settings.state." + target, value);
         } else {
             return rejected();
         }
@@ -113,7 +125,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_SHARE_LIMIT.equals(event)
                 || EVENT_FREEZE_LAST_SEEN.equals(event)
                 || EVENT_DND_MODE.equals(event)
-                || EVENT_MENU_HOME.equals(event);
+                || EVENT_MENU_HOME.equals(event)
+                || EVENT_IN_WHATSAPP_SETTINGS.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
@@ -126,6 +139,56 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "INVALID_MENU_SIGNATURE".equals(value)
                 || "ERROR".equals(value)
                 || "ITEM_ADDED".equals(value);
+    }
+
+    static boolean isSupportedSettingsState(String value) {
+        return "INSTALLED".equals(value)
+                || "ALREADY_INSTALLED".equals(value)
+                || "UNSUPPORTED_TARGET".equals(value)
+                || "HOME_CLASS_MISSING".equals(value)
+                || "MENU_METHOD_MISSING".equals(value)
+                || "INVALID_HOME_TYPE".equals(value)
+                || "INVALID_MENU_SIGNATURE".equals(value)
+                || "ERROR".equals(value);
+    }
+
+    /**
+     * Allowlist of preference keys the injected target may flip through the
+     * in-WhatsApp settings shell. Only enable flags of features with a wired
+     * modern adapter; formatting sub-keys stay Manager-side for now.
+     */
+    static boolean isWritableSettingKey(String key) {
+        return "modern.feature.custom_time.enabled".equals(key)
+                || "removeforwardlimit".equals(key)
+                || "freezelastseen".equals(key)
+                || "dndmode".equals(key);
+    }
+
+    /**
+     * Persists a target-originated toggle into the Manager default preferences
+     * (the file {@code ModernRuntimePreferenceRelay} observes), so the
+     * existing relay syncs it into RemotePreferences. Same UID authorization
+     * as telemetry; boolean values only; never clears other keys.
+     */
+    private static Bundle writeSetting(Context context, Bundle extras) {
+        String target = extras.getString("target", "");
+        String key = extras.getString("key", "");
+        if (!isAuthorizedSender(target, Binder.getCallingUid(),
+                context.getPackageManager().getPackagesForUid(Binder.getCallingUid()))) {
+            Log.w(TAG, "Rejected settings write from unauthorized UID");
+            return rejected();
+        }
+        if (!isWritableSettingKey(key)) {
+            return rejected();
+        }
+        boolean enabled = extras.getBoolean("enabled", false);
+        boolean saved = PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(key, enabled)
+                .commit();
+        Bundle result = new Bundle();
+        result.putBoolean("accepted", saved);
+        return result;
     }
 
     private static Bundle rejected() {
