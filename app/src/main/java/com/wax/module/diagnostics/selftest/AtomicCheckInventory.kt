@@ -133,7 +133,7 @@ object AtomicCheckInventory {
         scope = "feature:$featureId",
         level = EvidenceLevel.L3_HOOK,
         dependsOn = resolvers + PREF_READBACK,
-        expected = "The hook for $featureId is installed",
+        expected = "The hook for $featureId is installed (preference $preferenceKey)",
         remediation = "Enable the feature in the WA X Control Center, then restart WhatsApp",
         severity = "high",
         externalConfirmationRequired = externalConfirmationRequired,

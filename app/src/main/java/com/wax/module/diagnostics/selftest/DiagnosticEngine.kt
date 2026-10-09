@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -138,7 +139,7 @@ class DiagnosticEngine(
             val result = if (dependencyFailed) {
                 // Blocked, not failed: the failure belongs to the dependency
                 // and the cluster must not multiply it.
-                record(definition, config, AtomicCheckResult(
+                record(definition, AtomicCheckResult(
                     id = definition.id,
                     title = definition.title,
                     scope = definition.scope,
@@ -160,7 +161,7 @@ class DiagnosticEngine(
             } else {
                 runProbe(definition, config, probes[definition.id])
             }
-            record(definition, config, result)
+            record(definition, result)
             completed.incrementAndGet()
             progress.add(definition.id)
             onProgress(completed.get(), total, definition.id)
@@ -218,8 +219,11 @@ class DiagnosticEngine(
         val task: Future<Observation?> = executor.submit<Observation?> { probe.run() }
         val observation = try {
             task.get(config.perCheckTimeoutMillis, TimeUnit.MILLISECONDS)
-        } catch (timeout: Exception) {
+        } catch (failure: Exception) {
             task.cancel(true)
+            // The probe failed rather than the scan: say which, so an export
+            // never shows a crashed check as merely a slow one.
+            val timedOut = failure is TimeoutException
             return AtomicCheckResult(
                 id = definition.id,
                 title = definition.title,
@@ -227,13 +231,17 @@ class DiagnosticEngine(
                 status = DiagnosticStatus.FAIL,
                 evidenceLevel = definition.level,
                 expected = definition.expected,
-                observedEvidence = "probe exceeded ${config.perCheckTimeoutMillis}ms",
+                observedEvidence = if (timedOut) {
+                    "probe exceeded ${config.perCheckTimeoutMillis}ms"
+                } else {
+                    "probe failed: ${failure.javaClass.simpleName}"
+                },
                 verification = VerificationState.NOT_OBSERVED,
                 timestampMillis = System.currentTimeMillis(),
                 whatsappBuild = config.whatsappBuild,
                 severity = definition.severity,
                 confidence = 1.0,
-                failureClass = FailureClass.TIMEOUT,
+                failureClass = if (timedOut) FailureClass.TIMEOUT else FailureClass.CRASHED,
                 remediation = definition.remediation,
                 dependsOn = definition.dependsOn,
                 externalConfirmationRequired = definition.externalConfirmationRequired,
@@ -298,7 +306,6 @@ class DiagnosticEngine(
 
     private fun record(
         definition: AtomicCheckInventory.Definition,
-        config: RunConfig,
         result: AtomicCheckResult,
     ) {
         observed[definition.id] = result
