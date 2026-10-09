@@ -55,6 +55,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #423 | MinorFixes adapter, source-stage only, NOT wired | MERGED, main CI green |
 | #426 | MenuHome overflow-menu entry (access part of #425) | MERGED, main CI green |
 | #427 | Authenticated runtime heartbeat + accurate Manager target state | MERGED, main CI green |
+| #429 | In-WhatsApp settings shell (4 wired toggles + restart + pending note) | MERGED, main CI green |
 | #421 | Derived source-wiring ledger (anti-false-claim guard) | MERGED, main CI green |
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
@@ -153,10 +154,12 @@ batch 12 = BackupRestore, CaptureDevice.
 
 ## Remaining work (updated every turn)
 
-1. IN FLIGHT (Phase 1): in-WhatsApp settings shell for the 4 wired toggles
-   (branch `feat/m06-inwhatsapp-settings-shell`) — provider write channel,
-   menu contributor, entry wiring, tests, stage doc. Next: push, open PR,
-   watch CI, merge, then Batch 1. —
+1. NEXT (Phase 2, Batch 1): migrate the 5 W1 core/infra adapters
+   (ContactItemListener, ConversationItemListener, MenuStatusProvider,
+   ActivityController, Tasker) against the WA X hook abstraction, register
+   in the modern path, add in-WhatsApp controls with persistence + restart
+   indicator — one feature at a time, each verified (hook path, preference
+   path, UI wiring, tests, CI) before moving on. —
    an API 102 screen rendered inside WhatsApp listing features with honest
    status (functional vs pending), controls wired to real settings, and a
    "requires WhatsApp restart" indicator. `ModernMenuHomeFeature` entry is
