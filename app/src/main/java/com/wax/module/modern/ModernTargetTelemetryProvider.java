@@ -43,6 +43,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_CONTACT_ACCESS = "CONTACT_ACCESS";
     public static final String EVENT_JID_ACCESS = "JID_ACCESS";
     public static final String EVENT_TYPING_PRIVACY = "TYPING_PRIVACY";
+    public static final String EVENT_HIDE_CHAT = "HIDE_CHAT";
     private static final String TAG = "WA-X TargetTelemetry";
 
     /**
@@ -54,8 +55,16 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
      */
     public static final String CONTROL_CENTER_FAVORITES_KEY = "wax.control_center.favorites";
 
+    /** The archived-chat modes, matching res/values/arrays.xml archive_values. */
+    static final String MODE_DISABLED = "0";
+    static final String MODE_CLICK_TIMES = "1";
+    static final String MODE_HOLD_TITLE = "2";
+
     /** Upper bound on the favourites list, so the value stays a short string. */
     static final int MAX_FAVORITES_LENGTH = 256;
+
+    /** The one string-valued mode the embedded Control Center may read/write. */
+    static final String CONTROL_CENTER_MODE_KEY = "typearchive";
 
     /** The only preference keys the embedded Control Center may read. */
     static final String[] CONTROL_CENTER_PREFERENCE_KEYS = {
@@ -67,6 +76,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "ghostmode",
         "ghostmode_t",
         "ghostmode_r",
+        "typearchive",
     };
 
     /** The only effective-state keys the embedded Control Center may read. */
@@ -85,6 +95,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.contact_access.state",
         "modern.feature.jid_access.state",
         "modern.feature.typing_privacy.state",
+        "modern.feature.hide_chat.state",
     };
 
     @Override
@@ -172,6 +183,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.jid_access.state." + target, value);
         } else if (EVENT_TYPING_PRIVACY.equals(event)) {
             editor.putString("modern.feature.typing_privacy.state." + target, value);
+        } else if (EVENT_HIDE_CHAT.equals(event)) {
+            editor.putString("modern.feature.hide_chat.state." + target, value);
         } else {
             return rejected();
         }
@@ -207,7 +220,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_CONTEXT_MENU_ACTION_PROVIDER.equals(event)
                 || EVENT_CONTACT_ACCESS.equals(event)
                 || EVENT_JID_ACCESS.equals(event)
-                || EVENT_TYPING_PRIVACY.equals(event);
+                || EVENT_TYPING_PRIVACY.equals(event)
+                || EVENT_HIDE_CHAT.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
@@ -266,6 +280,20 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             Log.w(TAG, "Rejected settings write from unauthorized UID");
             return rejected();
         }
+        if ("typearchive".equals(key)) {
+            String mode = extras.getString("mode", MODE_DISABLED);
+            if (!MODE_DISABLED.equals(mode) && !MODE_CLICK_TIMES.equals(mode)
+                    && !MODE_HOLD_TITLE.equals(mode)) {
+                return rejected();
+            }
+            boolean savedMode = PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString("typearchive", mode)
+                    .commit();
+            Bundle modeResult = new Bundle();
+            modeResult.putBoolean("accepted", savedMode);
+            return modeResult;
+        }
         if (CONTROL_CENTER_FAVORITES_KEY.equals(key)) {
             String favorites = extras.getString("favorites", "");
             if (!isValidFavorites(favorites)) return rejected();
@@ -314,6 +342,10 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         }
         result.putString("pref." + CONTROL_CENTER_FAVORITES_KEY,
                 manager.getString(CONTROL_CENTER_FAVORITES_KEY, ""));
+        // String-valued modes travel under their own prefix, because the
+        // boolean loop above would coerce them to false.
+        result.putString("mode." + CONTROL_CENTER_MODE_KEY,
+                manager.getString(CONTROL_CENTER_MODE_KEY, MODE_DISABLED));
         for (String key : CONTROL_CENTER_EVIDENCE_KEYS) {
             String value = reports.getString(key + "." + target, null);
             if (value != null) {

@@ -484,6 +484,25 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Typing privacy state delivery failed", error);
             }
+            // HideChat: hides archived chats by swapping the archive view for
+            // one that stays GONE. Driven by the user's existing typearchive mode.
+            String hideChatState = ModernHideChatFeature.Outcome.DISABLED.name();
+            try {
+                System.loadLibrary("dexkit");
+                hideChatState = ModernHideChatFeature.INSTANCE
+                        .install(target, this, hookRegistry, preferences).name();
+                Log.i(TAG, "M06_HIDE_CHAT_RESULT package=" + packageName
+                        + " state=" + hideChatState);
+            } catch (Throwable hideFailure) {
+                if (hideFailure instanceof VirtualMachineError) throw (VirtualMachineError) hideFailure;
+                hideChatState = "ERROR_" + hideFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern HideChat failed on " + packageName, hideFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "HIDE_CHAT", hideChatState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Hide chat state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

@@ -77,6 +77,14 @@ object ModernControlCenterCatalog {
             description = "Keep your last-seen value frozen",
         ),
         Wired(
+            id = "hide_chat",
+            preferenceKey = ModernHideChatFeature.PREF_ARCHIVE_MODE,
+            evidenceKey = "modern.feature.hide_chat.state",
+            category = ControlCategory.PRIVACY,
+            label = "Hide Archived Chats",
+            description = "Hide archived chats from the chat list",
+        ),
+        Wired(
             id = "typing_privacy",
             preferenceKey = ModernTypingPrivacyFeature.PREF_GHOSTMODE_TYPING,
             evidenceKey = "modern.feature.typing_privacy.state",

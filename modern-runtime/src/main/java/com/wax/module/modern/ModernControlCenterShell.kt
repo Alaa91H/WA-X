@@ -54,6 +54,7 @@ class ModernControlCenterShell(
 
     private var favorites = emptySet<String>()
     private var favoritesOnly = false
+    private val currentModes = HashMap<String, String>()
 
     private val primary = themeColor(android.R.attr.textColorPrimary, Color.WHITE)
     private val secondary = themeColor(android.R.attr.textColorSecondary, Color.LTGRAY)
@@ -80,6 +81,9 @@ class ModernControlCenterShell(
         favorites = ModernControlCenterCatalog.parseFavorites(
             states.getString("pref." + ModernControlCenterCatalog.FAVORITES_KEY, null),
         )
+        currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] =
+            states.getString("state." + ModernHideChatFeature.PREF_ARCHIVE_MODE, null)
+                ?: readModeFromState(states)
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(8))
@@ -261,6 +265,21 @@ class ModernControlCenterShell(
             // accessibility services instead of a dead switch.
             container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
+        val modeControl = row.preferenceKey == ModernHideChatFeature.PREF_ARCHIVE_MODE
+        if (modeControl && row.preferenceKey != null) {
+            // A three-state mode, not an on/off switch: tapping cycles
+            // disabled -> hide -> hold, which is what the Manager list offers.
+            val button = Button(activity).apply {
+                isAllCaps = false
+                contentDescription = row.title
+                setOnClickListener { cycleArchiveMode(row, status) }
+            }
+            container.addView(button)
+            status.text = "${row.description} · ${archiveModeLabel(row)}" +
+                if (row.requiresRestart) " · restart required" else ""
+            container.addView(status)
+            return container
+        }
         if (row.writable && row.preferenceKey != null) {
             val toggle = Switch(activity).apply {
                 text = row.title
@@ -290,6 +309,36 @@ class ModernControlCenterShell(
             container.addView(star)
         }
         return container
+    }
+
+    private fun archiveModeLabel(row: ControlEntry): String {
+        val stored = currentModes[row.id] ?: ModernHideChatFeature.MODE_DISABLED
+        return when (stored) {
+            "1" -> strings.hideAfterClicks
+            "2" -> strings.hideWhileHolding
+            else -> strings.disabled
+        }
+    }
+
+    private fun cycleArchiveMode(row: ControlEntry, status: TextView) {
+        val stored = currentModes[row.id] ?: ModernHideChatFeature.MODE_DISABLED
+        val next = when (stored) {
+            ModernHideChatFeature.MODE_DISABLED -> ModernHideChatFeature.MODE_CLICK_TIMES
+            "1" -> "2"
+            else -> ModernHideChatFeature.MODE_DISABLED
+        }
+        writer.execute {
+            val saved = ModernTargetSettingsClient.writeMode(activity, packageName, next)
+            Handler(Looper.getMainLooper()).post {
+                if (saved) {
+                    currentModes[row.id] = next
+                    status.text = "${row.description} · ${archiveModeLabel(row)} · restart required"
+                } else {
+                    status.text = "${row.description} · " +
+                        ControlStatusText.status(ControlEffective.ERROR)
+                }
+            }
+        }
     }
 
     private fun toggleFavorite(row: ControlEntry) {
@@ -371,6 +420,11 @@ class ModernControlCenterShell(
 
     private fun readString(states: Bundle, key: String): String? =
         states.getString("state." + key, null)
+
+    /** The archive mode arrives as a prefixed preference value. */
+    private fun readModeFromState(states: Bundle): String =
+        states.getString("mode." + ModernHideChatFeature.PREF_ARCHIVE_MODE,
+            ModernHideChatFeature.MODE_DISABLED) ?: ModernHideChatFeature.MODE_DISABLED
 
     private companion object {
         const val TAG = "WA-X ControlCenter"

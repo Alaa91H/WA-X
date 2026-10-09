@@ -1,5 +1,6 @@
 package com.wax.module.modern;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -75,6 +76,15 @@ public final class ModernTargetTelemetryProviderTest {
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("EXECUTE_CODE"));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(null));
         assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(""));
+    }
+
+    @Test public void archiveModeIsReadAsAStringNotABoolean() {
+        // The archived-chat mode is a three-state string; reading it through
+        // the boolean path would silently report every mode as "off".
+        assertEquals("typearchive", ModernTargetTelemetryProvider.CONTROL_CENTER_MODE_KEY);
+        assertEquals("0", ModernTargetTelemetryProvider.MODE_DISABLED);
+        assertEquals("1", ModernTargetTelemetryProvider.MODE_CLICK_TIMES);
+        assertEquals("2", ModernTargetTelemetryProvider.MODE_HOLD_TITLE);
     }
 
     @Test public void favouritesAreValidatedBeforePersistence() {
