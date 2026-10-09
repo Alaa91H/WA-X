@@ -580,7 +580,7 @@
     <string name="modern_framework_features_pending">Çerçeve bağlantısı WhatsApp özelliklerinin çalıştığını kanıtlamaz. Geçiş deneyseldir.</string>
     <string name="modern_target_title">%1$s — API 102</string>
     <string name="modern_target_loaded">Güncel Runtime başlatma raporu alındı. Bu, özelliklerin çalıştığını kanıtlamaz.</string>
-    <string name="modern_target_stale">Önceki raporun süresi doldu. WhatsApp’ı açıp yeniden kontrol edin.</string>
+    <string name="modern_target_stale">Modülün önceki başlangıcı doğrulandı ancak yakın zamanda doğrulanmış bir sinyal alınmadı. WhatsApp askıya alınmış veya kapatılmış olabilir.</string>
     <string name="modern_target_boot_mismatch">Rapor farklı bir açılışa ait ya da saat geçersiz.</string>
     <string name="modern_target_no_report">API 102 raporu alınmadı. Uygulamayı açıp yeniden kontrol edin.</string>
     <string name="modern_target_feature_status">Deneysel CustomTime özelliği: %1$s</string>
@@ -592,4 +592,8 @@
     <string name="modern_pilot_tap">Deneysel CustomTime ayarları için dokunun.</string>
     <string name="modern_target_share_limit_status">İletme sınırı: %1$s</string>
     <string name="modern_target_presence_status">Son görülmeyi dondur: %1$s | Rahatsız etmeyin: %2$s</string>
+    <string name="modern_target_live_heartbeat">WhatsApp işlemi yanıt veriyor: güncel ve doğrulanmış bir yaşam sinyali alındı. Bu, tüm özelliklerin çalıştığını kanıtlamaz.</string>
+    <string name="modern_target_previous_attach">Modülün başlatıldığı önceden doğrulandı; ayrıntılı başlatma aşamaları artık güncel değil.</string>
+    <string name="modern_target_no_lifecycle_signal">WhatsApp uygulamasından henüz başlatma raporu alınmadı.</string>
+    <string name="modern_target_menu_status">WA X menüsünün son raporu: %1$s</string>
 </resources>

@@ -581,7 +581,7 @@
     <string name="modern_framework_features_pending">Соединение с фреймворком не подтверждает работу функций WhatsApp. Миграция пока экспериментальная.</string>
     <string name="modern_target_title">%1$s — API 102</string>
     <string name="modern_target_loaded">Получен свежий отчёт о запуске Runtime. Он не доказывает работу функций.</string>
-    <string name="modern_target_stale">Предыдущий отчёт устарел. Откройте WhatsApp и проверьте снова.</string>
+    <string name="modern_target_stale">Ранее запуск модуля был подтверждён, но нового подтверждённого сигнала нет. WhatsApp мог быть приостановлен или закрыт.</string>
     <string name="modern_target_boot_mismatch">Отчёт относится к другой загрузке устройства или неверному времени.</string>
     <string name="modern_target_no_report">Отчёт API 102 не получен. Откройте приложение и проверьте снова.</string>
     <string name="modern_target_feature_status">Экспериментальная функция CustomTime: %1$s</string>
@@ -593,4 +593,8 @@
     <string name="modern_pilot_tap">Нажмите, чтобы настроить экспериментальный CustomTime.</string>
     <string name="modern_target_share_limit_status">Лимит пересылки: %1$s</string>
     <string name="modern_target_presence_status">Заморозка последнего посещения: %1$s | Не беспокоить: %2$s</string>
+    <string name="modern_target_live_heartbeat">Процесс WhatsApp отвечает: получен недавний подтверждённый сигнал. Это не доказывает работу всех функций.</string>
+    <string name="modern_target_previous_attach">Запуск модуля подтверждался ранее; подробные этапы запуска уже устарели.</string>
+    <string name="modern_target_no_lifecycle_signal">От WhatsApp пока не получен отчёт о запуске.</string>
+    <string name="modern_target_menu_status">Последний отчёт о меню WA X: %1$s</string>
 </resources>

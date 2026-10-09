@@ -584,7 +584,7 @@
     <string name="modern_target_live_heartbeat">واتساب متصل حالياً بوحدة WA X: تم استلام إشارة تشغيل حديثة ومُتحقق من مصدرها. هذا لا يثبت عمل جميع الميزات.</string>
     <string name="modern_target_previous_attach">تم تأكيد تهيئة الوحدة سابقاً، لكن تفاصيل مراحل التشغيل القديمة لم تعد حديثة.</string>
     <string name="modern_target_no_lifecycle_signal">لم يصل بعد تقرير تشغيل من واتساب.</string>
-    <string name="modern_target_menu_status">قائمة WA X داخل واتساب: %1$s</string>
+    <string name="modern_target_menu_status">آخر تقرير لقائمة WA X داخل واتساب: %1$s</string>
     <string name="modern_target_loaded">ورد تقرير حديث عن بدء Runtime داخل هذا التطبيق، لكن هذا لا يثبت عمل الميزات.</string>
     <string name="modern_target_stale">تم تأكيد تشغيل الوحدة سابقاً، لكن لم تصل إشارة حديثة موثقة من عملية واتساب. افتح واتساب وتحقق مجدداً؛ فقد تكون العملية متوقفة أو مجمّدة.</string>
     <string name="modern_target_boot_mismatch">تقرير Runtime يعود إلى إقلاع مختلف أو وقت غير صحيح.</string>

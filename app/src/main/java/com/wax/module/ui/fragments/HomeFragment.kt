@@ -66,6 +66,7 @@ class HomeFragment : BaseFragment() {
     private var statusReceiverRegistered = false
     private val activationProbeHandler = Handler(Looper.getMainLooper())
     private val pendingActivationProbes = mutableListOf<Runnable>()
+
     // Update the visible Manager card as authenticated heartbeat evidence arrives.
     // Cleared onStop: no background polling or view references after navigation.
     private val modernStatusRefresh =

@@ -579,7 +579,7 @@
     <string name="modern_framework_features_pending">框架连接不能证明 WhatsApp 功能正常运行。迁移仍处于试验阶段。</string>
     <string name="modern_target_title">%1$s — API 102</string>
     <string name="modern_target_loaded">已收到近期 Runtime 启动报告，但这不代表功能已正常运行。</string>
-    <string name="modern_target_stale">之前的报告已过期。请打开 WhatsApp 并重新检查。</string>
+    <string name="modern_target_stale">此前已确认模块启动，但最近没有收到经验证的存活信号。WhatsApp 可能已暂停或关闭。</string>
     <string name="modern_target_boot_mismatch">报告来自另一轮设备启动，或系统时间无效。</string>
     <string name="modern_target_no_report">未收到 API 102 报告。请打开应用后重新检查。</string>
     <string name="modern_target_feature_status">实验性 CustomTime 功能：%1$s</string>
@@ -591,4 +591,8 @@
     <string name="modern_pilot_tap">点按此处配置实验性 CustomTime。</string>
     <string name="modern_target_share_limit_status">转发数量限制：%1$s</string>
     <string name="modern_target_presence_status">冻结最后上线时间：%1$s | 请勿打扰：%2$s</string>
+    <string name="modern_target_live_heartbeat">WhatsApp 进程正在响应：已收到近期经过验证的存活信号。这不代表所有功能都能正常使用。</string>
+    <string name="modern_target_previous_attach">此前已确认模块启动，但详细启动阶段记录已过期。</string>
+    <string name="modern_target_no_lifecycle_signal">尚未收到来自 WhatsApp 的启动报告。</string>
+    <string name="modern_target_menu_status">WA X 菜单的最近报告：%1$s</string>
 </resources>

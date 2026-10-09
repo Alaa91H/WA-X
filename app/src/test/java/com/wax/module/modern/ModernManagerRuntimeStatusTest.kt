@@ -48,15 +48,25 @@ class ModernManagerRuntimeStatusTest {
         assertEquals(
             ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT,
             ModernManagerRuntimeStatus.classifyWithHeartbeat(
-                now - 500_000L, boot, now, boot,
-                elapsed - 45_000L, boot + 100L, elapsed,
+                now - 500_000L,
+                boot,
+                now,
+                boot,
+                elapsed - 45_000L,
+                boot + 100L,
+                elapsed,
             ),
         )
         assertEquals(
             ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP,
             ModernManagerRuntimeStatus.classifyWithHeartbeat(
-                now - 500_000L, boot, now, boot,
-                elapsed - 160_000L, boot, elapsed,
+                now - 500_000L,
+                boot,
+                now,
+                boot,
+                elapsed - 160_000L,
+                boot,
+                elapsed,
             ),
         )
     }
@@ -67,17 +77,24 @@ class ModernManagerRuntimeStatusTest {
         val elapsed = 800_000L
         val boot = now - elapsed
         val original = now - 500_000L
-        val scenarios = listOf(
-            Triple(elapsed - 20_000L, boot - 100_000L, elapsed),
-            Triple(elapsed + 500L, boot, elapsed),
-            Triple(0L, boot, elapsed),
-            Triple(elapsed - 20_000L, 0L, elapsed),
-        )
+        val scenarios =
+            listOf(
+                Triple(elapsed - 20_000L, boot - 100_000L, elapsed),
+                Triple(elapsed + 500L, boot, elapsed),
+                Triple(0L, boot, elapsed),
+                Triple(elapsed - 20_000L, 0L, elapsed),
+            )
         scenarios.forEach { (last, recordedBoot, current) ->
             assertEquals(
                 ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP,
                 ModernManagerRuntimeStatus.classifyWithHeartbeat(
-                    original, boot, now, boot, last, recordedBoot, current,
+                    original,
+                    boot,
+                    now,
+                    boot,
+                    last,
+                    recordedBoot,
+                    current,
                 ),
             )
         }
@@ -92,8 +109,13 @@ class ModernManagerRuntimeStatusTest {
         assertEquals(
             ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP,
             ModernManagerRuntimeStatus.classifyWithHeartbeat(
-                now - 300_000L, boot, now, boot,
-                elapsed - 150_001L, boot, elapsed,
+                now - 300_000L,
+                boot,
+                now,
+                boot,
+                elapsed - 150_001L,
+                boot,
+                elapsed,
             ),
         )
     }
@@ -105,7 +127,13 @@ class ModernManagerRuntimeStatusTest {
         assertEquals(
             ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP,
             ModernManagerRuntimeStatus.classifyWithHeartbeat(
-                now - 1000L, boot, now, boot, 0L, 0L, 100_000L,
+                now - 1000L,
+                boot,
+                now,
+                boot,
+                0L,
+                0L,
+                100_000L,
             ),
         )
     }
