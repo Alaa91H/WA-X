@@ -575,4 +575,14 @@
     <string name="gt_translate_from">תרגום מ־</string>
     <string name="gt_translate_to">תרגום אל</string>
     <string name="gt_translate_action">תרגום</string>
+    <string name="modern_framework_connected">libxposed API %1$d מחובר</string>
+    <string name="modern_framework_waiting">libxposed API 102: ממתין למסגרת</string>
+    <string name="modern_framework_status">WA X %1$s — אבחון סביבת הריצה החדשה</string>
+    <string name="modern_framework_features_pending">החיבור למסגרת אינו מוכיח שתכונות WhatsApp פועלות. המעבר עדיין ניסיוני.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">התקבל דוח הפעלה עדכני. אין בכך הוכחה שהתכונות פועלות.</string>
+    <string name="modern_target_stale">תוקף הדוח הקודם פג. יש לפתוח את WhatsApp ולבדוק שוב.</string>
+    <string name="modern_target_boot_mismatch">הדוח שייך לאתחול אחר או מכיל זמן לא תקין.</string>
+    <string name="modern_target_no_report">לא התקבל דוח API 102. יש לפתוח את היישום ולבדוק שוב.</string>
+    <string name="modern_target_feature_status">תכונת CustomTime ניסיונית: %1$s</string>
 </resources>
