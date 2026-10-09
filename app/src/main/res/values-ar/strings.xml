@@ -587,4 +587,10 @@
     <string name="modern_target_boot_mismatch">تقرير Runtime يعود إلى إقلاع مختلف أو وقت غير صحيح.</string>
     <string name="modern_target_no_report">لم يصل تقرير عن Runtime API 102 من هذا التطبيق. افتحه ثم تحقق مجددًا.</string>
     <string name="modern_target_feature_status">ميزة CustomTime التجريبية: %1$s</string>
+    <string name="modern_pilot_title">CustomTime التجريبية (API 102)</string>
+    <string name="modern_pilot_message">تغيّر هذه الميزة تنسيق وقت الرسائل فقط، وقد لا تعمل مع إصدار واتساب الحالي. باقي ميزات Legacy غير متاحة بعد عبر API 102.</string>
+    <string name="modern_pilot_enable">تفعيل التجربة</string>
+    <string name="modern_pilot_disable">إيقاف التجربة</string>
+    <string name="modern_pilot_restart">أغلق واتساب وافتحه مجددًا لتطبيق التغيير.</string>
+    <string name="modern_pilot_tap">اضغط هنا لضبط ميزة CustomTime التجريبية.</string>
 </resources>

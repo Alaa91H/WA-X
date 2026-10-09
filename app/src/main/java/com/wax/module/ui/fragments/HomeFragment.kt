@@ -43,6 +43,7 @@ import com.wax.module.config.ConfigValue
 import com.wax.module.databinding.DialogDiagnosticsLogBinding
 import com.wax.module.databinding.FragmentHomeBinding
 import com.wax.module.modern.ModernManagerRuntimeStatus
+import com.wax.module.modern.ModernRuntimePreferenceRelay
 import com.wax.module.ui.fragments.base.BaseFragment
 import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RootDiagnostics
@@ -222,6 +223,10 @@ class HomeFragment : BaseFragment() {
             showDiagnosticsDialog()
         }
 
+        if (BuildConfig.MODERN_XPOSED) {
+            binding.status.setOnClickListener { showModernCustomTimeDialog() }
+        }
+
         checkForUpdates()
         startCardAnimations()
 
@@ -325,6 +330,8 @@ class HomeFragment : BaseFragment() {
                         snapshot.connectionProblem?.let { append(": ").append(it) }
                         append('\n')
                         append(getString(R.string.modern_framework_features_pending))
+                        append('\n')
+                        append(getString(R.string.modern_pilot_tap))
                     }
                 binding.statusIcon.setImageResource(
                     if (snapshot.connected) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
@@ -389,6 +396,25 @@ class HomeFragment : BaseFragment() {
                 }
             }
         }
+    }
+
+    private fun showModernCustomTimeDialog() {
+        if (!BuildConfig.MODERN_XPOSED || !isAdded) return
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val active = prefs.getBoolean(ModernRuntimePreferenceRelay.ENABLE_KEY, false)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.modern_pilot_title)
+            .setMessage(R.string.modern_pilot_message)
+            .setPositiveButton(
+                if (active) R.string.modern_pilot_disable else R.string.modern_pilot_enable,
+            ) { _, _ ->
+                prefs.edit {
+                    putBoolean(ModernRuntimePreferenceRelay.ENABLE_KEY, !active)
+                }
+                Toast.makeText(requireContext(), R.string.modern_pilot_restart, Toast.LENGTH_LONG).show()
+                renderModernActivation()
+            }.setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun statusOf(

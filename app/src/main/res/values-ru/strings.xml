@@ -586,4 +586,10 @@
     <string name="modern_target_boot_mismatch">Отчёт относится к другой загрузке устройства или неверному времени.</string>
     <string name="modern_target_no_report">Отчёт API 102 не получен. Откройте приложение и проверьте снова.</string>
     <string name="modern_target_feature_status">Экспериментальная функция CustomTime: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (экспериментальный API 102)</string>
+    <string name="modern_pilot_message">CustomTime меняет только отображение времени сообщений. Функция может не работать с этой версией WhatsApp. Остальные старые функции пока недоступны в режиме API 102.</string>
+    <string name="modern_pilot_enable">Включить эксперимент</string>
+    <string name="modern_pilot_disable">Выключить эксперимент</string>
+    <string name="modern_pilot_restart">Закройте и снова откройте WhatsApp для применения.</string>
+    <string name="modern_pilot_tap">Нажмите, чтобы настроить экспериментальный CustomTime.</string>
 </resources>

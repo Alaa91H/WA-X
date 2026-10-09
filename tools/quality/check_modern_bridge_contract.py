@@ -78,6 +78,21 @@ def verify() -> None:
     assert ".isBlank()" not in lifecycle
     assert "com.whatsapp.w4b" in scope
     assert "com.whatsapp" in scope
+
+    # Modern Manager settings must explicitly bridge into this module's API102
+    # remote preference group; a service handshake alone is insufficient.
+    manager_application = source("app/src/main/java/com/wax/module/ModuleApplication.kt")
+    relay = source("app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt")
+    if 'if (BuildConfig.MODERN_XPOSED)' not in manager_application:
+        raise AssertionError("Modern preference relay must be guarded by the API102 build mode")
+    assert "ModernRuntimePreferenceRelay.start(this)" in manager_application
+    assert "ModernFrameworkServiceBridge.remotePreferences()" in relay
+    assert "ModernFrameworkServiceBridge.setOnConnectedListener" in relay
+    assert 'setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour")' in relay
+    assert "PreferenceManager.getDefaultSharedPreferences" in relay
+    assert 'enabled = source.getBoolean(ENABLE_KEY, false)' in relay
+    assert ".clear()" not in relay
+    assert "putBoolean(ENABLE_KEY, values.enabled)" in relay
     assert "XposedServiceHelper.registerListener" in manager
     assert "ModernFrameworkServiceBridge.register()" in application
     assert '"wax.runtime.v1"' in manager

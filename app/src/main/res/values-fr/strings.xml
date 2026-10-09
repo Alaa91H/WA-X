@@ -583,4 +583,10 @@
     <string name="modern_target_boot_mismatch">Le rapport provient d’un autre démarrage ou d’une horloge incorrecte.</string>
     <string name="modern_target_no_report">Aucun rapport API 102 reçu. Ouvrez l’application puis réessayez.</string>
     <string name="modern_target_feature_status">Fonction expérimentale CustomTime : %1$s</string>
+    <string name="modern_pilot_title">CustomTime (API 102 expérimental)</string>
+    <string name="modern_pilot_message">CustomTime modifie uniquement l’affichage des heures des messages. Peut ne pas fonctionner avec cette version de WhatsApp. Les autres fonctions Legacy ne sont pas encore disponibles avec API 102.</string>
+    <string name="modern_pilot_enable">Activer l’essai</string>
+    <string name="modern_pilot_disable">Désactiver l’essai</string>
+    <string name="modern_pilot_restart">Fermez puis rouvrez WhatsApp pour appliquer la modification.</string>
+    <string name="modern_pilot_tap">Appuyez ici pour configurer CustomTime expérimental.</string>
 </resources>

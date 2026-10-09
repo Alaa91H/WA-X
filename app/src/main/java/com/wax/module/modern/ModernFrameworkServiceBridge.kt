@@ -34,6 +34,15 @@ object ModernFrameworkServiceBridge {
     @Volatile
     private var registered = false
 
+    @Volatile
+    private var onConnectedListener: (() -> Unit)? = null
+
+    /** Callback must only enqueue work; the service binder thread must not be blocked. */
+    fun setOnConnectedListener(listener: () -> Unit) {
+        onConnectedListener = listener
+        if (snapshot.connected) listener()
+    }
+
     private val listener =
         object : XposedServiceHelper.OnServiceListener {
             override fun onServiceBind(value: XposedService) {
@@ -48,6 +57,11 @@ object ModernFrameworkServiceBridge {
                     value.getRemotePreferences(PREFERENCES_GROUP)
                     service = value
                     snapshot = Snapshot(true, value.apiVersion, value.frameworkName, value.frameworkVersion, null)
+                    try {
+                        onConnectedListener?.invoke()
+                    } catch (error: RuntimeException) {
+                        Log.w(TAG, "Modern connection observer failed", error)
+                    }
                     Log.i(TAG, "Modern framework connected: API ${value.apiVersion}")
                 } catch (e: RuntimeException) {
                     service = null
