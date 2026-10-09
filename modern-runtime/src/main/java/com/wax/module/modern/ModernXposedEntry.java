@@ -412,6 +412,27 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Context menu state delivery failed", error);
             }
+            // Contact accessor chain: the modern replacement for the legacy
+            // WaContactWpp wrapper. Every consumer feature that needs a name, a
+            // JID or a phone number reads this, so its state is reported.
+            String contactAccessState = ModernContactAccess.Outcome.ERROR.name();
+            try {
+                System.loadLibrary("dexkit");
+                ModernContactAccess.Resolution contactAccess =
+                        ModernContactAccess.resolve(target);
+                contactAccessState = contactAccess.getOutcome().name();
+                Log.i(TAG, "M06_CONTACT_ACCESS_RESULT package=" + packageName
+                        + " state=" + contactAccessState);
+            } catch (Throwable accessFailure) {
+                if (accessFailure instanceof VirtualMachineError) throw (VirtualMachineError) accessFailure;
+                contactAccessState = "ERROR_" + accessFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern contact access failed on " + packageName, accessFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "CONTACT_ACCESS", contactAccessState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Contact access state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
