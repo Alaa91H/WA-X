@@ -44,6 +44,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_JID_ACCESS = "JID_ACCESS";
     public static final String EVENT_TYPING_PRIVACY = "TYPING_PRIVACY";
     public static final String EVENT_HIDE_CHAT = "HIDE_CHAT";
+    public static final String EVENT_VIEW_ONCE = "VIEW_ONCE";
+    public static final String EVENT_MESSAGE_ACCESS = "MESSAGE_ACCESS";
     private static final String TAG = "WA-X TargetTelemetry";
 
     /**
@@ -77,6 +79,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "ghostmode_t",
         "ghostmode_r",
         "typearchive",
+        "viewonce",
     };
 
     /** The only effective-state keys the embedded Control Center may read. */
@@ -96,6 +99,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.jid_access.state",
         "modern.feature.typing_privacy.state",
         "modern.feature.hide_chat.state",
+        "modern.feature.view_once.state",
+        "modern.feature.message_access.state",
     };
 
     @Override
@@ -185,6 +190,10 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.typing_privacy.state." + target, value);
         } else if (EVENT_HIDE_CHAT.equals(event)) {
             editor.putString("modern.feature.hide_chat.state." + target, value);
+        } else if (EVENT_VIEW_ONCE.equals(event)) {
+            editor.putString("modern.feature.view_once.state." + target, value);
+        } else if (EVENT_MESSAGE_ACCESS.equals(event)) {
+            editor.putString("modern.feature.message_access.state." + target, value);
         } else {
             return rejected();
         }
@@ -221,7 +230,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_CONTACT_ACCESS.equals(event)
                 || EVENT_JID_ACCESS.equals(event)
                 || EVENT_TYPING_PRIVACY.equals(event)
-                || EVENT_HIDE_CHAT.equals(event);
+                || EVENT_HIDE_CHAT.equals(event)
+                || EVENT_VIEW_ONCE.equals(event)
+                || EVENT_MESSAGE_ACCESS.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
@@ -248,7 +259,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "ghostmode_r".equals(key)
                 || "removeforwardlimit".equals(key)
                 || "freezelastseen".equals(key)
-                || "dndmode".equals(key);
+                || "dndmode".equals(key)
+                || "viewonce".equals(key);
     }
 
     /** Favourites must be a short, comma-separated list of plain identifiers. */

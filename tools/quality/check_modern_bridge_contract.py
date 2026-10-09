@@ -136,6 +136,7 @@ def verify() -> None:
         '"ghostmode_t"',
         '"ghostmode_r"',
         '"typearchive"',
+        '"viewonce"',
     ):
         assert relayed_key in relay, f"modern preference relay is missing {relayed_key}"
     # The Tasker switch and its token must be written, not only observed.
@@ -147,6 +148,7 @@ def verify() -> None:
     assert 'putBoolean("ghostmode_r", source.getBoolean("ghostmode_r", false))' in relay
     # The archived-chat mode is a string preference and must be relayed as one.
     assert 'putString("typearchive", source.getString("typearchive", "0")' in relay
+    assert 'putBoolean("viewonce", source.getBoolean("viewonce", false))' in relay
     assert "PreferenceManager.getDefaultSharedPreferences" in relay
     assert 'enabled = source.getBoolean(ENABLE_KEY, false)' in relay
     assert ".clear()" not in relay
