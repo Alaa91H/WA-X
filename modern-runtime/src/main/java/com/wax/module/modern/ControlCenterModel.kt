@@ -131,7 +131,8 @@ object ControlStatusText {
  * working toggles as active" is enforced here rather than in the UI.
  */
 object ControlPolicy {
-    private val WORKING_STATES = setOf(
+    private val WORKING_STATES =
+        setOf(
         ControlEffective.NOT_OBSERVED,
         ControlEffective.WORKING,
         ControlEffective.INSTALLED,

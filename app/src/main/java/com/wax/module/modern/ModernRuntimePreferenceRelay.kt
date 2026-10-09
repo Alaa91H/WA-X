@@ -17,10 +17,18 @@ import java.util.concurrent.Executors
 object ModernRuntimePreferenceRelay {
     const val ENABLE_KEY = "modern.feature.custom_time.enabled"
     private const val TAG = "WA-X ModernPrefs"
-    private val observedKeys = setOf(
-        ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit",
-        "freezelastseen", "dndmode", "tasker", "tasker_auth_token",
-    )
+    private val observedKeys =
+        setOf(
+            ENABLE_KEY,
+            "segundos",
+            "ampm",
+            "text_in_hour",
+            "removeforwardlimit",
+            "freezelastseen",
+            "dndmode",
+            "tasker",
+            "tasker_auth_token",
+        )
     private val worker =
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "wax-api102-settings-relay").apply { isDaemon = true }
