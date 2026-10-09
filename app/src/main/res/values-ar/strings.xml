@@ -592,4 +592,5 @@
     <string name="modern_pilot_disable">إيقاف التجربة</string>
     <string name="modern_pilot_restart">أغلق واتساب وافتحه مجددًا لتطبيق التغيير.</string>
     <string name="modern_pilot_tap">اضغط هنا لضبط ميزة CustomTime التجريبية.</string>
+    <string name="modern_target_share_limit_status">حد إعادة التوجيه: %1$s</string>
 </resources>

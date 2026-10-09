@@ -87,11 +87,20 @@ def verify() -> None:
     assert "ModernRuntimePreferenceRelay.start(this)" in manager_application
     assert "ModernFrameworkServiceBridge.remotePreferences()" in relay
     assert "ModernFrameworkServiceBridge.setOnConnectedListener" in relay
-    assert 'setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour")' in relay
+    assert 'setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit")' in relay
     assert "PreferenceManager.getDefaultSharedPreferences" in relay
     assert 'enabled = source.getBoolean(ENABLE_KEY, false)' in relay
     assert ".clear()" not in relay
     assert "putBoolean(ENABLE_KEY, values.enabled)" in relay
+    assert 'putBoolean("removeforwardlimit", source.getBoolean("removeforwardlimit", false))' in relay
+    share_limit = source("modern-runtime/src/main/java/com/wax/module/modern/ModernShareLimitFeature.kt")
+    assert "ModernShareLimitFeature.ENABLE_KEY" in modern_entry
+    assert '"modern.feature.share_limit.state."' in modern_entry
+    assert "MultiSelectionLimitInfo" in share_limit
+    assert "ModernHookRegistry.Registration" in share_limit
+    assert "chain.proceed(" in share_limit
+    assert "ModernShareLimitPolicy" in share_limit
+
     assert "XposedServiceHelper.registerListener" in manager
     assert "ModernFrameworkServiceBridge.register()" in application
     assert '"wax.runtime.v1"' in manager

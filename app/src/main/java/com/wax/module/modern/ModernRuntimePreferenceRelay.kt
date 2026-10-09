@@ -17,7 +17,7 @@ import java.util.concurrent.Executors
 object ModernRuntimePreferenceRelay {
     const val ENABLE_KEY = "modern.feature.custom_time.enabled"
     private const val TAG = "WA-X ModernPrefs"
-    private val observedKeys = setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour")
+    private val observedKeys = setOf(ENABLE_KEY, "segundos", "ampm", "text_in_hour", "removeforwardlimit")
     private val worker =
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "wax-api102-settings-relay").apply { isDaemon = true }
@@ -58,6 +58,8 @@ object ModernRuntimePreferenceRelay {
                     putBoolean("segundos", values.seconds)
                     putBoolean("ampm", values.amPm)
                     putString("text_in_hour", values.template)
+                    // Preserve the user-selected Legacy switch for the migrated API102 feature.
+                    putBoolean("removeforwardlimit", source.getBoolean("removeforwardlimit", false))
                 }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)
