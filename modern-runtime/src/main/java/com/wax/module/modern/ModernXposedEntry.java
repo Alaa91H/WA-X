@@ -392,6 +392,26 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Tasker state delivery failed", error);
             }
+            // ContextMenuActionProvider is always-on infrastructure (no user
+            // toggle): the message-selection popup bus whose providers build
+            // contextual actions. It is a no-op while none are registered.
+            String contextMenuState = ModernContextMenuActionProviderFeature.Outcome.ERROR.name();
+            try {
+                System.loadLibrary("dexkit");
+                contextMenuState = ModernContextMenuActionProviderFeature.INSTANCE
+                        .install(target, this, hookRegistry).name();
+                Log.i(TAG, "M06_CONTEXT_MENU_HOOK_RESULT package=" + packageName
+                        + " state=" + contextMenuState);
+            } catch (Throwable featureFailure) {
+                if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                contextMenuState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern ContextMenuActionProvider failed on " + packageName, featureFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "CONTEXT_MENU_ACTION_PROVIDER", contextMenuState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Context menu state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

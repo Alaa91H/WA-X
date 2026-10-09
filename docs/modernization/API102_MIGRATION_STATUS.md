@@ -144,7 +144,7 @@ every row; status = honest roll-up.
 | 61 | AboutContactPicker | W2 | 7 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 62 | DefaultEmoji | W2 | 7 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 63 | CaptureDevice | W4 | 12 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 64 | ContextMenuActionProvider | W1 | 2 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 64 | ContextMenuActionProvider | W1 | 2 | 1 | wired (device UNVERIFIED) | infra (no user control) | feat/m06-context-menu-provider | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 
 Batch map (mechanical chunks of the W1 → W2 → W3 → W4 registry order):
 batch 1 = ContactItemListener, ConversationItemListener, MenuStatusProvider,
@@ -178,9 +178,10 @@ batch 12 = BackupRestore, CaptureDevice.
    ContextMenuActionProvider, CustomToolbar, CustomView, CallPrivacy,
    CustomThemeV2, one at a time, each with hook path + preference path + UI
    wiring + tests + CI verified before the next.
-2. THEN: continue Batch 2 and the rest of the wave plan in the table above,
-   one feature at a time, each with hook path + preference path + UI wiring +
-   tests + CI verified before the next.
+2. IN FLIGHT (Phase 2, Batch 2, 1/5): ContextMenuActionProvider
+   (branch `feat/m06-context-menu-provider`). Then CustomToolbar, CustomView,
+   CallPrivacy, CustomThemeV2 — one at a time, each with hook path +
+   preference path + UI wiring + tests + CI verified before the next.
 3. Device acceptance checklist for the user (consolidated, at the end):
    every wired feature, the single WA X entry opening the Control Center
    (#433), each toggle applying after restart, and every later batch. Never a
