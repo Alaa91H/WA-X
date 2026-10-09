@@ -54,13 +54,22 @@ PACKAGE_IMPORT = re.compile(r"^import\s+([\w.]+)\s*$")
 RESOLVER_CALL = re.compile(r"\bUnobfuscator\s*\.\s*(load\w+)")
 RESOLVER_DECL = re.compile(r"\bfun\s+(load\w+)\s*\(")
 ARRAY_ITEM = re.compile(r"<item>([^<]+)</item>")
-# Deliberately boolean switches only, as before. Widening this to every getter type
-# would rewrite the preferenceKeys of every feature in the matrix, which is a tooling
-# change in its own right and not part of a HD Status fix.
-GET_BOOLEAN = re.compile(r'\bgetBoolean\s*\(\s*"([^"]+)"')
-# A feature may name its preferences through a constant instead of an inline literal,
-# which is what keeps the key in one place. Both forms are read.
-PREF_CONST = re.compile(r'\bconst\s+val\s+PREF_[A-Z0-9_]+\s*=\s*"([^"]+)"')
+# Only known preference/settings receivers are treated as evidence of a read.
+# Generic getString/getInt calls on JSONObject, Bundle, etc. are not preferences.
+PREF_READ = re.compile(
+    r'\b(?:prefs|preferences|sharedPreferences|settingsStore|settings|store)'
+    r'\s*\.\s*(?:getBoolean|getString|getInt|getLong|getFloat|getStringSet|contains|get|read)'
+    r'\s*\(\s*(?:"([^"]+)"|(PREF_[A-Z0-9_]+))'
+)
+PREF_CONST = re.compile(
+    r'\bconst\s+val\s+(PREF_[A-Z0-9_]+)\s*=\s*"([^"]+)"'
+)
+KOTLIN_PACKAGE = re.compile(r"^\s*package\s+([\w.]+)\s*$", re.MULTILINE)
+KOTLIN_IMPORT = re.compile(r"^\s*import\s+([\w.]+)(?:\s+as\s+(\w+))?\s*$", re.MULTILINE)
+KOTLIN_DECL = re.compile(
+    r"\b(?:class|object|interface)\s+([A-Z][A-Za-z0-9_]*)\b"
+)
+
 # A type token naming another Kotlin file in the feature tree.
 TYPE_TOKEN = re.compile(r"\b([A-Z][A-Za-z0-9_]{2,})\b")
 # A helper class is *owned* by a feature when the feature constructs it. A bare type
@@ -146,15 +155,82 @@ def resolvers_declared() -> set[str]:
 
 
 def feature_files() -> dict[str, str]:
-    """Map Kotlin file stem -> source text, for every file in the feature tree."""
+    """Index source by file stem; never silently drop a colliding Kotlin file."""
     files: dict[str, str] = {}
-    for dirpath, _dirnames, filenames in os.walk(FEATURES_DIR):
-        for filename in filenames:
-            if filename.endswith(".kt"):
-                stem = filename[:-3]
-                files.setdefault(stem, read(os.path.join(dirpath, filename)))
+    paths: dict[str, str] = {}
+    for dirpath, dirnames, filenames in os.walk(FEATURES_DIR):
+        dirnames.sort()
+        for filename in sorted(filenames):
+            if not filename.endswith(".kt"):
+                continue
+            stem = filename[:-3]
+            path = os.path.join(dirpath, filename)
+            if stem in files:
+                raise ValueError(
+                    "duplicate Kotlin file stem %r: %s and %s"
+                    % (stem, paths[stem], path)
+                )
+            files[stem] = read(path)
+            paths[stem] = path
     return files
 
+
+def source_package(body: str) -> str | None:
+    match = KOTLIN_PACKAGE.search(body)
+    return match.group(1) if match else None
+
+
+def source_imports(body: str) -> dict[str, str]:
+    """Resolve explicitly imported Kotlin classes, including aliases."""
+    return {
+        alias or qualified.rsplit(".", 1)[-1]: qualified
+        for qualified, alias in KOTLIN_IMPORT.findall(body)
+    }
+
+
+def top_level_classes(code: str) -> set[str]:
+    """Resolve only top-level Kotlin declarations, never nested helper interfaces.
+
+    Replace string and character literals with equal-length whitespace first so
+    braces or fake declarations inside them do not alter source nesting.
+    """
+    literals = re.compile(
+        r"""\"\"\"[\s\S]*?\"\"\"|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'"""
+    )
+    sanitized = literals.sub(lambda match: " " * len(match.group()), code)
+    names: set[str] = set()
+    depth = 0
+    cursor = 0
+    for match in KOTLIN_DECL.finditer(sanitized):
+        for char in sanitized[cursor:match.start()]:
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth = max(0, depth - 1)
+        if depth == 0:
+            names.add(match.group(1))
+        cursor = match.start()
+    return names
+
+
+def declared_classes(files: dict[str, str]) -> dict[str, str]:
+    """Map fully qualified top-level classes to their defining Kotlin file stem."""
+    owners: dict[str, str] = {}
+    for stem, body in files.items():
+        code = strip_comments(body)
+        package = source_package(code)
+        # Bare source snippets in test fixtures retain the old stem fallback.
+        names = top_level_classes(code) or {stem}
+        for name in names:
+            qualified = (package + "." if package else "") + name
+            previous = owners.get(qualified)
+            if previous is not None and previous != stem:
+                raise ValueError(
+                    "ambiguous Kotlin class ownership %s: %s and %s"
+                    % (qualified, previous, stem)
+                )
+            owners[qualified] = stem
+    return owners
 
 def strip_comments(body: str) -> str:
     """Remove comments so a KDoc mention is not mistaken for a real reference."""
@@ -162,23 +238,20 @@ def strip_comments(body: str) -> str:
     return LINE_COMMENT.sub(" ", without_block)
 
 
-def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
-    """Files that make up one feature: its own file plus the helpers it constructs.
+def feature_closure(
+    stem: str, files: dict[str, str], unresolved: set[str] | None = None,
+    owners: dict[str, str] | None = None
+) -> set[str]:
+    """Follow constructed helpers by declaration, package and explicit imports.
 
-    A feature is not always one file. HD Status, for example, keeps its target
-    resolution and its image and video hooks in sibling classes, and those files hold
-    the resolver calls. Reading only the entry file reported that the feature needed no
-    resolvers at all, which is exactly the kind of wrong-but-passing metadata this
-    matrix exists to prevent.
-
-    The closure follows constructor calls only. Matching every capitalised token would
-    be far too greedy: a KDoc reference, a log string or a static access such as
-    ``Others.propsInteger[...]`` is not ownership, and following those pulled three
-    unrelated features in.
+    Unqualified names in other packages are not evidence of ownership.
+    Unresolved/ambiguous names can be collected for audit without inventing
+    dependencies or failing on ordinary external constructors.
     """
     if stem not in files:
         return set()
-
+    if owners is None:
+        owners = declared_classes(files)
     closure: set[str] = set()
     pending = [stem]
     while pending:
@@ -187,42 +260,66 @@ def feature_closure(stem: str, files: dict[str, str]) -> set[str]:
             continue
         closure.add(current)
         code = strip_comments(files[current])
+        package = source_package(code)
+        imports = source_imports(code)
         for token in set(CONSTRUCTS.findall(code)):
-            if token in files and token not in closure:
-                pending.append(token)
+            qualified = imports.get(token) or (
+                (package + "." if package else "") + token
+            )
+            target = owners.get(qualified)
+            if target is None and unresolved is not None:
+                # Only report an unresolved *feature-tree* candidate.
+                candidates = [
+                    owner for name, owner in owners.items()
+                    if name.rsplit(".", 1)[-1] == token
+                ]
+                if candidates:
+                    unresolved.add("%s: %s" % (current, token))
+            if target is not None and target not in closure:
+                pending.append(target)
     return closure
-
 
 def aggregate(files: dict[str, str], stems: set[str]) -> str:
     return "\n".join(files[stem] for stem in sorted(stems) if stem in files)
 
 
-def feature_resolver_usage(files: dict[str, str]) -> dict[str, list[str]]:
+def feature_resolver_usage(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
     """Map feature simple name -> sorted ``Unobfuscator.load*`` calls in its closure."""
+    if owners is None:
+        owners = declared_classes(files)
     usage: dict[str, list[str]] = {}
     for stem in files:
-        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files)))))
+        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files, owners=owners)))))
         if calls:
             usage[stem] = calls
     return usage
 
 
-def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
-    """Map feature simple name -> preference keys its closure reads."""
+def feature_preference_keys(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
+    """Inventory statically provable reads; writes and dynamic keys stay unknown."""
+    if owners is None:
+        owners = declared_classes(files)
     keys: dict[str, list[str]] = {}
     for stem in files:
-        body = aggregate(files, feature_closure(stem, files))
-        found = sorted(set(GET_BOOLEAN.findall(body)) | set(PREF_CONST.findall(body)))
+        body = strip_comments(aggregate(files, feature_closure(stem, files, owners=owners)))
+        constants = dict(PREF_CONST.findall(body))
+        found: set[str] = set()
+        for literal, constant in PREF_READ.findall(body):
+            if literal:
+                found.add(literal)
+            elif constant in constants:
+                found.add(constants[constant])
         if found:
-            keys[stem] = found
+            keys[stem] = sorted(found)
     return keys
 
-
-def feature_resolution_sources(files: dict[str, str]) -> dict[str, list[str]]:
+def feature_resolution_sources(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
     """Map feature simple name -> internal resolution layers its closure references."""
+    if owners is None:
+        owners = declared_classes(files)
     sources: dict[str, list[str]] = {}
     for stem in files:
-        body = aggregate(files, feature_closure(stem, files))
+        body = aggregate(files, feature_closure(stem, files, owners=owners))
         found = [name for name in RESOLUTION_SOURCES if re.search(r"\b%s\b" % name, body)]
         if found:
             sources[stem] = found
@@ -273,9 +370,10 @@ def build() -> dict[str, Any]:
     order = find_registered_order()
     imported = {simple: package for simple, package in find_feature_classes()}
     files = feature_files()
-    usage = feature_resolver_usage(files)
-    sources = feature_resolution_sources(files)
-    pref_keys = feature_preference_keys(files)
+    owners = declared_classes(files)
+    usage = feature_resolver_usage(files, owners)
+    sources = feature_resolution_sources(files, owners)
+    pref_keys = feature_preference_keys(files, owners)
     versions = supported_versions()
 
     missing = [name for name in order if name not in imported]
@@ -289,7 +387,13 @@ def build() -> dict[str, Any]:
     features: list[dict[str, Any]] = []
     for name in order:
         package = imported[name]
-        used = usage.get(name, [])
+        owner = owners.get(package + "." + name)
+        if owner is None:
+            raise SystemExit(
+                "registered feature %s has no unique Kotlin declaration in %s"
+                % (name, package)
+            )
+        used = usage.get(owner, [])
         for resolver in used:
             if resolver not in declared:
                 unknown_resolvers.add("%s -> %s" % (name, resolver))
@@ -299,8 +403,8 @@ def build() -> dict[str, Any]:
                 "category": package_for(package) or "unknown",
                 "sourcePackage": package,
                 "resolverDependencies": used,
-                "resolutionSources": sources.get(name, []),
-                "preferenceKeys": pref_keys.get(name, []),
+                "resolutionSources": sources.get(owner, []),
+                "preferenceKeys": pref_keys.get(owner, []),
             }
         )
 
