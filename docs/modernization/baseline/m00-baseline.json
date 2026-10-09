@@ -348,7 +348,7 @@
   "schema": "wax.m00.baseline/1",
   "source_counts": {
     "android_tests": 1,
-    "cpp": 1,
+    "cpp": 425,
     "java": 5,
     "kotlin": 408,
     "unit_tests": 80
