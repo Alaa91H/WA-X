@@ -37,6 +37,24 @@ class MigrationLedgerTests(unittest.TestCase):
             self.assertFalse(feature["target_runtime_verified"])
             self.assertFalse(feature["user_visible_behavior_verified"])
 
+    def test_enum_grouped_presence_adapters_are_source_wired_when_installed(self):
+        registry = ('FeatureFactory.Legacy("FreezeLastSeen") {} '
+                    'FeatureFactory.Legacy("DndMode") {}')
+        grouped = '''
+object ModernPresenceFeatures {
+    enum class Pilot(val id: String) {
+        FREEZE_LAST_SEEN("freeze_last_seen"),
+        DND_MODE("dnd_mode"),
+    }
+}
+'''
+        entry = 'for (ModernPresenceFeatures.Pilot pilot : ModernPresenceFeatures.Pilot.values()) { ModernPresenceFeatures.INSTANCE.install(pilot); }'
+        matrix = MODULE.inspect(registry, entry, {"ModernPresenceFeatures.kt": grouped})
+        self.assertEqual(2, matrix["counts"]["api102_wired_in_source"])
+        self.assertEqual(0, matrix["counts"]["device_behavior_verified"])
+        disconnected = MODULE.inspect(registry, "// no installed presence group", {"ModernPresenceFeatures.kt": grouped})
+        self.assertEqual(2, disconnected["counts"]["legacy_only"])
+
     def test_class_name_in_comment_is_not_enough_without_definition(self):
         report = MODULE.inspect(
             REGISTRY,
