@@ -67,6 +67,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #435 | ActivityController contact-picker relay | MERGED, main CI green |
 | #441 | Release 1.2.0-beta.10 (120), tag v1.2.0-beta.10 | MERGED, signed APK published |
 | #442 | ContextMenuActionProvider message-selection popup bus | MERGED, main CI green |
+| #444 | Message/contact accessor layer (API102 replacement for FMessageWpp/WaContactWpp) | MERGED, main CI green |
 | #431 | ContactItemListener bind fan-out bus (W1 infra, consumer pending) | MERGED, main CI green |
 | #432 | ConversationItemListener row bus (W1 infra, consumers pending) | MERGED, main CI green |
 | #421 | Derived source-wiring ledger (anti-false-claim guard) | MERGED, main CI green |
@@ -181,8 +182,11 @@ batch 12 = BackupRestore, CaptureDevice.
    ContextMenuActionProvider, CustomToolbar, CustomView, CallPrivacy,
    CustomThemeV2, one at a time, each with hook path + preference path + UI
    wiring + tests + CI verified before the next.
-2. NEXT (Phase 2, Batch 2): build the **message/contact accessor layer** in the
-   modern runtime before more consumer features. Dependency finding, not a
+2. DONE (Phase 2, Batch 2 infra): the **message/contact accessor layer**
+   (`ModernMessageAccess`, `ModernContactAccess`, #444) now exists and is
+   reported as CONTACT_ACCESS. NEXT: port the first consumer onto it —
+   ShowOnline (W3, a contact-list consumer) or CallPrivacy — using the
+   resolved JID/phone accessors instead of the legacy wrappers. Dependency finding, not a
    guess: after the five W1 buses, every remaining consumer feature needs one
    of two things that the modern module does not yet have:
    - the `FMessageWpp` / `WaContactWpp` accessor chain (JID, phone number,
