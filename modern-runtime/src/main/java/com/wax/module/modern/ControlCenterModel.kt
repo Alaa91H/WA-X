@@ -133,15 +133,15 @@ object ControlStatusText {
 object ControlPolicy {
     private val WORKING_STATES =
         setOf(
-        ControlEffective.NOT_OBSERVED,
-        ControlEffective.WORKING,
-        ControlEffective.INSTALLED,
-        ControlEffective.DISABLED,
-        ControlEffective.RESTART_REQUIRED,
-        // A partially migrated feature still has a live direction, so its row
-        // stays switchable while the status text says what is missing.
-        ControlEffective.PARTIAL,
-    )
+            ControlEffective.NOT_OBSERVED,
+            ControlEffective.WORKING,
+            ControlEffective.INSTALLED,
+            ControlEffective.DISABLED,
+            ControlEffective.RESTART_REQUIRED,
+            // A partially migrated feature still has a live direction, so its row
+            // stays switchable while the status text says what is missing.
+            ControlEffective.PARTIAL,
+        )
 
     /**
      * A row is writable only with a real, non-blank preference key and a
