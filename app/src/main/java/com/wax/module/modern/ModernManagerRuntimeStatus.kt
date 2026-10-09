@@ -1,5 +1,6 @@
 package com.wax.module.modern
 
+import android.content.Context
 import android.os.SystemClock
 import android.util.Log
 
@@ -23,6 +24,7 @@ object ModernManagerRuntimeStatus {
         val shareLimitInstallation: String?,
         val freezeInstallation: String?,
         val dndInstallation: String?,
+        val bootstrapMilestones: List<String> = emptyList(),
     )
 
     data class Snapshot(
@@ -34,6 +36,29 @@ object ModernManagerRuntimeStatus {
     )
 
     private val targetNames = listOf("com.whatsapp", "com.whatsapp.w4b")
+
+    // Individual timestamped milestones cannot overwrite each other out of order.
+    // They are diagnostics ONLY; a milestone never sets evidence=FRESH_BOOTSTRAP.
+    private val bootstrapMilestones =
+        listOf(
+            "MODULE_LOADED",
+            "ATTACH_HOOK_INSTALLED",
+            "PACKAGE_LOADED",
+            "ATTACH_OBSERVED",
+            "HEARTBEAT_WRITE_CONFIRMED",
+            "HEARTBEAT_WRITE_REJECTED",
+            "ATTACH_HOOK_FAILED",
+        )
+
+    fun observedMilestones(
+        targetName: String,
+        nowMillis: Long,
+        timestampOf: (String) -> Long,
+    ): List<String> =
+        bootstrapMilestones.filter { stage ->
+            val at = timestampOf("modern.runtime.milestone.$stage.$targetName")
+            at > 0 && at <= nowMillis && nowMillis - at <= 120_000L
+        }
 
     fun classify(
         lastReportMillis: Long,
@@ -54,8 +79,8 @@ object ModernManagerRuntimeStatus {
         return if (delta <= 5_000L) Evidence.FRESH_BOOTSTRAP else Evidence.BOOT_MISMATCH
     }
 
-    /** Must be called from a background dispatcher: service preferences may invoke Binder. */
-    fun inspect(): Snapshot {
+    /** Target reports live in Manager-owned preferences, not read-only Xposed target prefs. */
+    fun inspect(context: Context): Snapshot {
         val framework = ModernFrameworkServiceBridge.currentState()
         if (!framework.connected) {
             return Snapshot(
@@ -67,25 +92,27 @@ object ModernManagerRuntimeStatus {
             )
         }
         return try {
-            val prefs = ModernFrameworkServiceBridge.remotePreferences()
+            val prefs = context.getSharedPreferences(ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE)
             val now = System.currentTimeMillis()
             val boot = now - SystemClock.elapsedRealtime()
             Snapshot(
-                connected = prefs != null,
+                connected = true,
                 frameworkApi = framework.apiVersion,
                 frameworkName = framework.frameworkName,
-                connectionProblem = if (prefs == null) "REMOTE_PREFERENCES_UNAVAILABLE" else null,
+                connectionProblem = null,
                 targets =
                     targetNames.map { name ->
-                        val timestamp = prefs?.getLong("modern_canary.last_bootstrap.$name", 0L) ?: 0L
-                        val origin = prefs?.getLong("modern_canary.boot_epoch.$name", 0L) ?: 0L
+                        val timestamp = prefs.getLong("modern.bootstrap.last.$name", 0L)
+                        val origin = prefs.getLong("modern.bootstrap.boot.$name", 0L)
                         Target(
                             packageName = name,
                             evidence = classify(timestamp, origin, now, boot),
-                            customTimeInstallation = prefs?.getString("modern.feature.custom_time.state.$name", null),
-                            shareLimitInstallation = prefs?.getString("modern.feature.share_limit.state.$name", null),
-                            freezeInstallation = prefs?.getString("modern.feature.freeze_last_seen.state.$name", null),
-                            dndInstallation = prefs?.getString("modern.feature.dnd_mode.state.$name", null),
+                            customTimeInstallation = prefs.getString("modern.feature.custom_time.state.$name", null),
+                            shareLimitInstallation = prefs.getString("modern.feature.share_limit.state.$name", null),
+                            freezeInstallation = prefs.getString("modern.feature.freeze_last_seen.state.$name", null),
+                            dndInstallation = prefs.getString("modern.feature.dnd_mode.state.$name", null),
+                            bootstrapMilestones =
+                                observedMilestones(name, now) { key -> prefs.getLong(key, 0L) },
                         )
                     },
             )

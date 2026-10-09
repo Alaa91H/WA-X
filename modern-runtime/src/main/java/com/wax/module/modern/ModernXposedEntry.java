@@ -14,16 +14,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * API 102 entry, currently compiled as an isolated canary AAR.
+ * Modern libxposed API 102 entry loaded by WA X's official module APK.
  *
- * It deliberately does not invoke FeatureLoader, XposedBridge or XSharedPreferences:
- * legacy callbacks are forbidden on API 102. It must not be added to the legacy APK,
- * until the shipping metadata and every required feature have modern adapters.
+ * This entry never invokes legacy XposedBridge or XSharedPreferences. Feature
+ * adapters must be migrated individually, tested and opted in as appropriate.
  */
 public final class ModernXposedEntry extends XposedModule {
     private static final String TAG = "WA-X Modern";
     private static final String PREFS_GROUP = "wax.runtime.v1";
     private volatile String currentProcessName;
+    private volatile Context targetContext;
     private final Set<String> started = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final ModernHookRegistry hookRegistry = new ModernHookRegistry();
     private final AtomicLong formattedCalls = new AtomicLong();
@@ -34,91 +34,121 @@ public final class ModernXposedEntry extends XposedModule {
         return worker;
     });
 
+    /**
+     * Register the bootstrap as soon as the framework loads this module into the
+     * actual WhatsApp main process. Waiting for onPackageLoaded plus isFirstPackage
+     * can silently miss Application.attach on some framework/package lifecycles.
+     */
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
         currentProcessName = param.getProcessName();
         log(Log.INFO, TAG,
-                "Module loaded: API=" + getApiVersion() + ", process=" + param.getProcessName());
+                "Module loaded: API=" + getApiVersion() + ", process=" + currentProcessName);
+        if (!ModernTargetPolicy.isMainTargetProcess(currentProcessName)) {
+            return;
+        }
+        reportLifecycleStage(currentProcessName, "MODULE_LOADED");
+        installBootstrapHook(currentProcessName, "onModuleLoaded");
     }
 
     @Override
     public void onPackageLoaded(XposedModuleInterface.PackageLoadedParam param) {
-        if (!ModernTargetPolicy.isMainTarget(
-                currentProcessName, param.getPackageName(), param.isFirstPackage())) {
+        String packageName = param.getPackageName();
+        if (!ModernTargetPolicy.isTargetPackageForProcess(currentProcessName, packageName)) {
             return;
         }
-        final String packageName = param.getPackageName();
-        if (!started.add(packageName)) {
-            return;
-        }
+        // Record this independently of the bootstrap. isFirstPackage is NOT required.
+        log(Log.INFO, TAG, "Target package loaded: " + packageName
+                + ", firstPackage=" + param.isFirstPackage());
+        reportLifecycleStage(packageName, "PACKAGE_LOADED");
+        // Idempotent fallback if the framework rejected early hook registration.
+        installBootstrapHook(packageName, "onPackageLoaded");
+    }
+
+    private void installBootstrapHook(String packageName, String origin) {
         try {
             Method attach = Application.class.getDeclaredMethod("attach", Context.class);
-            hookRegistry.installOnce("runtime.bootstrap",
+            boolean installed = hookRegistry.installOnce("runtime.bootstrap",
                     new ModernHookRegistry.Registration("application.attach", () -> {
                         io.github.libxposed.api.XposedInterface.HookHandle handle =
                                 new ModernHookBridge(this).intercept(
-                    attach,
-                    "wax.modern.application.attach",
-                    chain -> {
-                        Object result = chain.proceed();
-                        Context target = (Context) chain.getArg(0);
-                        if (target != null && packageName.equals(target.getPackageName())) {
-                            // Remote framework IPC must never block WhatsApp Application.attach.
-                            Thread reporter = new Thread(() -> reportBootstrap(packageName, target),
-                                    "wax-api102-target-proof");
-                            reporter.setDaemon(true);
-                            reporter.start();
-                        }
-                        return result;
-                    });
+                                        attach, "wax.modern.application.attach", chain -> {
+                                            Object result = chain.proceed();
+                                            Context target = (Context) chain.getArg(0);
+                                            if (target != null && packageName.equals(target.getPackageName())
+                                                    && started.add(packageName)) {
+                                                targetContext = target;
+                                                log(Log.INFO, TAG,
+                                                        "Application.attach observed inside " + packageName);
+                                                reportLifecycleStage(packageName, "ATTACH_OBSERVED");
+                                                Thread reporter = new Thread(
+                                                        () -> reportBootstrap(packageName, target),
+                                                        "wax-api102-target-proof");
+                                                reporter.setDaemon(true);
+                                                reporter.start();
+                                            }
+                                            return result;
+                                        });
                         return handle::unhook;
                     }));
+            if (installed) {
+                log(Log.INFO, TAG, "Bootstrap installed via " + origin + ": " + packageName);
+                reportLifecycleStage(packageName, "ATTACH_HOOK_INSTALLED");
+            }
         } catch (Throwable e) {
             if (e instanceof VirtualMachineError) throw (VirtualMachineError) e;
-            started.remove(packageName);
-            log(Log.ERROR, TAG, "Modern package attach hook unavailable: " + packageName, e);
+            log(Log.ERROR, TAG, "Bootstrap install failed via " + origin + ": " + packageName, e);
+            reportLifecycleStage(packageName, "ATTACH_HOOK_FAILED");
         }
+    }
+
+    /**
+     * Early stages are written only to Vector's process logs: no target Context
+     * exists before Application.attach and target RemotePreferences is read-only.
+     */
+    private void reportLifecycleStage(String packageName, String stage) {
+        log(Log.INFO, TAG, "Bootstrap lifecycle [" + packageName + "]: " + stage);
     }
 
     private void recordFormattedInvocation(String packageName) {
         long count = formattedCalls.incrementAndGet();
         if (!invocationThrottle.accept(SystemClock.elapsedRealtime())) return;
-        // A confirmed Hooker invocation is stronger evidence than a registered HookHandle.
-        // No preference IPC or blocking work occurs inside WhatsApp's timestamp renderer.
+        // The hooked timestamp-rendering thread only enqueues background work.
         try {
             evidenceWorker.execute(() -> {
+                Context context = targetContext;
+                if (context == null) return;
                 try {
-                    SharedPreferences prefs = getRemotePreferences(PREFS_GROUP);
-                    if (prefs == null) return;
-                    long now = System.currentTimeMillis();
-                    prefs.edit()
-                            .putLong(ModernInvocationEvidence.timeKey(packageName), now)
-                            .putLong(ModernInvocationEvidence.bootKey(packageName),
-                                    now - SystemClock.elapsedRealtime())
-                            .putLong(ModernInvocationEvidence.countKey(packageName), count)
-                            .apply();
+                    boolean delivered = ModernTargetTelemetry.send(
+                            context, packageName, "CUSTOM_TIME", "INVOKED");
+                    if (!delivered) {
+                        log(Log.WARN, TAG, "Target invocation report rejected, count=" + count);
+                    }
                 } catch (RuntimeException e) {
-                    log(Log.WARN, TAG, "Modern feature invocation evidence write failed", e);
+                    log(Log.WARN, TAG, "Could not deliver CustomTime invocation evidence", e);
                 }
             });
         } catch (RuntimeException e) {
             log(Log.WARN, TAG, "Modern feature invocation evidence queue unavailable", e);
         }
     }
+
     private void reportBootstrap(String packageName, Context target) {
         try {
+            // XposedModule.getRemotePreferences() is READ-ONLY in hooked apps.
+            // Send lifecycle evidence to the Manager through a UID-authenticated provider.
+            boolean heartbeat = false;
+            try {
+                heartbeat = ModernTargetTelemetry.send(target, packageName, "BOOTSTRAP", "ATTACHED");
+                log(heartbeat ? Log.INFO : Log.ERROR, TAG,
+                        "Target-to-Manager bootstrap delivery: " + heartbeat + " for " + packageName);
+            } catch (RuntimeException telemetryFailure) {
+                log(Log.ERROR, TAG, "Target telemetry provider call failed: " + packageName,
+                        telemetryFailure);
+            }
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
-            // Only report target-originated canary evidence: never claim feature readiness.
             boolean canaryEnabled = preferences != null
                     && preferences.getBoolean("modern_canary_enabled", false);
-            if (preferences != null) {
-                preferences.edit()
-                        .putLong(ModernRuntimeProof.heartbeatKey(packageName), System.currentTimeMillis())
-                        .putLong(ModernRuntimeProof.bootEpochKey(packageName),
-                                System.currentTimeMillis() - SystemClock.elapsedRealtime())
-                        .putString(ModernRuntimeProof.processKey(packageName), currentProcessName)
-                        .apply();
-            }
             // Optional, reversible first modern feature. Never affect WhatsApp by default.
             String customTimeState = ModernCustomTimeFeature.Outcome.DISABLED.name();
             if (preferences != null && preferences.getBoolean(ModernCustomTimeFeature.ENABLE_KEY, false)) {
@@ -133,9 +163,10 @@ public final class ModernXposedEntry extends XposedModule {
                     log(Log.ERROR, TAG, "Modern CustomTime pilot failed on " + packageName, featureFailure);
                 }
             }
-            if (preferences != null) {
-                preferences.edit().putString("modern.feature.custom_time.state." + packageName,
-                        customTimeState).apply();
+            try {
+                ModernTargetTelemetry.send(target, packageName, "CUSTOM_TIME", customTimeState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "CustomTime state delivery failed", error);
             }
             // ShareLimit is migrated with the SAME user setting (off by default).
             String shareLimitState = ModernShareLimitFeature.Outcome.DISABLED.name();
@@ -150,10 +181,10 @@ public final class ModernXposedEntry extends XposedModule {
                     log(Log.ERROR, TAG, "Modern ShareLimit hook failed on " + packageName, featureFailure);
                 }
             }
-            if (preferences != null) {
-                preferences.edit()
-                        .putString("modern.feature.share_limit.state." + packageName, shareLimitState)
-                        .apply();
+            try {
+                ModernTargetTelemetry.send(target, packageName, "SHARE_LIMIT", shareLimitState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "ShareLimit state delivery failed", error);
             }
             for (ModernPresenceFeatures.Pilot pilot : ModernPresenceFeatures.Pilot.values()) {
                 String state = ModernPresenceFeatures.Outcome.DISABLED.name();

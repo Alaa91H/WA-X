@@ -53,14 +53,29 @@ def verify() -> None:
     modern_home = source("app/src/main/java/com/wax/module/ui/fragments/HomeFragment.kt")
     invocation = source("modern-runtime/src/main/java/com/wax/module/modern/ModernInvocationEvidence.java")
     throttle = source("modern-runtime/src/main/java/com/wax/module/modern/ModernInvocationThrottle.java")
-    assert "ModernInvocationEvidence.timeKey" in modern_entry
-    assert "ModernInvocationEvidence.bootKey" in modern_entry
+    assert "ModernTargetTelemetry.send" in modern_entry
+    assert "ModernTargetPolicy.isMainTargetProcess" in modern_entry
     assert "invocationThrottle.accept" in modern_entry
     assert "evidenceWorker.execute" in modern_entry
     assert "onFormatted.run()" in feature
-    assert "ModernManagerRuntimeStatus.inspect()" in modern_home
+    assert "ModernManagerRuntimeStatus.inspect(applicationContext)" in modern_home
     assert "NOT_OBSERVED" in invocation and "INVOKED_FRESH" in invocation
     assert "AtomicLong" in throttle
+    telemetry = source("modern-runtime/src/main/java/com/wax/module/modern/ModernTargetTelemetry.java")
+    receiver = source("app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java")
+    modern_status = source("app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt")
+    assert "getRemotePreferences(PREFS_GROUP)" in modern_entry  # read-only target settings
+    assert ".edit()" not in modern_entry  # target prefs cannot be written to
+    assert 'reportBootstrap(packageName, target)' in modern_entry
+    assert '"BOOTSTRAP", "ATTACHED"' in modern_entry
+    assert '"CUSTOM_TIME"' in modern_entry and '"SHARE_LIMIT"' in modern_entry
+    assert "getContentResolver().call(" in telemetry
+    assert "Binder.getCallingUid()" in receiver
+    assert "isAuthorizedSender" in receiver
+    assert "context.getSharedPreferences(ModernTargetTelemetryProvider.LOCAL_PREFS" in modern_status
+    assert "ModernTargetTelemetryProvider" in manifest
+    assert 'android:exported="true"' in manifest
+
     assert "ModernCustomTimeFeature.ENABLE_KEY" in modern_entry
     assert "modern.feature.custom_time.enabled" in feature
     assert "ModernHookRegistry.Registration" in feature
@@ -95,7 +110,7 @@ def verify() -> None:
     assert 'putBoolean("removeforwardlimit", source.getBoolean("removeforwardlimit", false))' in relay
     share_limit = source("modern-runtime/src/main/java/com/wax/module/modern/ModernShareLimitFeature.kt")
     assert "ModernShareLimitFeature.ENABLE_KEY" in modern_entry
-    assert '"modern.feature.share_limit.state."' in modern_entry
+    assert '"SHARE_LIMIT"' in modern_entry
     assert "MultiSelectionLimitInfo" in share_limit
     assert "ModernHookRegistry.Registration" in share_limit
     assert "chain.proceed(" in share_limit
@@ -125,6 +140,17 @@ def verify() -> None:
         for forbidden in ("import de.robv.android.xposed", "FeatureLoader.doHook"):
             if forbidden in content:
                 raise AssertionError(f"forbidden modern runtime dependency in {file}: {forbidden}")
+
+    # Target-side remote preferences are READ-ONLY. Enforce this for all future
+    # Java and Kotlin feature migrations, not just the entry implementation.
+    for file in modern_java.rglob("*"):
+        if file.suffix not in (".java", ".kt"):
+            continue
+        content = file.read_text(encoding="utf-8")
+        if ".edit()" in content or ".edit {" in content or ".edit(" in content:
+            raise AssertionError(
+                f"Modern target runtime cannot write read-only remote preferences: {file}"
+            )
 
     # Framework handshake is not proof that any feature works in WhatsApp.
     assert "NOT_CONNECTED" in manager
