@@ -260,6 +260,30 @@ jobs:
           fi
           python3 tools/quality/check_apk_loader_contract.py --apk "$APK"
 
+      - name: Compile and verify separate API 102 canary APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/quality/test_check_modern_canary_apk.py
+          python3 tools/quality/check_modern_canary_apk.py --source-only
+          # The canary module is explicitly absent from the regular release graph.
+          ./gradlew $GRADLE_ARGS -PenableModernCanary=true :modern-canary:assembleDebug :modern-canary:assembleRelease :modern-canary:lintDebug
+          CANARY_APK="$(find modern-canary/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
+          CANARY_RELEASE="$(find modern-canary/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
+          test -n "$CANARY_APK" && test -n "$CANARY_RELEASE"
+          python3 tools/quality/check_modern_canary_apk.py --apk "$CANARY_APK"
+          python3 tools/quality/check_modern_canary_apk.py --apk "$CANARY_RELEASE"
+          SIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          test -n "$SIGNER"
+          "$SIGNER" verify --verbose "$CANARY_APK"
+
+      - name: Upload separate modern API 102 canary debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0 # v7.0.1
+        with:
+          name: modern-api102-canary-${{ github.sha }}
+          path: modern-canary/build/outputs/apk/debug/
+          if-no-files-found: error
+          retention-days: 5
       - name: Upload baseline APK input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -327,6 +351,8 @@ jobs:
               python3 tools/quality/test_check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_modern_bridge_contract.py || failures=$((failures + 1))
+              python3 tools/quality/check_modern_canary_apk.py --source-only || failures=$((failures + 1))
+              python3 tools/quality/test_check_modern_canary_apk.py || failures=$((failures + 1))
               # The keep rule is what holds the entry point against R8, which never reads
               # assets/xposed_init. The source-level checker above asserts the rule exists; the
               # artifact-level check that reads a built APK runs in the build and release steps,
