@@ -24,7 +24,4 @@ dependencyResolutionManagement {
 rootProject.name = "WA-X"
 include(":app")
 include(":modern-runtime")
-// Debug-only modern API102 Xposed module. Never join the legacy release module graph by default.
-if (providers.gradleProperty("enableModernCanary").orNull == "true") {
-    include(":modern-canary")
-}
+// Only one installable application is built: the full WA X Manager on API 102.

@@ -2,7 +2,6 @@
     <string name="force_restore_backup">Force Restore Backup</string>
     <string name="force_restore_backup_summary">Launch the restore backup screen manually. Use this if you skipped restoration during setup.</string>
     <string name="app_name" translatable="false">WA X</string>
-    <string name="app_desc">Advanced WhatsApp Xposed Module</string>
     <string name="antirevoke">Anti-Revoke Messages</string>
     <string name="antirevoke_sum">Messages will not be deleted for you</string>
     <string name="ghostmode">Hide Typing</string>
@@ -621,4 +620,6 @@
     <string name="modern_pilot_disable">Disable experiment</string>
     <string name="modern_pilot_restart">Close and reopen WhatsApp to apply the change.</string>
     <string name="modern_pilot_tap">Tap here to configure experimental CustomTime.</string>
+    <string name="modern_target_share_limit_status">ShareLimit: %1$s</string>
+    <string name="modern_target_presence_status">Freeze last seen: %1$s | DND: %2$s</string>
 </resources>

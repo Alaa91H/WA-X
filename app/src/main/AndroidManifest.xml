@@ -51,6 +51,15 @@
         android:supportsRtl="true"
         tools:targetApi="30">
 
+        <!-- Target UID is verified inside the provider before accepting any report.
+             No signature permission: injected hooks run as WhatsApp's UID, not WA X's. -->
+        <provider
+            android:name=".modern.ModernTargetTelemetryProvider"
+            android:authorities="${applicationId}.runtime.telemetry"
+            android:exported="true"
+            android:grantUriPermissions="false"
+            tools:ignore="ExportedContentProvider" />
+
         <!--suppress AndroidDomInspection -->
         <service
             android:name="com.google.android.gms.metadata.ModuleDependencies"
@@ -142,37 +151,6 @@
             android:authorities="${applicationId}.preferences"
             android:exported="true"
             tools:ignore="ExportedContentProvider" />
-
-
-        <meta-data
-            android:name="xposedmodule"
-            android:value="true" />
-        <meta-data
-            android:name="xposeddescription"
-            android:value="@string/app_desc" />
-        <!--
-            xposedminversion is what marks this as a legacy Xposed API module. It also
-            decides which entry point LSPosed loads: with it present and no
-            META-INF/xposed/java_init.list in the APK, LSPosed reads
-            assets/xposed_init and sets staticScope to false unconditionally. Adding
-            the modern META-INF/xposed files (java_init.list, module.prop, scope.list)
-            would therefore not add a static scope, it would make LSPosed ignore
-            assets/xposed_init and load nothing at all.
-        -->
-        <meta-data
-            android:name="xposedminversion"
-            android:value="93" />
-        <meta-data
-            android:name="xposedsharedprefs"
-            android:value="true" />
-        <!--
-            Recommended scope. See the comment on the `scope` array in
-            res/values/arrays.xml for why it contains the system framework and why it
-            cannot be made static on this API.
-        -->
-        <meta-data
-            android:name="xposedscope"
-            android:resource="@array/scope" />
 
         <receiver
             android:name=".receivers.WAFReceiver"

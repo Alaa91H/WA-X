@@ -312,8 +312,9 @@ class HomeFragment : BaseFragment() {
      */
     private fun renderModernActivation() {
         if (!isAdded || currentBinding == null) return
+        val applicationContext = requireContext().applicationContext
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val snapshot = ModernManagerRuntimeStatus.inspect()
+            val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
             withContext(Dispatchers.Main) {
                 if (!isAdded || currentBinding == null) return@withContext
                 binding.statusTitle.text =
@@ -380,9 +381,25 @@ class HomeFragment : BaseFragment() {
                                     }
                                 }
                             evidence + "\n" +
+                                (
+                                    if (target.bootstrapMilestones.isNotEmpty()) {
+                                        target.bootstrapMilestones.joinToString(" → ") + "\n"
+                                    } else {
+                                        "NO_TARGET_LIFECYCLE_SIGNAL\n"
+                                    }
+                                ) +
                                 getString(
                                     R.string.modern_target_feature_status,
                                     target.customTimeInstallation ?: "NOT_REPORTED",
+                                ) + "\n" +
+                                getString(
+                                    R.string.modern_target_share_limit_status,
+                                    target.shareLimitInstallation ?: "NOT_REPORTED",
+                                ) + "\n" +
+                                getString(
+                                    R.string.modern_target_presence_status,
+                                    target.freezeInstallation ?: "NOT_REPORTED",
+                                    target.dndInstallation ?: "NOT_REPORTED",
                                 )
                         }
                     val reported = target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP

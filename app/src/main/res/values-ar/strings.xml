@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">استعادة النسخة الاحتياطية بالقوة</string>
     <string name="force_restore_backup_summary">تشغيل استعادة شاشة النسخ الاحتياطي يدوياً. استخدم هذا إذا قمت بتخطي الاستعادة أثناء الإعداد.</string>
-    <string name="app_desc">وحدة Xposed متقدمة لواتساب</string>
     <string name="antirevoke">منع حذف الرسائل</string>
     <string name="antirevoke_sum">لن تُحذف الرسائل نيابةً عنك</string>
     <string name="ghostmode">إخفاء مؤشر الكتابة</string>
@@ -593,4 +592,6 @@
     <string name="modern_pilot_disable">إيقاف التجربة</string>
     <string name="modern_pilot_restart">أغلق واتساب وافتحه مجددًا لتطبيق التغيير.</string>
     <string name="modern_pilot_tap">اضغط هنا لضبط ميزة CustomTime التجريبية.</string>
+    <string name="modern_target_share_limit_status">حد إعادة التوجيه: %1$s</string>
+    <string name="modern_target_presence_status">تجميد آخر ظهور: %1$s | عدم الإزعاج: %2$s</string>
 </resources>

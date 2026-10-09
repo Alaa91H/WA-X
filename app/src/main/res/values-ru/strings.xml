@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Принудительно восстановить резервную копию</string>
     <string name="force_restore_backup_summary">Запустите экран восстановления резервной копии вручную. Используйте это, если пропустили восстановление при настройке.</string>
-    <string name="app_desc">Расширенный Xposed-модуль для WhatsApp</string>
     <string name="antirevoke">Защита от удаления сообщений</string>
     <string name="antirevoke_sum">Активирован, удаленные сообщения останутся у вас</string>
     <string name="ghostmode">Скрыть ввод</string>
@@ -592,4 +591,6 @@
     <string name="modern_pilot_disable">Выключить эксперимент</string>
     <string name="modern_pilot_restart">Закройте и снова откройте WhatsApp для применения.</string>
     <string name="modern_pilot_tap">Нажмите, чтобы настроить экспериментальный CustomTime.</string>
+    <string name="modern_target_share_limit_status">Лимит пересылки: %1$s</string>
+    <string name="modern_target_presence_status">Заморозка последнего посещения: %1$s | Не беспокоить: %2$s</string>
 </resources>

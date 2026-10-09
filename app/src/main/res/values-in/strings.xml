@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Paksa Pulihkan Cadangan</string>
     <string name="force_restore_backup_summary">Luncurkan layar pemulihan cadangan secara manual. Gunakan ini jika Anda melewatkan pemulihan selama pencadangan</string>
-    <string name="app_desc">Modul Xposed Cadvanced untuk WhatsApp</string>
     <string name="antirevoke">Anti Hapus Pesan</string>
     <string name="antirevoke_sum">Pesan tidak akan dihapus untuk Anda</string>
     <string name="ghostmode">Sembunyikan mengetik…</string>
@@ -588,4 +587,6 @@
     <string name="modern_pilot_disable">Nonaktifkan eksperimen</string>
     <string name="modern_pilot_restart">Tutup lalu buka kembali WhatsApp untuk menerapkan perubahan.</string>
     <string name="modern_pilot_tap">Ketuk untuk mengatur CustomTime eksperimental.</string>
+    <string name="modern_target_share_limit_status">Batas penerusan: %1$s</string>
+    <string name="modern_target_presence_status">Bekukan terakhir dilihat: %1$s | Jangan ganggu: %2$s</string>
 </resources>

@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Yedeklemeyi Zorla Geri Yükle</string>
     <string name="force_restore_backup_summary">Yedek geri yükleme ekranını manuel olarak başlatın. Kurulum sırasında geri yüklemeyi atladıysanız bunu kullanın.</string>
-    <string name="app_desc">WhatsApp için gelişmiş Xposed modülü</string>
     <string name="antirevoke">Mesajların Silinmesini Engelle</string>
     <string name="antirevoke_sum">Mesajlar sizden silinmeyecektir</string>
     <string name="ghostmode">Yazıyor bilgisini gizle</string>
@@ -591,4 +590,6 @@
     <string name="modern_pilot_disable">Deneyi devre dışı bırak</string>
     <string name="modern_pilot_restart">Değişikliği uygulamak için WhatsApp’ı kapatıp yeniden açın.</string>
     <string name="modern_pilot_tap">Deneysel CustomTime ayarları için dokunun.</string>
+    <string name="modern_target_share_limit_status">İletme sınırı: %1$s</string>
+    <string name="modern_target_presence_status">Son görülmeyi dondur: %1$s | Rahatsız etmeyin: %2$s</string>
 </resources>

@@ -223,67 +223,20 @@ jobs:
       - name: Compile the debug APK
         run: ./gradlew $GRADLE_ARGS assembleDebug :modern-runtime:testDebugUnitTest
 
-      # The declaration-level LSPosed contract check runs in strict-static and only reads
-      # gradle/libs.versions.toml, so it works on a cold checkout. This one opens the artifact
-      # this job just resolved and asserts it publishes every legacy type the module imports,
-      # which is the only way to prove the pin and the code agree. It lives here because this is
-      # the only job that has the jar, and it fails rather than skipping when the jar is absent:
-      # a step that can report "nothing to check" is exactly how the version-blind checker it
-      # replaced survived for as long as it did.
-      - name: Prove the pinned legacy API artifact matches the code
+      # The built MAIN WA X application is the only modern Xposed module.
+      # Its APK must contain one modern loader and the original Manager UI.
+      - name: Verify the actual WA X API 102 debug loader
         shell: bash
         run: |
           set -euo pipefail
-          JAR="$(
-            find "${GRADLE_USER_HOME:-$HOME/.gradle}/caches/modules-2/files-2.1/de.robv.android.xposed" \
-              -type f -name 'api-*.jar' ! -name '*-sources.jar' | sort | tail -n 1
-          )"
-          if [[ -z "$JAR" ]]; then
-            echo "::error::The resolved de.robv.android.xposed:api artifact was not found in the Gradle cache"
-            exit 1
-          fi
-          python3 tools/quality/check_lsposed_contract.py --verify-artifact --artifact "$JAR"
+          python3 tools/quality/check_modern_main_apk.py --source-only
+          python3 tools/quality/test_check_modern_main_apk.py
+          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | sort | head -n 1)"
+          test -n "$APK"
+          python3 tools/quality/check_modern_main_apk.py --apk "$APK"
+          SIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          "$SIGNER" verify --verbose "$APK"
 
-      # The artifact-level half of the loader contract, on the build this job actually produced:
-      # the class named in the APK's own assets/xposed_init must be a class definition in its dex.
-      # This is the debug variant, which is not shrunk, so it cannot catch a keep-rule mistake -
-      # that is what the release step checks. What it does catch is the other silent failure: an
-      # entry point renamed, moved or mistyped so that the file and the code no longer agree.
-      - name: Prove the built APK declares an entry point it actually contains
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
-          if [[ -z "$APK" ]]; then
-            echo "::error::assembleDebug produced no APK to verify"
-            exit 1
-          fi
-          python3 tools/quality/check_apk_loader_contract.py --apk "$APK"
-
-      - name: Compile and verify separate API 102 canary APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 tools/quality/test_check_modern_canary_apk.py
-          python3 tools/quality/check_modern_canary_apk.py --source-only
-          # The canary module is explicitly absent from the regular release graph.
-          ./gradlew $GRADLE_ARGS -PenableModernCanary=true :modern-canary:assembleDebug :modern-canary:assembleRelease :modern-canary:lintDebug
-          CANARY_APK="$(find modern-canary/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
-          CANARY_RELEASE="$(find modern-canary/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
-          test -n "$CANARY_APK" && test -n "$CANARY_RELEASE"
-          python3 tools/quality/check_modern_canary_apk.py --apk "$CANARY_APK"
-          python3 tools/quality/check_modern_canary_apk.py --apk "$CANARY_RELEASE"
-          SIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
-          test -n "$SIGNER"
-          "$SIGNER" verify --verbose "$CANARY_APK"
-
-      - name: Upload separate modern API 102 canary debug APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: modern-api102-canary-${{ github.sha }}
-          path: modern-canary/build/outputs/apk/debug/
-          if-no-files-found: error
-          retention-days: 5
       - name: Upload baseline APK input
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -292,32 +245,7 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
-      - name: Verify same-package experimental modern API 102 APK
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 tools/quality/check_modern_main_apk.py --source-only
-          ./gradlew $GRADLE_ARGS -PmodernXposed=true :app:assembleDebug :app:assembleRelease
-          python3 tools/quality/check_modern_main_apk.py --generated-only
-          MODERN_DEBUG="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | sort | head -n 1)"
-          MODERN_RELEASE="$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' -type f | sort | head -n 1)"
-          test -n "$MODERN_DEBUG" && test -n "$MODERN_RELEASE"
-          python3 tools/quality/check_modern_main_apk.py --apk "$MODERN_DEBUG"
-          python3 tools/quality/check_modern_main_apk.py --apk "$MODERN_RELEASE"
-          AAPT="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name aapt -type f | sort -V | tail -n 1)"
-          SIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -name apksigner -type f | sort -V | tail -n 1)"
-          test -n "$AAPT" && test -n "$SIGNER"
-          "$AAPT" dump badging "$MODERN_DEBUG" | grep -q "package: name='com.wax.module'"
-          "$AAPT" dump badging "$MODERN_RELEASE" | grep -q "package: name='com.wax.module'"
-          "$SIGNER" verify --verbose "$MODERN_DEBUG"
 
-      - name: Upload same-package experimental API 102 APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: experimental-same-package-api102-${{ github.sha }}
-          path: app/build/outputs/apk/debug/
-          if-no-files-found: error
-          retention-days: 5
 
   strict-static:
     name: Strict parallel static quality
@@ -375,16 +303,11 @@ jobs:
               failures=0
               python3 tools/quality/test_scan_access_gates.py || failures=$((failures + 1))
               python3 tools/quality/scan_access_gates.py --check-mirror || failures=$((failures + 1))
-              python3 tools/quality/test_check_lsposed_contract.py || failures=$((failures + 1))
-              python3 tools/quality/check_lsposed_contract.py || failures=$((failures + 1))
               python3 tools/quality/check_modern_bridge_contract.py || failures=$((failures + 1))
-              python3 tools/quality/check_modern_canary_apk.py --source-only || failures=$((failures + 1))
-              python3 tools/quality/test_check_modern_canary_apk.py || failures=$((failures + 1))
-              # The keep rule is what holds the entry point against R8, which never reads
-              # assets/xposed_init. The source-level checker above asserts the rule exists; the
-              # artifact-level check that reads a built APK runs in the build and release steps,
-              # because a gate that only reads the tree is how the entry point was lost.
-              python3 tools/quality/test_check_apk_loader_contract.py || failures=$((failures + 1))
+              # Strict modern-loader self-tests replace obsolete Legacy checks.
+              # Real built APKs are checked separately in debug AND signed release steps.
+              python3 tools/quality/test_check_modern_main_apk.py || failures=$((failures + 1))
+              python3 tools/quality/check_modern_main_apk.py --source-only || failures=$((failures + 1))
               python3 tools/quality/test_check_repository_urls.py || failures=$((failures + 1))
               python3 tools/quality/check_repository_urls.py || failures=$((failures + 1))
               # The feature-contract boundary. A platform type in a feature constructor compiles
@@ -909,22 +832,14 @@ jobs:
 
           ls -l dist
 
-      # The gate that would have caught this before it shipped, and the reason it exists: R8 does
-      # not read assets/xposed_init, so a release build silently removed the entry point - and the
-      # whole injected runtime with it - while the APK still installed, still declared
-      # xposedmodule and still named the class. No other gate in this repository builds the release
-      # variant, so every one of them passed. This runs on the staged APK, before it is published,
-      # and it fails rather than skipping.
-      - name: Prove the release APK can be loaded as a legacy LSPosed module
+      - name: Verify signed production API 102 APK loader and Manager
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          python3 tools/quality/test_check_apk_loader_contract.py
+          python3 tools/quality/check_modern_main_apk.py --source-only
           for apk in dist/*.apk; do
-            python3 tools/quality/check_apk_loader_contract.py \
-              --apk "$apk" \
-              --expect-class com.wax.module.xposed.core.FeatureLoader
+            python3 tools/quality/check_modern_main_apk.py --apk "$apk"
           done
 
       - name: Verify the APK signatures and update certificate
@@ -1493,165 +1408,6 @@ jobs:
               echo "- Result: existing publication marker found; Telegram post skipped"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-  telegram-experimental:
-    name: Telegram experimental API102 (${{ matrix.variant }})
-    if: >-
-      ${{
-        !cancelled() &&
-        github.event_name != 'pull_request' &&
-        github.event_name != 'schedule' &&
-        needs.build.result == 'success' &&
-        needs.strict-verdict.result == 'success' &&
-        needs.package.result == 'success' &&
-        (github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/v')) &&
-        (github.event_name != 'workflow_dispatch' || inputs.publish_to_telegram)
-      }}
-    needs: [preflight, build, strict-verdict, package]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - variant: modern-canary
-            artifact: modern-api102-canary
-            package: com.wax.module.modern.canary
-          - variant: modern-main
-            artifact: experimental-same-package-api102
-            package: com.wax.module
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      actions: read
-    steps:
-      - name: Checkout publisher source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          submodules: false
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: tools/ci/telegram-requirements.txt
-      - name: Download verified variant artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: ${{ matrix.artifact }}-${{ github.sha }}
-          path: experimental-input
-      - name: Verify loader, package and debug signing
-        id: metadata
-        env:
-          VARIANT: ${{ matrix.variant }}
-          PACKAGE: ${{ matrix.package }}
-          VERSION: ${{ needs.preflight.outputs.version }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t apks < <(find experimental-input -type f -name '*.apk' | sort)
-          if [[ "${#apks[@]}" -ne 1 ]]; then
-            echo "::error::Expected exactly one $VARIANT APK"
-            exit 1
-          fi
-          APK="${apks[0]}"
-          if [[ "$VARIANT" == "modern-main" ]]; then
-            python3 tools/quality/check_modern_main_apk.py --apk "$APK"
-          else
-            python3 tools/quality/check_modern_canary_apk.py --apk "$APK"
-          fi
-          SIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
-          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n 1)"
-          test -n "$SIGNER" && test -n "$AAPT"
-          "$SIGNER" verify --verbose "$APK"
-          "$AAPT" dump badging "$APK" | grep -Fq "package: name='$PACKAGE'"
-          mkdir -p dist
-          DEST="dist/WA-X-$VERSION-$VARIANT-EXPERIMENTAL-DEBUG-${GITHUB_SHA:0:8}.apk"
-          cp "$APK" "$DEST"
-          echo "apk=$DEST" >> "$GITHUB_OUTPUT"
-          echo "sha256=$(sha256sum "$DEST" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-          echo "size=$(numfmt --to=iec-i --suffix=B "$(stat -c '%s' "$DEST")")" >> "$GITHUB_OUTPUT"
-          echo "marker=telegram-published-experimental-$VARIANT-18-$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-          echo "workflow=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
-      - name: Changelog and safe dry-run
-        env:
-          VARIANT: ${{ matrix.variant }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 tools/ci/test_publish_telegram_mtproto.py
-          python3 tools/ci/test_telegram_changelog.py
-          BASE="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
-          if [[ -z "$BASE" ]]; then
-            BASE="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
-          fi
-          python3 tools/ci/generate_telegram_changelog.py --base "$BASE" --head HEAD --output telegram-changelog.txt
-          {
-            echo "Experimental API102 $VARIANT, commit ${GITHUB_SHA:0:8}"
-            echo "Not fully migrated or verified on a rooted WhatsApp device."
-            if [[ "$VARIANT" == modern-main ]]; then
-              echo "DEBUG SIGNATURE: not an in-place update to WA X. DO NOT uninstall production WA X."
-            else
-              echo "Separate app: does not replace installed WA X."
-            fi
-          } >> telegram-changelog.txt
-          python3 tools/ci/publish_telegram_mtproto.py             --file "${{ steps.metadata.outputs.apk }}"             --type development --variant "$VARIANT"             --version "${{ needs.preflight.outputs.version }}"             --commit "$GITHUB_SHA" --branch "$GITHUB_REF_NAME"             --sha256 "${{ steps.metadata.outputs.sha256 }}"             --size "${{ steps.metadata.outputs.size }}"             --changelog-file telegram-changelog.txt             --workflow-url "${{ steps.metadata.outputs.workflow }}"             --chat-id "@WAXposed" --thread-id 18 --dry-run
-      - name: Check duplicate Telegram marker
-        id: guard
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          MARKER: ${{ steps.metadata.outputs.marker }}
-          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force_publish || false }}
-        run: |
-          set -euo pipefail
-          PUBLISH=true
-          if [[ "$FORCE" != true ]]; then
-            COUNT="$(gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts?name=$MARKER&per_page=1" --jq '.total_count')"
-            if [[ "$COUNT" != 0 ]]; then PUBLISH=false; fi
-          fi
-          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
-      - name: Verify Telegram secrets
-        if: steps.guard.outputs.publish == 'true'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          for key in TELEGRAM_BOT_TOKEN TELEGRAM_API_ID TELEGRAM_API_HASH; do
-            if [[ -z "${!key:-}" ]]; then echo "::error::Missing $key"; exit 1; fi
-          done
-      - name: Install pinned Telegram transport
-        if: steps.guard.outputs.publish == 'true'
-        run: python3 -m pip install --disable-pip-version-check --no-input -r tools/ci/telegram-requirements.txt
-      - name: Publish verified experimental APK to Beta Testing
-        if: steps.guard.outputs.publish == 'true'
-        id: posted
-        shell: bash
-        env:
-          VARIANT: ${{ matrix.variant }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-        run: |
-          set -euo pipefail
-          set +x
-          python3 tools/ci/publish_telegram_mtproto.py             --file "${{ steps.metadata.outputs.apk }}"             --type development --variant "$VARIANT"             --version "${{ needs.preflight.outputs.version }}"             --commit "$GITHUB_SHA" --branch "$GITHUB_REF_NAME"             --sha256 "${{ steps.metadata.outputs.sha256 }}"             --size "${{ steps.metadata.outputs.size }}"             --changelog-file telegram-changelog.txt             --workflow-url "${{ steps.metadata.outputs.workflow }}"             --chat-id "@WAXposed" --thread-id 18
-      - name: Write Telegram publication marker
-        if: steps.guard.outputs.publish == 'true' && steps.posted.outcome == 'success'
-        run: |
-          mkdir -p telegram-marker
-          printf '%s\n' "commit=$GITHUB_SHA" "variant=${{ matrix.variant }}"             "sha256=${{ steps.metadata.outputs.sha256 }}"             "message=${{ steps.posted.outputs.document_message_id }}" > telegram-marker/published.txt
-      - name: Upload publication marker
-        if: steps.guard.outputs.publish == 'true' && steps.posted.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ${{ steps.metadata.outputs.marker }}
-          path: telegram-marker/published.txt
-          if-no-files-found: error
-          retention-days: 30
-
   ubuntu26-canary:
     name: Ubuntu 26.04 forward-compatibility canary
     if: github.event_name == 'schedule'

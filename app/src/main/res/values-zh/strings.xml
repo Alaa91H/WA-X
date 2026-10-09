@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">强制恢复备份</string>
     <string name="force_restore_backup_summary">手动启动恢复备份界面。如果你在设置时跳过了恢复，请使用此项。</string>
-    <string name="app_desc">高级 WhatsApp Xposed 模块</string>
     <string name="antirevoke">防止消息撤回</string>
     <string name="antirevoke_sum">消息将不会在您的设备上删除</string>
     <string name="ghostmode">隐藏正在输入</string>
@@ -590,4 +589,6 @@
     <string name="modern_pilot_disable">停用实验功能</string>
     <string name="modern_pilot_restart">关闭并重新打开 WhatsApp 以应用更改。</string>
     <string name="modern_pilot_tap">点按此处配置实验性 CustomTime。</string>
+    <string name="modern_target_share_limit_status">转发数量限制：%1$s</string>
+    <string name="modern_target_presence_status">冻结最后上线时间：%1$s | 请勿打扰：%2$s</string>
 </resources>

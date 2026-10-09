@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Forçar restauração de backup</string>
     <string name="force_restore_backup_summary">Inicia a tela de restauração de backup manualmente. Use esta opção caso tenha pulado a restauração durante a configuração inicial.</string>
-    <string name="app_desc">Módulo Xposed avançado para o WhatsApp</string>
     <string name="antirevoke">Anti deletar mensagens</string>
     <string name="antirevoke_sum">Quando ativo, as mensagens não serão apagadas para você.</string>
     <string name="ghostmode">Ocultar digitando</string>
@@ -591,4 +590,6 @@
     <string name="modern_pilot_disable">Desativar teste</string>
     <string name="modern_pilot_restart">Feche e reabra o WhatsApp para aplicar a alteração.</string>
     <string name="modern_pilot_tap">Toque aqui para configurar o CustomTime experimental.</string>
+    <string name="modern_target_share_limit_status">Limite de encaminhamento: %1$s</string>
+    <string name="modern_target_presence_status">Congelar visto por último: %1$s | Não perturbe: %2$s</string>
 </resources>

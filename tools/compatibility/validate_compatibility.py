@@ -23,8 +23,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -104,6 +106,12 @@ def check_schema(matrix: dict, report: Report) -> None:
             report.fail(
                 "packages.%s.defaultStatus %r is not one of %s"
                 % (key, entry.get("defaultStatus"), ", ".join(VALID_STATUSES))
+            )
+        # A package-wide default cannot certify all features and versions.
+        if entry.get("defaultStatus") == "supported":
+            report.fail(
+                "packages.%s.defaultStatus=supported is forbidden without "
+                "per-feature, exact-target resolver evidence" % key
             )
 
     for feature_id, per_package in matrix.get("matrix", {}).items():
@@ -244,63 +252,127 @@ def check_inventory(matrix: dict, derived: dict, report: Report) -> None:
             report.fail("evidence references unknown feature %r" % feature_id)
 
 
-def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
-    by_id = {item["id"]: item for item in derived["features"]}
-    matrix_entries = matrix.get("matrix", {})
-    evidence_entries = matrix.get("evidence", {})
+def _utc_timestamp(value: object) -> datetime | None:
+    """Parse an explicitly UTC/offset-qualified ISO-8601 observation timestamp."""
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(timezone.utc)
 
-    claimed = []
-    for feature_id, per_package in matrix_entries.items():
+
+def _exact_version(value: object) -> bool:
+    """Do not certify declared wildcard version families as tested builds."""
+    return isinstance(value, str) and re.fullmatch(r"\d+\.\d+\.\d+\.\d+", value) is not None
+
+
+def _target_verified(
+    target: object, package_key: str, version: str, package_name: str,
+    required: list[str], module: dict,
+) -> bool:
+    if not isinstance(target, dict):
+        return False
+    if (target.get("package") != package_key
+            or target.get("packageName") != package_name
+            or target.get("version") != version):
+        return False
+    if not isinstance(target.get("buildFingerprint"), str) or not target["buildFingerprint"].strip():
+        return False
+    sdk = target.get("sdk")
+    if type(sdk) is not int or sdk < module.get("minSdk", 1):
+        return False
+    if target.get("abi") not in module.get("abis", []):
+        return False
+    now = datetime.now(timezone.utc)
+    verified = _utc_timestamp(target.get("verifiedAt"))
+    if verified is None or verified > now:
+        return False
+    if "expiresAt" in target:
+        expires = _utc_timestamp(target["expiresAt"])
+        if expires is None or expires <= now or expires <= verified:
+            return False
+    if target.get("result") != "resolved":
+        return False
+    resolvers = target.get("resolvers")
+    if not isinstance(resolvers, dict):
+        return False
+    for resolver in required:
+        record = resolvers.get(resolver)
+        if not isinstance(record, dict) or record.get("result") != "resolved":
+            return False
+        observed_at = _utc_timestamp(record.get("verifiedAt"))
+        if observed_at is None or observed_at > now or observed_at > verified:
+            return False
+    return True
+
+
+def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
+    """Fail closed: a supported claim needs evidence for that exact target.
+
+    Legacy feature-wide resolver records cannot certify a package/version cell.
+    Evidence targets use feature -> targets[] -> package, packageName, version,
+    buildFingerprint, sdk, abi, verifiedAt, result and resolver observations.
+    """
+    by_id = {item["id"]: item for item in derived["features"]}
+    entries = matrix.get("evidence", {})
+    packages = matrix.get("packages", {})
+    module = matrix.get("module", {})
+
+    for feature_id, per_package in matrix.get("matrix", {}).items():
+        if not isinstance(per_package, dict):
+            report.fail("matrix.%s must be an object" % feature_id)
+            continue
         for package_key, override in per_package.items():
-            if not isinstance(override, dict):
+            if package_key not in PACKAGE_KEYS or not isinstance(override, dict):
                 continue
             for dimension, cells in override.items():
                 if not isinstance(cells, dict):
                     continue
                 for cell, status in cells.items():
-                    if status == "supported":
-                        claimed.append("%s/%s/%s/%s" % (feature_id, package_key, dimension, cell))
-    for feature_id, record in evidence_entries.items():
+                    if status != "supported":
+                        continue
+                    claim = "%s/%s/%s/%s" % (feature_id, package_key, dimension, cell)
+                    # A version is a precise runtime identity. SDK/ABI-only
+                    # overrides would certify all versions, so reject them.
+                    if dimension != "versions" or not _exact_version(cell):
+                        report.fail("%s claims supported without an exact target version" % claim)
+                        continue
+                    package = packages.get(package_key, {})
+                    feature = by_id.get(feature_id)
+                    if feature is None or cell not in package.get("declaredVersions", []):
+                        report.fail("%s claims supported for an unknown feature/version" % claim)
+                        continue
+                    record = entries.get(feature_id, {})
+                    targets = record.get("targets") if isinstance(record, dict) else None
+                    if not isinstance(targets, list) or not any(
+                        _target_verified(target, package_key, cell,
+                                         package.get("packageName"),
+                                         feature["resolverDependencies"], module)
+                        for target in targets
+                    ):
+                        report.fail(
+                            "%s claims supported without complete resolver evidence "
+                            "for the exact package/version/build/SDK/ABI target" % claim
+                        )
+
+    # Feature-wide supported status cannot be scoped to any runtime target.
+    for feature_id, record in entries.items():
         if isinstance(record, dict) and record.get("status") == "supported":
-            claimed.append("%s/evidence" % feature_id)
-
-    for target in claimed:
-        feature_id = target.split("/")[0]
-        feature = by_id.get(feature_id)
-        if feature is None:
-            continue
-        required = feature["resolverDependencies"]
-        record = evidence_entries.get(feature_id, {})
-        observed = record.get("resolvers", {}) if isinstance(record, dict) else {}
-
-        missing = sorted(set(required) - set(observed))
-        if missing:
             report.fail(
-                "%s claims supported but has no evidence for resolver(s): %s"
-                % (target, ", ".join(missing))
-            )
-            continue
-
-        unverified = sorted(
-            name
-            for name in required
-            if not observed.get(name, {}).get("verifiedAt")
-            or observed[name].get("result") != "resolved"
-        )
-        if unverified:
-            report.fail(
-                "%s claims supported but resolver evidence is incomplete for: %s"
-                % (target, ", ".join(unverified))
+                "evidence.%s.status=supported is not an exact-target claim" % feature_id
             )
 
-    # A feature with no resolver dependencies can never be blocked on resolver
-    # evidence, so record that explicitly instead of leaving it ambiguous.
+    # 'none' means no direct resolver dependency, not a runtime guarantee.
     independent = sorted(
         item["id"] for item in derived["features"] if item["resolutionTier"] == "none"
     )
     report.note(
-        "%d/%d features are structurally independent of WhatsApp internals "
-        "(resolutionTier=none): %s"
+        "%d/%d features have no direct resolver dependencies "
+        "(resolutionTier=none; runtime compatibility is not proven): %s"
         % (len(independent), len(derived["features"]), ", ".join(independent))
     )
 

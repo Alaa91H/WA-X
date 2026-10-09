@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Wiederherstellung der Sicherung erzwingen</string>
     <string name="force_restore_backup_summary">Starten Sie den Sicherungsbildschirm manuell. Verwenden Sie dies, wenn Sie die Wiederherstellung während des Setups übersprungen haben.</string>
-    <string name="app_desc">Erweitertes Xposed-Modul für WhatsApp</string>
     <string name="antirevoke">Gelöschte Nachrichten anzeigen</string>
     <string name="antirevoke_sum">Nachrichten werden für Sie nicht gelöscht</string>
     <string name="ghostmode">Schreiben verbergen</string>
@@ -589,4 +588,6 @@
     <string name="modern_pilot_disable">Experiment deaktivieren</string>
     <string name="modern_pilot_restart">WhatsApp schließen und erneut öffnen, um die Änderung anzuwenden.</string>
     <string name="modern_pilot_tap">Tippen, um CustomTime experimentell einzustellen.</string>
+    <string name="modern_target_share_limit_status">Weiterleitungslimit: %1$s</string>
+    <string name="modern_target_presence_status">Zuletzt online einfrieren: %1$s | Nicht stören: %2$s</string>
 </resources>
