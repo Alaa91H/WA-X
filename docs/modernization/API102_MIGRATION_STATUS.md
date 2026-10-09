@@ -12,10 +12,11 @@
 ## Headline counts (2026-10-09, main @ 007f93c1)
 
 - Total registered features: 64
-- Source-wired to API 102 runtime (device UNVERIFIED): 5
-  (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome)
+- Source-wired to API 102 runtime (device UNVERIFIED): 5 + 1 in flight
+  (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome; ContactItemListener
+  on branch `feat/m06-contact-item-listener`)
 - Modern adapter present but NOT wired into `ModernXposedEntry`: 1 (MinorFixes)
-- Legacy-only: 58
+- Legacy-only: 58 (57 once the in-flight branch merges)
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
 - In-WhatsApp settings surface: not built. The only in-WhatsApp affordance
@@ -73,7 +74,7 @@ every row; status = honest roll-up.
 |---|---------|------|-------|------|---------|----------------|-------------|----|--------|--------|
 | 1 | DebugFeature | W0 | 0 | 0 | legacy-only (contract test double) | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 2 | MinorFixes | W0 | 0 | 0 | adapter present, NOT wired | pending | #423 MERGED | main green | PENDING_USER_DEVICE_TEST | staged, not active |
-| 3 | ContactItemListener | W1 | 1 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 3 | ContactItemListener | W1 | 1 | 3 | wired (device UNVERIFIED) | infra (no user control) | feat/m06-contact-item-listener | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 4 | ConversationItemListener | W1 | 1 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 5 | MenuStatusProvider | W1 | 1 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 6 | ShowEditMessage | W3 | 7 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -154,12 +155,11 @@ batch 12 = BackupRestore, CaptureDevice.
 
 ## Remaining work (updated every turn)
 
-1. NEXT (Phase 2, Batch 1): migrate the 5 W1 core/infra adapters
-   (ContactItemListener, ConversationItemListener, MenuStatusProvider,
-   ActivityController, Tasker) against the WA X hook abstraction, register
-   in the modern path, add in-WhatsApp controls with persistence + restart
-   indicator — one feature at a time, each verified (hook path, preference
-   path, UI wiring, tests, CI) before moving on. —
+1. IN FLIGHT (Phase 2, Batch 1): ContactItemListener modern bus
+   (branch `feat/m06-contact-item-listener`) — adapter, entry wiring,
+   evidence event, tests, stage doc. Next: push, open PR, watch CI, merge.
+   Then, one at a time: ConversationItemListener, MenuStatusProvider,
+   ActivityController, Tasker. —
    an API 102 screen rendered inside WhatsApp listing features with honest
    status (functional vs pending), controls wired to real settings, and a
    "requires WhatsApp restart" indicator. `ModernMenuHomeFeature` entry is
