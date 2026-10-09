@@ -199,10 +199,15 @@ public final class ModernXposedEntry extends XposedModule {
                         log(Log.ERROR, TAG, "Modern presence/DND adapter failed: " + pilot.name(), featureFailure);
                     }
                 }
-                if (preferences != null) {
-                    preferences.edit()
-                            .putString("modern.feature." + pilot.getFeatureId() + ".state." + packageName, state)
-                            .apply();
+                try {
+                    String event = pilot == ModernPresenceFeatures.Pilot.FREEZE_LAST_SEEN
+                            ? "FREEZE_LAST_SEEN" : "DND_MODE";
+                    boolean accepted = ModernTargetTelemetry.send(target, packageName, event, state);
+                    if (!accepted) {
+                        log(Log.WARN, TAG, "Modern presence state rejected: " + pilot.name());
+                    }
+                } catch (RuntimeException error) {
+                    log(Log.WARN, TAG, "Modern presence state delivery failed: " + pilot.name(), error);
                 }
             }
             log(Log.INFO, TAG, "API102 attached: " + packageName

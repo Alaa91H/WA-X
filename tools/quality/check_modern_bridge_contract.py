@@ -120,7 +120,11 @@ def verify() -> None:
     assert 'DND_KEY = "dndmode"' in presence
     assert "ModernVoidReplacementPolicy.isSafe" in presence
     assert "ModernPresenceFeatures.Pilot.values()" in modern_entry
-    assert "modern.feature." in modern_entry
+    assert "ModernTargetTelemetry.send" in modern_entry
+    assert '"FREEZE_LAST_SEEN"' in modern_entry
+    assert '"DND_MODE"' in modern_entry
+    provider = source("app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java")
+    assert "EVENT_FREEZE_LAST_SEEN" in provider and "EVENT_DND_MODE" in provider
     assert 'putBoolean("freezelastseen", source.getBoolean("freezelastseen", false))' in relay
     assert 'putBoolean("dndmode", source.getBoolean("dndmode", false))' in relay
 

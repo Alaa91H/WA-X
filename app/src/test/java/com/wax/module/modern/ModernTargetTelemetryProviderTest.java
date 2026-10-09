@@ -30,6 +30,12 @@ public final class ModernTargetTelemetryProviderTest {
                 ModernTargetTelemetryProvider.EVENT_BOOTSTRAP));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_CUSTOM_TIME));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_FREEZE_LAST_SEEN));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_DND_MODE));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_SHARE_LIMIT));
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent("EXECUTE_CODE"));
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent(null));
     }
