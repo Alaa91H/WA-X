@@ -137,6 +137,9 @@ object ControlPolicy {
         ControlEffective.INSTALLED,
         ControlEffective.DISABLED,
         ControlEffective.RESTART_REQUIRED,
+        // A partially migrated feature still has a live direction, so its row
+        // stays switchable while the status text says what is missing.
+        ControlEffective.PARTIAL,
     )
 
     /**

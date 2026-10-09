@@ -48,7 +48,7 @@ class ModernTaskerFeatureTest {
         val outcomes = ModernTaskerFeature.Outcome.values().map { it.name }
         assertTrue(outcomes.containsAll(listOf(
             "DISABLED", "TOKEN_MISSING", "RESOLVER_MISSING",
-            "SEND_DIRECTION_PENDING", "ERROR",
+            "RESOLVER_AMBIGUOUS", "SEND_DIRECTION_PENDING", "INSTALLED",
         )))
     }
 }
