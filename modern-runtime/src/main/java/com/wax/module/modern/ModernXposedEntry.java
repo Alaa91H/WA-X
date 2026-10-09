@@ -14,11 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * API 102 entry, currently compiled as an isolated canary AAR.
+ * Modern libxposed API 102 entry loaded by WA X's official module APK.
  *
- * It deliberately does not invoke FeatureLoader, XposedBridge or XSharedPreferences:
- * legacy callbacks are forbidden on API 102. It must not be added to the legacy APK,
- * until the shipping metadata and every required feature have modern adapters.
+ * This entry never invokes legacy XposedBridge or XSharedPreferences. Feature
+ * adapters must be migrated individually, tested and opted in as appropriate.
  */
 public final class ModernXposedEntry extends XposedModule {
     private static final String TAG = "WA-X Modern";
@@ -34,50 +33,97 @@ public final class ModernXposedEntry extends XposedModule {
         return worker;
     });
 
+    /**
+     * Register the bootstrap as soon as the framework loads this module into the
+     * actual WhatsApp main process. Waiting for onPackageLoaded plus isFirstPackage
+     * can silently miss Application.attach on some framework/package lifecycles.
+     */
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
         currentProcessName = param.getProcessName();
         log(Log.INFO, TAG,
-                "Module loaded: API=" + getApiVersion() + ", process=" + param.getProcessName());
+                "Module loaded: API=" + getApiVersion() + ", process=" + currentProcessName);
+        if (!ModernTargetPolicy.isMainTargetProcess(currentProcessName)) {
+            return;
+        }
+        reportLifecycleStage(currentProcessName, "MODULE_LOADED");
+        installBootstrapHook(currentProcessName, "onModuleLoaded");
     }
 
     @Override
     public void onPackageLoaded(XposedModuleInterface.PackageLoadedParam param) {
-        if (!ModernTargetPolicy.isMainTarget(
-                currentProcessName, param.getPackageName(), param.isFirstPackage())) {
+        String packageName = param.getPackageName();
+        if (!ModernTargetPolicy.isTargetPackageForProcess(currentProcessName, packageName)) {
             return;
         }
-        final String packageName = param.getPackageName();
-        if (!started.add(packageName)) {
-            return;
-        }
+        // Record this independently of the bootstrap. isFirstPackage is NOT required.
+        log(Log.INFO, TAG, "Target package loaded: " + packageName
+                + ", firstPackage=" + param.isFirstPackage());
+        reportLifecycleStage(packageName, "PACKAGE_LOADED");
+        // Idempotent fallback if the framework rejected early hook registration.
+        installBootstrapHook(packageName, "onPackageLoaded");
+    }
+
+    private void installBootstrapHook(String packageName, String origin) {
         try {
             Method attach = Application.class.getDeclaredMethod("attach", Context.class);
-            hookRegistry.installOnce("runtime.bootstrap",
+            boolean installed = hookRegistry.installOnce("runtime.bootstrap",
                     new ModernHookRegistry.Registration("application.attach", () -> {
                         io.github.libxposed.api.XposedInterface.HookHandle handle =
                                 new ModernHookBridge(this).intercept(
-                    attach,
-                    "wax.modern.application.attach",
-                    chain -> {
-                        Object result = chain.proceed();
-                        Context target = (Context) chain.getArg(0);
-                        if (target != null && packageName.equals(target.getPackageName())) {
-                            // Remote framework IPC must never block WhatsApp Application.attach.
-                            Thread reporter = new Thread(() -> reportBootstrap(packageName, target),
-                                    "wax-api102-target-proof");
-                            reporter.setDaemon(true);
-                            reporter.start();
-                        }
-                        return result;
-                    });
+                                        attach, "wax.modern.application.attach", chain -> {
+                                            Object result = chain.proceed();
+                                            Context target = (Context) chain.getArg(0);
+                                            if (target != null && packageName.equals(target.getPackageName())
+                                                    && started.add(packageName)) {
+                                                log(Log.INFO, TAG,
+                                                        "Application.attach observed inside " + packageName);
+                                                Thread reporter = new Thread(
+                                                        () -> reportBootstrap(packageName, target),
+                                                        "wax-api102-target-proof");
+                                                reporter.setDaemon(true);
+                                                reporter.start();
+                                            }
+                                            return result;
+                                        });
                         return handle::unhook;
                     }));
+            if (installed) {
+                log(Log.INFO, TAG, "Bootstrap installed via " + origin + ": " + packageName);
+                reportLifecycleStage(packageName, "ATTACH_HOOK_INSTALLED");
+            }
         } catch (Throwable e) {
             if (e instanceof VirtualMachineError) throw (VirtualMachineError) e;
-            started.remove(packageName);
-            log(Log.ERROR, TAG, "Modern package attach hook unavailable: " + packageName, e);
+            log(Log.ERROR, TAG, "Bootstrap install failed via " + origin + ": " + packageName, e);
+            reportLifecycleStage(packageName, "ATTACH_HOOK_FAILED");
         }
+    }
+
+    /**
+     * Diagnostic evidence is separate from bootstrap heartbeat: merely loading the
+     * module or installing a HookHandle must never be shown as target READY.
+     */
+    private void reportLifecycleStage(String packageName, String stage) {
+        Thread worker = new Thread(() -> {
+            try {
+                SharedPreferences prefs = getRemotePreferences(PREFS_GROUP);
+                if (prefs != null) {
+                    prefs.edit()
+                            .putString("modern.runtime.stage." + packageName, stage)
+                            .putLong("modern.runtime.stage_at." + packageName,
+                                    System.currentTimeMillis())
+                            .apply();
+                } else {
+                    log(Log.WARN, TAG, "RemotePreferences unavailable for " + stage
+                            + " in " + packageName);
+                }
+            } catch (RuntimeException e) {
+                log(Log.ERROR, TAG, "Lifecycle evidence write failed for " + packageName
+                        + " at " + stage, e);
+            }
+        }, "wax-api102-stage");
+        worker.setDaemon(true);
+        worker.start();
     }
 
     private void recordFormattedInvocation(String packageName) {
