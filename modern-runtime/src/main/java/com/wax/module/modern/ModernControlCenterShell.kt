@@ -95,11 +95,6 @@ class ModernControlCenterShell(
             text = strings.favoritesOnly
             isChecked = favoritesOnly
             setTextColor(secondary)
-            setOnCheckedChangeListener { button, checked ->
-                if (!button.isPressed) return@setOnCheckedChangeListener
-                favoritesOnly = checked
-                render(search.text.toString())
-            }
         }
         val search = EditText(activity).apply {
             hint = strings.searchHint
@@ -168,6 +163,11 @@ class ModernControlCenterShell(
             }
         }
 
+        favoritesFilter.setOnCheckedChangeListener { button, checked ->
+            if (!button.isPressed) return@setOnCheckedChangeListener
+            favoritesOnly = checked
+            render(search.text.toString())
+        }
         render("")
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
