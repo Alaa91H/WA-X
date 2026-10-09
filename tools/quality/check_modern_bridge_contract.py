@@ -132,11 +132,18 @@ def verify() -> None:
         '"dndmode"',
         '"tasker"',
         '"tasker_auth_token"',
+        '"ghostmode"',
+        '"ghostmode_t"',
+        '"ghostmode_r"',
     ):
         assert relayed_key in relay, f"modern preference relay is missing {relayed_key}"
     # The Tasker switch and its token must be written, not only observed.
     assert 'putBoolean("tasker", source.getBoolean("tasker", false))' in relay
     assert 'putString("tasker_auth_token", source.getString("tasker_auth_token"' in relay
+    # Typing/recording privacy switches must reach the migrated adapter.
+    assert 'putBoolean("ghostmode", source.getBoolean("ghostmode", false))' in relay
+    assert 'putBoolean("ghostmode_t", source.getBoolean("ghostmode_t", false))' in relay
+    assert 'putBoolean("ghostmode_r", source.getBoolean("ghostmode_r", false))' in relay
     assert "PreferenceManager.getDefaultSharedPreferences" in relay
     assert 'enabled = source.getBoolean(ENABLE_KEY, false)' in relay
     assert ".clear()" not in relay

@@ -25,6 +25,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String METHOD_REPORT = "report-target-event-v1";
     public static final String METHOD_WRITE_SETTING = "write-target-setting-v1";
     public static final String METHOD_READ_STATES = "read-target-states-v1";
+    public static final String METHOD_READ_PRIVACY = "read-target-privacy-v1";
     public static final String LOCAL_PREFS = "modern_runtime_target_reports";
     public static final String EVENT_BOOTSTRAP = "BOOTSTRAP";
     public static final String EVENT_RUNTIME_HEARTBEAT = "RUNTIME_HEARTBEAT";
@@ -41,6 +42,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_CONTEXT_MENU_ACTION_PROVIDER = "CONTEXT_MENU_ACTION_PROVIDER";
     public static final String EVENT_CONTACT_ACCESS = "CONTACT_ACCESS";
     public static final String EVENT_JID_ACCESS = "JID_ACCESS";
+    public static final String EVENT_TYPING_PRIVACY = "TYPING_PRIVACY";
     private static final String TAG = "WA-X TargetTelemetry";
 
     /**
@@ -62,6 +64,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "freezelastseen",
         "dndmode",
         "tasker",
+        "ghostmode",
+        "ghostmode_t",
+        "ghostmode_r",
     };
 
     /** The only effective-state keys the embedded Control Center may read. */
@@ -79,6 +84,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.context_menu_action_provider.state",
         "modern.feature.contact_access.state",
         "modern.feature.jid_access.state",
+        "modern.feature.typing_privacy.state",
     };
 
     @Override
@@ -96,6 +102,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         }
         if (METHOD_READ_STATES.equals(method)) {
             return readStates(getContext(), extras);
+        }
+        if (METHOD_READ_PRIVACY.equals(method)) {
+            return readPrivacy(getContext(), extras);
         }
         if (!METHOD_REPORT.equals(method)) {
             return rejected();
@@ -161,6 +170,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.contact_access.state." + target, value);
         } else if (EVENT_JID_ACCESS.equals(event)) {
             editor.putString("modern.feature.jid_access.state." + target, value);
+        } else if (EVENT_TYPING_PRIVACY.equals(event)) {
+            editor.putString("modern.feature.typing_privacy.state." + target, value);
         } else {
             return rejected();
         }
@@ -195,7 +206,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_TASKER.equals(event)
                 || EVENT_CONTEXT_MENU_ACTION_PROVIDER.equals(event)
                 || EVENT_CONTACT_ACCESS.equals(event)
-                || EVENT_JID_ACCESS.equals(event);
+                || EVENT_JID_ACCESS.equals(event)
+                || EVENT_TYPING_PRIVACY.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
@@ -217,6 +229,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
      */
     static boolean isWritableSettingKey(String key) {
         return "modern.feature.custom_time.enabled".equals(key)
+                || "ghostmode".equals(key)
+                || "ghostmode_t".equals(key)
+                || "ghostmode_r".equals(key)
                 || "removeforwardlimit".equals(key)
                 || "freezelastseen".equals(key)
                 || "dndmode".equals(key);
@@ -305,6 +320,37 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 result.putString("state." + key, value);
             }
         }
+        result.putBoolean("accepted", true);
+        return result;
+    }
+
+    /**
+     * Answers one contact's privacy rules.
+     *
+     * Same UID authorization as every other path. The request names a single
+     * number the target is already inspecting, and the answer is exactly two
+     * booleans, so no contact list is transferred and nothing is stored here.
+     */
+    private static Bundle readPrivacy(Context context, Bundle extras) {
+        String target = extras.getString("target", "");
+        if (!isAuthorizedSender(target, Binder.getCallingUid(),
+                context.getPackageManager().getPackagesForUid(Binder.getCallingUid()))) {
+            Log.w(TAG, "Rejected privacy read from unauthorized UID");
+            return rejected();
+        }
+        String number = extras.getString("number", "");
+        if (number.isEmpty() || number.length() > 32) return rejected();
+        for (int i = 0; i < number.length(); i++) {
+            if (!Character.isDigit(number.charAt(i))) return rejected();
+        }
+        SharedPreferences manager = PreferenceManager.getDefaultSharedPreferences(context);
+        if ("0".equals(manager.getString("custom_privacy_type", "0"))) {
+            return rejected();
+        }
+        String rules = manager.getString(number + "_privacy", "");
+        Bundle result = new Bundle();
+        result.putBoolean("hide_typing", rules.contains("\"HideTyping\":true"));
+        result.putBoolean("hide_recording", rules.contains("\"HideRecording\":true"));
         result.putBoolean("accepted", true);
         return result;
     }

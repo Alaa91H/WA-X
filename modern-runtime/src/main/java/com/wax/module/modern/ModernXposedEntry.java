@@ -437,12 +437,15 @@ public final class ModernXposedEntry extends XposedModule {
             // than by a literal member name, then derives phone numbers with
             // the legacy rules. Consumers need it for every privacy rule.
             String jidAccessState = ModernJidAccess.Outcome.ERROR.name();
+            ModernJidAccess resolvedJidAccess = null;
             try {
                 ModernContactAccess.Resolution contactResolution =
                         ModernContactAccess.resolve(target);
                 if (contactResolution.getAccess() != null) {
-                    jidAccessState = ModernJidAccess.resolve(contactResolution.getAccess().getJidClass())
-                            .getOutcome().name();
+                    ModernJidAccess.Resolution jidResolution = ModernJidAccess.resolve(
+                            contactResolution.getAccess().getJidClass());
+                    resolvedJidAccess = jidResolution.getAccess();
+                    jidAccessState = jidResolution.getOutcome().name();
                 } else {
                     jidAccessState = "JID_CLASS_UNRESOLVED";
                 }
@@ -457,6 +460,29 @@ public final class ModernXposedEntry extends XposedModule {
                 ModernTargetTelemetry.send(target, packageName, "JID_ACCESS", jidAccessState);
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "JID access state delivery failed", error);
+            }
+            // TypingPrivacy: the first migrated consumer of the accessor
+            // layers, reading its numbers through ModernJidAccess.
+            String typingPrivacyState = ModernTypingPrivacyFeature.Outcome.DISABLED.name();
+            try {
+                if (resolvedJidAccess != null) {
+                    typingPrivacyState = ModernTypingPrivacyFeature.INSTANCE
+                            .install(target, this, hookRegistry, preferences,
+                                    resolvedJidAccess).name();
+                } else {
+                    typingPrivacyState = "JID_ACCESS_UNAVAILABLE";
+                }
+                Log.i(TAG, "M06_TYPING_PRIVACY_RESULT package=" + packageName
+                        + " state=" + typingPrivacyState);
+            } catch (Throwable privacyFailure) {
+                if (privacyFailure instanceof VirtualMachineError) throw (VirtualMachineError) privacyFailure;
+                typingPrivacyState = "ERROR_" + privacyFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern TypingPrivacy failed on " + packageName, privacyFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "TYPING_PRIVACY", typingPrivacyState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Typing privacy state delivery failed", error);
             }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);

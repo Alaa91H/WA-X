@@ -21,6 +21,8 @@ import java.lang.reflect.Method
  * domains, take the part before the `@`.
  */
 class ModernJidAccess private constructor(
+    /** The JID class this accessor was resolved from, exposed to consumers. */
+    val jidClass: Class<*>,
     private val rawStringMethod: Method,
 ) {
     /** The JID's textual form with any device suffix removed. */
@@ -73,7 +75,7 @@ class ModernJidAccess private constructor(
                 0 -> Resolution(null, Outcome.RAW_STRING_METHOD_MISSING)
                 1 -> {
                     candidates[0].isAccessible = true
-                    Resolution(ModernJidAccess(candidates[0]), Outcome.AVAILABLE)
+                    Resolution(ModernJidAccess(jidClass, candidates[0]), Outcome.AVAILABLE)
                 }
                 else -> Resolution(null, Outcome.RAW_STRING_METHOD_AMBIGUOUS)
             }

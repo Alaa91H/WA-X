@@ -105,7 +105,7 @@ every row; status = honest roll-up.
 | 18 | ShowOnline | W3 | 9 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 19 | DndMode | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 20 | FreezeLastSeen | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 21 | TypingPrivacy | W2 | 3 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 21 | TypingPrivacy | W2 | 3 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle (Privacy) | feat/m06-typing-privacy | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 22 | HideChat | W2 | 3 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 23 | HideSeen | W3 | 9 | 7 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 24 | HideSeenView | W2 | 3 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -187,10 +187,14 @@ batch 12 = BackupRestore, CaptureDevice.
    (`ModernJidAccess`, resolving the raw-string reader by signature instead of
    the legacy literal `"getRawString"`, with `JidRules` pinning the phone-number
    derivation branch by branch) now exist. NEXT: port the first privacy
-   consumer onto them — **TypingPrivacy** is the smallest complete one (its
-   hook target is the `HandleMeComposing/sendComposing` anchor with the
-   3rd-parameter int signature check); ShowOnline and CallPrivacy additionally
-   need presence/VoipManager layers that do not exist yet. Dependency finding, not a
+   consumer onto them — **TypingPrivacy** (branch `feat/m06-typing-privacy`):
+   hook target from the `HandleMeComposing/sendComposing` anchor with the
+   3rd-parameter int guard, recipient located by JID type rather than argument
+   position, per-contact rules fetched one contact at a time through the new
+   `read-target-privacy-v1` channel so the address book never moves into the
+   injected process, and the three ghost-mode switches relayed. ShowOnline and
+   CallPrivacy additionally need presence/VoipManager layers that do not exist
+   yet. Dependency finding, not a
    guess: after the five W1 buses, every remaining consumer feature needs one
    of two things that the modern module does not yet have:
    - the `FMessageWpp` / `WaContactWpp` accessor chain (JID, phone number,
