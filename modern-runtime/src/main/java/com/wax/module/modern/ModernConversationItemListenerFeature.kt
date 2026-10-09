@@ -242,29 +242,46 @@ object ModernConversationItemListenerFeature {
         }
     }
 
-    private inner class LifecycleTracker : Application.ActivityLifecycleCallbacks {
-        override fun onActivityResumed(activity: Activity) {
-            currentActivity = WeakReference(activity)
+    /** Releases the per-adapter row hook and bindings when the chat dies. */
+    private fun releaseConversation(activity: Activity) {
+        if (adapterActivity?.get() !== activity) return
+        try {
+            innerUnhook?.unhook()
+        } catch (unhookFailure: Throwable) {
+            Log.w(TAG, "Row hook would not release on destroy", unhookFailure)
+        } finally {
+            innerUnhook = null
         }
-        override fun onActivityDestroyed(activity: Activity) {
-            if (adapterActivity?.get() === activity) {
-                try {
-                    innerUnhook?.unhook()
-                } catch (unhookFailure: Throwable) {
-                    Log.w(TAG, "Row hook would not release on destroy", unhookFailure)
-                } finally {
-                    innerUnhook = null
-                }
-                adapter = null
-                adapterActivity = null
-                synchronized(boundItems) { boundItems.clear() }
-            }
-        }
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-        override fun onActivityStarted(activity: Activity) {}
-        override fun onActivityPaused(activity: Activity) {}
-        override fun onActivityStopped(activity: Activity) {}
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+        adapter = null
+        adapterActivity = null
+        synchronized(boundItems) { boundItems.clear() }
     }
 
+    private fun trackActivity(activity: Activity) {
+        currentActivity = WeakReference(activity)
+    }
+
+    /**
+     * Nested (not inner) tracker: it delegates to the bus instead of holding
+     * a reference to it, so no strong Activity reference is ever retained.
+     */
+    private class LifecycleTracker : Application.ActivityLifecycleCallbacks {
+        override fun onActivityResumed(activity: Activity) {
+            ModernConversationItemListenerFeature.trackActivity(activity)
+        }
+
+        override fun onActivityDestroyed(activity: Activity) {
+            ModernConversationItemListenerFeature.releaseConversation(activity)
+        }
+
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+
+        override fun onActivityStarted(activity: Activity) {}
+
+        override fun onActivityPaused(activity: Activity) {}
+
+        override fun onActivityStopped(activity: Activity) {}
+
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+    }
 }
