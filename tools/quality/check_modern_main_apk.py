@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Gate a same-package modern WA X APK. Never silently co-package legacy/modern loaders."""
 import argparse
+import re
 import importlib.util
 import sys
 import zipfile
@@ -19,13 +20,21 @@ def verify_sources():
         'implementation(project(":modern-runtime"))',
         'compileOnly(libs.libxposed.modern.api)',
         'MODERN_XPOSED',
-        'if (!modernXposedPackage) excludes += "META-INF/**"',
         "prepareModernXposedSources",
         "outputAssets.copy",  # purposely checked below via alternative
     )
     for token in required[:-1]:
         if token not in build:
             raise ValueError(f"Modern production build contract missing: {token}")
+    # Kotlin formatters legitimately expand an if/else into multiple lines. Verify
+    # its structure rather than tying a security contract to exact whitespace.
+    if not re.search(
+        r'if\s*\(!modernXposedPackage\)\s*\{\s*excludes\s*\+=\s*"META-INF/\*\*"',
+        build,
+    ):
+        raise ValueError("Default Legacy package must exclude the entire META-INF tree")
+    if 'excludes += "META-INF/LICENSE*"' not in build or 'excludes += "META-INF/NOTICE*"' not in build:
+        raise ValueError("Modern package must explicitly discard duplicate dependency notices")
     if 'sourceAssets.copyRecursively(outputAssets' not in build:
         raise ValueError("Modern APK must copy existing Manager assets without xposed_init")
     if 'file("$outputAssets/xposed_init").delete()' not in build:
