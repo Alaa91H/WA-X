@@ -128,6 +128,15 @@ object ModernControlCenterCatalog {
             restartHint = false,
         ),
         Wired(
+            id = "contact_access",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.contact_access.state",
+            category = ControlCategory.ADVANCED,
+            label = "Contact Access Layer",
+            description = "Required infrastructure for contact-based features",
+            restartHint = false,
+        ),
+        Wired(
             id = "context_menu_action_provider",
             preferenceKey = "",
             evidenceKey = "modern.feature.context_menu_action_provider.state",
