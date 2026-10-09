@@ -12,12 +12,13 @@
 ## Headline counts (2026-10-09, main @ 5251fe12 + Tasker branch)
 
 - Total registered features: 64
-- Source-wired to API 102 runtime (device UNVERIFIED): 9
+- Source-wired to API 102 runtime (device UNVERIFIED): 10
   (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome, ContactItemListener,
-  ConversationItemListener, MenuStatusProvider, ActivityController)
-- Plus 1 in flight: Tasker on branch `feat/m06-tasker`, forward direction only
+  ConversationItemListener, MenuStatusProvider, ActivityController, Tasker)
+- Tasker is forward-direction only; its reverse send direction is reported
+  honestly as Partial until the send pipeline migrates.
 - Modern adapter present but NOT wired into `ModernXposedEntry`: 1 (MinorFixes)
-- Legacy-only: 54 (53 once the in-flight branch merges)
+- Legacy-only: 53
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
 - In-WhatsApp settings surface: BUILT as the embedded Control Center (#433,
@@ -118,7 +119,7 @@ every row; status = honest roll-up.
 | 36 | CallType | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 37 | MediaPreview | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 38 | FilterGroups | W3 | 10 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 39 | Tasker | W1 | 1 | 1 | wired, forward direction only | in-WhatsApp toggle (partial status) | feat/m06-tasker | in progress | PENDING_USER_DEVICE_TEST | migrated-partial (send direction pending) |
+| 39 | Tasker | W1 | 1 | 1 | wired, forward direction only | in-WhatsApp toggle (partial status) | #440 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-partial (send direction pending) |
 | 40 | DeleteStatus | W2 | 5 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 41 | DownloadViewOnce | W2 | 5 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 42 | Channels | W3 | 10 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -171,11 +172,12 @@ batch 12 = BackupRestore, CaptureDevice.
    green, merge, then slices 2-3 (category navigation polish, favourites,
    RTL/Arabic localization, themes, accessibility) and the Control Center
    progress comments on #433.
-1. IN FLIGHT (Phase 2, Batch 1, 5/5): Tasker modern port (branch
-   `feat/m06-tasker`) — receipt-method hook from repo-derived anchors,
-   authenticated Tasker broadcast relay in both directions, sender-side
-   receiver. After it merges, Batch 1 is complete at 5 verified features and
-   the release cadence applies (version bump + test APK).
+1. DONE — Batch 1 closed at 5 verified features (ContactItemListener,
+   ConversationItemListener, MenuStatusProvider, ActivityController, Tasker)
+   and released as 1.2.0-beta.10 (PR #441). NEXT: Batch 2 —
+   ContextMenuActionProvider, CustomToolbar, CustomView, CallPrivacy,
+   CustomThemeV2, one at a time, each with hook path + preference path + UI
+   wiring + tests + CI verified before the next.
 2. THEN: continue Batch 2 and the rest of the wave plan in the table above,
    one feature at a time, each with hook path + preference path + UI wiring +
    tests + CI verified before the next.

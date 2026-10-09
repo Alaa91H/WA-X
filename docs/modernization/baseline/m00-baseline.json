@@ -335,8 +335,8 @@
       "org/**"
     ],
     "target_sdk": 34,
-    "version_code": "119",
-    "version_name": "1.2.0-beta.9"
+    "version_code": "120",
+    "version_name": "1.2.0-beta.10"
   },
   "program_evidence": {
     "defect_registry": "docs/modernization/known-runtime-defects.json",
@@ -348,7 +348,7 @@
   "schema": "wax.m00.baseline/1",
   "source_counts": {
     "android_tests": 1,
-    "cpp": 425,
+    "cpp": 1,
     "java": 5,
     "kotlin": 408,
     "unit_tests": 80
