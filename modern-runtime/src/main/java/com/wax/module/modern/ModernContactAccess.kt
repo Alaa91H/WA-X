@@ -77,18 +77,18 @@ class ModernContactAccess private constructor(
             val classLoader = context.classLoader
             return try {
                 DexKitBridge.create(context.applicationInfo.sourceDir).use { dex ->
-                    val contactClass = dex.findClass {
+                    val contactData = dex.findClass {
                         matcher { addUsingString(ANCHOR_CONTACT, StringMatchType.Contains) }
-                    }.firstOrNull()?.getInstance(classLoader)
-                        ?: return Pair(null, Outcome.CONTACT_CLASS_MISSING)
-                    val dataClass = dex.findClass {
+                    }.firstOrNull() ?: return Pair(null, Outcome.CONTACT_CLASS_MISSING)
+                    val contactClass = contactData.getInstance(classLoader)
+                    val dataData = dex.findClass {
                         matcher { className(CONTACT_DATA_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull()?.getInstance(classLoader)
-                        ?: return Pair(null, Outcome.CONTACT_DATA_CLASS_MISSING)
-                    val jidClass = dex.findClass {
+                    }.firstOrNull() ?: return Pair(null, Outcome.CONTACT_DATA_CLASS_MISSING)
+                    val dataClass = dataData.getInstance(classLoader)
+                    val jidData = dex.findClass {
                         matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull()?.getInstance(classLoader)
-                        ?: return Pair(null, Outcome.JID_CLASS_MISSING)
+                    }.firstOrNull() ?: return Pair(null, Outcome.JID_CLASS_MISSING)
+                    val jidClass = jidData.getInstance(classLoader)
                     val phoneJidClass = dex.findMethod {
                         matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
                     }.firstOrNull()?.returnType
