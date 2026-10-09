@@ -42,6 +42,7 @@ import com.wax.module.config.ConfigBackupSchema
 import com.wax.module.config.ConfigValue
 import com.wax.module.databinding.DialogDiagnosticsLogBinding
 import com.wax.module.databinding.FragmentHomeBinding
+import com.wax.module.modern.ModernManagerRuntimeStatus
 import com.wax.module.ui.fragments.base.BaseFragment
 import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RootDiagnostics
@@ -108,6 +109,11 @@ class HomeFragment : BaseFragment() {
 
     override fun onStart() {
         super.onStart()
+        if (BuildConfig.MODERN_XPOSED) {
+            renderModernActivation()
+            scheduleModernStatusRetries()
+            return
+        }
         if (!statusReceiverRegistered) {
             val intentFilter = IntentFilter("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP")
             ContextCompat.registerReceiver(
@@ -122,6 +128,17 @@ class HomeFragment : BaseFragment() {
         // fast replies on cold starts because the Fragment had not reached onStart yet.
         checkWpp(requireActivity())
         scheduleActivationProbeRetries()
+    }
+
+    private fun scheduleModernStatusRetries() {
+        activationProbeRetryDelaysMillis.forEach { delayMillis ->
+            val retry =
+                Runnable {
+                    if (isAdded && currentBinding != null) renderModernActivation()
+                }
+            pendingActivationProbes.add(retry)
+            activationProbeHandler.postDelayed(retry, delayMillis)
+        }
     }
 
     private fun scheduleActivationProbeRetries() {
@@ -263,6 +280,10 @@ class HomeFragment : BaseFragment() {
      * against the other.
      */
     private fun renderActivation() {
+        if (BuildConfig.MODERN_XPOSED) {
+            renderModernActivation()
+            return
+        }
         val context = context ?: return
         val legacy = ModuleApplication.instance.isLegacySelfHookSignal()
 
@@ -278,6 +299,85 @@ class HomeFragment : BaseFragment() {
                 .map { statusOf(context, it, legacy) },
             legacy,
         )
+    }
+
+    /**
+     * API 102 uses framework remote preferences, not the old Xposed self-hook broadcast.
+     * Read Binder-backed values off the UI thread and never show READY just for a Service bind.
+     */
+    private fun renderModernActivation() {
+        if (!isAdded || currentBinding == null) return
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val snapshot = ModernManagerRuntimeStatus.inspect()
+            withContext(Dispatchers.Main) {
+                if (!isAdded || currentBinding == null) return@withContext
+                binding.statusTitle.text =
+                    if (snapshot.connected) {
+                        getString(R.string.modern_framework_connected, snapshot.frameworkApi ?: 102)
+                    } else {
+                        getString(R.string.modern_framework_waiting)
+                    }
+                binding.statusSummary.text =
+                    buildString {
+                        append(getString(R.string.modern_framework_status, BuildConfig.VERSION_NAME))
+                        append('\n')
+                        append(snapshot.frameworkName ?: "Vector/LSPosed")
+                        snapshot.connectionProblem?.let { append(": ").append(it) }
+                        append('\n')
+                        append(getString(R.string.modern_framework_features_pending))
+                    }
+                binding.statusIcon.setImageResource(
+                    if (snapshot.connected) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+                )
+                binding.status.getChildAt(0).setBackgroundResource(
+                    if (snapshot.connected) R.drawable.gradient_success else R.drawable.gradient_warning,
+                )
+
+                snapshot.targets.forEach { target ->
+                    val business = target.packageName == FeatureLoader.PACKAGE_BUSINESS
+                    val title = if (business) binding.statusTitle3 else binding.statusTitle2
+                    val summary = if (business) binding.statusSummary3 else binding.statusSummary1
+                    val icon = if (business) binding.statusIcon3 else binding.statusIcon2
+                    val card = if (business) binding.status3 else binding.status2
+                    val restart = if (business) binding.rebootBtn2 else binding.rebootBtn
+                    val label =
+                        if (business) getString(R.string.whatsapp_business_package)
+                        else getString(R.string.whatsapp_app_label)
+                    val installed = isInstalled(target.packageName)
+                    title.text = getString(R.string.modern_target_title, label)
+                    summary.text =
+                        if (!installed) {
+                            getString(R.string.app_not_installed)
+                        } else {
+                            val evidence =
+                                when (target.evidence) {
+                                    ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP ->
+                                        getString(R.string.modern_target_loaded)
+                                    ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP ->
+                                        getString(R.string.modern_target_stale)
+                                    ModernManagerRuntimeStatus.Evidence.BOOT_MISMATCH,
+                                    ModernManagerRuntimeStatus.Evidence.CLOCK_MISMATCH ->
+                                        getString(R.string.modern_target_boot_mismatch)
+                                    ModernManagerRuntimeStatus.Evidence.NOT_REPORTED ->
+                                        getString(R.string.modern_target_no_report)
+                                }
+                            evidence + "\n" +
+                                getString(
+                                    R.string.modern_target_feature_status,
+                                    target.customTimeInstallation ?: "NOT_REPORTED",
+                                )
+                        }
+                    val reported = target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP
+                    icon.setImageResource(
+                        if (reported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+                    )
+                    card.getChildAt(0).setBackgroundResource(
+                        if (reported) R.drawable.gradient_success else R.drawable.gradient_warning,
+                    )
+                    restart.visibility = if (reported) View.VISIBLE else View.GONE
+                }
+            }
+        }
     }
 
     private fun statusOf(
