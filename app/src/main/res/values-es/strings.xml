@@ -578,7 +578,7 @@
     <string name="modern_framework_features_pending">La conexión con el framework no demuestra que las funciones de WhatsApp funcionen. La migración sigue en pruebas.</string>
     <string name="modern_target_title">%1$s — API 102</string>
     <string name="modern_target_loaded">Se recibió un informe reciente del Runtime. No demuestra que las funciones operen.</string>
-    <string name="modern_target_stale">El informe anterior caducó. Abre WhatsApp y vuelve a comprobar.</string>
+    <string name="modern_target_stale">Se confirmó un inicio anterior, pero no llegó ninguna señal autenticada reciente. Es posible que WhatsApp esté suspendido o cerrado.</string>
     <string name="modern_target_boot_mismatch">El informe pertenece a otro arranque o tiene una hora no válida.</string>
     <string name="modern_target_no_report">No se recibió informe de API 102. Abre la aplicación y vuelve a comprobar.</string>
     <string name="modern_target_feature_status">Función experimental CustomTime: %1$s</string>
@@ -590,4 +590,8 @@
     <string name="modern_pilot_tap">Toca aquí para configurar CustomTime experimental.</string>
     <string name="modern_target_share_limit_status">Límite de reenvío: %1$s</string>
     <string name="modern_target_presence_status">Congelar última conexión: %1$s | No molestar: %2$s</string>
+    <string name="modern_target_live_heartbeat">El proceso de WhatsApp responde: se recibió una señal reciente y autenticada. Esto no demuestra que todas las funciones trabajen.</string>
+    <string name="modern_target_previous_attach">El inicio del módulo se confirmó antes, pero los detalles del arranque ya no son recientes.</string>
+    <string name="modern_target_no_lifecycle_signal">Todavía no se ha recibido un informe de inicio de WhatsApp.</string>
+    <string name="modern_target_menu_status">Último informe del menú WA X: %1$s</string>
 </resources>

@@ -609,8 +609,12 @@
     <string name="modern_framework_status">WA X %1$s — modern Runtime diagnostics</string>
     <string name="modern_framework_features_pending">Framework connection does not prove that WhatsApp features work. Feature migration is still experimental.</string>
     <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_live_heartbeat">WhatsApp runtime is responding: a recent authenticated process heartbeat was received. This does not prove all features work.</string>
+    <string name="modern_target_previous_attach">Module startup was previously confirmed; detailed lifecycle milestones are no longer recent.</string>
+    <string name="modern_target_no_lifecycle_signal">No target lifecycle report has been received yet.</string>
+    <string name="modern_target_menu_status">Latest WA X menu report: %1$s</string>
     <string name="modern_target_loaded">A fresh runtime startup report was received from this target. This does not prove feature behavior.</string>
-    <string name="modern_target_stale">The previous runtime report has expired. Open WhatsApp and refresh the status.</string>
+    <string name="modern_target_stale">A previous target startup was recorded, but no recent authenticated heartbeat was received. Open WhatsApp and check again. The process may be suspended or closed.</string>
     <string name="modern_target_boot_mismatch">The runtime report belongs to a different boot or has an invalid clock.</string>
     <string name="modern_target_no_report">No API 102 runtime report has been received from this target. Open it and check again.</string>
     <string name="modern_target_feature_status">CustomTime pilot: %1$s</string>

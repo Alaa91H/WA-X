@@ -24,6 +24,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String METHOD_REPORT = "report-target-event-v1";
     public static final String LOCAL_PREFS = "modern_runtime_target_reports";
     public static final String EVENT_BOOTSTRAP = "BOOTSTRAP";
+    public static final String EVENT_RUNTIME_HEARTBEAT = "RUNTIME_HEARTBEAT";
     public static final String EVENT_CUSTOM_TIME = "CUSTOM_TIME";
     public static final String EVENT_SHARE_LIMIT = "SHARE_LIMIT";
     public static final String EVENT_FREEZE_LAST_SEEN = "FREEZE_LAST_SEEN";
@@ -50,7 +51,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             Log.w(TAG, "Rejected telemetry from unauthorized UID");
             return rejected();
         }
-        if (!isSupportedEvent(event) || value.length() > 100) {
+        if (!isSupportedEvent(event) || value == null || value.length() > 100) {
             return rejected();
         }
         long now = System.currentTimeMillis();
@@ -60,6 +61,11 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putLong("modern.bootstrap.last." + target, now)
                     .putLong("modern.bootstrap.boot." + target, now - SystemClock.elapsedRealtime())
                     .putLong("modern.runtime.milestone.ATTACH_OBSERVED." + target, now);
+        } else if (EVENT_RUNTIME_HEARTBEAT.equals(event)) {
+            if (!isSupportedRuntimeHeartbeatValue(value)) return rejected();
+            editor.putLong("modern.heartbeat.elapsed." + target, SystemClock.elapsedRealtime())
+                    .putLong("modern.heartbeat.boot." + target,
+                            now - SystemClock.elapsedRealtime());
         } else if (EVENT_CUSTOM_TIME.equals(event)) {
             if ("INVOKED".equals(value)) {
                 SharedPreferences current =
@@ -96,8 +102,13 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         return Arrays.asList(uidPackages).contains(target);
     }
 
+    static boolean isSupportedRuntimeHeartbeatValue(String value) {
+        return "ALIVE".equals(value);
+    }
+
     static boolean isSupportedEvent(String event) {
         return EVENT_BOOTSTRAP.equals(event)
+                || EVENT_RUNTIME_HEARTBEAT.equals(event)
                 || EVENT_CUSTOM_TIME.equals(event)
                 || EVENT_SHARE_LIMIT.equals(event)
                 || EVENT_FREEZE_LAST_SEEN.equals(event)

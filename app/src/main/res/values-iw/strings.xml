@@ -580,7 +580,7 @@
     <string name="modern_framework_features_pending">החיבור למסגרת אינו מוכיח שתכונות WhatsApp פועלות. המעבר עדיין ניסיוני.</string>
     <string name="modern_target_title">%1$s — API 102</string>
     <string name="modern_target_loaded">התקבל דוח הפעלה עדכני. אין בכך הוכחה שהתכונות פועלות.</string>
-    <string name="modern_target_stale">תוקף הדוח הקודם פג. יש לפתוח את WhatsApp ולבדוק שוב.</string>
+    <string name="modern_target_stale">אתחול המודול אומת בעבר, אך לא התקבל אות חיים מאומת לאחרונה. ייתכן ש-WhatsApp הושהה או נסגר.</string>
     <string name="modern_target_boot_mismatch">הדוח שייך לאתחול אחר או מכיל זמן לא תקין.</string>
     <string name="modern_target_no_report">לא התקבל דוח API 102. יש לפתוח את היישום ולבדוק שוב.</string>
     <string name="modern_target_feature_status">תכונת CustomTime ניסיונית: %1$s</string>
@@ -592,4 +592,8 @@
     <string name="modern_pilot_tap">יש להקיש כדי להגדיר CustomTime ניסיוני.</string>
     <string name="modern_target_share_limit_status">מגבלת העברה: %1$s</string>
     <string name="modern_target_presence_status">הקפאת נראה לאחרונה: %1$s | נא לא להפריע: %2$s</string>
+    <string name="modern_target_live_heartbeat">התהליך של WhatsApp מגיב: התקבל אות חיים עדכני ומאומת. אין בכך הוכחה שכל התכונות פועלות.</string>
+    <string name="modern_target_previous_attach">אתחול המודול אומת בעבר, אך שלבי האתחול המפורטים כבר אינם עדכניים.</string>
+    <string name="modern_target_no_lifecycle_signal">עדיין לא התקבל דיווח אתחול מ-WhatsApp.</string>
+    <string name="modern_target_menu_status">דיווח אחרון על תפריט WA X: %1$s</string>
 </resources>

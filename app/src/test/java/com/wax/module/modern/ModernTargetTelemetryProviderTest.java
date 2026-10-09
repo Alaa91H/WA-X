@@ -29,6 +29,13 @@ public final class ModernTargetTelemetryProviderTest {
         assertFalse(ModernTargetTelemetryProvider.isSupportedMenuHomeState(null));
     }
 
+    @Test public void runtimeHeartbeatAcceptsOnlyFixedAliveEvidence() {
+        assertTrue(ModernTargetTelemetryProvider.isSupportedRuntimeHeartbeatValue("ALIVE"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedRuntimeHeartbeatValue("INSTALLED"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedRuntimeHeartbeatValue("BOOTSTRAP"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedRuntimeHeartbeatValue(null));
+    }
+
     @Test public void refusesUnrelatedPackagesAndArbitraryEventNames() {
         assertFalse(ModernTargetTelemetryProvider.isAuthorizedSender(
                 "com.whatsapp:push", 10482, new String[] {"com.whatsapp"}));
@@ -36,6 +43,8 @@ public final class ModernTargetTelemetryProviderTest {
                 "com.other.app", 10482, new String[] {"com.other.app"}));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_BOOTSTRAP));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_RUNTIME_HEARTBEAT));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_CUSTOM_TIME));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(

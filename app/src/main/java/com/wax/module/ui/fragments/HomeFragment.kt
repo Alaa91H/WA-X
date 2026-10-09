@@ -67,6 +67,17 @@ class HomeFragment : BaseFragment() {
     private val activationProbeHandler = Handler(Looper.getMainLooper())
     private val pendingActivationProbes = mutableListOf<Runnable>()
 
+    // Update the visible Manager card as authenticated heartbeat evidence arrives.
+    // Cleared onStop: no background polling or view references after navigation.
+    private val modernStatusRefresh =
+        object : Runnable {
+            override fun run() {
+                if (!BuildConfig.MODERN_XPOSED || !isAdded || currentBinding == null) return
+                renderModernActivation()
+                activationProbeHandler.postDelayed(this, 30_000L)
+            }
+        }
+
     // WhatsApp's initial DexKit / feature startup can outlast the Manager opening.
     // Bound retries to the visible Home screen; do not poll in the background.
     private val activationProbeRetryDelaysMillis = longArrayOf(4_000L, 12_000L, 24_000L)
@@ -113,6 +124,8 @@ class HomeFragment : BaseFragment() {
         if (BuildConfig.MODERN_XPOSED) {
             renderModernActivation()
             scheduleModernStatusRetries()
+            activationProbeHandler.removeCallbacks(modernStatusRefresh)
+            activationProbeHandler.postDelayed(modernStatusRefresh, 30_000L)
             return
         }
         if (!statusReceiverRegistered) {
@@ -156,6 +169,7 @@ class HomeFragment : BaseFragment() {
     }
 
     override fun onStop() {
+        activationProbeHandler.removeCallbacks(modernStatusRefresh)
         pendingActivationProbes.forEach(activationProbeHandler::removeCallbacks)
         pendingActivationProbes.clear()
         if (statusReceiverRegistered) {
@@ -366,6 +380,10 @@ class HomeFragment : BaseFragment() {
                                         getString(R.string.modern_target_loaded)
                                     }
 
+                                    ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT -> {
+                                        getString(R.string.modern_target_live_heartbeat)
+                                    }
+
                                     ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP -> {
                                         getString(R.string.modern_target_stale)
                                     }
@@ -384,10 +402,18 @@ class HomeFragment : BaseFragment() {
                                 (
                                     if (target.bootstrapMilestones.isNotEmpty()) {
                                         target.bootstrapMilestones.joinToString(" → ") + "\n"
+                                    } else if (target.evidence == ModernManagerRuntimeStatus.Evidence.NOT_REPORTED) {
+                                        getString(R.string.modern_target_no_lifecycle_signal) + "\n"
                                     } else {
-                                        "NO_TARGET_LIFECYCLE_SIGNAL\n"
+                                        // Old lifecycle markers expire, but historical
+                                        // authenticated bootstrap evidence is still present.
+                                        getString(R.string.modern_target_previous_attach) + "\n"
                                     }
                                 ) +
+                                getString(
+                                    R.string.modern_target_menu_status,
+                                    target.menuInstallation ?: "NOT_REPORTED",
+                                ) + "\n" +
                                 getString(
                                     R.string.modern_target_feature_status,
                                     target.customTimeInstallation ?: "NOT_REPORTED",
@@ -402,7 +428,9 @@ class HomeFragment : BaseFragment() {
                                     target.dndInstallation ?: "NOT_REPORTED",
                                 )
                         }
-                    val reported = target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP
+                    val reported =
+                        target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP ||
+                            target.evidence == ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
                     icon.setImageResource(
                         if (reported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
                     )

@@ -11,6 +11,9 @@ import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -27,6 +30,15 @@ public final class ModernXposedEntry extends XposedModule {
     private final Set<String> started = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final ModernHookRegistry hookRegistry = new ModernHookRegistry();
     private final AtomicLong formattedCalls = new AtomicLong();
+    private final AtomicBoolean heartbeatStarted = new AtomicBoolean();
+    // A 45-second non-wakelock worker runs only in the injected target process.
+    // Background process suspension simply causes telemetry to become stale.
+    private final ScheduledExecutorService heartbeatWorker =
+            Executors.newSingleThreadScheduledExecutor(task -> {
+                Thread worker = new Thread(task, "wax-api102-presence-heartbeat");
+                worker.setDaemon(true);
+                return worker;
+            });
     private final ModernInvocationThrottle invocationThrottle = new ModernInvocationThrottle(30_000L);
     private final ExecutorService evidenceWorker = Executors.newSingleThreadExecutor(task -> {
         Thread worker = new Thread(task, "wax-api102-feature-evidence");
@@ -155,6 +167,26 @@ public final class ModernXposedEntry extends XposedModule {
         }
     }
 
+    private void startRuntimeHeartbeat(String packageName, Context target) {
+        if (!heartbeatStarted.compareAndSet(false, true)) return;
+        try {
+            heartbeatWorker.scheduleWithFixedDelay(() -> {
+                try {
+                    if (!ModernTargetTelemetry.send(
+                            target, packageName, "RUNTIME_HEARTBEAT", "ALIVE")) {
+                        Log.w(TAG, "M06_RUNTIME_HEARTBEAT_REJECTED package=" + packageName);
+                    }
+                } catch (RuntimeException error) {
+                    Log.w(TAG, "M06_RUNTIME_HEARTBEAT_UNAVAILABLE package=" + packageName, error);
+                }
+            }, 45L, 45L, TimeUnit.SECONDS);
+            Log.i(TAG, "M06_RUNTIME_HEARTBEAT_SCHEDULED package=" + packageName);
+        } catch (RuntimeException scheduleFailure) {
+            heartbeatStarted.set(false);
+            Log.e(TAG, "M06_RUNTIME_HEARTBEAT_SCHEDULE_FAILED", scheduleFailure);
+        }
+    }
+
     private void reportBootstrap(String packageName, Context target) {
         try {
             // XposedModule.getRemotePreferences() is READ-ONLY in hooked apps.
@@ -166,6 +198,7 @@ public final class ModernXposedEntry extends XposedModule {
                         + " accepted=" + heartbeat);
                 log(heartbeat ? Log.INFO : Log.ERROR, TAG,
                         "Target-to-Manager bootstrap delivery: " + heartbeat + " for " + packageName);
+                if (heartbeat) startRuntimeHeartbeat(packageName, target);
             } catch (RuntimeException telemetryFailure) {
                 Log.e(TAG, "M06_LIFECYCLE_PROVIDER_ERROR package=" + packageName,
                         telemetryFailure);
