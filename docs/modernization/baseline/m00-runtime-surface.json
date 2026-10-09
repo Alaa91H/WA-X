@@ -521,7 +521,7 @@
         ]
       },
       "by_pattern": {
-        "PreferenceManager": 40,
+        "PreferenceManager": 41,
         "getSharedPreferences()": 7
       },
       "files": [
@@ -543,7 +543,7 @@
         "app/src/main/java/com/wax/module/ui/fragments/base/BasePreferenceFragment.kt",
         "app/src/main/java/com/wax/module/ui/targets/TargetSettingsViewModel.kt"
       ],
-      "occurrences": 47,
+      "occurrences": 48,
       "owner": "#333 A09",
       "target": "Not a target of this program. Listed so the asymmetry stays visible.",
       "title": "Preference reads inside the Manager process",

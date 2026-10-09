@@ -28,6 +28,9 @@ object ControlCenterStrings {
         val favoriteToggleOff: String,
         val favoriteToggleOn: String,
         val markFavorite: String,
+        val disabled: String,
+        val hideAfterClicks: String,
+        val hideWhileHolding: String,
     )
 
     private val english = Table(
@@ -41,6 +44,9 @@ object ControlCenterStrings {
         favoriteToggleOff = "Add to favourites",
         favoriteToggleOn = "Remove from favourites",
         markFavorite = "Mark as favourite",
+        disabled = "Disabled",
+        hideAfterClicks = "Hide after click count",
+        hideWhileHolding = "Hide while holding the title",
     )
 
     private val arabic = Table(
@@ -54,6 +60,9 @@ object ControlCenterStrings {
         favoriteToggleOff = "إضافة إلى المفضلة",
         favoriteToggleOn = "إزالة من المفضلة",
         markFavorite = "تعيين كمفضلة",
+        disabled = "معطّل",
+        hideAfterClicks = "إخفاء بعد عدد الضغطات",
+        hideWhileHolding = "إخفاء أثناء الضغط على العنوان",
     )
 
     /** Unknown languages fall back to English instead of rendering blanks. */

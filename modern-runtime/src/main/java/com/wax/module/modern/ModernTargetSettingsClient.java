@@ -41,6 +41,24 @@ public final class ModernTargetSettingsClient {
         }
     }
 
+    /** Persists a string-valued mode (currently the archived-chat mode). */
+    public static boolean writeMode(Context context, String packageName, String mode) {
+        if (context == null || packageName == null || mode == null) return false;
+        if (!ModernTargetPolicy.isTargetPackageForProcess(context.packageName, packageName)) {
+            return false;
+        }
+        Bundle extras = new Bundle();
+        extras.putString("target", packageName);
+        extras.putString("key", ModernHideChatFeature.PREF_ARCHIVE_MODE);
+        extras.putString("mode", mode);
+        try {
+            Bundle response = context.getContentResolver().call(PROVIDER, METHOD, null, extras);
+            return response != null && response.getBoolean("accepted", false);
+        } catch (RuntimeException deliveryFailure) {
+            return false;
+        }
+    }
+
     public static boolean write(Context context, String packageName, String key, boolean enabled) {
         if (context == null || packageName == null || key == null) return false;
         if (!ModernTargetPolicy.isTargetPackageForProcess(context.getPackageName(), packageName)) {

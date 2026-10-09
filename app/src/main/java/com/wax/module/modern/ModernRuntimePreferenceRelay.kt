@@ -31,6 +31,7 @@ object ModernRuntimePreferenceRelay {
             "ghostmode",
             "ghostmode_t",
             "ghostmode_r",
+            "typearchive",
         )
     private val worker =
         Executors.newSingleThreadExecutor { task ->
@@ -85,6 +86,8 @@ object ModernRuntimePreferenceRelay {
                     putBoolean("ghostmode", source.getBoolean("ghostmode", false))
                     putBoolean("ghostmode_t", source.getBoolean("ghostmode_t", false))
                     putBoolean("ghostmode_r", source.getBoolean("ghostmode_r", false))
+                    // Archived-chat hiding: the user's mode, not a boolean.
+                    putString("typearchive", source.getString("typearchive", "0") ?: "0")
                 }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)

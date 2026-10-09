@@ -12,14 +12,13 @@
 ## Headline counts (2026-10-09, main @ 5251fe12 + Tasker branch)
 
 - Total registered features: 64
-- Source-wired to API 102 runtime (device UNVERIFIED): 11
-  (CustomTime, ShareLimit, DndMode, FreezeLastSeen, MenuHome, ContactItemListener,
-  ConversationItemListener, MenuStatusProvider, ActivityController, Tasker,
-  ContextMenuActionProvider)
+- Source-wired to API 102 runtime (device UNVERIFIED): 11 + 2 in flight
+  (…, ContextMenuActionProvider; TypingPrivacy and HideChat on their branches,
+  the first two consumers actually running on the accessor layers)
 - Tasker is forward-direction only; its reverse send direction is reported
   honestly as Partial until the send pipeline migrates.
 - Modern adapter present but NOT wired into `ModernXposedEntry`: 1 (MinorFixes)
-- Legacy-only: 52
+- Legacy-only: 52 (50 once the in-flight branch merges)
 - Device-behavior verified: 0 — recorded as `PENDING_USER_DEVICE_TEST`,
   the correct state, not a gap and never a merge blocker.
 - In-WhatsApp settings surface: BUILT as the embedded Control Center (#433,
@@ -106,7 +105,7 @@ every row; status = honest roll-up.
 | 19 | DndMode | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 20 | FreezeLastSeen | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 21 | TypingPrivacy | W2 | 3 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle (Privacy) | feat/m06-typing-privacy | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 22 | HideChat | W2 | 3 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 22 | HideChat | W2 | 3 | 1 | wired (device UNVERIFIED) | in-WhatsApp 3-state control (Privacy) | feat/m06-hide-chat | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 23 | HideSeen | W3 | 9 | 7 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 24 | HideSeenView | W2 | 3 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 25 | TagMessage | W2 | 3 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -187,7 +186,10 @@ batch 12 = BackupRestore, CaptureDevice.
    (`ModernJidAccess`, resolving the raw-string reader by signature instead of
    the legacy literal `"getRawString"`, with `JidRules` pinning the phone-number
    derivation branch by branch) now exist. NEXT: port the first privacy
-   consumer onto them — **TypingPrivacy** (branch `feat/m06-typing-privacy`):
+   consumers now run on it: **TypingPrivacy** (#447) and **HideChat** (branch
+   `feat/m06-hide-chat`, a self-contained feature needing no accessor layer, and
+   a three-state control because the Manager setting is a list preference, not a
+   boolean). NEXT in the queue:
    hook target from the `HandleMeComposing/sendComposing` anchor with the
    3rd-parameter int guard, recipient located by JID type rather than argument
    position, per-contact rules fetched one contact at a time through the new
