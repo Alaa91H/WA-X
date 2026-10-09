@@ -2,7 +2,6 @@
 <resources>
     <string name="force_restore_backup">Forza Ripristino Backup</string>
     <string name="force_restore_backup_summary">Avvia manualmente la schermata di ripristino backup. Usa questa opzione se hai saltato il ripristino durante la configurazione.</string>
-    <string name="app_desc">Modulo Xposed avanzato per WhatsApp</string>
     <string name="antirevoke">Anti-Elimina messaggi</string>
     <string name="antirevoke_sum">I messaggi non saranno eliminati per te</string>
     <string name="ghostmode">Nascondi digitazione</string>
@@ -573,4 +572,22 @@
     <string name="gt_translate_from">Traduci da</string>
     <string name="gt_translate_to">Traduci in</string>
     <string name="gt_translate_action">Traduci</string>
+    <string name="modern_framework_connected">libxposed API %1$s connesso</string>
+    <string name="modern_framework_waiting">libxposed API 102: in attesa del framework</string>
+    <string name="modern_framework_status">WA X %1$s — diagnostica del Runtime moderno</string>
+    <string name="modern_framework_features_pending">La connessione al framework non dimostra che le funzioni di WhatsApp siano operative. Migrazione sperimentale.</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">Ricevuto un rapporto recente di avvio del Runtime. Non prova che le funzioni operino.</string>
+    <string name="modern_target_stale">Il rapporto precedente è scaduto. Apri WhatsApp e riprova.</string>
+    <string name="modern_target_boot_mismatch">Il rapporto si riferisce a un altro avvio o a un orario non valido.</string>
+    <string name="modern_target_no_report">Nessun rapporto API 102 ricevuto. Apri l\'app e riprova.</string>
+    <string name="modern_target_feature_status">Funzione sperimentale CustomTime: %1$s</string>
+    <string name="modern_pilot_title">CustomTime (API 102 sperimentale)</string>
+    <string name="modern_pilot_message">CustomTime modifica solo la visualizzazione degli orari dei messaggi. Potrebbe non funzionare con questa versione di WhatsApp. Le altre funzioni Legacy non sono disponibili su API 102.</string>
+    <string name="modern_pilot_enable">Attiva esperimento</string>
+    <string name="modern_pilot_disable">Disattiva esperimento</string>
+    <string name="modern_pilot_restart">Chiudi e riapri WhatsApp per applicare la modifica.</string>
+    <string name="modern_pilot_tap">Tocca qui per configurare CustomTime sperimentale.</string>
+    <string name="modern_target_share_limit_status">Limite di inoltro: %1$s</string>
+    <string name="modern_target_presence_status">Blocca ultimo accesso: %1$s | Non disturbare: %2$s</string>
 </resources>

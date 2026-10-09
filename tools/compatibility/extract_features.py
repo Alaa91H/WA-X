@@ -188,14 +188,39 @@ def source_imports(body: str) -> dict[str, str]:
     }
 
 
+def top_level_classes(code: str) -> set[str]:
+    """Resolve only top-level Kotlin declarations, never nested helper interfaces.
+
+    Replace string and character literals with equal-length whitespace first so
+    braces or fake declarations inside them do not alter source nesting.
+    """
+    literals = re.compile(
+        r"""\"\"\"[\s\S]*?\"\"\"|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'"""
+    )
+    sanitized = literals.sub(lambda match: " " * len(match.group()), code)
+    names: set[str] = set()
+    depth = 0
+    cursor = 0
+    for match in KOTLIN_DECL.finditer(sanitized):
+        for char in sanitized[cursor:match.start()]:
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth = max(0, depth - 1)
+        if depth == 0:
+            names.add(match.group(1))
+        cursor = match.start()
+    return names
+
+
 def declared_classes(files: dict[str, str]) -> dict[str, str]:
-    """Map fully qualified class names to their defining Kotlin file stem."""
+    """Map fully qualified top-level classes to their defining Kotlin file stem."""
     owners: dict[str, str] = {}
     for stem, body in files.items():
         code = strip_comments(body)
         package = source_package(code)
         # Bare source snippets in test fixtures retain the old stem fallback.
-        names = set(KOTLIN_DECL.findall(code)) or {stem}
+        names = top_level_classes(code) or {stem}
         for name in names:
             qualified = (package + "." if package else "") + name
             previous = owners.get(qualified)
@@ -214,7 +239,8 @@ def strip_comments(body: str) -> str:
 
 
 def feature_closure(
-    stem: str, files: dict[str, str], unresolved: set[str] | None = None
+    stem: str, files: dict[str, str], unresolved: set[str] | None = None,
+    owners: dict[str, str] | None = None
 ) -> set[str]:
     """Follow constructed helpers by declaration, package and explicit imports.
 
@@ -224,7 +250,8 @@ def feature_closure(
     """
     if stem not in files:
         return set()
-    owners = declared_classes(files)
+    if owners is None:
+        owners = declared_classes(files)
     closure: set[str] = set()
     pending = [stem]
     while pending:
@@ -256,21 +283,25 @@ def aggregate(files: dict[str, str], stems: set[str]) -> str:
     return "\n".join(files[stem] for stem in sorted(stems) if stem in files)
 
 
-def feature_resolver_usage(files: dict[str, str]) -> dict[str, list[str]]:
+def feature_resolver_usage(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
     """Map feature simple name -> sorted ``Unobfuscator.load*`` calls in its closure."""
+    if owners is None:
+        owners = declared_classes(files)
     usage: dict[str, list[str]] = {}
     for stem in files:
-        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files)))))
+        calls = sorted(set(RESOLVER_CALL.findall(aggregate(files, feature_closure(stem, files, owners=owners)))))
         if calls:
             usage[stem] = calls
     return usage
 
 
-def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
+def feature_preference_keys(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
     """Inventory statically provable reads; writes and dynamic keys stay unknown."""
+    if owners is None:
+        owners = declared_classes(files)
     keys: dict[str, list[str]] = {}
     for stem in files:
-        body = strip_comments(aggregate(files, feature_closure(stem, files)))
+        body = strip_comments(aggregate(files, feature_closure(stem, files, owners=owners)))
         constants = dict(PREF_CONST.findall(body))
         found: set[str] = set()
         for literal, constant in PREF_READ.findall(body):
@@ -282,11 +313,13 @@ def feature_preference_keys(files: dict[str, str]) -> dict[str, list[str]]:
             keys[stem] = sorted(found)
     return keys
 
-def feature_resolution_sources(files: dict[str, str]) -> dict[str, list[str]]:
+def feature_resolution_sources(files: dict[str, str], owners: dict[str, str] | None = None) -> dict[str, list[str]]:
     """Map feature simple name -> internal resolution layers its closure references."""
+    if owners is None:
+        owners = declared_classes(files)
     sources: dict[str, list[str]] = {}
     for stem in files:
-        body = aggregate(files, feature_closure(stem, files))
+        body = aggregate(files, feature_closure(stem, files, owners=owners))
         found = [name for name in RESOLUTION_SOURCES if re.search(r"\b%s\b" % name, body)]
         if found:
             sources[stem] = found
@@ -338,9 +371,9 @@ def build() -> dict[str, Any]:
     imported = {simple: package for simple, package in find_feature_classes()}
     files = feature_files()
     owners = declared_classes(files)
-    usage = feature_resolver_usage(files)
-    sources = feature_resolution_sources(files)
-    pref_keys = feature_preference_keys(files)
+    usage = feature_resolver_usage(files, owners)
+    sources = feature_resolution_sources(files, owners)
+    pref_keys = feature_preference_keys(files, owners)
     versions = supported_versions()
 
     missing = [name for name in order if name not in imported]

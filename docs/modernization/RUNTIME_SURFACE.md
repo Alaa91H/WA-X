@@ -8,15 +8,15 @@ the numbers.
 | --- | --- | --- | --- |
 | [Legacy Xposed API surface](#legacy_api_surface) | #318 M04-M06 | 239 | 97 |
 | [Preference reads inside the injected process](#runtime_preference_reads) | #318 M02 / #333 A08 | 12 | 3 |
-| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 35 | 14 |
+| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 41 | 17 |
 | [World-readable preference compatibility](#world_readable_prefs) | #318 M02 / #333 A16 | 4 | 1 |
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
 | [Direct DexKit use](#dexkit_direct) | #318 M08 / #333 A04 | 29 | 24 |
 | [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 71 |
 | [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
-| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 232 | 59 |
-| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 144 | 43 |
+| [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 234 | 61 |
+| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 142 | 43 |
 
 ## Legacy Xposed API surface
 
@@ -179,12 +179,12 @@ Legacy types in use:
 
 **End state:** Not a target of this program. Listed so the asymmetry stays visible.
 
-**Current:** 35 occurrences across 14 files.
+**Current:** 41 occurrences across 17 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `PreferenceManager` | 32 | 14 |
-| `getSharedPreferences()` | 3 | 2 |
+| `PreferenceManager` | 35 | 15 |
+| `getSharedPreferences()` | 6 | 4 |
 
 <details><summary>Files</summary>
 
@@ -194,6 +194,9 @@ Legacy types in use:
 - `app/src/main/java/com/wax/module/activities/TextEditorActivity.kt`
 - `app/src/main/java/com/wax/module/activities/base/BaseActivity.kt`
 - `app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt`
+- `app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt`
+- `app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt`
+- `app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java`
 - `app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt`
 - `app/src/main/java/com/wax/module/preference/FileReaderPreference.kt`
 - `app/src/main/java/com/wax/module/preference/FileSelectPreference.kt`
@@ -465,14 +468,14 @@ Legacy types in use:
 
 **End state:** Contained in RuntimeGraph with an explicit lifetime.
 
-**Current:** 232 occurrences across 59 files.
+**Current:** 234 occurrences across 61 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
 | `@JvmStatic var` | 2 | 2 |
 | `lateinit var` | 32 | 11 |
 | `module-level nullable var` | 160 | 42 |
-| `object singleton` | 38 | 29 |
+| `object singleton` | 40 | 31 |
 
 <details><summary>Files</summary>
 
@@ -527,6 +530,8 @@ Legacy types in use:
 - `app/src/main/java/com/wax/module/xposed/features/privacy/LockedChatsEnhancer.kt`
 - `app/src/main/java/com/wax/module/xposed/features/providers/MenuStatusProvider.kt`
 - `app/src/main/java/com/wax/module/xposed/graph/RuntimeGraphs.kt`
+- `app/src/main/java/com/wax/module/xposed/registry/FeatureFactory.kt`
+- `app/src/main/java/com/wax/module/xposed/registry/RuntimeFeatureRegistry.kt`
 - `app/src/main/java/com/wax/module/xposed/utils/AnimationUtil.kt`
 - `app/src/main/java/com/wax/module/xposed/utils/AudioOpusConverter.kt`
 - `app/src/main/java/com/wax/module/xposed/utils/DebugUtils.kt`
@@ -546,12 +551,12 @@ Legacy types in use:
 
 **End state:** Every catch reports through the runtime health store.
 
-**Current:** 144 occurrences across 43 files.
+**Current:** 142 occurrences across 43 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `catch with discarded binding` | 91 | 38 |
-| `empty catch body` | 53 | 25 |
+| `catch with discarded binding` | 90 | 38 |
+| `empty catch body` | 52 | 24 |
 
 <details><summary>Files</summary>
 

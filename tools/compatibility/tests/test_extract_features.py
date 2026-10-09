@@ -155,6 +155,48 @@ class DefensiveExtractionTests(unittest.TestCase):
             ["loadGeneral", "loadMedia"],
         )
 
+    def test_owner_index_reused_across_feature_scans(self):
+        files = {
+            "A": "package com.wax.module.xposed.features.general\nclass A {}",
+            "B": "package com.wax.module.xposed.features.general\nclass B {}",
+        }
+        with patch.object(extractor, "declared_classes", wraps=extractor.declared_classes) as owners:
+            extractor.feature_resolver_usage(files)
+            self.assertEqual(1, owners.call_count)
+
+    def test_nested_provider_interfaces_do_not_claim_top_level_ownership(self):
+        files = {
+            "ContextMenuActionProvider": """
+                package com.wax.module.xposed.features.providers
+                class ContextMenuActionProvider {
+                    fun interface Provider { fun apply() }
+                }
+            """,
+            "MenuStatusProvider": """
+                package com.wax.module.xposed.features.providers
+                class MenuStatusProvider {
+                    interface Provider { fun addMenu() }
+                }
+            """,
+        }
+        owners = extractor.declared_classes(files)
+        self.assertNotIn("com.wax.module.xposed.features.providers.Provider", owners)
+        self.assertEqual(
+            owners["com.wax.module.xposed.features.providers.MenuStatusProvider"],
+            "MenuStatusProvider",
+        )
+
+    def test_string_literal_braces_cannot_change_top_level_class_depth(self):
+        files = {
+            "A": """package com.wax.module.xposed.features.general
+                val sample = "{ class Fake {}"
+                class Actual {}
+            """,
+        }
+        owners = extractor.declared_classes(files)
+        self.assertIn("com.wax.module.xposed.features.general.Actual", owners)
+        self.assertNotIn("com.wax.module.xposed.features.general.Fake", owners)
+
     def test_ambiguous_qualified_class_definitions_fail(self):
         files = {
             "A": "package com.wax.module.xposed.features.media\nclass Helper {}",

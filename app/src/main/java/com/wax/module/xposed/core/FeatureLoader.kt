@@ -125,6 +125,7 @@ import com.wax.module.xposed.features.privacy.ViewOnce
 import com.wax.module.xposed.features.providers.ContextMenuActionProvider
 import com.wax.module.xposed.features.providers.MenuStatusProvider
 import com.wax.module.xposed.graph.RuntimeGraphs
+import com.wax.module.xposed.registry.RuntimeFeatureRegistry
 import com.wax.module.xposed.spoofer.HookBL
 import com.wax.module.xposed.utils.DesignUtils
 import com.wax.module.xposed.utils.ReflectionUtils
@@ -185,7 +186,14 @@ class FeatureLoader private constructor() {
         @Volatile
         private var reportStore: FailureReportStore? = null
 
-        /** Records a structured failure report and returns it. */
+        /**
+         * Records a structured failure report and returns it.
+         *
+         * [code] overrides the classification for callers that already know why something failed. A
+         * feature that reports `FailureCode.REQUIRED_CLASS_MISSING` should not have that re-derived
+         * from an exception message, and it is not only a cosmetic difference: the code is what the
+         * diagnostics dialog and the compatibility tooling read.
+         */
         private fun recordFailure(
             featureId: String,
             throwable: Throwable,
@@ -193,6 +201,7 @@ class FeatureLoader private constructor() {
             packageName: String,
             resolver: String? = null,
             stage: String? = null,
+            code: FailureCode? = null,
         ): FeatureFailureReport {
             val report =
                 FeatureFailureReport.fromThrowable(
@@ -205,6 +214,7 @@ class FeatureLoader private constructor() {
                     stage = stage,
                     timestampMillis = System.currentTimeMillis(),
                     threadName = Thread.currentThread().name,
+                    code = code,
                 )
             failureReports.add(report)
             XposedBridge.log("FeatureFailure ${report.toSummaryLine()}")
@@ -766,6 +776,7 @@ class FeatureLoader private constructor() {
                         context: Context,
                         intent: Intent,
                     ) {
+                        XposedBridge.log("WA X activation probe received for ${context.packageName}")
                         sendEnabledBroadcast(context)
                     }
                 }
@@ -801,6 +812,7 @@ class FeatureLoader private constructor() {
 
         private fun sendEnabledBroadcast(context: Context) {
             runCatching {
+                val heartbeat = encodeHeartbeat()
                 val wppIntent =
                     Intent("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP").apply {
                         putExtra(
@@ -812,11 +824,18 @@ class FeatureLoader private constructor() {
                         // the only code that can know: this process. The Manager used to be told
                         // it by a constant a hook installed in its own process, which is why a
                         // failure anywhere in here could present as "LSPosed is disabled".
-                        putExtra(EXTRA_HEARTBEAT, encodeHeartbeat())
+                        putExtra(EXTRA_HEARTBEAT, heartbeat)
                         setPackage(BuildConfig.APPLICATION_ID)
                     }
                 context.sendBroadcast(wppIntent)
-            }.onFailure { XposedBridge.log("WA X could not answer the activation probe") }
+                XposedBridge.log(
+                    "WA X activation broadcast dispatched for ${context.packageName}: " +
+                        (if (heartbeat == null) "heartbeat unavailable" else "heartbeat encoded"),
+                )
+            }.onFailure {
+                XposedBridge.log("WA X could not dispatch the activation report")
+                XposedBridge.log(it)
+            }
         }
 
         /**
@@ -1018,7 +1037,7 @@ class FeatureLoader private constructor() {
             private fun essential(): StageOutcome {
                 val pref = preferences ?: return StageOutcome.AWAITING
                 val context = featureContext(pref)
-                return if (plugins(loader, pref, targetVersion.orEmpty(), context)) StageOutcome.SUCCEEDED else StageOutcome.FAILED
+                return if (plugins(pref, targetVersion.orEmpty(), context)) StageOutcome.SUCCEEDED else StageOutcome.FAILED
             }
 
             /**
@@ -1074,90 +1093,49 @@ class FeatureLoader private constructor() {
         }
 
         /**
-         * Starts one feature, whichever contract it is written against.
+         * Records what a feature reported when it started.
          *
-         * The dispatch is on the *instance*, not on the declared type, because a feature written
-         * against [WaFeature] has no `(ClassLoader, SharedPreferences)` constructor to look up and
-         * the reflective path would fail on it with a `NoSuchMethodException` that says nothing
-         * about why.
-         *
-         * [legacy] is only called for a feature that is still an old [Feature], and it returns
-         * what the old path did so that both paths produce the same kind of record.
-         */
-        private inline fun startContractFeature(
-            clazz: Class<*>,
-            context: FeatureContext,
-            versionWpp: String,
-            legacy: (Feature) -> FeatureStartResult,
-        ): FeatureStartResult {
-            val instance =
-                if (WaFeature::class.java.isAssignableFrom(clazz)) {
-                    clazz.getDeclaredConstructor().newInstance() as WaFeature
-                } else {
-                    val preferences =
-                        legacyPreferences
-                            ?: throw IllegalStateException(
-                                "a legacy feature was started before the target settings were attached",
-                            )
-                    return legacy(
-                        clazz
-                            .getConstructor(
-                                ClassLoader::class.java,
-                                SharedPreferences::class.java,
-                            ).newInstance(context.targetClassLoader, preferences) as Feature,
-                    )
-                }
-            return recordStart(instance, context, versionWpp)
-        }
-
-        /**
-         * Starts a contract feature and records what it reported.
+         * Takes the id rather than the feature because the two contracts hand back different things:
+         * a [WaFeature] returns a [FeatureStartResult] that names what it installed or what it could
+         * not find, and a legacy [Feature] returns nothing at all and is recorded as installed with
+         * its display name. The registry's factories normalise that, so this is the only place that
+         * decides what a start *means*.
          *
          * A feature that skips itself says so with a result rather than by throwing, because an
          * unsupported WhatsApp build is an ordinary outcome and reporting it as a failure is what
          * makes a user's feature list look broken on a build it simply does not target.
          */
-        private fun recordStart(
-            feature: WaFeature,
-            context: FeatureContext,
+        private fun recordResult(
+            featureId: String,
+            result: FeatureStartResult,
             versionWpp: String,
-        ): FeatureStartResult =
-            try {
-                val result = feature.start(context)
-                when (result) {
-                    is FeatureStartResult.Installed -> {
-                        XposedBridge.log("${feature.featureId}: ${result.summary}")
-                    }
-
-                    is FeatureStartResult.Degraded -> {
-                        XposedBridge.log("${feature.featureId}: degraded, ${result.lost} - ${result.summary}")
-                    }
-
-                    is FeatureStartResult.Skipped -> {
-                        XposedBridge.log("${feature.featureId}: skipped, ${result.missing}")
-                    }
-
-                    is FeatureStartResult.Failed -> {
-                        recordFailure(
-                            featureId = feature.featureId,
-                            throwable = IllegalStateException(result.summary),
-                            whatsAppVersion = versionWpp,
-                            packageName = mApp?.packageName.orEmpty(),
-                            stage = result.code.name,
-                        )
-                    }
+        ): FeatureStartResult {
+            when (result) {
+                is FeatureStartResult.Installed -> {
+                    XposedBridge.log("$featureId: ${result.summary}")
                 }
-                result
-            } catch (throwable: Throwable) {
-                recordFailure(
-                    featureId = feature.featureId,
-                    throwable = throwable,
-                    whatsAppVersion = versionWpp,
-                    packageName = mApp?.packageName.orEmpty(),
-                    stage = "start",
-                )
-                FeatureStartResult.Failed(feature.featureId, FailureCode.classify(throwable, "start"))
+
+                is FeatureStartResult.Degraded -> {
+                    XposedBridge.log("$featureId: degraded, ${result.lost} - ${result.summary}")
+                }
+
+                is FeatureStartResult.Skipped -> {
+                    XposedBridge.log("$featureId: skipped, ${result.missing}")
+                }
+
+                is FeatureStartResult.Failed -> {
+                    recordFailure(
+                        featureId = featureId,
+                        throwable = IllegalStateException(result.summary),
+                        whatsAppVersion = versionWpp,
+                        packageName = mApp?.packageName.orEmpty(),
+                        stage = result.code.name,
+                        code = result.code,
+                    )
+                }
             }
+            return result
+        }
 
         /** The preferences a legacy feature is constructed with. Set by the ESSENTIAL stage. */
         @Volatile
@@ -1179,6 +1157,7 @@ class FeatureLoader private constructor() {
             recordFailure(
                 featureId = featureId,
                 throwable = IllegalStateException(message ?: code.name),
+                code = code,
                 whatsAppVersion =
                     mApp
                         ?.packageManager
@@ -1193,12 +1172,7 @@ class FeatureLoader private constructor() {
                         }.orEmpty(),
                 packageName = mApp?.packageName.orEmpty(),
                 stage = stage,
-            ).also { recorded ->
-                // The throwable above carries no code, so the classified code is attached here.
-                contractFailureCodes[recorded.timestampMillis] = code
-            }
-
-        private val contractFailureCodes = java.util.concurrent.ConcurrentHashMap<Long, FailureCode>()
+            )
 
         /**
          * Whether the per-process bootstrap has already attached to its target.
@@ -1233,78 +1207,14 @@ class FeatureLoader private constructor() {
          */
         @Throws(Exception::class)
         private fun plugins(
-            loader: ClassLoader,
             pref: SharedPreferences,
             versionWpp: String,
             context: FeatureContext,
         ): Boolean {
-            val classes =
-                arrayOf(
-                    DebugFeature::class.java,
-                    MinorFixes::class.java,
-                    ContactItemListener::class.java,
-                    ConversationItemListener::class.java,
-                    MenuStatusProvider::class.java,
-                    ShowEditMessage::class.java,
-                    AntiRevoke::class.java,
-                    CustomToolbar::class.java,
-                    CustomView::class.java,
-                    SeenTick::class.java,
-                    BubbleColors::class.java,
-                    CallPrivacy::class.java,
-                    ActivityController::class.java,
-                    CustomThemeV2::class.java,
-                    FloatingBottomBar::class.java,
-                    ChatLimit::class.java,
-                    SeparateGroup::class.java,
-                    ShowOnline::class.java,
-                    DndMode::class.java,
-                    FreezeLastSeen::class.java,
-                    TypingPrivacy::class.java,
-                    HideChat::class.java,
-                    HideSeen::class.java,
-                    HideSeenView::class.java,
-                    TagMessage::class.java,
-                    HideTabs::class.java,
-                    IGStatus::class.java,
-                    MediaQuality::class.java,
-                    NewChat::class.java,
-                    Others::class.java,
-                    PinnedLimit::class.java,
-                    CustomTime::class.java,
-                    ShareLimit::class.java,
-                    StatusDownload::class.java,
-                    ViewOnce::class.java,
-                    CallType::class.java,
-                    MediaPreview::class.java,
-                    FilterGroups::class.java,
-                    Tasker::class.java,
-                    DeleteStatus::class.java,
-                    DownloadViewOnce::class.java,
-                    Channels::class.java,
-                    DownloadProfile::class.java,
-                    ChatFilters::class.java,
-                    GroupAdmin::class.java,
-                    Stickers::class.java,
-                    CopyStatus::class.java,
-                    CopySelectionMessage::class.java,
-                    TextStatusComposer::class.java,
-                    ToastViewer::class.java,
-                    MenuHome::class.java,
-                    AntiWa::class.java,
-                    CustomPrivacy::class.java,
-                    AudioTranscript::class.java,
-                    GoogleTranslate::class.java,
-                    ContactVerify::class.java,
-                    LockedChatsEnhancer::class.java,
-                    CallRecording::class.java,
-                    BackupRestore::class.java,
-                    JumpFirstMessage::class.java,
-                    AboutContactPicker::class.java,
-                    DefaultEmoji::class.java,
-                    CaptureDevice::class.java,
-                    ContextMenuActionProvider::class.java,
-                )
+            // The registry is the one registration source; the feature classes were an
+            // arrayOf(...) here until #337, and the array is gone rather than commented out,
+            // because two lists that currently agree are one edit away from not agreeing.
+            val features = RuntimeFeatureRegistry.entries
 
             XposedBridge.log("Loading Plugins")
             val executorService =
@@ -1315,23 +1225,19 @@ class FeatureLoader private constructor() {
                 }
             val times = Collections.synchronizedList(ArrayList<String>())
 
-            for (clazz in classes) {
+            for (factory in features) {
                 CompletableFuture.runAsync({
                     val startTime = System.currentTimeMillis()
                     try {
-                        startContractFeature(clazz, context, versionWpp) { legacy ->
-                            val constructor =
-                                clazz.getConstructor(
-                                    ClassLoader::class.java,
-                                    SharedPreferences::class.java,
-                                )
-                            (constructor.newInstance(loader, pref) as Feature).doHook()
-                            FeatureStartResult.Installed(summary = legacy.getPluginName())
-                        }
+                        recordResult(
+                            factory.featureId,
+                            factory.start(context, pref),
+                            versionWpp,
+                        )
                     } catch (e: Throwable) {
                         XposedBridge.log(e)
                         recordFailure(
-                            featureId = clazz.simpleName,
+                            featureId = factory.featureId,
                             throwable = e,
                             whatsAppVersion = versionWpp,
                             packageName = FeatureLoader.moduleContext.packageName,
@@ -1339,7 +1245,7 @@ class FeatureLoader private constructor() {
                         )
                     }
                     val duration = System.currentTimeMillis() - startTime
-                    times.add("* Loaded Plugin ${clazz.simpleName} in ${duration}ms")
+                    times.add("* Loaded Plugin ${factory.featureId} in ${duration}ms")
                 }, executorService)
             }
 
@@ -1356,13 +1262,13 @@ class FeatureLoader private constructor() {
                 // in `times`, which is the only evidence the budget produced, so the number is
                 // what turns "the set installed slowly" into "these twelve never installed".
                 val installed = synchronized(times) { times.size }
-                val dropped = classes.size - installed
+                val dropped = features.size - installed
                 XposedBridge.log("WA X hook installation exceeded ${HOOK_INSTALL_BUDGET_MS}ms; $dropped feature(s) not installed")
                 recordFailure(
                     featureId = "MainFeatures[Install]",
                     throwable =
                         IllegalStateException(
-                            "$dropped of ${classes.size} features were not installed within ${HOOK_INSTALL_BUDGET_MS}ms",
+                            "$dropped of ${features.size} features were not installed within ${HOOK_INSTALL_BUDGET_MS}ms",
                         ),
                     whatsAppVersion = versionWpp,
                     packageName = moduleContext.packageName,

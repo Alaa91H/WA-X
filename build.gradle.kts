@@ -4,6 +4,7 @@
 // module that uses them so the root buildscript classpath is untouched.
 plugins {
     alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidLibrary) apply false
 }
 
 // Generic Java/Kotlin analyzers such as CodeQL probe for the conventional

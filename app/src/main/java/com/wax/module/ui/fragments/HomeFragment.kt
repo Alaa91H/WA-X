@@ -42,6 +42,8 @@ import com.wax.module.config.ConfigBackupSchema
 import com.wax.module.config.ConfigValue
 import com.wax.module.databinding.DialogDiagnosticsLogBinding
 import com.wax.module.databinding.FragmentHomeBinding
+import com.wax.module.modern.ModernManagerRuntimeStatus
+import com.wax.module.modern.ModernRuntimePreferenceRelay
 import com.wax.module.ui.fragments.base.BaseFragment
 import com.wax.module.utils.FilePicker
 import com.wax.module.utils.RootDiagnostics
@@ -62,6 +64,12 @@ class HomeFragment : BaseFragment() {
     private var currentBinding: FragmentHomeBinding? = null
     private val binding get() = currentBinding!!
     private var statusReceiverRegistered = false
+    private val activationProbeHandler = Handler(Looper.getMainLooper())
+    private val pendingActivationProbes = mutableListOf<Runnable>()
+
+    // WhatsApp's initial DexKit / feature startup can outlast the Manager opening.
+    // Bound retries to the visible Home screen; do not poll in the background.
+    private val activationProbeRetryDelaysMillis = longArrayOf(4_000L, 12_000L, 24_000L)
 
     /**
      * The activation model this screen reads.
@@ -83,18 +91,30 @@ class HomeFragment : BaseFragment() {
                     // Filed before anything is rendered, so the reply the screen shows and the
                     // record it leaves behind cannot disagree. A payload this version cannot
                     // read is dropped rather than guessed at.
-                    activation.accept(TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT)))
-                    when (intent.getStringExtra("PKG")) {
-                        FeatureLoader.PACKAGE_WPP -> renderTarget(FeatureLoader.PACKAGE_WPP)
-                        FeatureLoader.PACKAGE_BUSINESS -> renderTarget(FeatureLoader.PACKAGE_BUSINESS)
+                    val reportedPackage = intent.getStringExtra("PKG")
+                    val heartbeat = TargetHeartbeatCodec.decode(intent.getStringExtra(FeatureLoader.EXTRA_HEARTBEAT))
+                    if (heartbeat == null) {
+                        Log.w("WA-X Activation", "Probe reply from $reportedPackage has no valid runtime heartbeat")
+                    } else {
+                        activation.accept(heartbeat)
+                        Log.i("WA-X Activation", "Probe reply from $reportedPackage: stage=${heartbeat.stage}, state=${heartbeat.state}")
                     }
-                } catch (_: Exception) {
+                    // Both target and aggregate cards must reflect the received state. The old
+                    // receiver only repainted the target and left the module card red forever.
+                    renderActivation()
+                } catch (e: Exception) {
+                    Log.w("WA-X Activation", "Could not process runtime probe reply", e)
                 }
             }
         }
 
     override fun onStart() {
         super.onStart()
+        if (BuildConfig.MODERN_XPOSED) {
+            renderModernActivation()
+            scheduleModernStatusRetries()
+            return
+        }
         if (!statusReceiverRegistered) {
             val intentFilter = IntentFilter("${BuildConfig.APPLICATION_ID}.RECEIVER_WPP")
             ContextCompat.registerReceiver(
@@ -105,9 +125,39 @@ class HomeFragment : BaseFragment() {
             )
             statusReceiverRegistered = true
         }
+        // The receiver must exist BEFORE the first request. Sending in onCreateView lost
+        // fast replies on cold starts because the Fragment had not reached onStart yet.
+        checkWpp(requireActivity())
+        scheduleActivationProbeRetries()
+    }
+
+    private fun scheduleModernStatusRetries() {
+        activationProbeRetryDelaysMillis.forEach { delayMillis ->
+            val retry =
+                Runnable {
+                    if (isAdded && currentBinding != null) renderModernActivation()
+                }
+            pendingActivationProbes.add(retry)
+            activationProbeHandler.postDelayed(retry, delayMillis)
+        }
+    }
+
+    private fun scheduleActivationProbeRetries() {
+        activationProbeRetryDelaysMillis.forEach { delayMillis ->
+            val retry =
+                Runnable {
+                    if (statusReceiverRegistered && currentBinding != null && isAdded) {
+                        checkWpp(requireActivity())
+                    }
+                }
+            pendingActivationProbes.add(retry)
+            activationProbeHandler.postDelayed(retry, delayMillis)
+        }
     }
 
     override fun onStop() {
+        pendingActivationProbes.forEach(activationProbeHandler::removeCallbacks)
+        pendingActivationProbes.clear()
         if (statusReceiverRegistered) {
             runCatching { requireContext().unregisterReceiver(statusReceiver) }
             statusReceiverRegistered = false
@@ -173,6 +223,10 @@ class HomeFragment : BaseFragment() {
             showDiagnosticsDialog()
         }
 
+        if (BuildConfig.MODERN_XPOSED) {
+            binding.status.setOnClickListener { showModernCustomTimeDialog() }
+        }
+
         checkForUpdates()
         startCardAnimations()
 
@@ -231,6 +285,10 @@ class HomeFragment : BaseFragment() {
      * against the other.
      */
     private fun renderActivation() {
+        if (BuildConfig.MODERN_XPOSED) {
+            renderModernActivation()
+            return
+        }
         val context = context ?: return
         val legacy = ModuleApplication.instance.isLegacySelfHookSignal()
 
@@ -246,6 +304,134 @@ class HomeFragment : BaseFragment() {
                 .map { statusOf(context, it, legacy) },
             legacy,
         )
+    }
+
+    /**
+     * API 102 uses framework remote preferences, not the old Xposed self-hook broadcast.
+     * Read Binder-backed values off the UI thread and never show READY just for a Service bind.
+     */
+    private fun renderModernActivation() {
+        if (!isAdded || currentBinding == null) return
+        val applicationContext = requireContext().applicationContext
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val snapshot = ModernManagerRuntimeStatus.inspect(applicationContext)
+            withContext(Dispatchers.Main) {
+                if (!isAdded || currentBinding == null) return@withContext
+                binding.statusTitle.text =
+                    if (snapshot.connected) {
+                        getString(R.string.modern_framework_connected, (snapshot.frameworkApi ?: 102).toString())
+                    } else {
+                        getString(R.string.modern_framework_waiting)
+                    }
+                binding.statusSummary.text =
+                    buildString {
+                        append(getString(R.string.modern_framework_status, BuildConfig.VERSION_NAME))
+                        append('\n')
+                        append(snapshot.frameworkName ?: "Vector/LSPosed")
+                        snapshot.connectionProblem?.let { append(": ").append(it) }
+                        append('\n')
+                        append(getString(R.string.modern_framework_features_pending))
+                        append('\n')
+                        append(getString(R.string.modern_pilot_tap))
+                    }
+                binding.statusIcon.setImageResource(
+                    if (snapshot.connected) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+                )
+                binding.status.getChildAt(0).setBackgroundResource(
+                    if (snapshot.connected) R.drawable.gradient_success else R.drawable.gradient_warning,
+                )
+
+                snapshot.targets.forEach { target ->
+                    val business = target.packageName == FeatureLoader.PACKAGE_BUSINESS
+                    val title = if (business) binding.statusTitle3 else binding.statusTitle2
+                    val summary = if (business) binding.statusSummary3 else binding.statusSummary1
+                    val icon = if (business) binding.statusIcon3 else binding.statusIcon2
+                    val card = if (business) binding.status3 else binding.status2
+                    val restart = if (business) binding.rebootBtn2 else binding.rebootBtn
+                    val label =
+                        if (business) {
+                            getString(R.string.whatsapp_business_package)
+                        } else {
+                            getString(R.string.whatsapp_app_label)
+                        }
+                    val installed = isInstalled(target.packageName)
+                    title.text = getString(R.string.modern_target_title, label)
+                    summary.text =
+                        if (!installed) {
+                            getString(R.string.app_not_installed)
+                        } else {
+                            val evidence =
+                                when (target.evidence) {
+                                    ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP -> {
+                                        getString(R.string.modern_target_loaded)
+                                    }
+
+                                    ModernManagerRuntimeStatus.Evidence.STALE_BOOTSTRAP -> {
+                                        getString(R.string.modern_target_stale)
+                                    }
+
+                                    ModernManagerRuntimeStatus.Evidence.BOOT_MISMATCH,
+                                    ModernManagerRuntimeStatus.Evidence.CLOCK_MISMATCH,
+                                    -> {
+                                        getString(R.string.modern_target_boot_mismatch)
+                                    }
+
+                                    ModernManagerRuntimeStatus.Evidence.NOT_REPORTED -> {
+                                        getString(R.string.modern_target_no_report)
+                                    }
+                                }
+                            evidence + "\n" +
+                                (
+                                    if (target.bootstrapMilestones.isNotEmpty()) {
+                                        target.bootstrapMilestones.joinToString(" → ") + "\n"
+                                    } else {
+                                        "NO_TARGET_LIFECYCLE_SIGNAL\n"
+                                    }
+                                ) +
+                                getString(
+                                    R.string.modern_target_feature_status,
+                                    target.customTimeInstallation ?: "NOT_REPORTED",
+                                ) + "\n" +
+                                getString(
+                                    R.string.modern_target_share_limit_status,
+                                    target.shareLimitInstallation ?: "NOT_REPORTED",
+                                ) + "\n" +
+                                getString(
+                                    R.string.modern_target_presence_status,
+                                    target.freezeInstallation ?: "NOT_REPORTED",
+                                    target.dndInstallation ?: "NOT_REPORTED",
+                                )
+                        }
+                    val reported = target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP
+                    icon.setImageResource(
+                        if (reported) R.drawable.ic_round_check_circle_24 else R.drawable.ic_round_warning_24,
+                    )
+                    card.getChildAt(0).setBackgroundResource(
+                        if (reported) R.drawable.gradient_success else R.drawable.gradient_warning,
+                    )
+                    restart.visibility = if (reported) View.VISIBLE else View.GONE
+                }
+            }
+        }
+    }
+
+    private fun showModernCustomTimeDialog() {
+        if (!BuildConfig.MODERN_XPOSED || !isAdded) return
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val active = prefs.getBoolean(ModernRuntimePreferenceRelay.ENABLE_KEY, false)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.modern_pilot_title)
+            .setMessage(R.string.modern_pilot_message)
+            .setPositiveButton(
+                if (active) R.string.modern_pilot_disable else R.string.modern_pilot_enable,
+            ) { _, _ ->
+                prefs.edit {
+                    putBoolean(ModernRuntimePreferenceRelay.ENABLE_KEY, !active)
+                }
+                Toast.makeText(requireContext(), R.string.modern_pilot_restart, Toast.LENGTH_LONG).show()
+                renderModernActivation()
+            }.setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun statusOf(
@@ -620,7 +806,6 @@ class HomeFragment : BaseFragment() {
         }
         binding.listBusiness.text = activity.resources.getStringArray(R.array.supported_versions_business).contentToString()
         updatePackageStatuses(activity)
-        checkWpp(activity)
     }
 
     private fun updatePackageStatuses(context: Context) {

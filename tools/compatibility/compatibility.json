@@ -195,7 +195,8 @@
         ],
         "preferenceKeys": [
           "showbiohome",
-          "shownamehome"
+          "shownamehome",
+          "typearchive"
         ]
       },
       {
@@ -208,7 +209,11 @@
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
-          "custom_filters"
+          "change_dpi",
+          "css_theme",
+          "custom_css",
+          "custom_filters",
+          "folder_theme"
         ]
       },
       {
@@ -231,7 +236,8 @@
         ],
         "preferenceKeys": [
           "blueonreply",
-          "hidestatusview"
+          "hidestatusview",
+          "seentick"
         ]
       },
       {
@@ -247,7 +253,9 @@
           "loadBubbleDrawableMethod"
         ],
         "preferenceKeys": [
-          "bubble_color"
+          "bubble_color",
+          "bubble_left",
+          "bubble_right"
         ]
       },
       {
@@ -263,7 +271,12 @@
           "loadAntiRevokeOnCallReceivedMethod",
           "loadVoipManager"
         ],
-        "preferenceKeys": []
+        "preferenceKeys": [
+          "call_block_contacts",
+          "call_privacy",
+          "call_type",
+          "call_white_contacts"
+        ]
       },
       {
         "id": "ActivityController",
@@ -292,7 +305,11 @@
           "loadTabFrameClass"
         ],
         "preferenceKeys": [
+          "background_color",
           "changecolor",
+          "changecolor_mode",
+          "primary_color",
+          "text_color",
           "wallpaper"
         ]
       },
@@ -303,7 +320,8 @@
         "resolutionSources": [],
         "resolverDependencies": [],
         "preferenceKeys": [
-          "floating_bottom_bar"
+          "floating_bottom_bar",
+          "floating_bottom_bar_radius"
         ]
       },
       {
@@ -436,7 +454,9 @@
         "resolverDependencies": [
           "loadArchiveChatClass"
         ],
-        "preferenceKeys": []
+        "preferenceKeys": [
+          "typearchive"
+        ]
       },
       {
         "id": "HideSeen",
@@ -508,6 +528,7 @@
           "loadTabListMethod"
         ],
         "preferenceKeys": [
+          "hidetabs",
           "igstatus"
         ]
       },
@@ -615,9 +636,13 @@
         "preferenceKeys": [
           "always_online",
           "animation_emojis",
+          "animation_list",
           "audio_transcription",
+          "audio_type",
           "autonext_status",
           "call_info",
+          "chatfilter",
+          "configui_mode",
           "custom_filters",
           "disable_ads",
           "disable_expiration",
@@ -625,6 +650,8 @@
           "disable_sensor_proximity",
           "disable_swipe_up_in_group",
           "doubletap2like",
+          "doubletap2like_emoji",
+          "filter_items",
           "filterseen",
           "floatingmenu",
           "igstatus",
@@ -634,7 +661,9 @@
           "oldstatus",
           "proximity_audios",
           "showonline",
-          "stamp_copied_message"
+          "stamp_copied_message",
+          "status_style",
+          "voicenote_speed"
         ]
       },
       {
@@ -665,7 +694,8 @@
         ],
         "preferenceKeys": [
           "ampm",
-          "segundos"
+          "segundos",
+          "text_in_hour"
         ]
       },
       {
@@ -1062,9 +1092,13 @@
         ],
         "resolverDependencies": [],
         "preferenceKeys": [
+          "call_recording_blacklist",
           "call_recording_enable",
+          "call_recording_mode",
+          "call_recording_path",
           "call_recording_toast",
-          "call_recording_use_root"
+          "call_recording_use_root",
+          "call_recording_whitelist"
         ]
       },
       {

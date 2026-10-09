@@ -51,19 +51,33 @@ The current source tree contains features in areas such as:
 
 Feature availability is version-dependent. A feature existing in source code or UI is not a promise that it works on every WhatsApp build.
 
-## Installation
+## Installation — official API 102 module
 
-1. Use a compatible Xposed environment. WA X currently uses the legacy Xposed API and is commonly used with LSPosed.
-2. Install an official **WA X module APK** from [GitHub Releases](https://github.com/Alaa91H/WA-X/releases). Development builds are published separately for testing.
-3. Enable **WA X** in your Xposed/LSPosed manager.
-4. Scope the module to the target package(s) you use:
+Starting with **WA X 1.2.0-beta.9**, the only distributed WA X Android
+package is `com.wax.module` using modern **libxposed API 102**. The previous
+Legacy API 93 loader and the standalone Canary APK are no longer shipped.
+
+1. Use a Vector/LSPosed installation that actually supports libxposed API 102.
+   A framework advertising an older API is **not compatible** with this build.
+2. Get the officially signed module from [GitHub Releases](https://github.com/Alaa91H/WA-X/releases)
+   or the signed Beta Testing channel; retain your installed app's data.
+3. Enable **WA X** in your Xposed manager, scoped **only** to:
    - `com.whatsapp`
-   - `com.whatsapp.w4b`
-5. The current infrastructure bridge also hooks **System Framework** (`android`) and the Android **Settings Provider** (`com.android.providers.settings`). If your Xposed manager requires explicit package scope, include those infrastructure entries as well. They are not feature targets; they exist for package-visibility and settings-bridge behavior.
-   - WA X declares these four packages as its **recommended LSPosed scope**. On the current legacy Xposed API, LSPosed can still display unrelated installed apps in its selector; selecting them is unnecessary, and WA X refuses to install hooks outside the declared runtime scope.
-6. Force-stop/restart the target app after changing hook-sensitive settings.
+   - `com.whatsapp.w4b` (only if you use WhatsApp Business)
+4. Reopen the target app and verify that the WA X Manager has received a
+   current-boot runtime heartbeat. A Framework Service connection or an
+   installed HookHandle alone does **not** prove features work.
 
-The WA X APK is the Xposed module only. It is not a replacement WhatsApp APK.
+**Important (beta.9):** most old Xposed API 93 feature hooks have not yet
+been ported to API 102. Their legacy settings may still be visible in the
+Manager, but they cannot be assumed operational. The opt-in CustomTime
+pilot is the first migrated user-visible hook and must be verified on a
+rooted real device. This beta is **not feature complete or stable**.
+Back up your preferences. Do not uninstall WA X to get around Android
+signing errors, because uninstalling destroys app data.
+
+The WA X APK is an Xposed module, not a replacement WhatsApp APK.
+Historical releases remain in GitHub Releases as recovery references.
 
 ## Builds, releases and Telegram
 
