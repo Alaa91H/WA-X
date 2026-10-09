@@ -590,4 +590,5 @@
     <string name="modern_pilot_disable">Deneyi devre dışı bırak</string>
     <string name="modern_pilot_restart">Değişikliği uygulamak için WhatsApp’ı kapatıp yeniden açın.</string>
     <string name="modern_pilot_tap">Deneysel CustomTime ayarları için dokunun.</string>
+    <string name="modern_target_share_limit_status">İletme sınırı: %1$s</string>
 </resources>

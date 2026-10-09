@@ -20,6 +20,7 @@ object ModernManagerRuntimeStatus {
         val packageName: String,
         val evidence: Evidence,
         val customTimeInstallation: String?,
+        val shareLimitInstallation: String?,
     )
 
     data class Snapshot(
@@ -60,7 +61,7 @@ object ModernManagerRuntimeStatus {
                 frameworkApi = framework.apiVersion,
                 frameworkName = framework.frameworkName,
                 connectionProblem = framework.error ?: "SERVICE_NOT_CONNECTED",
-                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null) },
+                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null, null) },
             )
         }
         return try {
@@ -80,6 +81,7 @@ object ModernManagerRuntimeStatus {
                             packageName = name,
                             evidence = classify(timestamp, origin, now, boot),
                             customTimeInstallation = prefs?.getString("modern.feature.custom_time.state.$name", null),
+                            shareLimitInstallation = prefs?.getString("modern.feature.share_limit.state.$name", null),
                         )
                     },
             )
@@ -90,7 +92,7 @@ object ModernManagerRuntimeStatus {
                 frameworkApi = framework.apiVersion,
                 frameworkName = framework.frameworkName,
                 connectionProblem = "PREFERENCES_READ_FAILED",
-                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null) },
+                targets = targetNames.map { Target(it, Evidence.NOT_REPORTED, null, null) },
             )
         }
     }

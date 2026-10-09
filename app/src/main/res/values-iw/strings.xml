@@ -590,4 +590,5 @@
     <string name="modern_pilot_disable">השבתת ניסיון</string>
     <string name="modern_pilot_restart">יש לסגור ולפתוח מחדש את WhatsApp כדי להחיל את השינוי.</string>
     <string name="modern_pilot_tap">יש להקיש כדי להגדיר CustomTime ניסיוני.</string>
+    <string name="modern_target_share_limit_status">מגבלת העברה: %1$s</string>
 </resources>

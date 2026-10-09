@@ -591,4 +591,5 @@
     <string name="modern_pilot_disable">Выключить эксперимент</string>
     <string name="modern_pilot_restart">Закройте и снова откройте WhatsApp для применения.</string>
     <string name="modern_pilot_tap">Нажмите, чтобы настроить экспериментальный CustomTime.</string>
+    <string name="modern_target_share_limit_status">Лимит пересылки: %1$s</string>
 </resources>

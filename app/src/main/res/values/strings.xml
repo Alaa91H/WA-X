@@ -620,4 +620,5 @@
     <string name="modern_pilot_disable">Disable experiment</string>
     <string name="modern_pilot_restart">Close and reopen WhatsApp to apply the change.</string>
     <string name="modern_pilot_tap">Tap here to configure experimental CustomTime.</string>
+    <string name="modern_target_share_limit_status">ShareLimit: %1$s</string>
 </resources>

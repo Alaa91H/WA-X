@@ -589,4 +589,5 @@
     <string name="modern_pilot_disable">停用实验功能</string>
     <string name="modern_pilot_restart">关闭并重新打开 WhatsApp 以应用更改。</string>
     <string name="modern_pilot_tap">点按此处配置实验性 CustomTime。</string>
+    <string name="modern_target_share_limit_status">转发数量限制：%1$s</string>
 </resources>

@@ -383,6 +383,10 @@ class HomeFragment : BaseFragment() {
                                 getString(
                                     R.string.modern_target_feature_status,
                                     target.customTimeInstallation ?: "NOT_REPORTED",
+                                ) + "\n" +
+                                getString(
+                                    R.string.modern_target_share_limit_status,
+                                    target.shareLimitInstallation ?: "NOT_REPORTED",
                                 )
                         }
                     val reported = target.evidence == ModernManagerRuntimeStatus.Evidence.FRESH_BOOTSTRAP

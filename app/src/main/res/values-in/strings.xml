@@ -587,4 +587,5 @@
     <string name="modern_pilot_disable">Nonaktifkan eksperimen</string>
     <string name="modern_pilot_restart">Tutup lalu buka kembali WhatsApp untuk menerapkan perubahan.</string>
     <string name="modern_pilot_tap">Ketuk untuk mengatur CustomTime eksperimental.</string>
+    <string name="modern_target_share_limit_status">Batas penerusan: %1$s</string>
 </resources>

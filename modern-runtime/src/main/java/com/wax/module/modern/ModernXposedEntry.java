@@ -137,6 +137,24 @@ public final class ModernXposedEntry extends XposedModule {
                 preferences.edit().putString("modern.feature.custom_time.state." + packageName,
                         customTimeState).apply();
             }
+            // ShareLimit is migrated with the SAME user setting (off by default).
+            String shareLimitState = ModernShareLimitFeature.Outcome.DISABLED.name();
+            if (preferences != null && preferences.getBoolean(ModernShareLimitFeature.ENABLE_KEY, false)) {
+                try {
+                    System.loadLibrary("dexkit");
+                    shareLimitState = ModernShareLimitFeature.INSTANCE
+                            .install(target, this, hookRegistry, preferences).name();
+                } catch (Throwable featureFailure) {
+                    if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                    shareLimitState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                    log(Log.ERROR, TAG, "Modern ShareLimit hook failed on " + packageName, featureFailure);
+                }
+            }
+            if (preferences != null) {
+                preferences.edit()
+                        .putString("modern.feature.share_limit.state." + packageName, shareLimitState)
+                        .apply();
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

@@ -588,4 +588,5 @@
     <string name="modern_pilot_disable">Disattiva esperimento</string>
     <string name="modern_pilot_restart">Chiudi e riapri WhatsApp per applicare la modifica.</string>
     <string name="modern_pilot_tap">Tocca qui per configurare CustomTime sperimentale.</string>
+    <string name="modern_target_share_limit_status">Limite di inoltro: %1$s</string>
 </resources>
