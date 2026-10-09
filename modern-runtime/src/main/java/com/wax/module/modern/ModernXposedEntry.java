@@ -418,10 +418,9 @@ public final class ModernXposedEntry extends XposedModule {
             String contactAccessState = ModernContactAccess.Outcome.ERROR.name();
             try {
                 System.loadLibrary("dexkit");
-                ModernContactAccess resolved = ModernContactAccess.resolve(target).getFirst();
-                contactAccessState = resolved == null
-                        ? ModernContactAccess.resolve(target).getSecond().name()
-                        : ModernContactAccess.Outcome.AVAILABLE.name();
+                ModernContactAccess.Resolution contactAccess =
+                        ModernContactAccess.Companion.resolve(target);
+                contactAccessState = contactAccess.getOutcome().name();
                 Log.i(TAG, "M06_CONTACT_ACCESS_RESULT package=" + packageName
                         + " state=" + contactAccessState);
             } catch (Throwable accessFailure) {

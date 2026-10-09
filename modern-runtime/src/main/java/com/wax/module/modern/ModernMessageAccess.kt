@@ -78,6 +78,10 @@ class ModernMessageAccess private constructor(
             KEY_FIELD_MISSING,
             ERROR,
         }
+        /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
+        class Resolution(val access: ModernMessageAccess?, val outcome: Outcome) {
+            val available: Boolean get() = access != null
+        }
 
         /**
          * Resolves the access chain once per process. Returns null with the
@@ -92,7 +96,7 @@ class ModernMessageAccess private constructor(
                         matcher {
                             addUsingString(ANCHOR_MESSAGE_CLASS, StringMatchType.Contains)
                         }
-                    }.firstOrNull() ?: return Pair(null, Outcome.MESSAGE_CLASS_MISSING)
+                    }.firstOrNull() ?: return Resolution(null, Outcome.MESSAGE_CLASS_MISSING)
                     val messageClass = messageData.getInstance(classLoader)
                     val keyData = dex.findClass {
                         matcher {
@@ -102,11 +106,11 @@ class ModernMessageAccess private constructor(
                                 name("toString")
                             }
                         }
-                    }.firstOrNull() ?: return Pair(null, Outcome.KEY_CLASS_MISSING)
+                    }.firstOrNull() ?: return Resolution(null, Outcome.KEY_CLASS_MISSING)
                     val keyClass = keyData.getInstance(classLoader)
                     val keyField = messageClass.declaredFields
                         .firstOrNull { it.type == keyClass }
-                        ?: return Pair(null, Outcome.KEY_FIELD_MISSING)
+                        ?: return Resolution(null, Outcome.KEY_FIELD_MISSING)
                     keyField.isAccessible = true
                     val jidData = dex.findClass {
                         matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
@@ -128,7 +132,7 @@ class ModernMessageAccess private constructor(
                             " senderJid=" + (senderJidField != null) +
                             " fromMe=" + (fromMeField != null),
                     )
-                    Pair(
+                    Resolution(
                         ModernMessageAccess(
                             messageClass, keyField, messageIdField,
                             senderJidField, fromMeField,
@@ -139,7 +143,7 @@ class ModernMessageAccess private constructor(
             } catch (failure: Throwable) {
                 if (failure is VirtualMachineError) throw failure
                 Log.w(TAG, "Message access resolver unavailable", failure)
-                Pair(null, Outcome.ERROR)
+                Resolution(null, Outcome.ERROR)
             }
         }
     }

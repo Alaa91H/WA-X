@@ -66,6 +66,10 @@ class ModernContactAccess private constructor(
             USER_JID_FIELD_MISSING,
             ERROR,
         }
+        /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
+        class Resolution(val access: ModernContactAccess?, val outcome: Outcome) {
+            val available: Boolean get() = access != null
+        }
 
         /**
          * Resolves the access chain once per process. Returns null together
@@ -79,15 +83,15 @@ class ModernContactAccess private constructor(
                 DexKitBridge.create(context.applicationInfo.sourceDir).use { dex ->
                     val contactData = dex.findClass {
                         matcher { addUsingString(ANCHOR_CONTACT, StringMatchType.Contains) }
-                    }.firstOrNull() ?: return Pair(null, Outcome.CONTACT_CLASS_MISSING)
+                    }.firstOrNull() ?: return Resolution(null, Outcome.CONTACT_CLASS_MISSING)
                     val contactClass = contactData.getInstance(classLoader)
                     val dataData = dex.findClass {
                         matcher { className(CONTACT_DATA_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull() ?: return Pair(null, Outcome.CONTACT_DATA_CLASS_MISSING)
+                    }.firstOrNull() ?: return Resolution(null, Outcome.CONTACT_DATA_CLASS_MISSING)
                     val dataClass = dataData.getInstance(classLoader)
                     val jidData = dex.findClass {
                         matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull() ?: return Pair(null, Outcome.JID_CLASS_MISSING)
+                    }.firstOrNull() ?: return Resolution(null, Outcome.JID_CLASS_MISSING)
                     val jidClass = jidData.getInstance(classLoader)
                     // DexKit's returnType is a ClassData, not a Class.
                     val phoneJidClass = dex.findMethod {
@@ -102,11 +106,11 @@ class ModernContactAccess private constructor(
                     }
                     val (owner, field) = if (phoneField == null) {
                         val jidField = firstFieldOfType(dataClass, jidClass)
-                            ?: return Pair(null, Outcome.USER_JID_FIELD_MISSING)
+                            ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
                         dataClass to jidField
                     } else {
                         val jidField = firstFieldOfType(contactClass, jidClass)
-                            ?: return Pair(null, Outcome.USER_JID_FIELD_MISSING)
+                            ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
                         contactClass to jidField
                     }
                     field.isAccessible = true
@@ -114,7 +118,7 @@ class ModernContactAccess private constructor(
                         TAG,
                         "Contact access resolved; JID field owner=" + owner.name,
                     )
-                    Pair(
+                    Resolution(
                         ModernContactAccess(
                             contactClass, dataClass, jidClass, phoneJidClass, field,
                         ),
@@ -124,7 +128,7 @@ class ModernContactAccess private constructor(
             } catch (failure: Throwable) {
                 if (failure is VirtualMachineError) throw failure
                 Log.w(TAG, "Contact access resolver unavailable", failure)
-                Pair(null, Outcome.ERROR)
+                Resolution(null, Outcome.ERROR)
             }
         }
 
