@@ -54,7 +54,7 @@ public final class ModernXposedEntry extends XposedModule {
                         Context target = (Context) chain.getArg(0);
                         if (target != null && packageName.equals(target.getPackageName())) {
                             // Remote framework IPC must never block WhatsApp Application.attach.
-                            Thread reporter = new Thread(() -> reportBootstrap(packageName),
+                            Thread reporter = new Thread(() -> reportBootstrap(packageName, target),
                                     "wax-api102-target-proof");
                             reporter.setDaemon(true);
                             reporter.start();
@@ -70,7 +70,7 @@ public final class ModernXposedEntry extends XposedModule {
         }
     }
 
-    private void reportBootstrap(String packageName) {
+    private void reportBootstrap(String packageName, Context target) {
         try {
             SharedPreferences preferences = getRemotePreferences(PREFS_GROUP);
             // Only report target-originated canary evidence: never claim feature readiness.
@@ -84,7 +84,23 @@ public final class ModernXposedEntry extends XposedModule {
                         .putString(ModernRuntimeProof.processKey(packageName), currentProcessName)
                         .apply();
             }
-            log(Log.INFO, TAG, "API102 attached: " + packageName
+            // Optional, reversible first modern feature. Never affect WhatsApp by default.
+            String customTimeState = ModernCustomTimeFeature.Outcome.DISABLED.name();
+            if (preferences != null && preferences.getBoolean(ModernCustomTimeFeature.ENABLE_KEY, false)) {
+                try {
+                    System.loadLibrary("dexkit");
+                    customTimeState = ModernCustomTimeFeature.INSTANCE
+                            .install(target, this, hookRegistry, preferences).name();
+                } catch (Throwable featureFailure) {
+                    if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                    customTimeState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                    log(Log.ERROR, TAG, "Modern CustomTime pilot failed on " + packageName, featureFailure);
+                }
+            }
+            if (preferences != null) {
+                preferences.edit().putString("modern.feature.custom_time.state." + packageName,
+                        customTimeState).apply();
+            }            log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {
             log(Log.ERROR, TAG, "Modern preferences unavailable: " + packageName, e);

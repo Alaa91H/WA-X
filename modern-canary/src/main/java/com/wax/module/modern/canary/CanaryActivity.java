@@ -16,6 +16,7 @@ import android.widget.TextView;
 public final class CanaryActivity extends Activity implements CanaryApplication.StateListener {
     private TextView state;
     private Switch monitor;
+    private Switch customTime;
     private CanaryApplication application;
     private boolean rendering;
 
@@ -39,8 +40,8 @@ public final class CanaryActivity extends Activity implements CanaryApplication.
         root.addView(heading);
 
         TextView warning = new TextView(this);
-        warning.setText("Experimental diagnostic module. Separate from WA X. "
-                + "This canary only observes startup and does not activate legacy features.");
+        warning.setText("Experimental API102 module. Separate from production WA X. "
+                + "CustomTime is opt-in and experimental; the rest of the legacy features remain disabled.");
         warning.setPadding(0, dp(14), 0, dp(24));
         root.addView(warning);
 
@@ -58,6 +59,14 @@ public final class CanaryActivity extends Activity implements CanaryApplication.
         });
         root.addView(monitor);
 
+        customTime = new Switch(this);
+        customTime.setText("EXPERIMENTAL: Enable CustomTime display (restart WhatsApp after change)");
+        customTime.setPadding(0, dp(10), 0, dp(14));
+        customTime.setEnabled(false);
+        customTime.setOnCheckedChangeListener((button, checked) -> {
+            if (!rendering) application.setCustomTimeEnabled(checked);
+        });
+        root.addView(customTime);
         Button refresh = new Button(this);
         refresh.setText("Refresh framework state");
         refresh.setOnClickListener(v -> application.refresh());
@@ -85,6 +94,8 @@ public final class CanaryActivity extends Activity implements CanaryApplication.
         state.setText(status.message);
         monitor.setEnabled(status.connected);
         monitor.setChecked(status.monitoringEnabled);
+        customTime.setEnabled(status.connected);
+        customTime.setChecked(status.customTimeEnabled);
         rendering = false;
     }
 }
