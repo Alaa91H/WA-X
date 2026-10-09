@@ -145,8 +145,9 @@ android {
     if (modernXposedPackage) {
         sourceSets.getByName("main") {
             manifest.srcFile(modernSourceOutput.map { it.file("AndroidManifest.xml") })
-            assets.setSrcDirs(listOf(modernSourceOutput.map { it.dir("assets") }))
-            resources.srcDir("../modern-canary/src/main/resources")
+            assets.directories.clear()
+            assets.directories.add(modernSourceOutput.get().dir("assets").asFile.absolutePath)
+            resources.directories.add(file("../modern-canary/src/main/resources").absolutePath)
         }
     }
 
