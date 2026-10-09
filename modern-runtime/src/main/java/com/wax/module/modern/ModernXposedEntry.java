@@ -323,6 +323,27 @@ public final class ModernXposedEntry extends XposedModule {
                     log(Log.WARN, TAG, "Modern presence state delivery failed: " + pilot.name(), error);
                 }
             }
+            // ContactItemListener is always-on infrastructure (no user toggle):
+            // the contact-bind fan-out bus other features subscribe to. Its
+            // consumer (ShowOnline) migrates in a later wave; an empty bus is
+            // a no-op. Resolution runs on this background reporter thread.
+            String contactBusState = ModernContactItemListenerFeature.Outcome.ERROR.name();
+            try {
+                System.loadLibrary("dexkit");
+                contactBusState = ModernContactItemListenerFeature.INSTANCE
+                        .install(target, this, hookRegistry).name();
+                Log.i(TAG, "M06_CONTACT_BUS_HOOK_RESULT package=" + packageName
+                        + " state=" + contactBusState);
+            } catch (Throwable featureFailure) {
+                if (featureFailure instanceof VirtualMachineError) throw (VirtualMachineError) featureFailure;
+                contactBusState = "ERROR_" + featureFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Modern ContactItemListener bus failed on " + packageName, featureFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "CONTACT_ITEM_LISTENER", contactBusState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Contact bus state delivery failed", error);
+            }
             log(Log.INFO, TAG, "API102 attached: " + packageName
                     + ", canary=" + canaryEnabled);
         } catch (RuntimeException e) {

@@ -78,6 +78,8 @@ public final class ModernTargetTelemetryProviderTest {
         assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("HOME_CLASS_MISSING"));
         assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
                 ModernTargetTelemetryProvider.EVENT_IN_WHATSAPP_SETTINGS));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_CONTACT_ITEM_LISTENER));
         assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState("ITEM_ADDED"));
         assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState(null));
     }
