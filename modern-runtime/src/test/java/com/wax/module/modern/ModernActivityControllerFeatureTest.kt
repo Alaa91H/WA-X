@@ -1,6 +1,5 @@
 package com.wax.module.modern
 
-import android.content.Intent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,27 +34,48 @@ class ModernActivityControllerFeatureTest {
         assertFalse(ModernActivityControllerFeature.isSettingsNotificationsActivity(null))
     }
 
-    @Test fun pickerResultOnlyFillsMissingExtras() {
-        val intent = Intent()
-        intent.putExtra("key", "already-set")
-        ModernActivityControllerFeature.applyPickerResult(intent, "from-wax")
-        assertEquals("already-set", intent.getStringExtra("key"))
-        assertTrue(intent.getStringArrayListExtra("contacts")!!.isEmpty())
-        assertTrue(intent.getSerializableExtra("picker_contacts") != null)
+    @Test fun resultNeverOverwritesWhatThePickerAlreadySet() {
+        val alreadyComplete = setOf("key", "contacts", "picker_contacts")
+        assertEquals(
+            emptyList<String>(),
+            ModernActivityControllerFeature.extrasToFill(alreadyComplete, "from-wax"),
+        )
     }
 
-    @Test fun pickerIntentCarriesTheManagerKeyAndPickerMode() {
-        val intent = ModernActivityControllerFeature.buildPickerIntent(
-            "com.whatsapp", "com.whatsapp.settings.About", null,
+    @Test fun missingResultExtrasAreFilled() {
+        assertEquals(
+            listOf("key", "contacts", "picker_contacts"),
+            ModernActivityControllerFeature.extrasToFill(emptySet(), "from-wax"),
         )
-        assertEquals("com.whatsapp", intent.component?.packageName)
-        assertEquals("com.whatsapp.settings.About", intent.component?.className)
-        assertTrue(intent.getBooleanExtra("picker_mode", false))
-        assertEquals("", intent.getStringExtra("key"))
+        assertEquals(
+            listOf("contacts", "picker_contacts"),
+            ModernActivityControllerFeature.extrasToFill(setOf("key"), "from-wax"),
+        )
+    }
+
+    @Test fun aNullKeyNeverCreatesAnEmptyKeyExtra() {
+        assertEquals(
+            listOf("contacts", "picker_contacts"),
+            ModernActivityControllerFeature.extrasToFill(emptySet(), null),
+        )
     }
 
     @Test fun authWindowStartsClosed() {
         // Safety property: the bypass must never be armed outside a round trip.
         assertFalse(ModernActivityControllerFeature.isAuthBypassed())
+    }
+
+    @Test fun pickerRequestCodeMatchesTheManagerPreference() {
+        // Must equal ContactPickerPreference.REQUEST_CONTACT_PICKER (0xff2515).
+        assertEquals(0xff2515, ModernActivityControllerFeature.REQUEST_CONTACT_PICKER)
+    }
+
+    @Test fun outcomeSetCoversInstallReplayAndResolutionFailures() {
+        val outcomes = ModernActivityControllerFeature.Outcome.values().map { it.name }
+        assertTrue(outcomes.containsAll(listOf(
+            "INSTALLED", "ALREADY_INSTALLED", "APPLICATION_UNAVAILABLE",
+            "AUTH_RESOLVER_MISSING", "AUTH_RESOLVER_AMBIGUOUS",
+            "SETTINGS_ACTIVITY_UNRESOLVED", "ERROR",
+        )))
     }
 }

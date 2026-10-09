@@ -65,17 +65,36 @@ object ModernActivityControllerFeature {
     fun isSettingsNotificationsActivity(activityName: String?): Boolean =
         !activityName.isNullOrEmpty() && activityName.endsWith(SETTINGS_NOTIFICATIONS_SUFFIX)
 
-    /** Pure result shaping, unit-testable without a device. */
+    /**
+     * Which result extras the relay must add.
+     *
+     * Pure on purpose: the picker round trip can only be exercised inside
+     * WhatsApp, but the rule "never overwrite what the picker already set" is
+     * the part that can silently corrupt a result, so it is decided here and
+     * unit-tested without any Android object.
+     */
+    @JvmStatic
+    fun extrasToFill(existing: Set<String>, key: String?): List<String> {
+        val missing = ArrayList<String>(3)
+        if (EXTRA_KEY !in existing && key != null) missing.add(EXTRA_KEY)
+        if (EXTRA_CONTACTS !in existing) missing.add(EXTRA_CONTACTS)
+        if (EXTRA_PICKER_CONTACTS !in existing) missing.add(EXTRA_PICKER_CONTACTS)
+        return missing
+    }
+
+    /** Applies [extrasToFill] to the real result Intent. */
     @JvmStatic
     fun applyPickerResult(resultIntent: Intent, key: String?) {
-        if (!resultIntent.hasExtra(EXTRA_KEY) && key != null) {
-            resultIntent.putExtra(EXTRA_KEY, key)
+        val existing = HashSet<String>()
+        for (name in listOf(EXTRA_KEY, EXTRA_CONTACTS, EXTRA_PICKER_CONTACTS)) {
+            if (resultIntent.hasExtra(name)) existing.add(name)
         }
-        if (!resultIntent.hasExtra(EXTRA_CONTACTS)) {
-            resultIntent.putStringArrayListExtra(EXTRA_CONTACTS, arrayListOf())
-        }
-        if (!resultIntent.hasExtra(EXTRA_PICKER_CONTACTS)) {
-            resultIntent.putExtra(EXTRA_PICKER_CONTACTS, arrayListOf<Any?>())
+        for (name in extrasToFill(existing, key)) {
+            when (name) {
+                EXTRA_KEY -> resultIntent.putExtra(EXTRA_KEY, key)
+                EXTRA_CONTACTS -> resultIntent.putStringArrayListExtra(EXTRA_CONTACTS, arrayListOf())
+                else -> resultIntent.putExtra(EXTRA_PICKER_CONTACTS, arrayListOf<Any?>())
+            }
         }
     }
 
