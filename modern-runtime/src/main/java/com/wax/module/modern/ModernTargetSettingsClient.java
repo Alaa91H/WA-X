@@ -44,7 +44,7 @@ public final class ModernTargetSettingsClient {
     /** Persists a string-valued mode (currently the archived-chat mode). */
     public static boolean writeMode(Context context, String packageName, String mode) {
         if (context == null || packageName == null || mode == null) return false;
-        if (!ModernTargetPolicy.isTargetPackageForProcess(context.packageName, packageName)) {
+        if (!ModernTargetPolicy.isTargetPackageForProcess(context.getPackageName(), packageName)) {
             return false;
         }
         Bundle extras = new Bundle();
