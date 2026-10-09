@@ -21,8 +21,8 @@ class ModernControlCenterCatalogTest {
 
     @Test fun alwaysOnInfrastructureIsNeverActionable() {
         for (item in ModernControlCenterCatalog.alwaysOn) {
-            assertEquals("infrastructure must not expose a preference key", "",
-                item.preferenceKey)
+            assertTrue("infrastructure must not expose a preference key: ${item.id}",
+                item.preferenceKey.isEmpty())
             assertFalse(ControlPolicy.isWritable(item.preferenceKey, ControlEffective.INSTALLED))
         }
     }
@@ -30,7 +30,7 @@ class ModernControlCenterCatalogTest {
     @Test fun catalogueCoversExactlyTheFeaturesTheRuntimeWires() {
         val ids = (ModernControlCenterCatalog.wired + ModernControlCenterCatalog.alwaysOn)
             .map { it.id }
-        assertEquals("duplicate control ids", ids.size, ids.toSet().size)
+        assertEquals(ids.size, ids.toSet().size)
         assertNotNull(ModernControlCenterCatalog.wiredById("custom_time"))
         assertNull(ModernControlCenterCatalog.wiredById("does_not_exist"))
     }
@@ -46,11 +46,11 @@ class ModernControlCenterCatalogTest {
         val pendingIds = ModernControlCenterCatalog.pending.map { it.id }
         val wiredIds = (ModernControlCenterCatalog.wired + ModernControlCenterCatalog.alwaysOn)
             .map { it.id }
-        assertTrue(
-            "a feature cannot be pending and wired at once: " +
-                pendingIds.filter { it in wiredIds },
+        assertEquals(
+            "a feature cannot be pending and wired at once",
+            emptyList<String>(),
+            pendingIds.filter { it in wiredIds },
         )
-        pendingIds.forEach { assertTrue(it in pendingIds) }
     }
 
     @Test fun everyCategoryIsRepresentedByAtLeastOneRealControl() {
