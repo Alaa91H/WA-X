@@ -1,3 +1,54 @@
+WA X 1.2.0-beta.10
+Release date: 2026-10-09
+
+BATCH 1 OF THE API 102 MIGRATION + EMBEDDED CONTROL CENTER
+
+Migration progress: 10 of the 64 registered features are now wired to the
+modern libxposed API 102 runtime (up from 5), each with source-verified hook
+paths, preference paths and pure unit tests. This is still a partial
+migration and the app says so.
+
+NEW IN-WHATSAPP CONTROL CENTER (single WA X entry)
+- The WhatsApp overflow now contains exactly ONE WA X entry. It opens an
+  embedded control center inside WhatsApp instead of jumping to the Manager.
+- Categories (privacy, chats, media, appearance, tools, advanced), search,
+  and a Favourites list that really persists.
+- Every control shows its VERIFIED effective status, not just a stored ON/OFF:
+  Working, Installed, Off, Resolver could not confirm, Unsupported target
+  signature, Partial, Runtime error, Pending migration, Restart required.
+- Only features that are actually migrated are switchable. Unmigrated
+  features appear in a dedicated, non-actionable "Pending migration" area
+  instead of a fake toggle.
+- Toggling saves through the WA X Manager and applies after a WhatsApp
+  restart; the screen says so immediately.
+- English and Arabic, following the device language. Falls back to the
+  Manager only if the embedded surface cannot be shown.
+
+BATCH 1 MIGRATED FEATURES (W1 core infrastructure)
+- ContactItemListener: contact-bind fan-out bus.
+- ConversationItemListener: message-row bus with a real binding store.
+- MenuStatusProvider: status-playback menu bus.
+- ActivityController: Manager-driven contact-picker relay, with the app-lock
+  bypass window opened only for that flow.
+- Tasker: automation bridge. The forward direction (received message to
+  Tasker) works; the reverse send direction is reported as Partial because it
+  needs the message-send pipeline that has not migrated yet.
+
+SAFETY
+- No legacy Xposed API is used by any migrated adapter.
+- The control center cannot crash WhatsApp: it is main-thread and liveness
+  guarded and falls back on any failure.
+- The control center reads only a fixed allowlist of preference keys from the
+  Manager, and settings writes are validated and UID-authorized.
+
+NOT YET MIGRATED
+- The remaining 53 registered features still run on the legacy path and are
+  listed honestly as Pending migration in the control center. Do not expect
+  their behaviour to change in this release.
+- All device behaviour is pending the maintainer's own test on Android 17 /
+  WhatsApp 2.26.39.74; nothing in this release is claimed to be
+  device-verified.
+
 WA X 1.2.0-beta.9
 Release date: 2026-10-09
 
