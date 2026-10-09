@@ -104,8 +104,10 @@ object ModernMenuStatusProviderFeature {
         if (menuResourceId <= 0) return Outcome.RESOURCE_ID_MISSING
         return try {
             DexKitBridge.create(target.applicationInfo.sourceDir).use { dex ->
-                val menuMethods = dex.findMethod { matcher ->
-                    matcher.addUsingNumber(menuResourceId)
+                val menuMethods = dex.findMethod {
+                    matcher {
+                        addUsingNumber(menuResourceId)
+                    }
                 }
                 if (menuMethods.isEmpty()) return Outcome.RESOLVER_MISSING
                 val menuMethod = try {
@@ -122,8 +124,10 @@ object ModernMenuStatusProviderFeature {
                     ?: return Outcome.RESOLVER_MISSING
                 statusListField.isAccessible = true
                 currentIndexField = resolveCurrentIndexField(dex, target.classLoader)
-                val menuManagerClass = dex.findMethod { matcher ->
-                    matcher.addUsingString(ANCHOR_MENU_MANAGER, StringMatchType.Contains)
+                val menuManagerClass = dex.findMethod {
+                    matcher {
+                        addUsingString(ANCHOR_MENU_MANAGER, StringMatchType.Contains)
+                    }
                 }.firstOrNull { it.returnType == Void.TYPE }?.declaredClassName?.let { name ->
                     runCatching { Class.forName(name, false, target.classLoader) }.getOrNull()
                 }
@@ -209,8 +213,10 @@ object ModernMenuStatusProviderFeature {
         classLoader: ClassLoader,
     ): Field? {
         val playbackMethod = try {
-            dex.findMethod { matcher ->
-                matcher.usingStrings(ANCHOR_SET_PAGE_ACTIVE)
+            dex.findMethod {
+                matcher {
+                    usingStrings(ANCHOR_SET_PAGE_ACTIVE)
+                }
             }.firstOrNull()
         } catch (failure: Throwable) {
             Log.w(TAG, "Current-index anchor unresolvable", failure)
@@ -230,8 +236,10 @@ object ModernMenuStatusProviderFeature {
         suffix: String,
     ): Class<*>? {
         val resolvedName = try {
-            dex.findClass { finder ->
-                finder.matcher().className(suffix, StringMatchType.EndsWith)
+            dex.findClass {
+                matcher {
+                    className(suffix, StringMatchType.EndsWith)
+                }
             }.firstOrNull()?.getInstance(classLoader)?.name
         } catch (failure: Throwable) {
             Log.w(TAG, "Playback fragment $suffix unresolvable", failure)
