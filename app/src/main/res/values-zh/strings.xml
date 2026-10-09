@@ -574,4 +574,14 @@
     <string name="gt_translate_from">源语言</string>
     <string name="gt_translate_to">目标语言</string>
     <string name="gt_translate_action">翻译</string>
+    <string name="modern_framework_connected">libxposed API %1$d 已连接</string>
+    <string name="modern_framework_waiting">libxposed API 102：等待框架连接</string>
+    <string name="modern_framework_status">WA X %1$s — 现代 Runtime 诊断</string>
+    <string name="modern_framework_features_pending">框架连接不能证明 WhatsApp 功能正常运行。迁移仍处于试验阶段。</string>
+    <string name="modern_target_title">%1$s — API 102</string>
+    <string name="modern_target_loaded">已收到近期 Runtime 启动报告，但这不代表功能已正常运行。</string>
+    <string name="modern_target_stale">之前的报告已过期。请打开 WhatsApp 并重新检查。</string>
+    <string name="modern_target_boot_mismatch">报告来自另一轮设备启动，或系统时间无效。</string>
+    <string name="modern_target_no_report">未收到 API 102 报告。请打开应用后重新检查。</string>
+    <string name="modern_target_feature_status">实验性 CustomTime 功能：%1$s</string>
 </resources>
