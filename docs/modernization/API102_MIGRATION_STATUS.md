@@ -88,8 +88,8 @@ every row; status = honest roll-up.
 | 16 | ChatLimit | W3 | 8 | 5 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 17 | SeparateGroup | W3 | 8 | 15 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 18 | ShowOnline | W3 | 9 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 19 | DndMode | W0 | 0 | 1 | wired (device UNVERIFIED) | pending (Manager toggle only) | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 20 | FreezeLastSeen | W0 | 0 | 1 | wired (device UNVERIFIED) | pending (Manager toggle only) | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 19 | DndMode | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 20 | FreezeLastSeen | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 21 | TypingPrivacy | W2 | 3 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 22 | HideChat | W2 | 3 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 23 | HideSeen | W3 | 9 | 7 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -101,8 +101,8 @@ every row; status = honest roll-up.
 | 29 | NewChat | W2 | 4 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 30 | Others | W3 | 10 | 28 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 31 | PinnedLimit | W3 | 10 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 32 | CustomTime | W0 | 0 | 1 | wired (device UNVERIFIED) | pending (Manager toggle only) | #411 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 33 | ShareLimit | W0 | 0 | 1 | wired (device UNVERIFIED) | pending (Manager toggle only) | #417 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 32 | CustomTime | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #411 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 33 | ShareLimit | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #417 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 34 | StatusDownload | W2 | 4 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 35 | ViewOnce | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 36 | CallType | W2 | 4 | 1 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -120,7 +120,7 @@ every row; status = honest roll-up.
 | 48 | CopySelectionMessage | W2 | 6 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 49 | TextStatusComposer | W3 | 10 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 50 | ToastViewer | W2 | 6 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
-| 51 | MenuHome | W0 | 0 | 0 | wired (device UNVERIFIED) | overflow-menu Manager link | #426 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 51 | MenuHome | W0 | 0 | 0 | wired (device UNVERIFIED) | overflow-menu Manager link + settings shell host | #426 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 52 | AntiWa | W4 | 11 | 3 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 53 | CustomPrivacy | W2 | 6 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 54 | AudioTranscript | W4 | 11 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
@@ -153,7 +153,10 @@ batch 12 = BackupRestore, CaptureDevice.
 
 ## Remaining work (updated every turn)
 
-1. NEXT (Phase 1 remainder): build the in-WhatsApp settings surface shell —
+1. IN FLIGHT (Phase 1): in-WhatsApp settings shell for the 4 wired toggles
+   (branch `feat/m06-inwhatsapp-settings-shell`) — provider write channel,
+   menu contributor, entry wiring, tests, stage doc. Next: push, open PR,
+   watch CI, merge, then Batch 1. —
    an API 102 screen rendered inside WhatsApp listing features with honest
    status (functional vs pending), controls wired to real settings, and a
    "requires WhatsApp restart" indicator. `ModernMenuHomeFeature` entry is

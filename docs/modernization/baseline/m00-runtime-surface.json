@@ -503,6 +503,7 @@
           "app/src/main/java/com/wax/module/activities/base/BaseActivity.kt",
           "app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt",
           "app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt",
+          "app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java",
           "app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt",
           "app/src/main/java/com/wax/module/preference/FileReaderPreference.kt",
           "app/src/main/java/com/wax/module/preference/FileSelectPreference.kt",
@@ -520,7 +521,7 @@
         ]
       },
       "by_pattern": {
-        "PreferenceManager": 35,
+        "PreferenceManager": 37,
         "getSharedPreferences()": 6
       },
       "files": [
@@ -542,7 +543,7 @@
         "app/src/main/java/com/wax/module/ui/fragments/base/BasePreferenceFragment.kt",
         "app/src/main/java/com/wax/module/ui/targets/TargetSettingsViewModel.kt"
       ],
-      "occurrences": 41,
+      "occurrences": 43,
       "owner": "#333 A09",
       "target": "Not a target of this program. Listed so the asymmetry stays visible.",
       "title": "Preference reads inside the Manager process",

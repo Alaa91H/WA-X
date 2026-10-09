@@ -58,4 +58,27 @@ public final class ModernTargetTelemetryProviderTest {
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent("EXECUTE_CODE"));
         assertFalse(ModernTargetTelemetryProvider.isSupportedEvent(null));
     }
+
+    @Test public void settingsWriteAllowlistCoversOnlyWiredAdapters() {
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey(
+                "modern.feature.custom_time.enabled"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("removeforwardlimit"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("freezelastseen"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("dndmode"));
+        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("segundos"));
+        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("ghostmode"));
+        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey("EXECUTE_CODE"));
+        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(null));
+        assertFalse(ModernTargetTelemetryProvider.isWritableSettingKey(""));
+    }
+
+    @Test public void settingsEvidenceValuesAreFixed() {
+        assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("INSTALLED"));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("ALREADY_INSTALLED"));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedSettingsState("HOME_CLASS_MISSING"));
+        assertTrue(ModernTargetTelemetryProvider.isSupportedEvent(
+                ModernTargetTelemetryProvider.EVENT_IN_WHATSAPP_SETTINGS));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState("ITEM_ADDED"));
+        assertFalse(ModernTargetTelemetryProvider.isSupportedSettingsState(null));
+    }
 }
