@@ -40,7 +40,7 @@ object ModernActivityControllerFeature {
     const val EXTRA_CONTACTS = "contacts"
     const val EXTRA_PICKER_CONTACTS = "picker_contacts"
     const val SETTINGS_NOTIFICATIONS_SUFFIX = "SettingsNotifications"
-    const val REQUEST_CONTACT_PICKER = 0xff2515
+    const val REQUEST_CONTACT_PICKER: Int = 0xff2515
     private const val TAG = "WA-X ActivityCtrl102"
 
     enum class Outcome {
@@ -139,7 +139,7 @@ object ModernActivityControllerFeature {
         val onActivityResult = Activity::class.java.getDeclaredMethod(
             "onActivityResult", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Intent::class.java,
         )
-        val installed = try {
+        val installedCount = try {
             hooks.installFeature(FEATURE_ID, listOf(
                 ModernHookRegistry.Registration("activity.app_lock_auth") {
                     val handle = ModernHookBridge(framework).intercept(
@@ -161,7 +161,7 @@ object ModernActivityControllerFeature {
                         if (activity != null && settingsActivity.isAssignableFrom(activity.javaClass)
                             && activity.intent.getBooleanExtra(EXTRA_CONTACT_MODE, false)
                         ) {
-                            openPicker(activity, targetPackage, aboutActivity)
+                            openPicker(activity, targetPackage, aboutActivity.name)
                         }
                         result
                     }
@@ -187,13 +187,12 @@ object ModernActivityControllerFeature {
                     ModernHookRegistry.Handle { handle.unhook() }
                 },
             ))
-            installed
         } catch (failure: Throwable) {
             if (failure is VirtualMachineError) throw failure
             Log.w(TAG, "Activity controller unavailable", failure)
             return Outcome.ERROR
         }
-        return if (installed > 0) Outcome.INSTALLED else Outcome.ALREADY_INSTALLED
+        return if (installedCount > 0) Outcome.INSTALLED else Outcome.ALREADY_INSTALLED
     }
 
     private fun openPicker(activity: Activity, targetPackage: String, aboutActivity: String) {
