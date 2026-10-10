@@ -3,7 +3,6 @@ package com.wax.module.activities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.widget.Button
 import android.widget.LinearLayout
@@ -56,35 +55,59 @@ class DiagnosticsActivity : BaseActivity() {
         externalVerifications = ExternalVerificationStore(this)
         DiagnosticProbeSource.attach(this, externalVerifications)
 
-        val root = vertical()
-        root.addView(title())
-        root.addView(body())
+        // Scan output can contain hundreds of checks. Keep the whole report in
+        // the weighted scrolling region and the actions outside it. Otherwise a
+        // long deep scan measures the ScrollView at its content height and pushes
+        // Export ZIP / Import ZIP below the screen with no way to reach them.
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val reportContent = vertical()
+        reportContent.addView(title())
+        reportContent.addView(body())
         progressLabel = label("")
-        root.addView(progressLabel)
+        reportContent.addView(progressLabel)
         output = label("")
-        output.movementMethod = ScrollingMovementMethod()
-        val scroller = ScrollView(this)
-        scroller.addView(output)
-        root.addView(scroller)
+        reportContent.addView(output)
+
+        val scroller =
+            ScrollView(this).apply {
+                id = R.id.diagnostics_report_scroll
+                isFillViewport = true
+                addView(reportContent)
+            }
+        root.addView(
+            scroller,
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
+        )
+
+        // The footer is always visible, even while the report is expanding or
+        // the user is scrolling back through a deep scan. Both scan modes share
+        // these same export/import actions and their redaction safeguards.
+        val actions =
+            LinearLayout(this).apply {
+                id = R.id.diagnostics_actions
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(4), dp(16), dp(16))
+            }
 
         val runRow = horizontal()
         runRow.addView(button(R.string.diagnostics_quick) { runQuickCheck() })
         runRow.addView(button(R.string.diagnostics_deep) { runDeepScan() })
         runRow.addView(button(R.string.diagnostics_cancel) { cancelScan() })
-        root.addView(runRow)
+        actions.addView(runRow)
 
         val verificationRow = horizontal()
         verificationRow.addView(
             button(R.string.diagnostics_confirm_external) { showExternalVerificationDialog() },
         )
-        root.addView(verificationRow)
+        actions.addView(verificationRow)
 
         val exportRow = horizontal()
         exportRow.addView(button(R.string.diagnostics_export) { exportWithConfirmation() })
         exportRow.addView(button(R.string.diagnostics_import) { importPreviousArchive() })
         exportRow.addView(button(R.string.diagnostics_close) { finish() })
-        root.addView(exportRow)
+        actions.addView(exportRow)
 
+        root.addView(actions)
         setContentView(root)
     }
 
