@@ -77,6 +77,8 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #454 | ViewOnce (privacy pair) | MERGED, main CI green |
 | #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | PR #457 MERGED (`44b90875`), all 12 checks green on `8c093fc8`, issue CLOSED |
 | #455 | API102 resolver, hook and core privacy failure investigation | PR #459 MERGED (`599deca6`), all 12 checks green on `a6f0f3b4` |
+| #449 | Read receipt privacy: hide read receipts, release after reply, delivery tick | on `integration/api102-migration`, PR pending |
+| #450 | Stealth privacy: typing, recording and online reported separately | on `integration/api102-migration`, PR pending |
 
 ### #170 scope notes
 
@@ -165,9 +167,9 @@ every row; status = honest roll-up.
 | 18 | ShowOnline | W3 | 9 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 19 | DndMode | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 20 | FreezeLastSeen | W0 | 0 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle + Manager | #418 MERGED | main green | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 21 | TypingPrivacy | W2 | 3 | 1 | wired (device UNVERIFIED) | in-WhatsApp toggle (Privacy) | feat/m06-typing-privacy | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
+| 21 | TypingPrivacy | W2 | 3 | 1 | wired; typing and recording reported separately (#450) | in-WhatsApp toggle (Privacy) | integration/api102-migration | PR pending | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 22 | HideChat | W2 | 3 | 1 | wired (device UNVERIFIED) | in-WhatsApp 3-state control (Privacy) | feat/m06-hide-chat | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
-| 23 | HideSeen | W3 | 9 | 7 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
+| 23 | HideSeen | W3 | 9 | 7 | migrated: receipt_privacy_read / _after_reply / _delivery | Privacy: hide read receipts, release after reply, delivery reported UNSUPPORTED | PR pending | — | PENDING_USER_DEVICE_TEST | migrated-pending-user-test |
 | 24 | HideSeenView | W2 | 3 | 0 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 25 | TagMessage | W2 | 3 | 2 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
 | 26 | HideTabs | W3 | 9 | 4 | legacy-only | pending | — | — | PENDING_USER_DEVICE_TEST | pending |
