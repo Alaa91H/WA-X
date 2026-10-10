@@ -75,7 +75,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #447 | TypingPrivacy (privacy pair) | MERGED, main CI green |
 | #453 | HideChat (privacy pair) | MERGED, main CI green |
 | #454 | ViewOnce (privacy pair) | MERGED, main CI green |
-| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | in progress, CI pending |
+| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | on `integration/api102-migration`, CI pending |
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
 exists (the Manager link alone is not the full acceptance criterion).
