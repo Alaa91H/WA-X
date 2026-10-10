@@ -1,6 +1,7 @@
 package com.wax.module.modern
 
 import android.app.Activity
+import android.app.Application
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
@@ -22,7 +23,9 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The embedded WA X Control Center (#433): the primary in-WhatsApp surface for
@@ -35,17 +38,20 @@ import java.util.concurrent.Executors
  * adapter is not migrated yet are rendered inert in a dedicated pending area
  * with an explicit "pending migration" status.
  *
- * Failure policy: any construction or inflation problem is caught and turned
- * into a fallback to the external Manager. This UI must never be able to
- * crash WhatsApp.
+ * Failure policy: any construction or inflation problem is caught and returned
+ * to the menu owner, which launches the Manager once. This UI must never be
+ * able to crash WhatsApp.
  */
 class ModernControlCenterShell(
     private val activity: Activity,
     private val packageName: String,
 ) {
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val writer = Executors.newSingleThreadExecutor { task ->
         Thread(task, "wax-api102-control-center-write").apply { isDaemon = true }
     }
+    private val taskScope = newTaskScope(writer, mainHandler)
+    private val disposed = AtomicBoolean(false)
 
     /** Follows the device language WhatsApp is already running in. */
     private val strings = ControlCenterStrings.forLanguage(
@@ -60,20 +66,49 @@ class ModernControlCenterShell(
     private val secondary = themeColor(android.R.attr.textColorSecondary, Color.LTGRAY)
 
     private var dialog: Dialog? = null
+    private var dialogLifecycle: ActivityBoundDialogLifecycle? = null
 
-    /** Shows the centre. Returns false when the caller must fall back. */
-    fun show(): Boolean {
-        if (activity.isFinishing || activity.isDestroyed) return false
-        if (Looper.myLooper() != Looper.getMainLooper()) return false
+    /** Shows one centre per target process/activity. Returns false for one Manager fallback. */
+    private fun show(): Boolean {
+        if (!isHostUsable()) {
+            Log.w(TAG, "WINDOW_FAILED package=$packageName reason=ACTIVITY_UNAVAILABLE")
+            disposeWithoutWindow(ActivityDialogCloseReason.SHOW_FAILED)
+            return false
+        }
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Log.w(TAG, "WINDOW_FAILED package=$packageName reason=MAIN_THREAD_REQUIRED")
+            disposeWithoutWindow(ActivityDialogCloseReason.SHOW_FAILED)
+            return false
+        }
+        if (dialogLifecycle?.isActive == true && dialog?.isShowing == true) {
+            Log.i(TAG, "WINDOW_REUSED package=$packageName")
+            return true
+        }
         return try {
             buildAndShow()
             true
         } catch (failure: Throwable) {
             if (failure is VirtualMachineError) throw failure
-            Log.w(TAG, "Embedded control center unavailable; falling back", failure)
-            fallbackToManager()
+            val reason = ControlCenterFailureReason.fromClassName(failure.javaClass.name)
+            Log.w(TAG,
+                "WINDOW_FAILED package=$packageName reason=$reason exception=${failure.javaClass.simpleName}")
+            dialogLifecycle?.closeForShowFailure()
+                ?: disposeWithoutWindow(ActivityDialogCloseReason.SHOW_FAILED)
             false
         }
+    }
+
+    private fun isReusableFor(host: Activity): Boolean =
+        activity === host && isHostUsable() && !disposed.get() &&
+            dialogLifecycle?.isActive == true && dialog?.isShowing == true
+
+    private fun isHostUsable(): Boolean =
+        activity.packageName == packageName && !activity.isFinishing && !activity.isDestroyed
+
+    private fun closeForReplacement() {
+        if (Looper.myLooper() != Looper.getMainLooper()) return
+        dialogLifecycle?.closeForReplacement()
+            ?: disposeWithoutWindow(ActivityDialogCloseReason.REPLACED)
     }
 
     private fun buildAndShow() {
@@ -126,7 +161,7 @@ class ModernControlCenterShell(
         }
         val restart = Button(activity).apply {
             text = strings.restart
-            setOnClickListener { restartWhatsApp() }
+            setOnClickListener { if (isWindowInteractive()) restartWhatsApp() }
         }
         val manager = Button(activity).apply {
             text = strings.openManager
@@ -139,6 +174,7 @@ class ModernControlCenterShell(
         val rowsInOrder = buildEntries(states, "")
 
         fun render(query: String) {
+            if (!isShellAlive()) return
             content.removeAllViews()
             val matching = rowsInOrder.filter { ControlPolicy.matches(it, query) }
             val filtered = if (favoritesOnly) matching.filter { it.id in favorites } else matching
@@ -168,7 +204,7 @@ class ModernControlCenterShell(
         }
 
         favoritesFilter.setOnCheckedChangeListener { button, checked ->
-            if (!button.isPressed) return@setOnCheckedChangeListener
+            if (!isShellAlive() || !button.isPressed) return@setOnCheckedChangeListener
             favoritesOnly = checked
             render(search.text.toString())
         }
@@ -177,20 +213,119 @@ class ModernControlCenterShell(
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun afterTextChanged(s: Editable?) {
+                if (!isShellAlive()) return
                 try {
                     render(s?.toString().orEmpty())
                 } catch (failure: Throwable) {
-                    Log.w(TAG, "Control center render failed", failure)
+                    if (failure is VirtualMachineError) throw failure
+                    Log.w(TAG,
+                        "WINDOW_RENDER_FAILED package=$packageName exception=${failure.javaClass.simpleName}")
                 }
             }
         })
 
-        dialog = Dialog(activity).apply {
-            setContentView(root)
-            setTitle(strings.title)
-            setOnDismissListener { dialog = null }
-            show()
+        showDialog(root)
+    }
+
+    private fun showDialog(root: View) {
+        val window = Dialog(activity)
+        window.setContentView(root)
+        window.setTitle(strings.title)
+        dialog = window
+
+        val application = activity.application
+        var callbackRegistered = false
+        lateinit var lifecycle: ActivityBoundDialogLifecycle
+        val callbacks = object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(candidate: Activity, state: Bundle?) {}
+            override fun onActivityStarted(candidate: Activity) {}
+            override fun onActivityResumed(candidate: Activity) {}
+            override fun onActivityPaused(candidate: Activity) {}
+            override fun onActivityStopped(candidate: Activity) {
+                lifecycle.onActivityStopped(candidate)
+            }
+            override fun onActivitySaveInstanceState(candidate: Activity, state: Bundle) {}
+            override fun onActivityDestroyed(candidate: Activity) {
+                lifecycle.onActivityDestroyed(candidate)
+            }
         }
+        val handler = mainHandler
+        lifecycle = ActivityBoundDialogLifecycle(
+            hostActivity = activity,
+            dispatchToMain = { action ->
+                if (Looper.myLooper() == Looper.getMainLooper()) {
+                    action()
+                    true
+                } else {
+                    handler.post(action)
+                }
+            },
+            dismissDialog = {
+                if (window.isShowing) window.dismiss()
+            },
+            unregister = {
+                if (callbackRegistered) {
+                    callbackRegistered = false
+                    application.unregisterActivityLifecycleCallbacks(callbacks)
+                }
+            },
+            onClosed = { reason -> finishSession(window, lifecycle, reason) },
+            onCleanupFailure = { reason, code ->
+                Log.w(TAG, "$code package=$packageName reason=$reason")
+            },
+            onMainDispatchRejected = { reason ->
+                Log.e(TAG, "WINDOW_CLOSE_FAILED package=$packageName reason=MAIN_DISPATCH_REJECTED close=$reason")
+            },
+        )
+        dialogLifecycle = lifecycle
+        window.setOnDismissListener { lifecycle.onDialogDismissed() }
+
+        application.registerActivityLifecycleCallbacks(callbacks)
+        callbackRegistered = true
+        Log.i(TAG, "WINDOW_CREATED package=$packageName")
+        window.show()
+        if (!window.isShowing) throw IllegalStateException("Dialog did not attach")
+        Log.i(TAG, "WINDOW_SHOWN package=$packageName")
+    }
+
+    private fun finishSession(
+        window: Dialog,
+        lifecycle: ActivityBoundDialogLifecycle,
+        reason: ActivityDialogCloseReason,
+    ) {
+        if (!disposed.compareAndSet(false, true)) return
+        mainHandler.removeCallbacksAndMessages(null)
+        try {
+            taskScope.close()
+        } catch (_: RuntimeException) {
+            Log.w(TAG, "CONTROL_CENTER_TASK_SHUTDOWN_FAILED package=$packageName")
+        }
+        if (dialog === window) dialog = null
+        if (dialogLifecycle === lifecycle) dialogLifecycle = null
+        sessions.release(packageName, this)
+        Log.i(TAG, "WINDOW_CLOSED package=$packageName reason=$reason")
+    }
+
+    private fun disposeWithoutWindow(reason: ActivityDialogCloseReason) {
+        if (!disposed.compareAndSet(false, true)) return
+        mainHandler.removeCallbacksAndMessages(null)
+        try {
+            taskScope.close()
+        } catch (_: RuntimeException) {
+            Log.w(TAG, "CONTROL_CENTER_TASK_SHUTDOWN_FAILED package=$packageName")
+        }
+        sessions.release(packageName, this)
+        Log.i(TAG, "WINDOW_CLOSED package=$packageName reason=$reason")
+    }
+
+    private fun isShellAlive(): Boolean = !disposed.get() && isHostUsable()
+
+    private fun isWindowInteractive(): Boolean =
+        isShellAlive() && dialogLifecycle?.isActive == true && dialog?.isShowing == true
+
+    /** Kept as the row-action boundary used by the in-flight diagnostics PR. */
+    private fun fallbackToManager() {
+        if (isWindowInteractive()) ModernManagerFallback.open(activity)
     }
 
     private fun sectionHeader(label: String): View = TextView(activity).apply {
@@ -294,7 +429,9 @@ class ModernControlCenterShell(
             val button = Button(activity).apply {
                 isAllCaps = false
                 contentDescription = row.title
-                setOnClickListener { cycleArchiveMode(row, status) }
+                setOnClickListener {
+                    if (isWindowInteractive()) cycleArchiveMode(row, status)
+                }
             }
             container.addView(button)
             status.text = "${row.description} · ${archiveModeLabel(row)}" +
@@ -308,7 +445,7 @@ class ModernControlCenterShell(
                 isChecked = row.requested == ControlRequested.ENABLED
                 contentDescription = "${row.title}. ${ControlStatusText.status(row.effective)}"
                 setOnCheckedChangeListener { button, isChecked ->
-                    if (!button.isPressed) return@setOnCheckedChangeListener
+                    if (!isWindowInteractive() || !button.isPressed) return@setOnCheckedChangeListener
                     val key = row.preferenceKey
                     persist(key, isChecked, status, row)
                 }
@@ -326,7 +463,9 @@ class ModernControlCenterShell(
                 text = if (row.id in favorites) strings.favoriteToggleOn else strings.favoriteToggleOff
                 isAllCaps = false
                 contentDescription = strings.markFavorite
-                setOnClickListener { toggleFavorite(row) }
+                setOnClickListener {
+                    if (isWindowInteractive()) toggleFavorite(row)
+                }
             }
             container.addView(star)
         }
@@ -343,36 +482,53 @@ class ModernControlCenterShell(
     }
 
     private fun cycleArchiveMode(row: ControlEntry, status: TextView) {
+        if (!isWindowInteractive()) return
         val stored = currentModes[row.id] ?: ModernHideChatFeature.MODE_DISABLED
         val next = when (stored) {
             ModernHideChatFeature.MODE_DISABLED -> ModernHideChatFeature.MODE_CLICK_TIMES
             "1" -> "2"
             else -> ModernHideChatFeature.MODE_DISABLED
         }
-        writer.execute {
-            val saved = ModernTargetSettingsClient.writeMode(activity, packageName, next)
-            Handler(Looper.getMainLooper()).post {
+        val context = activity.applicationContext
+        val targetPackage = packageName
+        val weakShell = WeakReference(this)
+        val weakStatus = WeakReference(status)
+        taskScope.submit(
+            operation = { ModernTargetSettingsClient.writeMode(context, targetPackage, next) },
+            onComplete = { saved ->
+                val shell = weakShell.get() ?: return@submit
+                val statusView = weakStatus.get() ?: return@submit
+                if (!shell.isWindowInteractive()) return@submit
                 if (saved) {
-                    currentModes[row.id] = next
-                    status.text = "${row.description} · ${archiveModeLabel(row)} · restart required"
+                    shell.currentModes[row.id] = next
+                    statusView.text = "${row.description} · ${shell.archiveModeLabel(row)} · restart required"
                 } else {
-                    status.text = "${row.description} · " +
+                    statusView.text = "${row.description} · " +
                         ControlStatusText.status(ControlEffective.ERROR)
                 }
             }
-        }
+        )
     }
 
     private fun toggleFavorite(row: ControlEntry) {
+        if (!isWindowInteractive()) return
         val next = if (row.id in favorites) favorites - row.id else favorites + row.id
-        writer.execute {
-            ModernTargetSettingsClient.writeFavorites(activity, packageName,
-                ModernControlCenterCatalog.formatFavorites(next))
-            Handler(Looper.getMainLooper()).post {
-                favorites = next
-                Log.i(TAG, "Control centre favourite toggled: " + row.id)
+        val context = activity.applicationContext
+        val targetPackage = packageName
+        val serialized = ModernControlCenterCatalog.formatFavorites(next)
+        val weakShell = WeakReference(this)
+        taskScope.submit(
+            operation = { ModernTargetSettingsClient.writeFavorites(context, targetPackage, serialized) },
+            onComplete = { saved ->
+                val shell = weakShell.get() ?: return@submit
+                if (saved && shell.isWindowInteractive()) {
+                    shell.favorites = next
+                    Log.i(TAG, "CONTROL_CENTER_FAVORITE_SAVED")
+                } else if (!saved) {
+                    Log.w(TAG, "CONTROL_CENTER_FAVORITE_SAVE_FAILED")
+                }
             }
-        }
+        )
     }
 
     private fun persist(
@@ -381,33 +537,41 @@ class ModernControlCenterShell(
         status: TextView,
         row: ControlEntry,
     ) {
-        writer.execute {
-            val saved = ModernTargetSettingsClient.write(activity, packageName, key, enabled)
-            Handler(Looper.getMainLooper()).post {
-                if (saved) {
-                    status.text = "${row.description} · " +
-                        ControlStatusText.status(ControlEffective.RESTART_REQUIRED)
-                } else {
-                    status.text = "${row.description} · " +
-                        ControlStatusText.status(ControlEffective.ERROR)
-                }
+        if (!isWindowInteractive()) return
+        val context = activity.applicationContext
+        val targetPackage = packageName
+        val weakShell = WeakReference(this)
+        val weakStatus = WeakReference(status)
+        taskScope.submit(
+            operation = { ModernTargetSettingsClient.write(context, targetPackage, key, enabled) },
+            onComplete = { saved ->
+                val shell = weakShell.get() ?: return@submit
+                val statusView = weakStatus.get() ?: return@submit
+                if (!shell.isWindowInteractive()) return@submit
+                statusView.text = "${row.description} · " +
+                    ControlStatusText.status(
+                        if (saved) ControlEffective.RESTART_REQUIRED else ControlEffective.ERROR,
+                    )
             }
-        }
-    }
-
-    private fun fallbackToManager() {
-        try {
-            val intent = Intent(Intent.ACTION_MAIN).apply {
-                setClassName(MANAGER_PACKAGE, MANAGER_ACTIVITY)
-                addCategory(Intent.CATEGORY_LAUNCHER)
-            }
-            activity.startActivity(intent)
-        } catch (failure: Throwable) {
-            Log.w(TAG, "WA X Manager fallback unavailable", failure)
-        }
+        )
     }
 
     private fun restartWhatsApp() {
+        if (!isWindowInteractive()) return
+        val weakShell = WeakReference(this)
+        val accepted = taskScope.submit(
+            operation = { true },
+            onComplete = {
+                val shell = weakShell.get() ?: return@submit
+                if (shell.isWindowInteractive()) shell.restartWhatsAppNow()
+            },
+        )
+        if (!accepted) Log.w(TAG, "CONTROL_CENTER_RESTART_SKIPPED reason=SESSION_CLOSED")
+    }
+
+    /** Queued after accepted writes so an immediate restart cannot discard a save in flight. */
+    private fun restartWhatsAppNow() {
+        if (!isWindowInteractive()) return
         try {
             val launch = activity.packageManager.getLaunchIntentForPackage(packageName)
             val component = launch?.component ?: return
@@ -416,7 +580,9 @@ class ModernControlCenterShell(
             activity.startActivity(restart)
             Runtime.getRuntime().exit(0)
         } catch (failure: Throwable) {
-            Log.w(TAG, "Restart unavailable", failure)
+            if (failure is VirtualMachineError) throw failure
+            Log.w(TAG,
+                "CONTROL_CENTER_RESTART_FAILED exception=${failure.javaClass.simpleName}")
         }
     }
 
@@ -448,9 +614,48 @@ class ModernControlCenterShell(
         states.getString("mode." + ModernHideChatFeature.PREF_ARCHIVE_MODE,
             ModernHideChatFeature.MODE_DISABLED) ?: ModernHideChatFeature.MODE_DISABLED
 
-    private companion object {
-        const val TAG = "WA-X ControlCenter"
-        const val MANAGER_PACKAGE = "com.wax.module"
-        const val MANAGER_ACTIVITY = "com.wax.module.activities.MainActivity"
+    companion object {
+        private const val TAG = "WA-X ControlCenter"
+        private val sessions = ControlCenterSessionRegistry<ModernControlCenterShell>()
+
+        private fun newTaskScope(
+            executor: java.util.concurrent.ExecutorService,
+            handler: Handler,
+        ): ControlCenterTaskScope = ControlCenterTaskScope(
+            executor = executor,
+            postToMain = { callback -> handler.post(callback) },
+            removeMainCallbacks = { handler.removeCallbacksAndMessages(null) },
+            onUiPostFailure = {
+                Log.w(TAG, "CONTROL_CENTER_UI_UPDATE_DROPPED reason=MAIN_HANDLER_UNAVAILABLE")
+            },
+        )
+
+        @JvmStatic
+        fun showFor(activity: Activity, packageName: String): Boolean {
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                Log.w(TAG, "WINDOW_FAILED package=$packageName reason=MAIN_THREAD_REQUIRED")
+                return false
+            }
+            if (activity.packageName != packageName || activity.isFinishing || activity.isDestroyed) {
+                Log.w(TAG, "WINDOW_FAILED package=$packageName reason=ACTIVITY_UNAVAILABLE")
+                return false
+            }
+            return try {
+                val session = sessions.acquire(
+                    key = packageName,
+                    hostActivity = activity,
+                    canReuse = { it.isReusableFor(activity) },
+                    create = { ModernControlCenterShell(activity, packageName) },
+                    retire = { it.closeForReplacement() },
+                )
+                session.show()
+            } catch (failure: Throwable) {
+                if (failure is VirtualMachineError) throw failure
+                val reason = ControlCenterFailureReason.fromClassName(failure.javaClass.name)
+                Log.w(TAG,
+                    "WINDOW_FAILED package=$packageName reason=$reason exception=${failure.javaClass.simpleName}")
+                false
+            }
+        }
     }
 }

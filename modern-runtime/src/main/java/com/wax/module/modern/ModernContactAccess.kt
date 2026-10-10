@@ -37,13 +37,14 @@ class ModernContactAccess private constructor(
     private val userJidField: java.lang.reflect.Field,
 ) {
     /** The contact's JID object, or null when it cannot be read. */
-    fun userJid(contact: Any): Any? = try {
-        userJidField.get(contact)
-    } catch (failure: Throwable) {
-        if (failure is VirtualMachineError) throw failure
-        Log.w(TAG, "Contact JID unreadable", failure)
-        null
-    }
+    fun userJid(contact: Any): Any? =
+        try {
+            userJidField.get(contact)
+        } catch (failure: Throwable) {
+            if (failure is VirtualMachineError) throw failure
+            Log.w(TAG, "Contact JID unreadable", failure)
+            null
+        }
 
     /** True when the value is a JID (as opposed to a LID-shaped value). */
     fun isPhoneJid(jid: Any?): Boolean = jid != null && phoneUserJidClass?.isInstance(jid) == true
@@ -57,12 +58,61 @@ class ModernContactAccess private constructor(
         CONTACT_DATA_CLASS_MISSING,
         JID_CLASS_MISSING,
         USER_JID_FIELD_MISSING,
+
+        /**
+         * More than one class satisfied the query. Picking one of them would be
+         * the "arbitrary first match" this resolver exists to avoid, so it fails
+         * and says so instead.
+         */
+        CONTACT_CLASS_AMBIGUOUS,
+        CONTACT_DATA_CLASS_AMBIGUOUS,
+        JID_CLASS_AMBIGUOUS,
+
+        /**
+         * The candidate was found in the target DEX but its defining loader is
+         * not the target's, so the class it yields is not the one WhatsApp runs.
+         */
+        CLASS_LOADER_MISMATCH,
         ERROR,
     }
 
+    /**
+     * What the resolver actually saw, for the diagnostic record.
+     *
+     * Counts and the query that produced them, never a class name that could
+     * carry contact data: this travels into an exported ZIP.
+     */
+    data class Evidence(
+        val contactCandidates: Int,
+        val contactDataCandidates: Int,
+        val jidCandidates: Int,
+        val contactDataAnchor: String,
+        val contactDataLoaderMatches: Boolean,
+        val jidLoaderMatches: Boolean,
+    )
+
     /** Java-friendly result holder; Kotlin's Pair extensions are not callable from Java. */
-    class Resolution(val access: ModernContactAccess?, val outcome: Outcome) {
+    class Resolution(
+        val access: ModernContactAccess?,
+        val outcome: Outcome,
+        val evidence: Evidence? = null,
+    ) {
         val available: Boolean get() = access != null
+    }
+
+    /**
+     * How the contact-data class is looked for.
+     *
+     * The legacy resolver searched for a class that *uses* the string
+     * `WaContactData`, not for a class *named* that. The modern resolver had
+     * switched to the name query, which no WhatsApp build satisfies, so the
+     * chain failed at `CONTACT_DATA_CLASS_MISSING` while the anchor that
+     * actually works sat in the legacy code the whole time. Both queries are
+     * tried, in the legacy order first, and which one answered is reported.
+     */
+    enum class ContactDataAnchor {
+        USING_STRING,
+        CLASS_NAME,
     }
 
     companion object {
@@ -73,50 +123,150 @@ class ModernContactAccess private constructor(
         const val JID_SUFFIX = "jid.Jid"
         const val ANCHOR_PHONE_JID = "WaJidMapRepository/getPhoneJidByAccountUserJid"
 
-
-
         /**
          * Resolves the access chain once per process. Returns null together
          * with the reason, so the caller can report an honest state instead of
          * pretending a feature is wired.
+         *
+         * Selection fails closed: a query that matches several classes is
+         * reported as ambiguous rather than resolved by taking the first, and a
+         * class whose defining loader is not the target's is rejected before it
+         * can be reflected on.
          */
         @JvmStatic
         fun resolve(context: android.content.Context): Resolution {
             val classLoader = context.classLoader
+            var evidence: Evidence? = null
             return try {
                 DexKitBridge.create(context.applicationInfo.sourceDir).use { dex ->
-                    val contactData = dex.findClass {
-                        matcher { addUsingString(ANCHOR_CONTACT, StringMatchType.Contains) }
-                    }.firstOrNull() ?: return Resolution(null, Outcome.CONTACT_CLASS_MISSING)
+                    val contactCandidates =
+                        dex.findClass {
+                            matcher { addUsingString(ANCHOR_CONTACT, StringMatchType.Contains) }
+                        }
+                    val contactData =
+                        singleOrNull(contactCandidates)
+                            ?: return Resolution(
+                                null,
+                                if (contactCandidates.isEmpty()) {
+                                    Outcome.CONTACT_CLASS_MISSING
+                                } else {
+                                    Outcome.CONTACT_CLASS_AMBIGUOUS
+                                },
+                                evidence,
+                            )
                     val contactClass = contactData.getInstance(classLoader)
-                    val dataData = dex.findClass {
-                        matcher { className(CONTACT_DATA_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull() ?: return Resolution(null, Outcome.CONTACT_DATA_CLASS_MISSING)
+
+                    // Legacy order first: a class that *uses* the marker string.
+                    val byString =
+                        dex.findClass {
+                            matcher { addUsingString(CONTACT_DATA_SUFFIX, StringMatchType.EndsWith) }
+                        }
+                    val dataCandidates =
+                        if (byString.isNotEmpty()) {
+                            byString
+                        } else {
+                            dex.findClass {
+                                matcher { className(CONTACT_DATA_SUFFIX, StringMatchType.EndsWith) }
+                            }
+                        }
+                    val anchor =
+                        if (byString.isNotEmpty()) {
+                            ContactDataAnchor.USING_STRING
+                        } else {
+                            ContactDataAnchor.CLASS_NAME
+                        }
+                    val dataData =
+                        singleOrNull(dataCandidates)
+                            ?: return Resolution(
+                                null,
+                                if (dataCandidates.isEmpty()) {
+                                    Outcome.CONTACT_DATA_CLASS_MISSING
+                                } else {
+                                    Outcome.CONTACT_DATA_CLASS_AMBIGUOUS
+                                },
+                                Evidence(
+                                    contactCandidates = contactCandidates.size,
+                                    contactDataCandidates = dataCandidates.size,
+                                    jidCandidates = 0,
+                                    contactDataAnchor = anchor.name,
+                                    contactDataLoaderMatches = false,
+                                    jidLoaderMatches = false,
+                                ),
+                            )
                     val dataClass = dataData.getInstance(classLoader)
-                    val jidData = dex.findClass {
-                        matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull() ?: return Resolution(null, Outcome.JID_CLASS_MISSING)
+
+                    val jidCandidates =
+                        dex.findClass {
+                            matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
+                        }
+                    val jidData =
+                        singleOrNull(jidCandidates)
+                            ?: return Resolution(
+                                null,
+                                if (jidCandidates.isEmpty()) {
+                                    Outcome.JID_CLASS_MISSING
+                                } else {
+                                    Outcome.JID_CLASS_AMBIGUOUS
+                                },
+                                Evidence(
+                                    contactCandidates = contactCandidates.size,
+                                    contactDataCandidates = dataCandidates.size,
+                                    jidCandidates = jidCandidates.size,
+                                    contactDataAnchor = anchor.name,
+                                    contactDataLoaderMatches = true,
+                                    jidLoaderMatches = false,
+                                ),
+                            )
                     val jidClass = jidData.getInstance(classLoader)
+
+                    evidence =
+                        Evidence(
+                            contactCandidates = contactCandidates.size,
+                            contactDataCandidates = dataCandidates.size,
+                            jidCandidates = jidCandidates.size,
+                            contactDataAnchor = anchor.name,
+                            contactDataLoaderMatches = isTargetClass(dataClass, classLoader),
+                            jidLoaderMatches = isTargetClass(jidClass, classLoader),
+                        )
+                    // A class resolved from the target DEX but defined by another
+                    // loader is not the class WhatsApp runs. Catching it here is
+                    // the difference between a clear failure and a ClassCast
+                    // exception somewhere further down.
+                    if (!evidence.contactDataLoaderMatches) {
+                        return Resolution(null, Outcome.CLASS_LOADER_MISMATCH, evidence)
+                    }
+                    if (!evidence.jidLoaderMatches) {
+                        return Resolution(null, Outcome.CLASS_LOADER_MISMATCH, evidence)
+                    }
+
                     // DexKit's returnType is a ClassData, not a Class.
-                    val phoneJidClass = dex.findMethod {
-                        matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
-                    }.firstOrNull()?.returnType?.getInstance(classLoader)
+                    val phoneJidClass =
+                        dex
+                            .findMethod {
+                                matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
+                            }.firstOrNull()
+                            ?.returnType
+                            ?.getInstance(classLoader)
 
                     // Mirror the legacy decision: the JID field lives on the
                     // contact-data class when the contact has no phone-JID
                     // field of its own, and on the contact class otherwise.
-                    val phoneField = phoneJidClass?.let {
-                        firstFieldOfType(contactClass, it)
-                    }
-                    val (owner, field) = if (phoneField == null) {
-                        val jidField = firstFieldOfType(dataClass, jidClass)
-                            ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
-                        dataClass to jidField
-                    } else {
-                        val jidField = firstFieldOfType(contactClass, jidClass)
-                            ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
-                        contactClass to jidField
-                    }
+                    val phoneField =
+                        phoneJidClass?.let {
+                            firstFieldOfType(contactClass, it)
+                        }
+                    val (owner, field) =
+                        if (phoneField == null) {
+                            val jidField =
+                                firstFieldOfType(dataClass, jidClass)
+                                    ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
+                            dataClass to jidField
+                        } else {
+                            val jidField =
+                                firstFieldOfType(contactClass, jidClass)
+                                    ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
+                            contactClass to jidField
+                        }
                     field.isAccessible = true
                     Log.i(
                         TAG,
@@ -124,19 +274,42 @@ class ModernContactAccess private constructor(
                     )
                     Resolution(
                         ModernContactAccess(
-                            contactClass, dataClass, jidClass, phoneJidClass, field,
+                            contactClass,
+                            dataClass,
+                            jidClass,
+                            phoneJidClass,
+                            field,
                         ),
                         Outcome.AVAILABLE,
+                        evidence,
                     )
                 }
             } catch (failure: Throwable) {
                 if (failure is VirtualMachineError) throw failure
                 Log.w(TAG, "Contact access resolver unavailable", failure)
-                Resolution(null, Outcome.ERROR)
+                Resolution(null, Outcome.ERROR, evidence)
             }
         }
 
-        private fun firstFieldOfType(owner: Class<*>, type: Class<*>): java.lang.reflect.Field? =
-            owner.declaredFields.firstOrNull { type.isAssignableFrom(it.type) }
+        /**
+         * One candidate, or null when the query matched nothing or too much.
+         *
+         * Returning null for both cases is deliberate: the caller maps the count
+         * to a missing or an ambiguous outcome, and neither ever results in an
+         * arbitrary class being reflected on.
+         */
+private fun <T> singleOrNull(candidates: List<T>): T? =
+            if (candidates.size == 1) candidates[0] else null
+
+        /** True when the class is defined by the loader the target actually runs. */
+        private fun isTargetClass(
+            candidate: Class<*>,
+            classLoader: ClassLoader,
+        ): Boolean = candidate.classLoader == classLoader
+
+        private fun firstFieldOfType(
+            owner: Class<*>,
+            type: Class<*>,
+        ): java.lang.reflect.Field? = owner.declaredFields.firstOrNull { type.isAssignableFrom(it.type) }
     }
 }

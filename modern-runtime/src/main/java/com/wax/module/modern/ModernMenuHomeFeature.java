@@ -2,12 +2,10 @@ package com.wax.module.modern;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 import io.github.libxposed.api.XposedInterface;
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -26,8 +24,6 @@ public final class ModernMenuHomeFeature {
     public static final String FEATURE_ID = "menu_home";
     public static final int MENU_ITEM_ID = 0x57415821;
     private static final String TAG = "WA-X MenuHome102";
-    private static final String MANAGER_PACKAGE = "com.wax.module";
-    private static final String MANAGER_ACTIVITY = "com.wax.module.activities.MainActivity";
     private final AtomicBoolean reportedVisible = new AtomicBoolean(false);
 
     public enum Outcome {
@@ -98,41 +94,26 @@ public final class ModernMenuHomeFeature {
         return installed ? Outcome.INSTALLED : Outcome.ALREADY_INSTALLED;
     }
 
-    /** Fallback path: only used when the embedded centre cannot be shown. */
-    private static void openManager(Activity activity) {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setClassName(MANAGER_PACKAGE, MANAGER_ACTIVITY);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        try {
-            activity.startActivity(intent);
-            Log.i(TAG, "M06_MENU_HOME_MANAGER_OPENED");
-        } catch (RuntimeException failure) {
-            Log.e(TAG, "WA X Manager launch unavailable", failure);
-            Toast.makeText(activity, "WA X Manager could not be opened",
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void addManagerEntry(Menu menu, Activity activity, Runnable onMenuItemAdded) {
         if (menu.findItem(MENU_ITEM_ID) != null) return;
         MenuItem item = menu.add(Menu.NONE, MENU_ITEM_ID, 9999, "WA X");
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         item.setOnMenuItemClickListener(clicked -> {
             // Embedded first: the Control Center is the primary surface. It
-            // decides for itself whether it can render, and signals the
-            // fallback itself, so there is exactly one path to the Manager.
+            // reports whether its Activity-bound window was actually shown.
             boolean opened;
             try {
-                opened = new ModernControlCenterShell(activity, activity.getPackageName()).show();
+                opened = ModernControlCenterShell.showFor(activity, activity.getPackageName());
             } catch (Throwable failure) {
                 if (failure instanceof VirtualMachineError) throw (VirtualMachineError) failure;
-                Log.w(TAG, "Control center entry failed", failure);
+                Log.w(TAG, "WINDOW_FAILED package=" + activity.getPackageName()
+                        + " reason=WINDOW_CREATE_FAILED exception=" + failure.getClass().getSimpleName());
                 opened = false;
             }
             if (opened) {
                 Log.i(TAG, "M06_CONTROL_CENTER_OPENED");
             } else {
-                openManager(activity);
+                ModernManagerFallback.open(activity);
             }
             return true;
         });

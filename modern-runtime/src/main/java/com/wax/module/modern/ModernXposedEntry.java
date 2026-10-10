@@ -423,6 +423,18 @@ public final class ModernXposedEntry extends XposedModule {
                         ModernContactAccess.resolve(target);
                 resolvedContactAccess = contactAccess.getAccess();
                 contactAccessState = contactAccess.getOutcome().name();
+                ModernContactAccess.Evidence contactEvidence = contactAccess.getEvidence();
+                if (contactEvidence != null) {
+                    // Candidate counts and provenance, never a class name: this
+                    // line reaches a diagnostics ZIP the user can share.
+                    Log.i(TAG, "M06_CONTACT_ACCESS_EVIDENCE package=" + packageName
+                            + " contactCandidates=" + contactEvidence.getContactCandidates()
+                            + " contactDataCandidates=" + contactEvidence.getContactDataCandidates()
+                            + " contactDataAnchor=" + contactEvidence.getContactDataAnchor()
+                            + " dataLoaderMatches=" + contactEvidence.getContactDataLoaderMatches()
+                            + " jidCandidates=" + contactEvidence.getJidCandidates()
+                            + " jidLoaderMatches=" + contactEvidence.getJidLoaderMatches());
+                }
                 Log.i(TAG, "M06_CONTACT_ACCESS_RESULT package=" + packageName
                         + " state=" + contactAccessState);
             } catch (Throwable accessFailure) {
@@ -441,16 +453,21 @@ public final class ModernXposedEntry extends XposedModule {
             String jidAccessState = ModernJidAccess.Outcome.ERROR.name();
             ModernJidAccess resolvedJidAccess = null;
             try {
-                ModernContactAccess.Resolution contactResolution =
-                        ModernContactAccess.resolve(target);
+                ModernJidAccess.Resolution jidResolution;
+                // The contact chain was resolved once above. Resolving it a
+                // second time here re-ran a full DEX scan on every launch and
+                // then discarded the result, which is both slow and a source of
+                // two different answers for one process.
                 if (resolvedContactAccess != null) {
-                    ModernJidAccess.Resolution jidResolution = ModernJidAccess.resolve(
+                    jidResolution = ModernJidAccess.resolve(
                             resolvedContactAccess.getJidClass());
-                    resolvedJidAccess = jidResolution.getAccess();
-                    jidAccessState = jidResolution.getOutcome().name();
                 } else {
-                    jidAccessState = "JID_CLASS_UNRESOLVED";
+                    jidResolution = null;
                 }
+                resolvedJidAccess = jidResolution == null ? null : jidResolution.getAccess();
+                jidAccessState = jidResolution == null
+                        ? "JID_CLASS_UNRESOLVED"
+                        : jidResolution.getOutcome().name();
                 Log.i(TAG, "M06_JID_ACCESS_RESULT package=" + packageName
                         + " state=" + jidAccessState);
             } catch (Throwable jidFailure) {
