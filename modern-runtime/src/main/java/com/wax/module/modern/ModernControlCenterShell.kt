@@ -337,15 +337,18 @@ class ModernControlCenterShell(
     }
 
     private fun buildEntries(states: Bundle, query: String): List<ControlEntry> {
+        val stateAccepted = states.getBoolean("accepted", false)
         val rows = ArrayList<ControlEntry>()
         for (item in ModernControlCenterCatalog.wired) {
             val requested = when {
-                item.preferenceKey.isEmpty() -> ControlRequested.UNKNOWN
+                !stateAccepted || item.preferenceKey.isEmpty() ||
+                    !states.containsKey("pref." + item.preferenceKey) -> ControlRequested.UNKNOWN
                 readBoolean(states, item.preferenceKey) -> ControlRequested.ENABLED
                 else -> ControlRequested.DISABLED
             }
             val reported = readString(states, item.evidenceKey)
-            val effective = ControlPolicy.effectiveFrom(reported, false, requested)
+            val effective = if (!stateAccepted) ControlEffective.ERROR else
+                ControlPolicy.effectiveFrom(reported, false, requested)
             rows.add(
                 ControlEntry(
                     id = item.id,
@@ -355,7 +358,8 @@ class ModernControlCenterShell(
                     preferenceKey = item.preferenceKey.ifEmpty { null },
                     requested = requested,
                     effective = effective,
-                    writable = item.preferenceKey.isNotEmpty() &&
+                    writable = stateAccepted && requested != ControlRequested.UNKNOWN &&
+                        item.preferenceKey.isNotEmpty() &&
                         ControlPolicy.isWritable(item.preferenceKey, effective),
                     restartRequired = item.restartHint && requested == ControlRequested.ENABLED &&
                         effective != ControlEffective.INSTALLED && effective != ControlEffective.WORKING,
@@ -447,7 +451,7 @@ class ModernControlCenterShell(
                 setOnCheckedChangeListener { button, isChecked ->
                     if (!isWindowInteractive() || !button.isPressed) return@setOnCheckedChangeListener
                     val key = row.preferenceKey
-                    persist(key, isChecked, status, row)
+                    persist(key, isChecked, button as Switch, status, row)
                 }
             }
             container.addView(toggle)
@@ -534,28 +538,42 @@ class ModernControlCenterShell(
     private fun persist(
         key: String,
         enabled: Boolean,
+        toggle: Switch,
         status: TextView,
         row: ControlEntry,
     ) {
         if (!isWindowInteractive()) return
+        toggle.isEnabled = false
         val context = activity.applicationContext
         val targetPackage = packageName
         val weakShell = WeakReference(this)
         val weakStatus = WeakReference(status)
-        taskScope.submit(
+        val weakToggle = WeakReference(toggle)
+        val accepted = taskScope.submit(
             operation = { ModernTargetSettingsClient.write(context, targetPackage, key, enabled) },
             onComplete = { saved ->
                 val shell = weakShell.get() ?: return@submit
                 val statusView = weakStatus.get() ?: return@submit
+                val switchView = weakToggle.get() ?: return@submit
                 if (!shell.isWindowInteractive()) return@submit
+                switchView.isEnabled = true
+                if (!saved) {
+                    // A rejected write must not leave an apparently enabled switch.
+                    switchView.isChecked = !enabled
+                    Log.w(TAG, "CONTROL_CENTER_SETTING_SAVE_FAILED key=$key")
+                }
                 statusView.text = "${row.description} · " +
                     ControlStatusText.status(
                         if (saved) ControlEffective.RESTART_REQUIRED else ControlEffective.ERROR,
                     )
-            }
+            },
         )
+        if (!accepted) {
+            toggle.isEnabled = true
+            toggle.isChecked = !enabled
+            status.text = "${row.description} · " + ControlStatusText.status(ControlEffective.ERROR)
+        }
     }
-
     private fun restartWhatsApp() {
         if (!isWindowInteractive()) return
         val weakShell = WeakReference(this)

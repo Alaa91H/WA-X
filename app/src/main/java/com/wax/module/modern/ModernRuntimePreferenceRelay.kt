@@ -33,7 +33,17 @@ object ModernRuntimePreferenceRelay {
             "ghostmode_r",
             "typearchive",
             "viewonce",
+            "hideread",
+            "hideread_group",
+            "hidereceipt",
+            "hidereadafterreply",
+            "antirevoke",
+            "hidestatusview",
+            "sendstatusseenonreply",
         )
+    /** Checked by contract tests so new Control Center keys cannot be omitted from the relay. */
+    internal fun observes(key: String): Boolean = key in observedKeys
+
     private val worker =
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "wax-api102-settings-relay").apply { isDaemon = true }
@@ -90,6 +100,22 @@ object ModernRuntimePreferenceRelay {
                     // Archived-chat hiding: the user's mode, not a boolean.
                     putString("typearchive", source.getString("typearchive", "0") ?: "0")
                     putBoolean("viewonce", source.getBoolean("viewonce", false))
+                    // Single source of truth: Manager preferences also feed the in-WhatsApp
+                    // privacy toggles. Do not drop a persisted setting at the API102 bridge.
+                    putBoolean("hideread", source.getBoolean("hideread", false))
+                    putBoolean("hideread_group", source.getBoolean("hideread_group", false))
+                    putBoolean("hidereceipt", source.getBoolean("hidereceipt", false))
+                    putBoolean("hidereadafterreply", source.getBoolean("hidereadafterreply", false))
+                    // An older boolean write may have damaged this legacy list preference.
+                    // Normalize it without aborting the whole synchronization transaction.
+                    val antiRevoke = source.all["antirevoke"]
+                    putString("antirevoke", when (antiRevoke) {
+                        "1", "2" -> antiRevoke as String
+                        true -> "1"
+                        else -> "0"
+                    })
+                    putBoolean("hidestatusview", source.getBoolean("hidestatusview", false))
+                    putBoolean("sendstatusseenonreply", source.getBoolean("sendstatusseenonreply", false))
                 }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)
