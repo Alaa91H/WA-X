@@ -22,6 +22,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.wax.module.activities.DiagnosticsActivity
 import com.wax.module.BuildConfig
 import com.wax.module.ModuleApplication
 import com.wax.module.R
@@ -235,6 +236,12 @@ class HomeFragment : BaseFragment() {
         binding.diagBtn.setOnClickListener { view ->
             animateClick(view)
             showDiagnosticsDialog()
+        }
+
+        // F155: the atomic self-test screen, reachable from the Manager.
+        currentBinding?.atomicSelfTestBtn?.setOnClickListener { view ->
+            animateClick(view)
+            startActivity(Intent(requireContext(), DiagnosticsActivity::class.java))
         }
 
         if (BuildConfig.MODERN_XPOSED) {

@@ -125,6 +125,15 @@ object ModernControlCenterCatalog {
      */
     val alwaysOn: List<Wired> = listOf(
         Wired(
+            id = "diagnostics",
+            preferenceKey = "",
+            evidenceKey = "modern.feature.diagnostics.state",
+            category = ControlCategory.TOOLS,
+            label = "Run Diagnostics",
+            description = "Atomic self-test of the module, runtime and resolvers",
+            restartHint = false,
+        ),
+        Wired(
             id = "contact_item_listener",
             preferenceKey = "",
             evidenceKey = "modern.feature.contact_item_listener.state",

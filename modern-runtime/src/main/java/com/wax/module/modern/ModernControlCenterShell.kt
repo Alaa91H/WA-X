@@ -260,13 +260,35 @@ class ModernControlCenterShell(
             setTextColor(secondary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
         }
+        if (row.id == "diagnostics") {
+            // Rendered before the inert-row rule: this row is an action, not a
+            // switch, so hiding it from accessibility services would be wrong.
+            // The self-test engine lives in the Manager, where the sanitized
+            // export and the SAF writer are; this row is the in-WhatsApp door.
+            container.addView(
+                Button(activity).apply {
+                    text = strings.runDiagnostics
+                    isAllCaps = false
+                    contentDescription = strings.runDiagnostics
+                    setOnClickListener { fallbackToManager() }
+                },
+            )
+            container.addView(
+                TextView(activity).apply {
+                    text = row.description
+                    setTextColor(secondary)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                },
+            )
+            return container
+        }
         if (!row.writable) {
             // Pending / failed rows are inert by design; make that explicit to
             // accessibility services instead of a dead switch.
             container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
         val modeControl = row.preferenceKey == ModernHideChatFeature.PREF_ARCHIVE_MODE
-        if (modeControl && row.preferenceKey != null) {
+        if (modeControl) {
             // A three-state mode, not an on/off switch: tapping cycles
             // disabled -> hide -> hold, which is what the Manager list offers.
             val button = Button(activity).apply {

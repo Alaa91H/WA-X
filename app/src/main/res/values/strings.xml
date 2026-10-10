@@ -626,4 +626,26 @@
     <string name="modern_pilot_tap">Tap here to configure experimental CustomTime.</string>
     <string name="modern_target_share_limit_status">ShareLimit: %1$s</string>
     <string name="modern_target_presence_status">Freeze last seen: %1$s | DND: %2$s</string>
+
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">WA X diagnostics</string>
+    <string name="diagnostics_explain">Runs atomic checks on the module, the runtime and its resolvers. A check without evidence is reported as not tested, never as working. End-to-end privacy behaviour needs a second account and is never confirmed automatically.</string>
+    <string name="diagnostics_quick">Quick Check</string>
+    <string name="diagnostics_deep">Deep Atomic Scan</string>
+    <string name="diagnostics_cancel">Cancel</string>
+    <string name="diagnostics_close">Close</string>
+    <string name="diagnostics_export">Export ZIP</string>
+    <string name="diagnostics_running">Running checks\u2026</string>
+    <string name="diagnostics_cancelled">Cancelled</string>
+    <string name="diagnostics_finished">Finished</string>
+    <string name="diagnostics_scan">Scan</string>
+    <string name="diagnostics_counts">Counts:</string>
+    <string name="diagnostics_first_failed">First failed dependency:</string>
+    <string name="diagnostics_root_causes">Root causes</string>
+    <string name="diagnostics_run_first">Run a scan before exporting.</string>
+    <string name="diagnostics_redaction_preview">Redaction preview</string>
+    <string name="diagnostics_redaction_summary">Items redacted: %1$d</string>
+    <string name="diagnostics_export_done">Diagnostics exported</string>
+    <string name="diagnostics_export_failed">Export failed</string>
+    <string name="diagnostics_manifest_missing">The archive could not be verified and was not written.</string>
 </resources>

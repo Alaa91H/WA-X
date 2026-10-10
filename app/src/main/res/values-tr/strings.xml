@@ -596,4 +596,25 @@
     <string name="modern_target_previous_attach">Modülün başlatıldığı önceden doğrulandı; ayrıntılı başlatma aşamaları artık güncel değil.</string>
     <string name="modern_target_no_lifecycle_signal">WhatsApp uygulamasından henüz başlatma raporu alınmadı.</string>
     <string name="modern_target_menu_status">WA X menüsünün son raporu: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">WA X tanılama</string>
+    <string name="diagnostics_explain">Modül, çalışma zamanı ve çözümleyiciler üzerinde atomik denetimler yürütür. Kanıtı olmayan bir denetim hiçbir zaman çalışıyor olarak değil, test edilmemiş olarak raporlanır. Eksiksiz gizlilik davranışı ikinci bir hesap gerektirir ve asla otomatik onaylanmaz.</string>
+    <string name="diagnostics_quick">Hızlı denetim</string>
+    <string name="diagnostics_deep">Kapsamlı atomik tarama</string>
+    <string name="diagnostics_cancel">İptal</string>
+    <string name="diagnostics_close">Kapat</string>
+    <string name="diagnostics_export">ZIP dışa aktar</string>
+    <string name="diagnostics_running">Denetimler çalışıyor\u2026</string>
+    <string name="diagnostics_cancelled">İptal edildi</string>
+    <string name="diagnostics_finished">Bitti</string>
+    <string name="diagnostics_scan">Tarama</string>
+    <string name="diagnostics_counts">Sayaçlar:</string>
+    <string name="diagnostics_first_failed">İlk başarısız bağımlılık:</string>
+    <string name="diagnostics_root_causes">Kök nedenler</string>
+    <string name="diagnostics_run_first">Dışa aktarmadan önce bir tarama çalıştırın.</string>
+    <string name="diagnostics_redaction_preview">Karartma önizlemesi</string>
+    <string name="diagnostics_redaction_summary">Karartılan öge: %1$d</string>
+    <string name="diagnostics_export_done">Tanılama dışa aktarıldı</string>
+    <string name="diagnostics_export_failed">Dışa aktarma başarısız</string>
+    <string name="diagnostics_manifest_missing">Arşiv doğrulanamadı ve bu yüzden yazılmadı.</string>
 </resources>

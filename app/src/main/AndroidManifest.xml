@@ -99,6 +99,13 @@
             android:name=".activities.TextEditorActivity"
             android:theme="@style/AppTheme" />
 
+        <!-- F155 atomic self-test. Local-only diagnostics: nothing here uploads. -->
+        <activity
+            android:name=".activities.DiagnosticsActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".activities.MainActivity" />
+
         <activity
             android:name=".activities.CallRecordingSettingsActivity"
             android:theme="@style/Theme.Material3.DynamicColors.DayNight.NoActionBar"

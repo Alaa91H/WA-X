@@ -46,6 +46,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_HIDE_CHAT = "HIDE_CHAT";
     public static final String EVENT_VIEW_ONCE = "VIEW_ONCE";
     public static final String EVENT_MESSAGE_ACCESS = "MESSAGE_ACCESS";
+    public static final String EVENT_DIAGNOSTICS = "DIAGNOSTICS";
     private static final String TAG = "WA-X TargetTelemetry";
 
     /**
@@ -101,6 +102,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.hide_chat.state",
         "modern.feature.view_once.state",
         "modern.feature.message_access.state",
+        "modern.feature.diagnostics.state",
     };
 
     @Override
@@ -194,6 +196,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.view_once.state." + target, value);
         } else if (EVENT_MESSAGE_ACCESS.equals(event)) {
             editor.putString("modern.feature.message_access.state." + target, value);
+        } else if (EVENT_DIAGNOSTICS.equals(event)) {
+            editor.putString("modern.feature.diagnostics.state." + target, value);
         } else {
             return rejected();
         }
@@ -232,7 +236,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || EVENT_TYPING_PRIVACY.equals(event)
                 || EVENT_HIDE_CHAT.equals(event)
                 || EVENT_VIEW_ONCE.equals(event)
-                || EVENT_MESSAGE_ACCESS.equals(event);
+                || EVENT_MESSAGE_ACCESS.equals(event)
+                || EVENT_DIAGNOSTICS.equals(event);
     }
 
     static boolean isSupportedMenuHomeState(String value) {
