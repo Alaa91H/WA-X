@@ -115,4 +115,47 @@ public final class ModernTargetTelemetryProviderTest {
             assertFalse(key.startsWith("ampm"));
         }
     }
+    /** Simulates existing Manager values without requiring an Android device. */
+    private static android.content.SharedPreferences preferences(Object... entries) {
+        java.util.Map<String, Object> values = new java.util.HashMap<>();
+        for (int i = 0; i < entries.length; i += 2) {
+            values.put((String) entries[i], entries[i + 1]);
+        }
+        return (android.content.SharedPreferences) java.lang.reflect.Proxy.newProxyInstance(
+                android.content.SharedPreferences.class.getClassLoader(),
+                new Class<?>[] {android.content.SharedPreferences.class},
+                (proxy, method, args) -> {
+                    if ("getAll".equals(method.getName())) return values;
+                    throw new UnsupportedOperationException(method.getName());
+                });
+    }
+
+    @Test public void listModesRemainReadableAndRetainExistingSelections() {
+        android.content.SharedPreferences prefs = preferences(
+                "typearchive", "2", "antirevoke", "1");
+        assertEquals("2", ModernTargetTelemetryProvider.readMode(prefs, "typearchive"));
+        assertEquals("1", ModernTargetTelemetryProvider.readMode(prefs, "antirevoke"));
+        assertTrue(ModernTargetTelemetryProvider.isWritableSettingKey("antirevoke"));
+    }
+
+    @Test public void oldBooleanModeWritesAreSafelyInterpreted() {
+        android.content.SharedPreferences prefs = preferences(
+                "antirevoke", true, "typearchive", false, "unrelated", "value");
+        assertEquals("1", ModernTargetTelemetryProvider.readMode(prefs, "antirevoke"));
+        assertEquals("0", ModernTargetTelemetryProvider.readMode(prefs, "typearchive"));
+        assertEquals("0", ModernTargetTelemetryProvider.readMode(prefs, "absent"));
+        assertFalse(ModernTargetTelemetryProvider.readBoolean(prefs, "unrelated"));
+        assertTrue(ModernTargetTelemetryProvider.readBoolean(prefs, "antirevoke"));
+    }
+
+    @Test public void booleanSnapshotNeverIteratesLegacyStringModes() {
+        java.util.List<String> keys = java.util.Arrays.asList(
+                ModernTargetTelemetryProvider.CONTROL_CENTER_PREFERENCE_KEYS);
+        assertFalse(keys.contains("typearchive"));
+        assertFalse(keys.contains("antirevoke"));
+        assertTrue(keys.contains("hideread"));
+        assertTrue(keys.contains("sendstatusseenonreply"));
+        assertTrue(ModernTargetTelemetryProvider.readBoolean(
+                preferences("hideread", true), "hideread"));
+    }
 }

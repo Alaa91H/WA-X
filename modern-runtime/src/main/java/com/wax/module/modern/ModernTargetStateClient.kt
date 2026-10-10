@@ -22,7 +22,8 @@ import android.os.Bundle
  * false "working".
  */
 object ModernTargetStateClient {
-    private val PROVIDER: Uri = Uri.parse("content://com.wax.module.runtime.telemetry")
+    /** Shared identity for authenticated state reads and change notifications. */
+    @JvmField val STATES_URI: Uri = Uri.parse("content://com.wax.module.runtime.telemetry")
     private const val METHOD = "read-target-states-v1"
 
     @JvmStatic
@@ -34,7 +35,7 @@ object ModernTargetStateClient {
         return try {
             val extras = Bundle()
             extras.putString("target", packageName)
-            val response = context.contentResolver.call(PROVIDER, METHOD, null, extras)
+            val response = context.contentResolver.call(STATES_URI, METHOD, null, extras)
             response ?: Bundle()
         } catch (failure: RuntimeException) {
             Bundle()

@@ -88,7 +88,6 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "ghostmode",
         "ghostmode_t",
         "ghostmode_r",
-        "typearchive",
         "viewonce",
         // Receipt privacy keeps the legacy keys so an existing switch keeps
         // its meaning across the port.
@@ -96,7 +95,6 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "hideread_group",
         "hidereceipt",
         "hidereadafterreply",
-        "antirevoke",
         "hidestatusview",
         "sendstatusseenonreply",
     };
@@ -310,6 +308,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "removeforwardlimit".equals(key)
                 || "freezelastseen".equals(key)
                 || "dndmode".equals(key)
+                || "tasker".equals(key)
                 || "viewonce".equals(key)
                 || "hideread".equals(key)
                 || "hideread_group".equals(key)
@@ -363,6 +362,18 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             modeResult.putBoolean("accepted", savedMode);
             return modeResult;
         }
+        if ("antirevoke".equals(key)) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            // The Manager owns a three-state ListPreference, never a Boolean.
+            String previous = readMode(preferences, key);
+            String next = extras.getBoolean("enabled", false)
+                    ? (MODE_HOLD_TITLE.equals(previous) ? MODE_HOLD_TITLE : MODE_CLICK_TIMES)
+                    : MODE_DISABLED;
+            boolean savedMode = preferences.edit().putString(key, next).commit();
+            Bundle modeResult = new Bundle();
+            modeResult.putBoolean("accepted", savedMode);
+            return modeResult;
+        }
         if (CONTROL_CENTER_FAVORITES_KEY.equals(key)) {
             String favorites = extras.getString("favorites", "");
             if (!isValidFavorites(favorites)) return rejected();
@@ -407,14 +418,19 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         SharedPreferences manager = PreferenceManager.getDefaultSharedPreferences(context);
         Bundle result = new Bundle();
         for (String key : CONTROL_CENTER_PREFERENCE_KEYS) {
-            result.putBoolean("pref." + key, manager.getBoolean(key, false));
+            // One corrupt or obsolete key must never blank every other switch.
+            result.putBoolean("pref." + key, readBoolean(manager, key));
         }
+        String archiveMode = readMode(manager, CONTROL_CENTER_MODE_KEY);
+        String antiRevokeMode = readMode(manager, "antirevoke");
+        result.putBoolean("pref." + CONTROL_CENTER_MODE_KEY, !MODE_DISABLED.equals(archiveMode));
+        result.putBoolean("pref.antirevoke", !MODE_DISABLED.equals(antiRevokeMode));
         result.putString("pref." + CONTROL_CENTER_FAVORITES_KEY,
                 manager.getString(CONTROL_CENTER_FAVORITES_KEY, ""));
         // String-valued modes travel under their own prefix, because the
         // boolean loop above would coerce them to false.
-        result.putString("mode." + CONTROL_CENTER_MODE_KEY,
-                manager.getString(CONTROL_CENTER_MODE_KEY, MODE_DISABLED));
+        result.putString("mode." + CONTROL_CENTER_MODE_KEY, archiveMode);
+        result.putString("mode.antirevoke", antiRevokeMode);
         for (String key : CONTROL_CENTER_EVIDENCE_KEYS) {
             String value = reports.getString(key + "." + target, null);
             if (value != null) {
@@ -423,6 +439,21 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         }
         result.putBoolean("accepted", true);
         return result;
+    }
+
+    /** Returns the effective boolean without letting a malformed legacy value break the bundle. */
+    static boolean readBoolean(SharedPreferences prefs, String key) {
+        Object value = prefs.getAll().get(key);
+        return value instanceof Boolean && (Boolean) value;
+    }
+
+    /** Legacy list preferences must stay strings; old buggy toggles may have stored booleans. */
+    static String readMode(SharedPreferences prefs, String key) {
+        Object value = prefs.getAll().get(key);
+        if (MODE_DISABLED.equals(value) || MODE_CLICK_TIMES.equals(value)
+                || MODE_HOLD_TITLE.equals(value)) return (String) value;
+        if (Boolean.TRUE.equals(value)) return MODE_CLICK_TIMES;
+        return MODE_DISABLED;
     }
 
     /**
