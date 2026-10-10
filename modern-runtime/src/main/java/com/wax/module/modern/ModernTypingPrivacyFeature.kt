@@ -156,8 +156,9 @@ object ModernTypingPrivacyFeature {
                 Log.w(TAG, "Composing method unresolvable", failure)
                 return Outcome.RESOLVER_MISSING
             }
-        // The legacy resolver only accepts this exact observed shape.
-        if (method.parameterCount < 3 || method.parameterTypes[2] != Int::class.javaPrimitiveType) {
+        // The legacy resolver requires the state Int in slot 2.
+        // Reject multiple Int slots instead of guessing which one represents composing.
+        if (!isSafeComposingSignature(method.parameterTypes)) {
             return Outcome.UNSAFE_SIGNATURE
         }
         val jidClass = jidAccess.jidClass
@@ -172,7 +173,7 @@ object ModernTypingPrivacyFeature {
                                 method,
                                 "wax.modern.typing_privacy.composing",
                             ) { chain ->
-                                val stateType = chain.args.firstOrNull() as? Int
+                                val stateType = composingState(method.parameterTypes, chain.args.toList())
                                 val jid =
                                     chain.args.firstOrNull { candidate ->
                                         candidate != null && jidClass.isInstance(candidate)
@@ -199,6 +200,20 @@ object ModernTypingPrivacyFeature {
         }
         return Outcome.INSTALLED
     }
+
+    /** Fail closed when the composing-state signature is missing or ambiguous. */
+    internal fun isSafeComposingSignature(parameterTypes: Array<Class<*>>): Boolean =
+        parameterTypes.size >= 3 &&
+            parameterTypes[2] == Int::class.javaPrimitiveType &&
+            parameterTypes.count { it == Int::class.javaPrimitiveType } == 1
+
+    /** Read the observed composing state from the third argument, not the first. */
+    internal fun composingState(parameterTypes: Array<Class<*>>, args: List<Any?>): Int? =
+        if (isSafeComposingSignature(parameterTypes) && args.size == parameterTypes.size) {
+            args[2] as? Int
+        } else {
+            null
+        }
 
     /**
      * Cached per-contact rule lookup. A cache hit answers immediately; a miss
