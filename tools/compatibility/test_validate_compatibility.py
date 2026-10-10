@@ -113,6 +113,25 @@ class EvidenceGateTests(unittest.TestCase):
         matrix["evidence"] = {"Example": {"targets": [observation()]}}
         self.assertFalse(validate(matrix))
 
+    def test_conflicting_build_fingerprints_do_not_certify_one_cell(self):
+        # A beta and a release observation of the same version are different
+        # signers. A cell names one target, so accepting whichever happens to
+        # be listed would let a green cell rest on evidence it never described.
+        matrix = supported(fixture())
+        release = observation()
+        beta = observation()
+        beta["buildFingerprint"] = "com.whatsapp/beta/arm64:stable-build-999"
+        matrix["evidence"] = {"Example": {"targets": [release, beta]}}
+        self.assertTrue(validate(matrix))
+
+    def test_two_targets_sharing_one_fingerprint_are_fine(self):
+        matrix = supported(fixture())
+        first = observation()
+        second = observation()
+        second["verifiedAt"] = STAMP
+        matrix["evidence"] = {"Example": {"targets": [first, second]}}
+        self.assertFalse(validate(matrix))
+
     def test_cross_package_evidence_is_rejected(self):
         matrix = supported(fixture(), package="business")
         matrix["evidence"] = {"Example": {"targets": [observation("whatsapp")]}}
