@@ -233,44 +233,45 @@ batch 12 = BackupRestore, CaptureDevice.
 
 Nothing below is claimed as done.
 
-### Merged this pass, device validation still outstanding
+### Merged, device validation still outstanding
 
 | issue | state |
 |---|---|
-| #170 | merged `44b90875`, issue closed, anonymised schema posted on the issue |
+| #170 | merged `44b90875`, **CLOSED**, anonymised schema posted on the issue |
 | #455 | root causes merged `599deca6`: control-center lifecycle, contact-data anchor, fail-closed resolver selection |
-| #449 | merged `67fc086b`: read receipts withheld, release-after-reply, delivery tick reported `UNSUPPORTED` on purpose |
-| #450 | merged `67fc086b`: typing and recording reported separately; online presence named `SERVER_CONTROLLED` |
-| #451 | merged `3b6b4842`: anti-revoke with bounded retention and no protected content copied |
-| #452 | merged `9a9d0a72`: Status seen privacy, kept separate from chat receipts |
-| #357 | merged `5c8d91b6`: the Status reply seen-receipt rule; native receipt path still unresolved on the runtime |
+| #449 | merged `67fc086b`: read receipts withheld, release-after-reply, delivery tick `UNSUPPORTED` |
+| #450 | merged `67fc086b`: typing and recording reported separately; online `SERVER_CONTROLLED` |
+| #451 | merged `3b6b4842`: anti-revoke, bounded retention, no protected content copied |
+| #452 | merged `9a9d0a72`: Status seen privacy, separate from chat receipts |
+| #357 | merged `5c8d91b6`: the Status reply seen-receipt rule; native path `NATIVE_PATH_UNRESOLVED` |
+| #433 | **CLOSED**: Control Center acceptance met, verified in the tree |
+| #425 | **CLOSED**: single menu entry restored, Control Center is the control path |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
 
 ### Next, in order
 
-1. **#357** — the single Status seen-receipt rule, including release after a
-   successful reply. #452 shipped the withheld-acknowledgement half and reports
-   `OWNED_BY_357` for this half rather than reimplementing it.
-2. **#448** — the execution-order parent, updated for the landed P0-CORE set.
-3. **#433 / #425** — close the embedded Control Center and options-menu
-   acceptance now that per-feature toggles exist for receipt, activity and
-   message privacy.
-4. **#396 / #391** — the resolver evidence gate and its package/version scoping,
-   which every migrated feature above depends on.
-5. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
+1. **#396 / #391** — the resolver evidence gate and its package/version
+   scoping. Every migrated privacy feature depends on these, so they come
+   before further feature work.
+2. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
    evidence gap.
-6. **#383** — the master audit aggregating the above.
-7. **#377** — per-build WhatsApp/Business version discovery and the
+3. **#383** — the master audit that aggregates the above.
+4. **#377** — per-build WhatsApp/Business version discovery and the
    compatibility canary.
-8. **#403** — the release APK growth budget, which currently watches debug only.
+5. **#403** — the release APK growth budget, which currently watches debug only.
+6. **#448** stays open on its own device gate: its four P0-CORE children are all
+   merged, and closing it would close a parent whose acceptance says the
+   sender-account check has to pass first.
+7. **#455** stays open for the same reason: the code-side root causes are fixed,
+   but the anchor correction wants a run on a real build to confirm.
 
 ### Not started
 
-Ascending, once the P0 items above are done: #458, #437, #400, #395, #394, #393,
-#389, #387, #386, #385, #384, #379, #378, #372, #371, #370, #369, #368, #357,
-#354, #353, #352, #351, #350, and the remainder of the open list.
+Ascending, once the items above are done: #458, #437, #400, #395, #394, #393,
+#389, #387, #386, #385, #384, #379, #378, #372, #371, #370, #369, #368, #354,
+#353, #352, #351, #350, and the remainder of the open list.
 
 ### Standing constraints
 
