@@ -610,7 +610,7 @@
     <string name="diagnostics_scan">Análise</string>
     <string name="diagnostics_counts">Contagens:</string>
     <string name="diagnostics_first_failed">Primeira dependência com falha:</string>
-    <string name="diagnostics_root_causes">Causas raíz</string>
+    <string name="diagnostics_root_causes">Causas principais</string>
     <string name="diagnostics_run_first">Executa uma análise antes de exportar.</string>
     <string name="diagnostics_redaction_preview">Pré-visualização da ocultação</string>
     <string name="diagnostics_redaction_summary">Itens ocultados: %1$d</string>

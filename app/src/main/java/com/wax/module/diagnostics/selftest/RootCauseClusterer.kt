@@ -70,18 +70,24 @@ object RootCauseClusterer {
     private fun firstFailedAncestor(
         result: AtomicCheckResult,
         byId: Map<String, AtomicCheckResult>,
-        seen: MutableSet<String> = mutableSetOf(),
+        visiting: MutableSet<String> = mutableSetOf(),
     ): AtomicCheckResult? {
-        var earliest: AtomicCheckResult? = null
+        if (!visiting.add(result.id)) return null
         for (dependencyId in result.dependsOn) {
-            if (!seen.add(dependencyId)) continue
             val dependency = byId[dependencyId] ?: continue
-            if (dependency.status == DiagnosticStatus.FAIL) {
-                val upstream = firstFailedAncestor(dependency, byId, seen)
-                earliest = upstream ?: dependency
-            }
+            // A blocked or not-tested check is still on the chain, so the walk
+            // passes through it: the root is the first *failure*, wherever in
+            // the chain it sits. Visiting guards against a dependency cycle.
+            val upstream = firstFailedAncestor(dependency, byId, visiting)
+            val root =
+                if (dependency.status == DiagnosticStatus.FAIL) {
+                    upstream ?: dependency
+                } else {
+                    upstream
+                }
+            if (root != null) return root
         }
-        return earliest
+        return null
     }
 
     /**

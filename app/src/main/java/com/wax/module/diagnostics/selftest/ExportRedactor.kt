@@ -114,14 +114,15 @@ class ExportRedactor {
         // Redaction changes the bytes, so the digests are taken from the
         // redacted payload. Keeping the originals would ship an archive that
         // fails its own verification, which is worse than shipping none.
-        val withChecksums = if (hadChecksums) {
-            cleaned + DiagnosticZipExporter.Entry(
-                CHECKSUMS_ENTRY,
-                DiagnosticZipExporter().checksums(cleaned),
-            )
-        } else {
-            cleaned
-        }
+        val withChecksums =
+            if (hadChecksums) {
+                cleaned + DiagnosticZipExporter.Entry(
+                    CHECKSUMS_ENTRY,
+                    DiagnosticZipExporter().checksums(cleaned),
+                )
+            } else {
+                cleaned
+            }
         return RedactedEntries(
             entries = withChecksums,
             report = RedactionReport(
