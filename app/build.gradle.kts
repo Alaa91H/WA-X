@@ -82,6 +82,9 @@ android {
 
         buildConfigField("Boolean", "RESET_ON_INSTALL", "false")
         buildConfigField("boolean", "MODERN_XPOSED", modernXposedPackage.toString())
+        // Baked into the diagnostics export so a report names the commit that
+        // produced it rather than a number that only looks like one.
+        buildConfigField("String", "GIT_SHA", "\"$gitHash\"")
     }
 
     packaging {

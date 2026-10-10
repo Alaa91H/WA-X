@@ -14,6 +14,8 @@ object DiagnosticReportBuilder {
     data class Environment(
         val appVersion: String,
         val appBuildSha: String,
+        /** Kept separate from the commit: the two identify different things. */
+        val appVersionCode: Long,
         val whatsappPackage: String,
         val whatsappVersion: String,
         val androidVersion: String,
@@ -87,6 +89,7 @@ object DiagnosticReportBuilder {
             append("\"consent\":").append("\"user_initiated_export\"").append(',')
             append("\"app_version\":").appendQuoted(inputs.environment.appVersion).append(',')
             append("\"app_build_sha\":").appendQuoted(inputs.environment.appBuildSha).append(',')
+            append("\"app_version_code\":").append(inputs.environment.appVersionCode).append(',')
             append("\"whatsapp_package\":").appendQuoted(inputs.environment.whatsappPackage).append(',')
             append("\"whatsapp_version\":").appendQuoted(inputs.environment.whatsappVersion).append(',')
             append("\"android_version\":").appendQuoted(inputs.environment.androidVersion).append(',')
@@ -227,4 +230,61 @@ object DiagnosticReportBuilder {
             append("\"unredacted_dump_available\":false")
             append('}')
         }
+
+    /**
+     * The redaction pass writes its own account of what it removed.
+     *
+     * The generic file above is part of the archive contract, but it is written
+     * before the redactor runs, so it cannot claim what the redactor actually
+     * did. This one replaces it afterwards with the real counts, and the archive
+     * checksums are rebuilt over the final content so the file on disk matches
+     * what the user was shown in the preview.
+     */
+    fun redactionReportJson(report: ExportRedactor.RedactionReport): String =
+        buildString {
+            append('{')
+            append("\"policy\":").appendQuoted("local_only_never_auto_uploaded").append(',')
+            append("\"total_replacements\":").append(report.total).append(',')
+            appendField("jids", report.jidsRedacted)
+            appendField("phone_numbers", report.numbersRedacted)
+            appendField("message_like", report.messageLikeRedacted)
+            appendField("tokens", report.tokensRedacted)
+            appendField("paths", report.pathsRedacted)
+            append("\"unredacted_dump_available\":false")
+            append('}')
+        }
+
+    private fun StringBuilder.appendField(
+        key: String,
+        value: Int,
+    ) {
+        append('"')
+            .append(key)
+            .append("\":")
+            .append(value)
+            .append(',')
+    }
+
+    /**
+     * Swaps in the real redaction account and re-seals the archive.
+     *
+     * Everything after this point is derived from the redacted content, so the
+     * checksums are rebuilt rather than carried over: a digest over pre-redaction
+     * bytes would make the archive look tampered with when it is in fact
+     * correct.
+     */
+    fun withRedactionReport(
+        entries: List<DiagnosticZipExporter.Entry>,
+        redaction: ExportRedactor.RedactionReport,
+    ): List<DiagnosticZipExporter.Entry> {
+        val body =
+            entries
+                .filter { it.name != REDACTION_ENTRY && it.name != CHECKSUMS_ENTRY }
+                .plus(DiagnosticZipExporter.Entry(REDACTION_ENTRY, redactionReportJson(redaction)))
+        return body.plus(
+            DiagnosticZipExporter.Entry(CHECKSUMS_ENTRY, DiagnosticZipExporter().checksums(body)),
+        )
+    }
+
+    const val REDACTION_ENTRY = "redaction-report.json"
 }

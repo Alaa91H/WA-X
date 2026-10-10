@@ -601,6 +601,16 @@
     <string name="diagnostics_cancel">Batal</string>
     <string name="diagnostics_close">Tutup</string>
     <string name="diagnostics_export">Ekspor ZIP</string>
+    <string name="diagnostics_import">Impor ZIP</string>
+    <string name="diagnostics_import_title">Arsip diagnostik sebelumnya</string>
+    <string name="diagnostics_import_failed">Arsip ditolak dan tidak ada yang dibaca darinya.</string>
+    <string name="diagnostics_import_run_first">Jalankan pindai terlebih dahulu untuk membandingkannya dengan arsip ini.</string>
+    <string name="diagnostics_import_summary">Skema %1$s · WhatsApp %2$s · build %3$s · %4$d pemeriksaan tercatat</string>
+    <string name="diagnostics_confirm_external">Konfirmasi pemeriksaan eksternal</string>
+    <string name="diagnostics_confirm">Lanjutkan</string>
+    <string name="diagnostics_external_none">Tidak ada fitur pada build ini yang memerlukan konfirmasi eksternal.</string>
+    <string name="diagnostics_external_explainer">Efek ini hanya terlihat dari akun kedua. Konfirmasi hanya setelah Anda melihatnya di WhatsApp %1$s. Memilih fitur yang sudah dikonfirmasi akan membatalkan konfirmasi.</string>
+    <string name="diagnostics_external_recorded">%1$s dikonfirmasi untuk WhatsApp %2$s. Jalankan ulang Pindai Atomik Mendalam agar terlihat di laporan.</string>
     <string name="diagnostics_running">Menjalankan pemeriksaan\u2026</string>
     <string name="diagnostics_cancelled">Dibatalkan</string>
     <string name="diagnostics_finished">Selesai</string>

@@ -603,6 +603,16 @@
     <string name="diagnostics_cancel">取消</string>
     <string name="diagnostics_close">关闭</string>
     <string name="diagnostics_export">导出 ZIP</string>
+    <string name="diagnostics_import">导入 ZIP</string>
+    <string name="diagnostics_import_title">先前的诊断归档</string>
+    <string name="diagnostics_import_failed">该归档已被拒绝，未从中读取任何内容。</string>
+    <string name="diagnostics_import_run_first">请先运行一次扫描以与该归档比较。</string>
+    <string name="diagnostics_import_summary">架构 %1$s · WhatsApp %2$s · 构建 %3$s · 已记录 %4$d 项检查</string>
+    <string name="diagnostics_confirm_external">确认外部验证</string>
+    <string name="diagnostics_confirm">继续</string>
+    <string name="diagnostics_external_none">此版本没有任何功能需要外部确认。</string>
+    <string name="diagnostics_external_explainer">此效果只能从第二个账号看到。请仅在 WhatsApp %1$s 上观察到之后再确认。选择已确认的功能将撤销该确认。</string>
+    <string name="diagnostics_external_recorded">已为 WhatsApp %2$s 确认 %1$s。重新运行深度原子扫描即可在报告中看到。</string>
     <string name="diagnostics_running">正在执行检查\u2026</string>
     <string name="diagnostics_cancelled">已取消</string>
     <string name="diagnostics_finished">已完成</string>

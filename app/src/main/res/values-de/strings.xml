@@ -602,6 +602,16 @@
     <string name="diagnostics_cancel">Abbrechen</string>
     <string name="diagnostics_close">Schließen</string>
     <string name="diagnostics_export">ZIP exportieren</string>
+    <string name="diagnostics_import">ZIP importieren</string>
+    <string name="diagnostics_import_title">Früheres Diagnose-Archiv</string>
+    <string name="diagnostics_import_failed">Das Archiv wurde abgelehnt; es wurde nichts daraus gelesen.</string>
+    <string name="diagnostics_import_run_first">Führe zuerst einen Scan aus, um ihn mit diesem Archiv zu vergleichen.</string>
+    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · Build %3$s · %4$d erfasste Prüfungen</string>
+    <string name="diagnostics_confirm_external">Externe Prüfung bestätigen</string>
+    <string name="diagnostics_confirm">Weiter</string>
+    <string name="diagnostics_external_none">In diesem Build muss keine Funktion extern bestätigt werden.</string>
+    <string name="diagnostics_external_explainer">Diese Wirkung ist nur von einem zweiten Konto aus sichtbar. Bestätige sie erst, wenn du sie auf WhatsApp %1$s beobachtet hast. Eine bereits bestätigte Funktion wieder auszuwählen hebt die Bestätigung auf.</string>
+    <string name="diagnostics_external_recorded">%1$s für WhatsApp %2$s bestätigt. Führe den tiefen Atomarscan erneut aus, um es im Bericht zu sehen.</string>
     <string name="diagnostics_running">Prüfungen laufen\u2026</string>
     <string name="diagnostics_cancelled">Abgebrochen</string>
     <string name="diagnostics_finished">Fertig</string>

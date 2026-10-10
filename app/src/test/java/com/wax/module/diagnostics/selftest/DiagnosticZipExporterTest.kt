@@ -108,6 +108,7 @@ class DiagnosticZipExporterTest {
                     DiagnosticReportBuilder.Environment(
                         appVersion = "1.2.0",
                         appBuildSha = "abc123",
+                        appVersionCode = 10042L,
                         whatsappPackage = "com.whatsapp",
                         whatsappVersion = "2.26.39.74",
                         androidVersion = "17",
@@ -137,6 +138,7 @@ class DiagnosticZipExporterTest {
                     DiagnosticReportBuilder.Environment(
                         "1.2.0",
                         "abc123",
+                        10042L,
                         "com.whatsapp",
                         "2.26.39.74",
                         "17",
@@ -176,6 +178,7 @@ class DiagnosticZipExporterTest {
                                 DiagnosticReportBuilder.Environment(
                                     "1.2.0",
                                     "abc",
+                                    10042L,
                                     "com.whatsapp",
                                     "2.26.39.74",
                                     "17",
@@ -201,6 +204,7 @@ class DiagnosticZipExporterTest {
                     DiagnosticReportBuilder.Environment(
                         "1.2.0",
                         "abc123",
+                        10042L,
                         "com.whatsapp",
                         "2.26.39.74",
                         "17",

@@ -15,11 +15,15 @@ import androidx.appcompat.app.AlertDialog
 import com.wax.module.R
 import com.wax.module.activities.base.BaseActivity
 import com.wax.module.diagnostics.selftest.AtomicCheckInventory
+import com.wax.module.diagnostics.selftest.DiagnosticArchiveImporter
 import com.wax.module.diagnostics.selftest.DiagnosticEngine
 import com.wax.module.diagnostics.selftest.DiagnosticProbeSource
 import com.wax.module.diagnostics.selftest.DiagnosticReportBuilder
 import com.wax.module.diagnostics.selftest.DiagnosticZipExporter
 import com.wax.module.diagnostics.selftest.ExportRedactor
+import com.wax.module.diagnostics.selftest.ExternalVerificationStore
+import com.wax.module.diagnostics.selftest.FeatureCheckInventory
+import com.wax.module.diagnostics.selftest.readBounded
 import java.io.OutputStream
 
 /**
@@ -38,14 +42,19 @@ import java.io.OutputStream
  */
 class DiagnosticsActivity : BaseActivity() {
     private val engine = DiagnosticEngine()
+    private val importer = DiagnosticArchiveImporter()
     private val mainHandler = Handler(Looper.getMainLooper())
     private lateinit var output: TextView
     private lateinit var progressLabel: TextView
     private var latest: DiagnosticEngine.Report? = null
 
+    /** Only the user can write here; the scan only ever reads. */
+    private lateinit var externalVerifications: ExternalVerificationStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DiagnosticProbeSource.attach(this)
+        externalVerifications = ExternalVerificationStore(this)
+        DiagnosticProbeSource.attach(this, externalVerifications)
 
         val root = vertical()
         root.addView(title())
@@ -64,13 +73,158 @@ class DiagnosticsActivity : BaseActivity() {
         runRow.addView(button(R.string.diagnostics_cancel) { cancelScan() })
         root.addView(runRow)
 
+        val verificationRow = horizontal()
+        verificationRow.addView(
+            button(R.string.diagnostics_confirm_external) { showExternalVerificationDialog() },
+        )
+        root.addView(verificationRow)
+
         val exportRow = horizontal()
         exportRow.addView(button(R.string.diagnostics_export) { exportWithConfirmation() })
+        exportRow.addView(button(R.string.diagnostics_import) { importPreviousArchive() })
         exportRow.addView(button(R.string.diagnostics_close) { finish() })
         root.addView(exportRow)
 
         setContentView(root)
     }
+
+    /**
+     * Guided external verification.
+     *
+     * L5 evidence exists only when a person with a second account says they saw
+     * the effect. The dialog states plainly what is being claimed, and a
+     * confirmation is recorded against this WhatsApp build only — so it can
+     * never be carried over to a version it was not made on.
+     */
+    private fun showExternalVerificationDialog() {
+        val build = DiagnosticProbeSource.whatsappBuild()
+        val candidates =
+            FeatureCheckInventory.features().filter { it.externalConfirmationRequired }
+        if (candidates.isEmpty()) {
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.diagnostics_confirm_external)
+                .setMessage(R.string.diagnostics_external_none)
+                .setPositiveButton(R.string.diagnostics_close, null)
+                .show()
+            return
+        }
+        val labels =
+            candidates
+                .map { feature ->
+                    val confirmed =
+                        externalVerifications.confirmationFor(feature.id, build) != null
+                    (if (confirmed) "✓ " else "○ ") + feature.title + " — " + feature.id
+                }.toTypedArray()
+        AlertDialog
+            .Builder(this)
+            .setTitle(R.string.diagnostics_confirm_external)
+            .setMessage(
+                getString(R.string.diagnostics_external_explainer, build) +
+                    "\n\n" + labels.joinToString("\n"),
+            ).setPositiveButton(R.string.diagnostics_confirm) { _, _ ->
+                askWhichToConfirm(candidates, build)
+            }.setNegativeButton(R.string.diagnostics_cancel, null)
+            .show()
+    }
+
+    private fun askWhichToConfirm(
+        candidates: List<FeatureCheckInventory.Feature>,
+        build: String,
+    ) {
+        AlertDialog
+            .Builder(this)
+            .setTitle(R.string.diagnostics_confirm_external)
+            .setItems(candidates.map { it.title }.toTypedArray()) { _, which ->
+                val feature = candidates[which]
+                val already = externalVerifications.confirmationFor(feature.id, build)
+                if (already != null) {
+                    // Confirming twice would be meaningless; the second action is
+                    // the only honest way to undo a claim.
+                    externalVerifications.revoke(feature.id, build)
+                    mainHandler.post { showExternalVerificationDialog() }
+                    return@setItems
+                }
+                externalVerifications.confirm(
+                    featureId = feature.id,
+                    whatsappBuild = build,
+                    note = "confirmed by the owner in the Manager",
+                    nowUtcMillis = System.currentTimeMillis(),
+                )
+                mainHandler.post {
+                    AlertDialog
+                        .Builder(this)
+                        .setTitle(R.string.diagnostics_confirm_external)
+                        .setMessage(
+                            getString(R.string.diagnostics_external_recorded, feature.title, build),
+                        ).setPositiveButton(R.string.diagnostics_close, null)
+                        .show()
+                }
+            }.setNegativeButton(R.string.diagnostics_cancel, null)
+            .show()
+    }
+
+    /**
+     * Imports a previously exported archive and compares it with this scan.
+     *
+     * The archive is verified first and refused outright when its own digests do
+     * not match, so a comparison can never be built on bytes nobody checked.
+     */
+    private fun importPreviousArchive() {
+        openDocument.launch(arrayOf(ZIP_MIME_TYPE, "*/*"))
+    }
+
+    /** Reads the picked archive, refusing anything that fails verification. */
+    private val openDocument =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            val stream = uri?.let { contentResolver.openInputStream(it) }
+            if (stream == null) {
+                showFailure(getString(R.string.diagnostics_import_failed))
+                return@registerForActivityResult
+            }
+            val bytes =
+                try {
+                    stream.use { it.readBounded(MAX_IMPORT_BYTES) }
+                } catch (failure: RuntimeException) {
+                    Log.w(TAG, "could not read the archive", failure)
+                    showFailure(getString(R.string.diagnostics_import_failed))
+                    return@registerForActivityResult
+                }
+            val current = latest
+            when (val result = DiagnosticArchiveImporter().import(bytes)) {
+                is DiagnosticArchiveImporter.ImportResult.Rejected -> {
+                    AlertDialog
+                        .Builder(this)
+                        .setTitle(R.string.diagnostics_import_failed)
+                        .setMessage(result.reason.name + ": " + result.detail)
+                        .setPositiveButton(R.string.diagnostics_close, null)
+                        .show()
+                }
+
+                is DiagnosticArchiveImporter.ImportResult.Accepted -> {
+                    val message =
+                        getString(
+                            R.string.diagnostics_import_summary,
+                            result.manifest.schemaVersion,
+                            result.manifest.whatsappVersion ?: "?",
+                            result.manifest.appBuildSha ?: "?",
+                            result.previous.size,
+                        )
+                    val comparison =
+                        if (current == null) {
+                            getString(R.string.diagnostics_import_run_first)
+                        } else {
+                            importer.describe(importer.compare(result.previous, current.results))
+                        }
+                    AlertDialog
+                        .Builder(this)
+                        .setTitle(R.string.diagnostics_import_title)
+                        .setMessage(message + "\n\n" + comparison)
+                        .setPositiveButton(R.string.diagnostics_close, null)
+                        .show()
+                }
+            }
+        }
 
     private fun vertical(): LinearLayout =
         LinearLayout(this).apply {
@@ -124,7 +278,10 @@ class DiagnosticsActivity : BaseActivity() {
                 DiagnosticProbeSource.whatsappBuild(),
                 DiagnosticProbeSource.TARGET_PACKAGE,
             )
-        runScan(config, AtomicCheckInventory.all())
+        // The deep scan is the whole inventory: the shared pipeline plus one
+        // hook check and one trigger check per feature, so the report can say
+        // which feature a resolver failure actually blocks.
+        runScan(config, FeatureCheckInventory.full())
     }
 
     private fun runScan(
@@ -217,7 +374,9 @@ class DiagnosticsActivity : BaseActivity() {
             .setTitle(R.string.diagnostics_redaction_preview)
             .setMessage(redactionMessage(preview.text, redacted.report.total))
             .setPositiveButton(R.string.diagnostics_export) { _, _ ->
-                writeZip(redacted.entries)
+                // The redaction account is written from what the redactor really
+                // removed, then the digests are re-sealed over the final bytes.
+                writeZip(DiagnosticReportBuilder.withRedactionReport(redacted.entries, redacted.report))
             }.setNegativeButton(R.string.diagnostics_cancel, null)
             .show()
     }
@@ -322,5 +481,11 @@ class DiagnosticsActivity : BaseActivity() {
     private companion object {
         const val TAG = "WA-X Diagnostics"
         const val ZIP_MIME_TYPE = "application/zip"
+
+        /**
+         * An imported archive is untrusted input, so it is read under a cap
+         * rather than into memory on the strength of its own claims.
+         */
+        const val MAX_IMPORT_BYTES = 8 * 1024 * 1024
     }
 }

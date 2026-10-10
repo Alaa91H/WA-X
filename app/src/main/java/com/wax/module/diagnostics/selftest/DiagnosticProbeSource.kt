@@ -3,6 +3,9 @@ package com.wax.module.diagnostics.selftest
 import android.content.Context
 import android.os.Build
 import com.wax.module.BuildConfig
+import com.wax.module.modern.ControlEffective
+import com.wax.module.modern.ControlPolicy
+import com.wax.module.modern.ControlRequested
 import com.wax.module.modern.ModernManagerRuntimeStatus
 import com.wax.module.modern.ModernTargetTelemetryProvider
 import com.wax.module.platform.SupportedPackages
@@ -19,16 +22,32 @@ import com.wax.module.platform.SupportedPackages
 object DiagnosticProbeSource {
     const val TARGET_PACKAGE = "com.whatsapp"
 
+    /** The only feature the runtime counts invocations for today. */
+    private const val CUSTOM_TIME_FEATURE = "custom_time"
+
     fun whatsappBuild(): String =
         runCatching {
             val info = context()?.packageManager?.getPackageInfo(TARGET_PACKAGE, 0)
             info?.versionName
-        }.getOrNull() ?: "unknown"
+        }.getOrNull() ?: ExternalVerificationStore.UNKNOWN_BUILD
 
     private var appContext: Context? = null
 
-    fun attach(context: Context) {
+    /**
+     * User confirmations of externally observed behaviour.
+     *
+     * Optional on purpose: a runtime with no confirmations recorded simply has no
+     * L5 evidence, which the engine reports honestly rather than guessing at.
+     */
+    var externalVerifications: ExternalVerificationStore? = null
+        private set
+
+    fun attach(
+        context: Context,
+        externalVerifications: ExternalVerificationStore = ExternalVerificationStore(context),
+    ) {
         appContext = context.applicationContext
+        this.externalVerifications = externalVerifications
     }
 
     private fun context(): Context? = appContext
@@ -171,7 +190,146 @@ object DiagnosticProbeSource {
             AtomicCheckInventory.JID_RAW_STRING to resolverProbe("jid_raw_string"),
             AtomicCheckInventory.MESSAGE_CLASS to resolverProbe("message_class"),
             AtomicCheckInventory.MESSAGE_KEY_CLASS to resolverProbe("message_key_class"),
-        )
+        ) + featureProbes()
+
+    /**
+     * The per-feature hook and trigger probes.
+     *
+     * They answer from what the target actually reported for the feature, not
+     * from a source file or an assumed count, and they keep the three states
+     * apart that the issue insists on: a feature that is switched off is
+     * `NOT_TESTED`, a feature whose hook is registered is `HOOKED` and stops
+     * there, and only a real callback moves it to `TRIGGERED`.
+     */
+    private fun featureProbes(): Map<String, DiagnosticEngine.Probe> {
+        val probes = LinkedHashMap<String, DiagnosticEngine.Probe>()
+        for (feature in FeatureCheckInventory.features()) {
+            probes[AtomicCheckInventory.HOOK_PREFIX + feature.id] = hookProbe(feature)
+            probes[AtomicCheckInventory.TRIGGER_PREFIX + feature.id] = triggerProbe(feature)
+        }
+        return probes
+    }
+
+    private fun hookProbe(feature: FeatureCheckInventory.Feature) =
+        DiagnosticEngine.Probe {
+            val reported = reportedState(feature.id)
+            if (reported == null || reported.isEmpty()) {
+                // Nothing was reported at all: the target never ran this feature.
+                return@Probe DiagnosticEngine.Observation(
+                    evidence = "no state reported by the target",
+                    level = EvidenceLevel.L3_HOOK,
+                    verification = VerificationState.NOT_OBSERVED,
+                    expectedMatch = false,
+                    failureClass = FailureClass.DEPENDENCY_MISSING,
+                )
+            }
+            val requested = requestedState(feature)
+            val effective = ControlPolicy.effectiveFrom(reported, false, requested)
+            DiagnosticEngine.Observation(
+                evidence = "$reported (${effective.name})",
+                level = EvidenceLevel.L3_HOOK,
+                verification = VerificationState.HOOKED,
+                // A feature the user switched off is not a broken feature, and a
+                // feature that never reported is not a failing one either. Both
+                // are stated directly rather than being forced through the
+                // pass/fail axis, so the export cannot imply otherwise.
+                statusOverride =
+                    when (effective) {
+                        ControlEffective.DISABLED -> DiagnosticStatus.NOT_TESTED
+
+                        ControlEffective.NOT_OBSERVED -> DiagnosticStatus.NOT_TESTED
+
+                        ControlEffective.PENDING_MIGRATION -> DiagnosticStatus.UNSUPPORTED
+
+                        ControlEffective.RESOLVER_FAILED,
+                        ControlEffective.UNSAFE_SIGNATURE,
+                        ControlEffective.ERROR,
+                        -> DiagnosticStatus.FAIL
+
+                        else -> DiagnosticStatus.PASS
+                    },
+                failureClass =
+                    when (effective) {
+                        ControlEffective.RESOLVER_FAILED -> FailureClass.DEPENDENCY_MISSING
+                        ControlEffective.UNSAFE_SIGNATURE -> FailureClass.SIGNATURE_UNSUPPORTED
+                        ControlEffective.ERROR -> FailureClass.CRASHED
+                        ControlEffective.DISABLED -> FailureClass.PREFERENCE_DISABLED
+                        else -> FailureClass.NONE
+                    },
+            )
+        }
+
+    /**
+     * What the Manager last requested for this feature.
+     *
+     * Read from the Manager's own preference store, because that is what decides
+     * whether `DISABLED` means "switched off" or "switched on but the target has
+     * not restarted yet" — the difference between a normal state and a
+     * restart-required one.
+     */
+    private fun requestedState(feature: FeatureCheckInventory.Feature): ControlRequested {
+        if (feature.alwaysOn || feature.preferenceKey.isEmpty()) return ControlRequested.ENABLED
+        val context = context() ?: return ControlRequested.UNKNOWN
+        val prefs =
+            runCatching {
+                androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+            }.getOrNull() ?: return ControlRequested.UNKNOWN
+        if (prefs.contains(feature.preferenceKey)) {
+            val value = prefs.all[feature.preferenceKey]
+            return when (value) {
+                is Boolean -> if (value) ControlRequested.ENABLED else ControlRequested.DISABLED
+                is String -> if (value.isNotEmpty()) ControlRequested.ENABLED else ControlRequested.DISABLED
+                else -> ControlRequested.UNKNOWN
+            }
+        }
+        // Always-on infrastructure reports no preference of its own; a switched-on
+        // wired feature whose key was never stored is genuinely unknown.
+        return ControlRequested.UNKNOWN
+    }
+
+    /**
+     * The trigger probe.
+     *
+     * Three sources of truth, in increasing strength:
+     * 1. only Custom Time reports an invocation counter, so for the other
+     *    features there is no local evidence at all and the probe returns null;
+     * 2. a feature whose effect only a second account can see may be confirmed
+     *    by the user, which is recorded per feature and per WhatsApp build;
+     * 3. without either, the check stays `NEEDS_EXTERNAL_VERIFICATION`. It is
+     *    never upgraded on the strength of an installed hook.
+     */
+    private fun triggerProbe(feature: FeatureCheckInventory.Feature) =
+        DiagnosticEngine.Probe {
+            if (feature.id == CUSTOM_TIME_FEATURE) {
+                val count =
+                    reportedLong("modern.feature.custom_time.invocation_count.$TARGET_PACKAGE")
+                if (count != null && count > 0L) {
+                    return@Probe DiagnosticEngine.Observation(
+                        evidence = "invocations=$count",
+                        level = EvidenceLevel.L4_TRIGGER,
+                        verification = VerificationState.TRIGGERED,
+                        expectedMatch = true,
+                    )
+                }
+            }
+            val build = whatsappBuild()
+            val confirmation = externalVerifications?.confirmationFor(feature.id, build)
+            if (confirmation == null) return@Probe null
+            DiagnosticEngine.Observation(
+                evidence =
+                    "confirmed by the user on $build at ${confirmation.confirmedAtUtcMillis}" +
+                        if (confirmation.note.isBlank()) "" else " — ${confirmation.note}",
+                level = EvidenceLevel.L5_EXTERNAL,
+                verification = VerificationState.EXTERNALLY_VERIFIED,
+                expectedMatch = true,
+            )
+        }
+
+    private fun reportedLong(key: String): Long? =
+        runCatching {
+            val prefs = targetPrefs() ?: return null
+            if (!prefs.contains(key)) null else prefs.getLong(key, 0L)
+        }.getOrNull()
 
     /**
      * Maps a pipeline resolver check onto the state the target reported for it.
@@ -232,7 +390,11 @@ object DiagnosticProbeSource {
         val context = context()
         return DiagnosticReportBuilder.Environment(
             appVersion = BuildConfig.VERSION_NAME,
-            appBuildSha = BuildConfig.VERSION_CODE.toString(),
+            // The commit the APK was built from, so a report can be traced back
+            // to the code that produced it. The version code stays in
+            // appVersion and is not passed off as a revision.
+            appBuildSha = BuildConfig.GIT_SHA,
+            appVersionCode = BuildConfig.VERSION_CODE.toLong(),
             whatsappPackage = TARGET_PACKAGE,
             whatsappVersion = whatsappBuild(),
             androidVersion = Build.VERSION.RELEASE,

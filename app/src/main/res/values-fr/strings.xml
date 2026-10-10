@@ -602,6 +602,16 @@
     <string name="diagnostics_cancel">Annuler</string>
     <string name="diagnostics_close">Fermer</string>
     <string name="diagnostics_export">Exporter le ZIP</string>
+    <string name="diagnostics_import">Importer ZIP</string>
+    <string name="diagnostics_import_title">Archive de diagnostic précédent</string>
+    <string name="diagnostics_import_failed">L’archive a été refusée et rien n’en a été lu.</string>
+    <string name="diagnostics_import_run_first">Lancez d’abord une analyse pour la comparer à cette archive.</string>
+    <string name="diagnostics_import_summary">Schéma %1$s · WhatsApp %2$s · build %3$s · %4$d contrôles enregistrés</string>
+    <string name="diagnostics_confirm_external">Confirmer le contrôle externe</string>
+    <string name="diagnostics_confirm">Continuer</string>
+    <string name="diagnostics_external_none">Aucune fonction de cette version ne nécessite de confirmation externe.</string>
+    <string name="diagnostics_external_explainer">Cet effet n’est visible que depuis un second compte. Ne confirmez qu’après l’avoir observé sur WhatsApp %1$s. Choisir une fonction déjà confirmée annule la confirmation.</string>
+    <string name="diagnostics_external_recorded">%1$s confirmé pour WhatsApp %2$s. Relancez l’analyse atomique profonde pour le voir dans le rapport.</string>
     <string name="diagnostics_running">Contrôles en cours\u2026</string>
     <string name="diagnostics_cancelled">Annulé</string>
     <string name="diagnostics_finished">Terminé</string>

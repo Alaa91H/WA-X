@@ -43,6 +43,16 @@ class DiagnosticEngine(
         val failureClass: FailureClass = FailureClass.NONE,
         val expectedMatch: Boolean = true,
         val durationMillis: Long = 0L,
+        /**
+         * Set only when the observed situation does not fit pass or fail at all.
+         *
+         * A feature switched off in preferences and a feature whose migration is
+         * still pending are real observations that are neither a success nor a
+         * defect, so the probe states the status directly instead of squeezing
+         * them through the pass/fail axis. A `PASS` here still has to survive the
+         * same honesty pass as any other result.
+         */
+        val statusOverride: DiagnosticStatus? = null,
     )
 
     data class RunConfig(
@@ -289,19 +299,20 @@ class DiagnosticEngine(
             definition.externalConfirmationRequired &&
                 observation.level < EvidenceLevel.L4_TRIGGER
         val status =
-            when {
-                !observation.expectedMatch -> {
-                    DiagnosticStatus.FAIL
-                }
+            observation.statusOverride
+                ?: when {
+                    !observation.expectedMatch -> {
+                        DiagnosticStatus.FAIL
+                    }
 
-                needsExternal -> {
-                    DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-                }
+                    needsExternal -> {
+                        DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                    }
 
-                else -> {
-                    DiagnosticStatus.PASS
+                    else -> {
+                        DiagnosticStatus.PASS
+                    }
                 }
-            }
         return AtomicCheckResult(
             id = definition.id,
             title = definition.title,

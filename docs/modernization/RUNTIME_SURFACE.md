@@ -8,7 +8,7 @@ the numbers.
 | --- | --- | --- | --- |
 | [Legacy Xposed API surface](#legacy_api_surface) | #318 M04-M06 | 239 | 97 |
 | [Preference reads inside the injected process](#runtime_preference_reads) | #318 M02 / #333 A08 | 12 | 3 |
-| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 49 | 18 |
+| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 51 | 19 |
 | [World-readable preference compatibility](#world_readable_prefs) | #318 M02 / #333 A16 | 4 | 1 |
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
@@ -179,12 +179,12 @@ Legacy types in use:
 
 **End state:** Not a target of this program. Listed so the asymmetry stays visible.
 
-**Current:** 49 occurrences across 18 files.
+**Current:** 51 occurrences across 19 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `PreferenceManager` | 41 | 16 |
-| `getSharedPreferences()` | 8 | 5 |
+| `PreferenceManager` | 42 | 17 |
+| `getSharedPreferences()` | 9 | 6 |
 
 <details><summary>Files</summary>
 
@@ -195,6 +195,7 @@ Legacy types in use:
 - `app/src/main/java/com/wax/module/activities/base/BaseActivity.kt`
 - `app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt`
 - `app/src/main/java/com/wax/module/diagnostics/selftest/DiagnosticProbeSource.kt`
+- `app/src/main/java/com/wax/module/diagnostics/selftest/ExternalVerificationStore.kt`
 - `app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt`
 - `app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt`
 - `app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java`

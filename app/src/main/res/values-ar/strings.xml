@@ -606,6 +606,16 @@
     <string name="diagnostics_cancel">إلغاء</string>
     <string name="diagnostics_close">إغلاق</string>
     <string name="diagnostics_export">تصدير ZIP</string>
+    <string name="diagnostics_import">استيراد ZIP</string>
+    <string name="diagnostics_import_title">أرشيف تشخيص سابق</string>
+    <string name="diagnostics_import_failed">رُفض الأرشيف ولم يُقرأ منه شيء.</string>
+    <string name="diagnostics_import_run_first">نفّذ مسحًا أولًا للمقارنة مع هذا الأرشيف.</string>
+    <string name="diagnostics_import_summary">المخطط %1$s · واتساب %2$s · البناء %3$s · %4$d فحصًا مسجلًا</string>
+    <string name="diagnostics_confirm_external">تأكيد فحص خارجي</string>
+    <string name="diagnostics_confirm">متابعة</string>
+    <string name="diagnostics_external_none">لا توجد ميزة في هذا الإصدار تحتاج تأكيدًا خارجيًا.</string>
+    <string name="diagnostics_external_explainer">لا يُرى هذا التأثير إلا من حساب ثانٍ. أكّد أحدها فقط بعد أن تلاحظه على واتساب %1$s. اختيار ميزة مؤكَّدة مسبقًا يلغي التأكيد.</string>
+    <string name="diagnostics_external_recorded">تم تأكيد %1$s لواتساب %2$s. أعد الفحص الذري الشامل ليظهر في التقرير.</string>
     <string name="diagnostics_running">جارٍ تنفيذ الفحوصات\u2026</string>
     <string name="diagnostics_cancelled">تم الإلغاء</string>
     <string name="diagnostics_finished">اكتمل</string>
