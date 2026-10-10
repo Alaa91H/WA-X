@@ -34,132 +34,133 @@ object DiagnosticProbeSource {
     private fun context(): Context? = appContext
 
     /** The probes the Manager can actually answer right now. */
-    fun probes(): Map<String, DiagnosticEngine.Probe> = linkedMapOf(
-        AtomicCheckInventory.ENV_ANDROID to DiagnosticEngine.Probe {
-            DiagnosticEngine.Observation(
-                evidence = "Android ${Build.VERSION.RELEASE} sdk ${Build.VERSION.SDK_INT} " +
-                    Build.SUPPORTED_ABIS.joinToString(","),
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-            )
-        },
-        AtomicCheckInventory.ENV_TARGET to DiagnosticEngine.Probe {
-            val snapshot = snapshot() ?: return@Probe null
-            val target = snapshot.targets.firstOrNull { it.packageName == TARGET_PACKAGE }
-                ?: return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "${target.packageName} evidence=${target.evidence}",
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-            )
-        },
-        AtomicCheckInventory.FRAMEWORK_API102 to DiagnosticEngine.Probe {
-            val snapshot = snapshot() ?: return@Probe null
-            val api = snapshot.frameworkApi
-            DiagnosticEngine.Observation(
-                evidence = "framework=${snapshot.frameworkName ?: "unknown"} api=$api",
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-                expectedMatch = api != null && api >= 100,
-                failureClass = FailureClass.FRAMEWORK_UNAVAILABLE,
-            )
-        },
-        AtomicCheckInventory.MODULE_LOADED to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            if (!target.bootstrapMilestones.contains("MODULE_LOADED")) return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "milestones=" + target.bootstrapMilestones.joinToString(">"),
-                level = EvidenceLevel.L1_LIFECYCLE,
-                verification = VerificationState.TRIGGERED,
-            )
-        },
-        AtomicCheckInventory.APP_ATTACH to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            if (!target.bootstrapMilestones.contains("ATTACH_OBSERVED")) return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "Application.attach intercepted",
-                level = EvidenceLevel.L1_LIFECYCLE,
-                verification = VerificationState.TRIGGERED,
-            )
-        },
-        AtomicCheckInventory.MANAGER_IPC to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            if (target.bootstrapMilestones.none { it.endsWith("HEARTBEAT_WRITE_CONFIRMED") }) {
-                return@Probe null
-            }
-            DiagnosticEngine.Observation(
-                evidence = "provider accepted an authenticated report",
-                level = EvidenceLevel.L1_LIFECYCLE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-            )
-        },
-        AtomicCheckInventory.HEARTBEAT to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "evidence=" + target.evidence,
-                level = EvidenceLevel.L1_LIFECYCLE,
-                verification =
-                    if (target.evidence ==
-                        ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
-                    ) {
-                        VerificationState.LOCALLY_VERIFIED
-                    } else {
-                        VerificationState.HOOKED
-                    },
-                expectedMatch = target.evidence ==
-                    ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT,
-                failureClass = FailureClass.SCOPE_MISSING,
-            )
-        },
-        AtomicCheckInventory.DEXKIT_NATIVE to DiagnosticEngine.Probe {
-            val loaded = runCatching { System.loadLibrary("dexkit") }.isSuccess
-            DiagnosticEngine.Observation(
-                evidence = if (loaded) "dexkit native library loaded" else "load failed",
-                level = EvidenceLevel.L2_RESOLVER,
-                verification =
-                    if (loaded) {
-                        VerificationState.LOCALLY_VERIFIED
-                    } else {
-                        VerificationState.NOT_OBSERVED
-                    },
-                expectedMatch = loaded,
-                failureClass = FailureClass.DEPENDENCY_MISSING,
-            )
-        },
-        AtomicCheckInventory.ENV_SCOPE to DiagnosticEngine.Probe {
-            val packages = SupportedPackages.ALL
-            if (!packages.contains(TARGET_PACKAGE)) return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "supported=${packages.joinToString(",")}",
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-            )
-        },
-        AtomicCheckInventory.REGISTRY to DiagnosticEngine.Probe {
-            // The registry lives in the hooked process, so the honest answer
-            // here is whatever the target reported back, not a source file and
-            // not an assumed count.
-            val reported = reportedFeatureStates().size
-            if (reported == 0) return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "features reported by the target=$reported",
-                level = EvidenceLevel.L2_RESOLVER,
-                verification = VerificationState.LOCALLY_VERIFIED,
-                expectedMatch = reported > 0,
-                failureClass = FailureClass.DEPENDENCY_MISSING,
-            )
-        },
-        // The four contact/JID resolver checks answer from the states the
-        // target itself reported, which is exactly the observed failure chain.
-        AtomicCheckInventory.CONTACT_CLASS to resolverProbe("contact_access"),
-        AtomicCheckInventory.CONTACT_DATA_CLASS to resolverProbe("contact_data_class"),
-        AtomicCheckInventory.JID_CLASS to resolverProbe("jid_class"),
-        AtomicCheckInventory.JID_RAW_STRING to resolverProbe("jid_raw_string"),
-        AtomicCheckInventory.MESSAGE_CLASS to resolverProbe("message_class"),
-        AtomicCheckInventory.MESSAGE_KEY_CLASS to resolverProbe("message_key_class"),
-    )
+    fun probes(): Map<String, DiagnosticEngine.Probe> =
+        linkedMapOf(
+            AtomicCheckInventory.ENV_ANDROID to DiagnosticEngine.Probe {
+                DiagnosticEngine.Observation(
+                    evidence = "Android ${Build.VERSION.RELEASE} sdk ${Build.VERSION.SDK_INT} " +
+                        Build.SUPPORTED_ABIS.joinToString(","),
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                )
+            },
+            AtomicCheckInventory.ENV_TARGET to DiagnosticEngine.Probe {
+                val snapshot = snapshot() ?: return@Probe null
+                val target = snapshot.targets.firstOrNull { it.packageName == TARGET_PACKAGE }
+                    ?: return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "${target.packageName} evidence=${target.evidence}",
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                )
+            },
+            AtomicCheckInventory.FRAMEWORK_API102 to DiagnosticEngine.Probe {
+                val snapshot = snapshot() ?: return@Probe null
+                val api = snapshot.frameworkApi
+                DiagnosticEngine.Observation(
+                    evidence = "framework=${snapshot.frameworkName ?: "unknown"} api=$api",
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                    expectedMatch = api != null && api >= 100,
+                    failureClass = FailureClass.FRAMEWORK_UNAVAILABLE,
+                )
+            },
+            AtomicCheckInventory.MODULE_LOADED to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                if (!target.bootstrapMilestones.contains("MODULE_LOADED")) return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "milestones=" + target.bootstrapMilestones.joinToString(">"),
+                    level = EvidenceLevel.L1_LIFECYCLE,
+                    verification = VerificationState.TRIGGERED,
+                )
+            },
+            AtomicCheckInventory.APP_ATTACH to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                if (!target.bootstrapMilestones.contains("ATTACH_OBSERVED")) return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "Application.attach intercepted",
+                    level = EvidenceLevel.L1_LIFECYCLE,
+                    verification = VerificationState.TRIGGERED,
+                )
+            },
+            AtomicCheckInventory.MANAGER_IPC to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                if (target.bootstrapMilestones.none { it.endsWith("HEARTBEAT_WRITE_CONFIRMED") }) {
+                    return@Probe null
+                }
+                DiagnosticEngine.Observation(
+                    evidence = "provider accepted an authenticated report",
+                    level = EvidenceLevel.L1_LIFECYCLE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                )
+            },
+            AtomicCheckInventory.HEARTBEAT to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "evidence=" + target.evidence,
+                    level = EvidenceLevel.L1_LIFECYCLE,
+                    verification =
+                        if (target.evidence ==
+                            ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
+                        ) {
+                            VerificationState.LOCALLY_VERIFIED
+                        } else {
+                            VerificationState.HOOKED
+                        },
+                    expectedMatch = target.evidence ==
+                        ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT,
+                    failureClass = FailureClass.SCOPE_MISSING,
+                )
+            },
+            AtomicCheckInventory.DEXKIT_NATIVE to DiagnosticEngine.Probe {
+                val loaded = runCatching { System.loadLibrary("dexkit") }.isSuccess
+                DiagnosticEngine.Observation(
+                    evidence = if (loaded) "dexkit native library loaded" else "load failed",
+                    level = EvidenceLevel.L2_RESOLVER,
+                    verification =
+                        if (loaded) {
+                            VerificationState.LOCALLY_VERIFIED
+                        } else {
+                            VerificationState.NOT_OBSERVED
+                        },
+                    expectedMatch = loaded,
+                    failureClass = FailureClass.DEPENDENCY_MISSING,
+                )
+            },
+            AtomicCheckInventory.ENV_SCOPE to DiagnosticEngine.Probe {
+                val packages = SupportedPackages.ALL
+                if (!packages.contains(TARGET_PACKAGE)) return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "supported=${packages.joinToString(",")}",
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                )
+            },
+            AtomicCheckInventory.REGISTRY to DiagnosticEngine.Probe {
+                // The registry lives in the hooked process, so the honest answer
+                // here is whatever the target reported back, not a source file and
+                // not an assumed count.
+                val reported = reportedFeatureStates().size
+                if (reported == 0) return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "features reported by the target=$reported",
+                    level = EvidenceLevel.L2_RESOLVER,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                    expectedMatch = reported > 0,
+                    failureClass = FailureClass.DEPENDENCY_MISSING,
+                )
+            },
+            // The four contact/JID resolver checks answer from the states the
+            // target itself reported, which is exactly the observed failure chain.
+            AtomicCheckInventory.CONTACT_CLASS to resolverProbe("contact_access"),
+            AtomicCheckInventory.CONTACT_DATA_CLASS to resolverProbe("contact_data_class"),
+            AtomicCheckInventory.JID_CLASS to resolverProbe("jid_class"),
+            AtomicCheckInventory.JID_RAW_STRING to resolverProbe("jid_raw_string"),
+            AtomicCheckInventory.MESSAGE_CLASS to resolverProbe("message_class"),
+            AtomicCheckInventory.MESSAGE_KEY_CLASS to resolverProbe("message_key_class"),
+        )
 
-    /**
+        /**
      * Maps a pipeline resolver check onto the state the target reported for it.
      *
      * A reported failure keeps its own reason so the clusterer can attach every

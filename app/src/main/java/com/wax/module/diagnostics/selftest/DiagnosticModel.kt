@@ -167,7 +167,10 @@ data class AtomicCheckResult(
             append('}')
     }
 
-    private fun StringBuilder.appendField(key: String, value: String) {
+    private fun StringBuilder.appendField(
+        key: String,
+        value: String,
+    ) {
         append('"').append(key).append("\":")
         appendQuoted(value)
         append(',')
