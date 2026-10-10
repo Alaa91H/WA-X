@@ -11,7 +11,6 @@ package com.wax.module.diagnostics.selftest
  * everyday privacy features.
  */
 object AtomicCheckInventory {
-
     data class Definition(
         val id: String,
         val title: String,

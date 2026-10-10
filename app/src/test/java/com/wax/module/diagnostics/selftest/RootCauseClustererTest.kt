@@ -9,7 +9,6 @@ import org.junit.Test
 
 /** The observed device failure chain must collapse into ONE root cause. */
 class RootCauseClustererTest {
-
     private fun result(
         id: String,
         status: DiagnosticStatus,

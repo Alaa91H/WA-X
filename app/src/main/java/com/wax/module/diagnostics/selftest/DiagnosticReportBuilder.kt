@@ -11,7 +11,6 @@ import com.wax.module.diagnostics.selftest.jsonArray
  * there is deliberately no code path that invents a `logs/sanitized-runtime.log`.
  */
 object DiagnosticReportBuilder {
-
     data class Environment(
         val appVersion: String,
         val appBuildSha: String,

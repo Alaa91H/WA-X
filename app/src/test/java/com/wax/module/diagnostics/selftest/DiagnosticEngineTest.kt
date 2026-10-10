@@ -13,7 +13,6 @@ import org.junit.Test
  * reported as functional.
  */
 class DiagnosticEngineTest {
-
     private fun config(mode: DiagnosticEngine.RunConfig.Mode = DiagnosticEngine.RunConfig.Mode.DEEP_SCAN) =
         DiagnosticEngine.RunConfig(mode, 2_000L, "2.26.39.74", "com.whatsapp")
 

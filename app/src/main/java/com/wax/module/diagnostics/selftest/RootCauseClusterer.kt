@@ -11,7 +11,6 @@ package com.wax.module.diagnostics.selftest
  * dependency and everything downstream is attached to it.
  */
 object RootCauseClusterer {
-
     data class Cluster(
         val rootCauseId: String,
         val rootTitle: String,

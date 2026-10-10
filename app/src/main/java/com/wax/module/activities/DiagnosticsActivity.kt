@@ -267,8 +267,9 @@ class DiagnosticsActivity : BaseActivity() {
             pendingBytes = null
             if (uri == null || bytes == null) return@registerForActivityResult
             try {
-                val stream = contentResolver.openOutputStream(uri)
-                    ?: throw IllegalStateException("storage provider returned no stream")
+                val stream =
+                    contentResolver.openOutputStream(uri)
+                        ?: throw IllegalStateException("storage provider returned no stream")
                 stream.use { DiagnosticZipExporter().writeTo(ResolverTarget(it), bytes) }
                 AlertDialog
                     .Builder(this)
@@ -282,7 +283,8 @@ class DiagnosticsActivity : BaseActivity() {
         }
 
     private fun showFailure(reason: String) {
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.diagnostics_export_failed)
             .setMessage(reason)
             .show()
