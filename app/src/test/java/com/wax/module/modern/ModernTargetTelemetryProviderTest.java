@@ -145,7 +145,7 @@ public final class ModernTargetTelemetryProviderTest {
         assertEquals("0", ModernTargetTelemetryProvider.readMode(prefs, "typearchive"));
         assertEquals("0", ModernTargetTelemetryProvider.readMode(prefs, "absent"));
         assertFalse(ModernTargetTelemetryProvider.readBoolean(prefs, "unrelated"));
-        assertFalse(ModernTargetTelemetryProvider.readBoolean(prefs, "antirevoke"));
+        assertTrue(ModernTargetTelemetryProvider.readBoolean(prefs, "antirevoke"));
     }
 
     @Test public void booleanSnapshotNeverIteratesLegacyStringModes() {
