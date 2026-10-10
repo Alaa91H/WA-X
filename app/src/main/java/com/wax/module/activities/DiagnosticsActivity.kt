@@ -211,18 +211,20 @@ class DiagnosticsActivity : BaseActivity() {
         val redactor = ExportRedactor()
         val redacted = redactor.redactEntries(entries)
         val preview = redactor.redactAll(entries.map { String(it.content) })
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.diagnostics_redaction_preview)
             .setMessage(redactionMessage(preview.text, redacted.report.total))
             .setPositiveButton(R.string.diagnostics_export) { _, _ ->
                 writeZip(redacted.entries)
-            }
-            .setNegativeButton(R.string.diagnostics_cancel, null)
+            }.setNegativeButton(R.string.diagnostics_cancel, null)
             .show()
     }
 
-    private fun redactionMessage(preview: String, total: Int): String =
-        getString(R.string.diagnostics_redaction_summary, total) + "\n\n" + preview.take(1200)
+    private fun redactionMessage(
+        preview: String,
+        total: Int,
+    ): String = getString(R.string.diagnostics_redaction_summary, total) + "\n\n" + preview.take(1200)
 
     private fun reportInputs(report: DiagnosticEngine.Report): DiagnosticReportBuilder.Inputs =
         DiagnosticReportBuilder.Inputs(

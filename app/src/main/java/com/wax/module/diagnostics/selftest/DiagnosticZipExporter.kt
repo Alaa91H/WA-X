@@ -7,6 +7,9 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+/** The digest file; redaction rebuilds it because it covers the rest. */
+internal const val CHECKSUMS_ENTRY = "checksums.sha256"
+
 /**
  * Builds the diagnostics ZIP in memory and verifies it before anything is
  * written to storage.
@@ -22,9 +25,6 @@ class DiagnosticZipExporter(
     private val maxTotalBytes: Int = 4 * 1024 * 1024,
     private val maxEntries: Int = 200,
 ) {
-    /** The digest file; it is rebuilt after redaction because it covers the rest. */
-    const val CHECKSUMS_ENTRY = "checksums.sha256"
-
     data class Entry(val name: String, val content: ByteArray)
 
     data class BuildResult(
