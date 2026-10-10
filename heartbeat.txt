@@ -1,0 +1,7 @@
+last_heartbeat_utc=2026-10-10T23:31:58Z
+host=server
+uptime_s=311896
+supervisor=active
+reporter=active
+mem_available_mb=450
+quota_reset_at=2026-10-11T00:01:59Z
