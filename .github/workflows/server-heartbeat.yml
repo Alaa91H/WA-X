@@ -1,0 +1,108 @@
+name: Server heartbeat
+
+# External dead-man switch for the WA-X migration server.
+#
+# The server publishes a heartbeat commit to refs/heads/ops/heartbeat roughly every
+# 30 minutes. This workflow runs entirely on GitHub's infrastructure, so it still
+# executes when the server itself is down, its network is gone, or its services have
+# died. That is the whole point: a check that runs on the machine it monitors cannot
+# report that machine's death.
+#
+# Threshold rationale: a healthy server publishes every 30 min. The longest legitimate
+# gap is the daily model-quota blackout, which parks the supervisor for about 6.25 h
+# until the 00:00 UTC window rolls over. 9 hours leaves comfortable margin above that
+# while still catching a genuine failure well inside one day.
+
+on:
+  schedule:
+    - cron: "13,43 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read the last heartbeat
+        id: hb
+        run: |
+          set -euo pipefail
+          RAW=$(curl -sS --max-time 30 \
+            "https://api.github.com/repos/Alaa91H/WA-X/commits/ops/heartbeat" || echo '{}')
+          DATE=$(printf '%s' "$RAW" | jq -r '.commit.committer.date // empty')
+          if [ -z "$DATE" ]; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "age_hours=99999" >> "$GITHUB_OUTPUT"
+          else
+            NOW=$(date -u +%s)
+            THEN=$(date -u -d "$DATE" +%s)
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "date=$DATE" >> "$GITHUB_OUTPUT"
+            echo "age_hours=$(( (NOW - THEN) / 3600 ))" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Evaluate
+        id: verdict
+        run: |
+          set -euo pipefail
+          AGE="${{ steps.hb.outputs.age_hours }}"
+          THRESHOLD=9
+          if [ "$AGE" -gt "$THRESHOLD" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "The WA-X migration server has not published a heartbeat for ${AGE} hours (threshold ${THRESHOLD})." >> "$GITHUB_ENV"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+            echo "Heartbeat is ${AGE} hours old. Healthy." >> "$GITHUB_ENV"
+          fi
+
+      - name: Notify Telegram
+        if: steps.verdict.outputs.stale == 'true'
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_ALERT_CHAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TG_TOKEN:-}" ] || [ -z "${TG_CHAT:-}" ]; then
+            echo "::warning::Telegram secret or chat id missing; skipping Telegram alert."
+            exit 0
+          fi
+          curl -sS --max-time 30 -X POST \
+            "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d chat_id="${TG_CHAT}" \
+            -d parse_mode=HTML \
+            --data-urlencode "text=<b>WA-X server heartbeat stale</b>
+Last heartbeat: ${{ steps.hb.outputs.date || 'never' }}
+Age: ${{ steps.hb.outputs.age_hours }} h (threshold 9 h)
+
+The migration supervisor may be down, offline, or stuck. Check the box." \
+            > /dev/null
+          echo "Telegram alert sent."
+
+      - name: Record it on the repository
+        if: steps.verdict.outputs.stale == 'true'
+        run: |
+          set -euo pipefail
+          TITLE="Server heartbeat stale since ${{ steps.hb.outputs.date || 'never' }}"
+          BODY="Automated check: no heartbeat commit on \`ops/heartbeat\` for ${{ steps.hb.outputs.age_hours }} hours (threshold 9)."
+          EXISTING=$(gh issue list --state open --search "Server heartbeat stale in:title" \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label automation
+          fi
+
+      - name: Result
+        run: |
+          {
+            echo "### Server heartbeat"
+            echo ""
+            echo "$REPORT"
+            echo ""
+            echo "- last heartbeat: ${{ steps.hb.outputs.date || 'never seen' }}"
+            echo "- age (hours): ${{ steps.hb.outputs.age_hours }}"
+            echo "- threshold (hours): 9"
+          } >> "$GITHUB_STEP_SUMMARY"
