@@ -37,6 +37,15 @@ enum class ControlEffective {
     /** Hook signature outside what the adapter accepts. */
     UNSAFE_SIGNATURE,
 
+    /**
+     * The runtime states it cannot provide this behaviour at all.
+     *
+     * A server-controlled effect such as suppressing a delivery receipt cannot
+     * be delivered from inside the app. Presenting such a switch as working is
+     * a false claim, so it has a state of its own that no row may switch on.
+     */
+    UNSUPPORTED,
+
     /** Adapter exists but is not wired into the runtime yet. */
     PENDING_MIGRATION,
 
@@ -98,6 +107,7 @@ object ControlStatusText {
             ControlEffective.ERROR -> "Runtime error"
             ControlEffective.RESTART_REQUIRED -> "Restart WhatsApp to apply"
             ControlEffective.PARTIAL -> "Partial: part still pending migration"
+            ControlEffective.UNSUPPORTED -> "Unsupported on this WhatsApp build"
         }
 
     fun categoryTitle(category: ControlCategory): String =
