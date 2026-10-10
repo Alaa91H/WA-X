@@ -298,7 +298,8 @@ class ModernContactAccess private constructor(
          * to a missing or an ambiguous outcome, and neither ever results in an
          * arbitrary class being reflected on.
          */
-        private fun singleOrNull(candidates: List<*>): Any? = if (candidates.size == 1) candidates[0] else null
+private fun <T> singleOrNull(candidates: List<T>): T? =
+            if (candidates.size == 1) candidates[0] else null
 
         /** True when the class is defined by the loader the target actually runs. */
         private fun isTargetClass(
