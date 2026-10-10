@@ -4,6 +4,21 @@ import android.util.Log
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
 
+/** A resolver must never silently pick one item from a non-unique match set. */
+internal sealed class CandidateSelection<out T> {
+    data object Missing : CandidateSelection<Nothing>()
+    data class Unique<T>(val candidate: T) : CandidateSelection<T>()
+    data object Ambiguous : CandidateSelection<Nothing>()
+
+    companion object {
+        fun <T> from(candidates: List<T>): CandidateSelection<T> = when (candidates.size) {
+            0 -> Missing
+            1 -> Unique(candidates.single())
+            else -> Ambiguous
+        }
+    }
+}
+
 /**
  * Modern runtime access to WhatsApp's contact objects.
  *
@@ -54,9 +69,15 @@ class ModernContactAccess private constructor(
     enum class Outcome {
         AVAILABLE,
         CONTACT_CLASS_MISSING,
+        CONTACT_CLASS_AMBIGUOUS,
         CONTACT_DATA_CLASS_MISSING,
+        CONTACT_DATA_CLASS_AMBIGUOUS,
         JID_CLASS_MISSING,
+        JID_CLASS_AMBIGUOUS,
+        PHONE_JID_METHOD_AMBIGUOUS,
+        PHONE_JID_FIELD_AMBIGUOUS,
         USER_JID_FIELD_MISSING,
+        USER_JID_FIELD_AMBIGUOUS,
         ERROR,
     }
 
@@ -85,36 +106,69 @@ class ModernContactAccess private constructor(
             val classLoader = context.classLoader
             return try {
                 DexKitBridge.create(context.applicationInfo.sourceDir).use { dex ->
-                    val contactData = dex.findClass {
+                    val contactData = when (val matches = CandidateSelection.from(dex.findClass {
                         matcher { addUsingString(ANCHOR_CONTACT, StringMatchType.Contains) }
-                    }.firstOrNull() ?: return Resolution(null, Outcome.CONTACT_CLASS_MISSING)
+                    })) {
+                        CandidateSelection.Missing -> return Resolution(null, Outcome.CONTACT_CLASS_MISSING)
+                        CandidateSelection.Ambiguous -> return Resolution(null, Outcome.CONTACT_CLASS_AMBIGUOUS)
+                        is CandidateSelection.Unique -> matches.candidate
+                    }
                     val contactClass = contactData.getInstance(classLoader)
-                    val dataData = dex.findClass {
+                    val dataData = when (val matches = CandidateSelection.from(dex.findClass {
                         matcher { className(CONTACT_DATA_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull() ?: return Resolution(null, Outcome.CONTACT_DATA_CLASS_MISSING)
+                    })) {
+                        CandidateSelection.Missing -> return Resolution(null, Outcome.CONTACT_DATA_CLASS_MISSING)
+                        CandidateSelection.Ambiguous -> return Resolution(null, Outcome.CONTACT_DATA_CLASS_AMBIGUOUS)
+                        is CandidateSelection.Unique -> matches.candidate
+                    }
                     val dataClass = dataData.getInstance(classLoader)
-                    val jidData = dex.findClass {
+                    val jidData = when (val matches = CandidateSelection.from(dex.findClass {
                         matcher { className(JID_SUFFIX, StringMatchType.EndsWith) }
-                    }.firstOrNull() ?: return Resolution(null, Outcome.JID_CLASS_MISSING)
+                    })) {
+                        CandidateSelection.Missing -> return Resolution(null, Outcome.JID_CLASS_MISSING)
+                        CandidateSelection.Ambiguous -> return Resolution(null, Outcome.JID_CLASS_AMBIGUOUS)
+                        is CandidateSelection.Unique -> matches.candidate
+                    }
                     val jidClass = jidData.getInstance(classLoader)
                     // DexKit's returnType is a ClassData, not a Class.
-                    val phoneJidClass = dex.findMethod {
+                    val phoneJidMethod = when (val matches = CandidateSelection.from(dex.findMethod {
                         matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
-                    }.firstOrNull()?.returnType?.getInstance(classLoader)
+                    })) {
+                        CandidateSelection.Missing -> null
+                        CandidateSelection.Ambiguous ->
+                            return Resolution(null, Outcome.PHONE_JID_METHOD_AMBIGUOUS)
+                        is CandidateSelection.Unique -> matches.candidate
+                    }
+                    val phoneJidClass = phoneJidMethod?.returnType?.getInstance(classLoader)
 
                     // Mirror the legacy decision: the JID field lives on the
                     // contact-data class when the contact has no phone-JID
                     // field of its own, and on the contact class otherwise.
                     val phoneField = phoneJidClass?.let {
-                        firstFieldOfType(contactClass, it)
+                        when (val matches = fieldsOfType(contactClass, it)) {
+                            CandidateSelection.Missing -> null
+                            CandidateSelection.Ambiguous ->
+                                return Resolution(null, Outcome.PHONE_JID_FIELD_AMBIGUOUS)
+                            is CandidateSelection.Unique -> matches.candidate
+                        }
                     }
                     val (owner, field) = if (phoneField == null) {
-                        val jidField = firstFieldOfType(dataClass, jidClass)
-                            ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
+                        val jidField = when (val matches = fieldsOfType(dataClass, jidClass)) {
+                            CandidateSelection.Missing ->
+                                return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
+                            CandidateSelection.Ambiguous ->
+                                return Resolution(null, Outcome.USER_JID_FIELD_AMBIGUOUS)
+                            is CandidateSelection.Unique -> matches.candidate
+                        }
                         dataClass to jidField
                     } else {
-                        val jidField = firstFieldOfType(contactClass, jidClass)
-                            ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
+                        val jidField = when (val matches = fieldsOfType(contactClass, jidClass)) {
+                            CandidateSelection.Missing ->
+                                return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
+                            CandidateSelection.Ambiguous ->
+                                return Resolution(null, Outcome.USER_JID_FIELD_AMBIGUOUS)
+                            is CandidateSelection.Unique -> matches.candidate
+                        }
                         contactClass to jidField
                     }
                     field.isAccessible = true
@@ -136,7 +190,10 @@ class ModernContactAccess private constructor(
             }
         }
 
-        private fun firstFieldOfType(owner: Class<*>, type: Class<*>): java.lang.reflect.Field? =
-            owner.declaredFields.firstOrNull { type.isAssignableFrom(it.type) }
+        private fun fieldsOfType(
+            owner: Class<*>,
+            type: Class<*>,
+        ): CandidateSelection<java.lang.reflect.Field> =
+            CandidateSelection.from(owner.declaredFields.filter { type.isAssignableFrom(it.type) })
     }
 }

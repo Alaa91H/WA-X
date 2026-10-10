@@ -47,3 +47,20 @@ Nine pure tests cover each branch of the derivation, the device-suffix strip,
 group/broadcast/LID handling, the unknown-domain fallback, the null cases, the
 invalid-JID test and the ambiguity outcome. Reading a real JID needs WhatsApp
 (`PENDING_USER_DEVICE_TEST`).
+
+## Contact resolver cardinality hardening (2026-10-10)
+
+`ModernContactAccess.resolve` now accepts a DexKit class or method match only
+when exactly one candidate exists. It reports distinct `*_AMBIGUOUS` outcomes
+for contact, contact-data, JID, phone-JID method/field, and user-JID field
+matches. Reflection field lookup follows the same rule; zero matches retain
+the existing missing outcome. This removes the previous `firstOrNull()` choice
+from the contact/JID access chain and keeps ambiguous layouts unavailable
+rather than binding to an arbitrary class or field.
+
+Pure JVM tests cover zero, one, and multiple candidate selection, and assert
+that each ambiguity outcome is part of the reported result vocabulary. These
+tests establish fail-closed selection only. Candidate counts and structural
+signatures on WhatsApp/Business, actual resolver success, and behavioral
+effects remain `NOT_TESTED` on the changed build; the installed E0592465 APK
+predates this source change.
