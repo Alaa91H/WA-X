@@ -165,7 +165,7 @@ data class AtomicCheckResult(
             append(']')
             append("\"external_confirmation_required\":").append(externalConfirmationRequired)
             append('}')
-    }
+        }
 
     private fun StringBuilder.appendField(
         key: String,

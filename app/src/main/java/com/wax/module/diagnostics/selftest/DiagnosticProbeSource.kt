@@ -34,58 +34,60 @@ object DiagnosticProbeSource {
     private fun context(): Context? = appContext
 
     /** The probes the Manager can actually answer right now. */
-    fun probes(): Map<String, DiagnosticEngine.Probe> = linkedMapOf(
-        AtomicCheckInventory.ENV_ANDROID to DiagnosticEngine.Probe {
-            DiagnosticEngine.Observation(
-                evidence = "Android ${Build.VERSION.RELEASE} sdk ${Build.VERSION.SDK_INT} " +
-                    Build.SUPPORTED_ABIS.joinToString(","),
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-            )
-        },
-        AtomicCheckInventory.ENV_TARGET to DiagnosticEngine.Probe {
-            val snapshot = snapshot() ?: return@Probe null
-            val target = snapshot.targets.firstOrNull { it.packageName == TARGET_PACKAGE }
-                ?: return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "${target.packageName} evidence=${target.evidence}",
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-            )
-        },
-        AtomicCheckInventory.FRAMEWORK_API102 to DiagnosticEngine.Probe {
-            val snapshot = snapshot() ?: return@Probe null
-            val api = snapshot.frameworkApi
-            DiagnosticEngine.Observation(
-                evidence = "framework=${snapshot.frameworkName ?: "unknown"} api=$api",
-                level = EvidenceLevel.L0_PACKAGE,
-                verification = VerificationState.LOCALLY_VERIFIED,
-                expectedMatch = api != null && api >= 100,
-                failureClass = FailureClass.FRAMEWORK_UNAVAILABLE,
-            )
-        },
-        AtomicCheckInventory.MODULE_LOADED to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            if (!target.bootstrapMilestones.contains("MODULE_LOADED")) return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "milestones=" + target.bootstrapMilestones.joinToString(">"),
-                level = EvidenceLevel.L1_LIFECYCLE,
-                verification = VerificationState.TRIGGERED,
-            )
-        },
-        AtomicCheckInventory.APP_ATTACH to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            if (!target.bootstrapMilestones.contains("ATTACH_OBSERVED")) return@Probe null
-            DiagnosticEngine.Observation(
-                evidence = "Application.attach intercepted",
-                level = EvidenceLevel.L1_LIFECYCLE,
-                verification = VerificationState.TRIGGERED,
-            )
-        },
-        AtomicCheckInventory.MANAGER_IPC to DiagnosticEngine.Probe {
-            val target = target() ?: return@Probe null
-            if (target.bootstrapMilestones.none { it.endsWith("HEARTBEAT_WRITE_CONFIRMED") }) {
-                return@Probe null
+    fun probes(): Map<String, DiagnosticEngine.Probe> =
+        linkedMapOf(
+            AtomicCheckInventory.ENV_ANDROID to DiagnosticEngine.Probe {
+                DiagnosticEngine.Observation(
+                    evidence = "Android ${Build.VERSION.RELEASE} sdk ${Build.VERSION.SDK_INT} " +
+                        Build.SUPPORTED_ABIS.joinToString(","),
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                )
+            },
+            AtomicCheckInventory.ENV_TARGET to DiagnosticEngine.Probe {
+                val snapshot = snapshot() ?: return@Probe null
+                val target = snapshot.targets.firstOrNull { it.packageName == TARGET_PACKAGE }
+                    ?: return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "${target.packageName} evidence=${target.evidence}",
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                )
+            },
+            AtomicCheckInventory.FRAMEWORK_API102 to DiagnosticEngine.Probe {
+                val snapshot = snapshot() ?: return@Probe null
+                val api = snapshot.frameworkApi
+                DiagnosticEngine.Observation(
+                    evidence = "framework=${snapshot.frameworkName ?: "unknown"} api=$api",
+                    level = EvidenceLevel.L0_PACKAGE,
+                    verification = VerificationState.LOCALLY_VERIFIED,
+                    expectedMatch = api != null && api >= 100,
+                    failureClass = FailureClass.FRAMEWORK_UNAVAILABLE,
+                )
+            },
+            AtomicCheckInventory.MODULE_LOADED to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                if (!target.bootstrapMilestones.contains("MODULE_LOADED")) return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "milestones=" + target.bootstrapMilestones.joinToString(">"),
+                    level = EvidenceLevel.L1_LIFECYCLE,
+                    verification = VerificationState.TRIGGERED,
+                )
+            },
+            AtomicCheckInventory.APP_ATTACH to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                if (!target.bootstrapMilestones.contains("ATTACH_OBSERVED")) return@Probe null
+                DiagnosticEngine.Observation(
+                    evidence = "Application.attach intercepted",
+                    level = EvidenceLevel.L1_LIFECYCLE,
+                    verification = VerificationState.TRIGGERED,
+                )
+            },
+            AtomicCheckInventory.MANAGER_IPC to DiagnosticEngine.Probe {
+                val target = target() ?: return@Probe null
+                if (target.bootstrapMilestones.none { it.endsWith("HEARTBEAT_WRITE_CONFIRMED") }) {
+                    return@Probe null
+                }
                 DiagnosticEngine.Observation(
                     evidence = "provider accepted an authenticated report",
                     level = EvidenceLevel.L1_LIFECYCLE,
@@ -157,9 +159,8 @@ object DiagnosticProbeSource {
             AtomicCheckInventory.MESSAGE_CLASS to resolverProbe("message_class"),
             AtomicCheckInventory.MESSAGE_KEY_CLASS to resolverProbe("message_key_class"),
         )
-    }
 
-    /**
+        /**
      * Maps a pipeline resolver check onto the state the target reported for it.
      *
      * A reported failure keeps its own reason so the clusterer can attach every
