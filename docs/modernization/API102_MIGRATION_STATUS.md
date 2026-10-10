@@ -79,6 +79,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #455 | API102 resolver, hook and core privacy failure investigation | PR #459 MERGED (`599deca6`), all 12 checks green on `a6f0f3b4` |
 | #449 | Read receipt privacy: hide read receipts, release after reply, delivery tick | PR #460 MERGED (`67fc086b`), all 12 checks green on `92e8109f`; delivery reported UNSUPPORTED |
 | #450 | Stealth privacy: typing, recording and online reported separately | PR #460 MERGED (`67fc086b`), all 12 checks green on `92e8109f` |
+| #451 | Anti-Delete / anti-revoke with explicit capability boundaries | PR #461 MERGED (`3b6b4842`), all 12 checks green on `2c099394` |
 
 ### #170 scope notes
 
