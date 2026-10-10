@@ -41,8 +41,10 @@ object ModernRuntimePreferenceRelay {
             "hidestatusview",
             "sendstatusseenonreply",
         )
+
     /** Checked by contract tests so new Control Center keys cannot be omitted from the relay. */
     internal fun observes(key: String): Boolean = key in observedKeys
+
     internal fun affectsControlCenter(key: String?): Boolean =
         key == null || key in observedKeys || key == ModernControlCenterCatalog.FAVORITES_KEY
 
@@ -86,11 +88,12 @@ object ModernRuntimePreferenceRelay {
     }
 
     /** Preserve real list selections while normalizing historical malformed booleans. */
-    internal fun legacyMode(value: Any?): String = when (value) {
-        "1", "2" -> value as String
-        true -> "1"
-        else -> "0"
-    }
+    internal fun legacyMode(value: Any?): String =
+        when (value) {
+            "1", "2" -> value as String
+            true -> "1"
+            else -> "0"
+        }
 
     private fun repairLegacyModes(preferences: SharedPreferences) {
         val original = preferences.all

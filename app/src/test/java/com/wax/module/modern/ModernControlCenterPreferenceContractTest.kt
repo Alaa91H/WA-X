@@ -22,6 +22,7 @@ class ModernControlCenterPreferenceContractTest {
             )
         }
     }
+
     @Test
     fun favoritesAndUnknownPreferenceChangesNotifyTheEmbeddedPanel() {
         assertTrue(ModernRuntimePreferenceRelay.affectsControlCenter(ModernControlCenterCatalog.FAVORITES_KEY))
