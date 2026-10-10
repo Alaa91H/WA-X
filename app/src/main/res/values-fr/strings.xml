@@ -594,4 +594,25 @@
     <string name="modern_target_previous_attach">Le démarrage du module a été confirmé auparavant ; les étapes détaillées ne sont plus récentes.</string>
     <string name="modern_target_no_lifecycle_signal">Aucun rapport de démarrage de WhatsApp reçu pour le moment.</string>
     <string name="modern_target_menu_status">Dernier rapport du menu WA X : %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">Diagnostic WA X</string>
+    <string name="diagnostics_explain">Exécute des contrôles atomiques du module, de l’exécution et de ses résolveurs. Un contrôle sans preuve est indiqué comme non testé, jamais comme fonctionnel. Le comportement complet de confidentialité exige un second compte et n’est jamais confirmé automatiquement.</string>
+    <string name="diagnostics_quick">Contrôle rapide</string>
+    <string name="diagnostics_deep">Analyse atomique complète</string>
+    <string name="diagnostics_cancel">Annuler</string>
+    <string name="diagnostics_close">Fermer</string>
+    <string name="diagnostics_export">Exporter le ZIP</string>
+    <string name="diagnostics_running">Contrôles en cours\u2026</string>
+    <string name="diagnostics_cancelled">Annulé</string>
+    <string name="diagnostics_finished">Terminé</string>
+    <string name="diagnostics_scan">Analyse</string>
+    <string name="diagnostics_counts">Compteurs :</string>
+    <string name="diagnostics_first_failed">Première dépendance en échec :</string>
+    <string name="diagnostics_root_causes">Causes racines</string>
+    <string name="diagnostics_run_first">Lancez une analyse avant d’exporter.</string>
+    <string name="diagnostics_redaction_preview">Aperçu du masquage</string>
+    <string name="diagnostics_redaction_summary">Éléments masqués : %1$d</string>
+    <string name="diagnostics_export_done">Diagnostic exporté</string>
+    <string name="diagnostics_export_failed">Échec de l’export</string>
+    <string name="diagnostics_manifest_missing">L’archive n’a pas pu être vérifiée et n’a pas été écrite.</string>
 </resources>

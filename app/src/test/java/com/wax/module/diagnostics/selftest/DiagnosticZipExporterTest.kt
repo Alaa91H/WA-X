@@ -53,17 +53,19 @@ class DiagnosticZipExporterTest {
     }
 
     @Test fun unsafeEntryNamesAreRejectedAtBuildTime() {
-        val failure = runCatching {
-            exporter.build(listOf(entry("../escape.json", "{}")))
-        }.exceptionOrNull()
+        val failure =
+            runCatching {
+                exporter.build(listOf(entry("../escape.json", "{}")))
+            }.exceptionOrNull()
         assertNotNull("traversal must be refused before anything is written", failure)
     }
 
     @Test fun oversizedEntriesAreRefused() {
         val small = DiagnosticZipExporter(maxEntryBytes = 64)
-        val failure = runCatching {
-            small.build(listOf(entry("manifest.json", "x".repeat(128))))
-        }.exceptionOrNull()
+        val failure =
+            runCatching {
+                small.build(listOf(entry("manifest.json", "x".repeat(128))))
+            }.exceptionOrNull()
         assertNotNull(failure)
     }
 
@@ -82,45 +84,49 @@ class DiagnosticZipExporterTest {
         assertEquals(40_000, written.total)
 
         val cancelling = RecordingTarget()
-        val failure = runCatching {
-            exporter.writeTo(cancelling, ByteArray(40_000) { 1 }, onCancelled = { true })
-        }.exceptionOrNull()
+        val failure =
+            runCatching {
+                exporter.writeTo(cancelling, ByteArray(40_000) { 1 }, onCancelled = { true })
+            }.exceptionOrNull()
         assertNotNull("cancellation must abort the export", failure)
         assertFalse("a cancelled export must not be finalized", cancelling.finished)
     }
 
     @Test fun missingSourcesAreDeclaredRatherThanFabricated() {
-        val inputs = DiagnosticReportBuilder.Inputs(
-            report = sampleReport(),
-            environment = DiagnosticReportBuilder.Environment(
-                appVersion = "1.2.0", appBuildSha = "abc123",
-                whatsappPackage = "com.whatsapp", whatsappVersion = "2.26.39.74",
-                androidVersion = "17", androidSdk = 37, abi = "arm64-v8a",
-            ),
-            hooks = emptyList(),
-            resolverStates = emptyMap(),
-            sanitizedLog = null,
-        )
+        val inputs =
+            DiagnosticReportBuilder.Inputs(
+                report = sampleReport(),
+                environment = DiagnosticReportBuilder.Environment(
+                    appVersion = "1.2.0", appBuildSha = "abc123",
+                    whatsappPackage = "com.whatsapp", whatsappVersion = "2.26.39.74",
+                    androidVersion = "17", androidSdk = 37, abi = "arm64-v8a",
+                ),
+                hooks = emptyList(),
+                resolverStates = emptyMap(),
+                sanitizedLog = null,
+            )
         val names = DiagnosticReportBuilder.entries(inputs).map { it.name }
         assertFalse("a missing log must never be fabricated", names.contains("logs/sanitized-runtime.log"))
-        val manifest = String(
-            DiagnosticReportBuilder.entries(inputs).first { it.name == "manifest.json" }.content,
-        )
+        val manifest =
+            String(
+                DiagnosticReportBuilder.entries(inputs).first { it.name == "manifest.json" }.content,
+            )
         assertTrue(manifest.contains("logs/sanitized-runtime.log"))
         assertTrue(manifest.contains("hooks.json"))
         assertFalse("no unredacted dump option may be advertised", manifest.contains("unredacted_dump_available\":true"))
     }
 
     @Test fun theReportSetContainsEveryContractFile() {
-        val inputs = DiagnosticReportBuilder.Inputs(
-            report = sampleReport(),
-            environment = DiagnosticReportBuilder.Environment(
-                "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
-            ),
-            hooks = listOf("wax.modern.typing_privacy.composing"),
-            resolverStates = mapOf("jid_class" to "AVAILABLE"),
-            sanitizedLog = "sanitized line\n",
-        )
+        val inputs =
+            DiagnosticReportBuilder.Inputs(
+                report = sampleReport(),
+                environment = DiagnosticReportBuilder.Environment(
+                    "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+                ),
+                hooks = listOf("wax.modern.typing_privacy.composing"),
+                resolverStates = mapOf("jid_class" to "AVAILABLE"),
+                sanitizedLog = "sanitized line\n",
+            )
         val names = DiagnosticReportBuilder.entries(inputs).map { it.name }.toSet()
         for (required in listOf(
             "manifest.json", "summary.md", "results.json", "environment.json",
@@ -133,31 +139,33 @@ class DiagnosticZipExporterTest {
     }
 
     @Test fun theSummaryIsBilingual() {
-        val summary = String(
-            DiagnosticReportBuilder.entries(
-                DiagnosticReportBuilder.Inputs(
-                    report = sampleReport(),
-                    environment = DiagnosticReportBuilder.Environment(
-                        "1.2.0", "abc", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+        val summary =
+            String(
+                DiagnosticReportBuilder.entries(
+                    DiagnosticReportBuilder.Inputs(
+                        report = sampleReport(),
+                        environment = DiagnosticReportBuilder.Environment(
+                            "1.2.0", "abc", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+                        ),
+                        hooks = emptyList(), resolverStates = emptyMap(), sanitizedLog = null,
                     ),
-                    hooks = emptyList(), resolverStates = emptyMap(), sanitizedLog = null,
-                ),
-            ).first { it.name == "summary.md" }.content,
-        )
+                ).first { it.name == "summary.md" }.content,
+            )
         assertTrue(summary.contains("Root causes"))
         assertTrue("the contract requires Arabic and English", summary.contains("الجذر"))
     }
 
     @Test fun aReportArchiveVerifiesEndToEndBeforeItIsOffered() {
-        val inputs = DiagnosticReportBuilder.Inputs(
-            report = sampleReport(),
-            environment = DiagnosticReportBuilder.Environment(
-                "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
-            ),
-            hooks = listOf("wax.modern.typing_privacy.composing"),
-            resolverStates = mapOf("jid_class" to "AVAILABLE"),
-            sanitizedLog = "sanitized line\n",
-        )
+        val inputs =
+            DiagnosticReportBuilder.Inputs(
+                report = sampleReport(),
+                environment = DiagnosticReportBuilder.Environment(
+                    "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+                ),
+                hooks = listOf("wax.modern.typing_privacy.composing"),
+                resolverStates = mapOf("jid_class" to "AVAILABLE"),
+                sanitizedLog = "sanitized line\n",
+            )
         val built = exporter.build(DiagnosticReportBuilder.entries(inputs))
         val verification = exporter.verify(built.bytes)
         assertTrue("manifest", verification.manifestPresent)
@@ -173,15 +181,17 @@ class DiagnosticZipExporterTest {
         // A checksum file that parses but does not describe the payload is the
         // exact corruption a user would otherwise discover after sharing it.
         val payload = listOf(entry("manifest.json", "a"), entry("results.json", "b"))
-        val wrong = payload.map {
-            DiagnosticZipExporter.Entry(
-                it.name,
-                if (it.name == "results.json") "tampered".toByteArray() else it.content,
+        val wrong =
+            payload.map {
+                DiagnosticZipExporter.Entry(
+                    it.name,
+                    if (it.name == "results.json") "tampered".toByteArray() else it.content,
+                )
+            }
+        val built =
+            exporter.build(
+                wrong + DiagnosticZipExporter.Entry("checksums.sha256", exporter.checksums(payload)),
             )
-        }
-        val built = exporter.build(
-            wrong + DiagnosticZipExporter.Entry("checksums.sha256", exporter.checksums(payload)),
-        )
         val verification = exporter.verify(built.bytes)
         assertTrue("the manifest is still readable", verification.manifestPresent)
         assertFalse(

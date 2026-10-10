@@ -35,9 +35,10 @@ class ExportRedactorTest {
     }
 
     @Test fun theReportCountsWhatWasRemoved() {
-        val redacted = redactor.redactAll(
-            listOf("4915112345678@s.whatsapp.net", "token=abcdef123456"),
-        )
+        val redacted =
+            redactor.redactAll(
+                listOf("4915112345678@s.whatsapp.net", "token=abcdef123456"),
+            )
         assertTrue(redacted.report.jidsRedacted >= 1)
         assertTrue(redacted.report.tokensRedacted >= 1)
         assertTrue(redacted.report.total >= 2)
@@ -53,11 +54,18 @@ class ExportRedactorTest {
     @Test fun archivedEntriesAreRedactedForRealNotPreviewed() {
         // The written archive must be the redacted one: a preview that does not
         // match the bytes on disk would be a privacy claim, not a guarantee.
-        val entries = listOf(
-            DiagnosticZipExporter.Entry("results.json", "{\"jid\":\"4915112345678@s.whatsapp.net\"}"),
-            DiagnosticZipExporter.Entry("environment.json", "path=/data/data/com.whatsapp/databases/wa.db"),
-            DiagnosticZipExporter.Entry("summary.md", "no user data here"),
-        )
+        val entries =
+            listOf(
+                DiagnosticZipExporter.Entry(
+                    "results.json",
+                    "{\"jid\":\"4915112345678@s.whatsapp.net\"}".toByteArray(),
+                ),
+                DiagnosticZipExporter.Entry(
+                    "environment.json",
+                    "path=/data/data/com.whatsapp/databases/wa.db".toByteArray(),
+                ),
+                DiagnosticZipExporter.Entry("summary.md", "no user data here".toByteArray()),
+            )
         val redacted = redactor.redactEntries(entries)
         assertEquals(entries.map { it.name }, redacted.entries.map { it.name })
         val jids = String(redacted.entries.first { it.name == "results.json" }.content)

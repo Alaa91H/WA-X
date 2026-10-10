@@ -594,4 +594,25 @@
     <string name="modern_target_previous_attach">Der Modulstart wurde früher bestätigt; die einzelnen Startphasen sind nicht mehr aktuell.</string>
     <string name="modern_target_no_lifecycle_signal">Es liegt noch kein Startbericht aus WhatsApp vor.</string>
     <string name="modern_target_menu_status">Letzter Bericht zum WA X-Menü: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">WA X-Diagnose</string>
+    <string name="diagnostics_explain">Führt atomare Prüfungen für Modul, Laufzeit und Resolver aus. Eine Prüfung ohne Nachweis wird als nicht geprüft gemeldet, nie als funktionierend. Das vollständige Datenschutzverhalten erfordert ein zweites Konto und wird nie automatisch bestätigt.</string>
+    <string name="diagnostics_quick">Schnellprüfung</string>
+    <string name="diagnostics_deep">Gründlicher Atom-Scan</string>
+    <string name="diagnostics_cancel">Abbrechen</string>
+    <string name="diagnostics_close">Schließen</string>
+    <string name="diagnostics_export">ZIP exportieren</string>
+    <string name="diagnostics_running">Prüfungen laufen\u2026</string>
+    <string name="diagnostics_cancelled">Abgebrochen</string>
+    <string name="diagnostics_finished">Fertig</string>
+    <string name="diagnostics_scan">Scan</string>
+    <string name="diagnostics_counts">Zähler:</string>
+    <string name="diagnostics_first_failed">Erste fehlgeschlagene Abhängigkeit:</string>
+    <string name="diagnostics_root_causes">Ursachen</string>
+    <string name="diagnostics_run_first">Vor dem Export einen Scan ausführen.</string>
+    <string name="diagnostics_redaction_preview">Vorschau der Schwärzung</string>
+    <string name="diagnostics_redaction_summary">Geschwärzte Einträge: %1$d</string>
+    <string name="diagnostics_export_done">Diagnose exportiert</string>
+    <string name="diagnostics_export_failed">Export fehlgeschlagen</string>
+    <string name="diagnostics_manifest_missing">Das Archiv konnte nicht geprüft werden und wurde nicht geschrieben.</string>
 </resources>

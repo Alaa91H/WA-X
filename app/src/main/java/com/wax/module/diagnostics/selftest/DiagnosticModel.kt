@@ -118,10 +118,11 @@ data class AtomicCheckResult(
         // that is how a single unresolved class used to present as a healthy
         // runtime. Unverified (`NOT_TESTED`) dependencies block too — a missing
         // observation is not evidence of success.
-        val failedDependency = dependsOn.firstOrNull { id ->
-            val dependencyStatus = dependencyResults[id]?.status ?: return@firstOrNull false
-            dependencyStatus != DiagnosticStatus.PASS
-        }
+        val failedDependency =
+            dependsOn.firstOrNull { id ->
+                val dependencyStatus = dependencyResults[id]?.status ?: return@firstOrNull false
+                dependencyStatus != DiagnosticStatus.PASS
+            }
         return when {
             status == DiagnosticStatus.PASS && observedEvidence.isBlank() ->
                 DiagnosticStatus.NOT_TESTED

@@ -102,9 +102,10 @@ class ExportRedactor {
         entries: List<DiagnosticZipExporter.Entry>,
     ): RedactedEntries {
         val state = MutableReportState()
-        val cleaned = entries.map { entry ->
-            DiagnosticZipExporter.Entry(entry.name, redact(String(entry.content), state).toByteArray())
-        }
+        val cleaned =
+            entries.map { entry ->
+                DiagnosticZipExporter.Entry(entry.name, redact(String(entry.content), state).toByteArray())
+            }
         return RedactedEntries(
             entries = cleaned,
             report = RedactionReport(
@@ -132,9 +133,10 @@ class ExportRedactor {
 
     private companion object {
         /** A JID, i.e. a local part with a known WhatsApp domain. */
-        val JID_PATTERN = Regex(
-            "[A-Za-z0-9_.+-]+@(s\\.whatsapp\\.net|g\\.us|lid|broadcast|newsletter)",
-        )
+        val JID_PATTERN =
+            Regex(
+                "[A-Za-z0-9_.+-]+@(s\\.whatsapp\\.net|g\\.us|lid|broadcast|newsletter)",
+            )
 
         /** The phone shapes `ReportRedactor` removes, counted for the report. */
         val PHONE_PATTERN = Regex("\\+?\\d[\\d\\s().-]{6,}\\d|\\b\\d{6,}\\b")

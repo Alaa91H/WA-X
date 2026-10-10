@@ -33,11 +33,12 @@ object DiagnosticReportBuilder {
     fun entries(inputs: Inputs): List<DiagnosticZipExporter.Entry> {
         val report = inputs.report
         val summary = report.summary
-        val declaredMissing = buildList {
-            if (inputs.sanitizedLog.isNullOrBlank()) add("logs/sanitized-runtime.log")
-            if (inputs.hooks.isEmpty()) add("hooks.json")
-            if (inputs.resolverStates.isEmpty()) add("resolvers.json")
-        }
+        val declaredMissing =
+            buildList {
+                if (inputs.sanitizedLog.isNullOrBlank()) add("logs/sanitized-runtime.log")
+                if (inputs.hooks.isEmpty()) add("hooks.json")
+                if (inputs.resolverStates.isEmpty()) add("resolvers.json")
+            }
         val entries = mutableListOf<DiagnosticZipExporter.Entry>()
         entries += entry("manifest.json", manifest(inputs, summary, declaredMissing))
         entries += entry("summary.md", summaryMarkdown(report, summary, declaredMissing))
@@ -177,9 +178,10 @@ object DiagnosticReportBuilder {
     }
 
     private fun errorsJson(report: DiagnosticEngine.Report): String = buildString {
-        val failures = report.results.filter {
-            it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
-        }
+        val failures =
+            report.results.filter {
+                it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
+            }
         append("{\"errors\":[")
         append(failures.joinToString(",") { failure ->
             buildString {

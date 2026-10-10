@@ -133,9 +133,10 @@ class DiagnosticEngine(
         for (definition in ordered) {
             if (cancelled.get()) break
             val dependencies = definition.dependsOn.mapNotNull { observed[it] }
-            val dependencyFailed = dependencies.any {
-                it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
-            }
+            val dependencyFailed =
+                dependencies.any {
+                    it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
+                }
             if (dependencyFailed) {
                 // Blocked, not failed: the failure belongs to the dependency
                 // and the cluster must not multiply it.
@@ -150,17 +151,18 @@ class DiagnosticEngine(
 
         val results = ordered.mapNotNull { observed[it.id] }
         // A final honesty pass: no PASS may survive without its observation.
-        val honest = results.map { result ->
-            val corrected = result.honestStatus(results.associateBy { it.id })
-            if (corrected == result.status) result else result.copy(
-                status = corrected,
-                failureClass = if (corrected == DiagnosticStatus.NOT_TESTED) {
-                    FailureClass.NONE
-                } else {
-                    FailureClass.DEPENDENCY_MISSING
-                },
-            )
-        }
+        val honest =
+            results.map { result ->
+                val corrected = result.honestStatus(results.associateBy { it.id })
+                if (corrected == result.status) result else result.copy(
+                    status = corrected,
+                    failureClass = if (corrected == DiagnosticStatus.NOT_TESTED) {
+                        FailureClass.NONE
+                    } else {
+                        FailureClass.DEPENDENCY_MISSING
+                    },
+                )
+            }
         return Report(
             scanId = scanId,
             startedAtMillis = started,
@@ -198,36 +200,37 @@ class DiagnosticEngine(
             )
         }
         val task: Future<Observation?> = executor.submit<Observation?> { probe.run() }
-        val observation = try {
-            task.get(config.perCheckTimeoutMillis, TimeUnit.MILLISECONDS)
-        } catch (failure: Exception) {
-            task.cancel(true)
-            // The probe failed rather than the scan: say which, so an export
-            // never shows a crashed check as merely a slow one.
-            val timedOut = failure is TimeoutException
-            return AtomicCheckResult(
-                id = definition.id,
-                title = definition.title,
-                scope = definition.scope,
-                status = DiagnosticStatus.FAIL,
-                evidenceLevel = definition.level,
-                expected = definition.expected,
-                observedEvidence = if (timedOut) {
-                    "probe exceeded ${config.perCheckTimeoutMillis}ms"
-                } else {
-                    "probe failed: ${failure.javaClass.simpleName}"
-                },
-                verification = VerificationState.NOT_OBSERVED,
-                timestampMillis = System.currentTimeMillis(),
-                whatsappBuild = config.whatsappBuild,
-                severity = definition.severity,
-                confidence = 1.0,
-                failureClass = if (timedOut) FailureClass.TIMEOUT else FailureClass.CRASHED,
-                remediation = definition.remediation,
-                dependsOn = definition.dependsOn,
-                externalConfirmationRequired = definition.externalConfirmationRequired,
-            )
-        }
+        val observation =
+            try {
+                task.get(config.perCheckTimeoutMillis, TimeUnit.MILLISECONDS)
+            } catch (failure: Exception) {
+                task.cancel(true)
+                // The probe failed rather than the scan: say which, so an export
+                // never shows a crashed check as merely a slow one.
+                val timedOut = failure is TimeoutException
+                return AtomicCheckResult(
+                    id = definition.id,
+                    title = definition.title,
+                    scope = definition.scope,
+                    status = DiagnosticStatus.FAIL,
+                    evidenceLevel = definition.level,
+                    expected = definition.expected,
+                    observedEvidence = if (timedOut) {
+                        "probe exceeded ${config.perCheckTimeoutMillis}ms"
+                    } else {
+                        "probe failed: ${failure.javaClass.simpleName}"
+                    },
+                    verification = VerificationState.NOT_OBSERVED,
+                    timestampMillis = System.currentTimeMillis(),
+                    whatsappBuild = config.whatsappBuild,
+                    severity = definition.severity,
+                    confidence = 1.0,
+                    failureClass = if (timedOut) FailureClass.TIMEOUT else FailureClass.CRASHED,
+                    remediation = definition.remediation,
+                    dependsOn = definition.dependsOn,
+                    externalConfirmationRequired = definition.externalConfirmationRequired,
+                )
+            }
         if (observation == null) {
             // A probe that could not observe anything is NOT evidence of success.
             return AtomicCheckResult(
@@ -253,13 +256,14 @@ class DiagnosticEngine(
                 externalConfirmationRequired = definition.externalConfirmationRequired,
             )
         }
-        val status = when {
-            !observation.expectedMatch -> DiagnosticStatus.FAIL
-            definition.externalConfirmationRequired &&
-                observation.level < EvidenceLevel.L4_TRIGGER ->
-                DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-            else -> DiagnosticStatus.PASS
-        }
+        val status =
+            when {
+                !observation.expectedMatch -> DiagnosticStatus.FAIL
+                definition.externalConfirmationRequired &&
+                    observation.level < EvidenceLevel.L4_TRIGGER ->
+                    DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                else -> DiagnosticStatus.PASS
+            }
         return AtomicCheckResult(
             id = definition.id,
             title = definition.title,
@@ -293,10 +297,11 @@ class DiagnosticEngine(
         definition: AtomicCheckInventory.Definition,
         config: RunConfig,
     ): AtomicCheckResult {
-        val blocking = definition.dependsOn.filter { id ->
-            val status = observed[id]?.status
-            status == DiagnosticStatus.FAIL || status == DiagnosticStatus.BLOCKED
-        }
+        val blocking =
+            definition.dependsOn.filter { id ->
+                val status = observed[id]?.status
+                status == DiagnosticStatus.FAIL || status == DiagnosticStatus.BLOCKED
+            }
         return AtomicCheckResult(
             id = definition.id,
             title = definition.title,
@@ -329,15 +334,16 @@ class DiagnosticEngine(
      * it can run on launch without a full DEX scan.
      */
     private fun quickSubset(): List<AtomicCheckInventory.Definition> {
-        val cheapIds = setOf(
-            AtomicCheckInventory.ENV_ANDROID,
-            AtomicCheckInventory.ENV_TARGET,
-            AtomicCheckInventory.FRAMEWORK_API102,
-            AtomicCheckInventory.MODULE_LOADED,
-            AtomicCheckInventory.APP_ATTACH,
-            AtomicCheckInventory.MANAGER_IPC,
-            AtomicCheckInventory.DEXKIT_NATIVE,
-        )
+        val cheapIds =
+            setOf(
+                AtomicCheckInventory.ENV_ANDROID,
+                AtomicCheckInventory.ENV_TARGET,
+                AtomicCheckInventory.FRAMEWORK_API102,
+                AtomicCheckInventory.MODULE_LOADED,
+                AtomicCheckInventory.APP_ATTACH,
+                AtomicCheckInventory.MANAGER_IPC,
+                AtomicCheckInventory.DEXKIT_NATIVE,
+            )
         return AtomicCheckInventory.PIPELINE.filter { it.id in cheapIds }
     }
 

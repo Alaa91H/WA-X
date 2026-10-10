@@ -26,24 +26,25 @@ class RootCauseClustererTest {
     )
 
     @Test fun theObservedChainCollapsesToOneCluster() {
-        val results = listOf(
-            result(AtomicCheckInventory.CONTACT_DATA_CLASS, DiagnosticStatus.FAIL),
-            result(
-                AtomicCheckInventory.JID_CLASS,
-                DiagnosticStatus.FAIL,
-                listOf(AtomicCheckInventory.CONTACT_DATA_CLASS),
-            ),
-            result(
-                AtomicCheckInventory.JID_RAW_STRING,
-                DiagnosticStatus.BLOCKED,
-                listOf(AtomicCheckInventory.JID_CLASS),
-            ),
-            result(
-                "trigger.typing_privacy",
-                DiagnosticStatus.BLOCKED,
-                listOf(AtomicCheckInventory.JID_RAW_STRING),
-            ),
-        )
+        val results =
+            listOf(
+                result(AtomicCheckInventory.CONTACT_DATA_CLASS, DiagnosticStatus.FAIL),
+                result(
+                    AtomicCheckInventory.JID_CLASS,
+                    DiagnosticStatus.FAIL,
+                    listOf(AtomicCheckInventory.CONTACT_DATA_CLASS),
+                ),
+                result(
+                    AtomicCheckInventory.JID_RAW_STRING,
+                    DiagnosticStatus.BLOCKED,
+                    listOf(AtomicCheckInventory.JID_CLASS),
+                ),
+                result(
+                    "trigger.typing_privacy",
+                    DiagnosticStatus.BLOCKED,
+                    listOf(AtomicCheckInventory.JID_RAW_STRING),
+                ),
+            )
         val clusters = RootCauseClusterer.cluster(results)
         assertEquals(
             "one broken resolver chain must be one cluster, not four symptoms",
@@ -57,18 +58,20 @@ class RootCauseClustererTest {
     }
 
     @Test fun unrelatedFailuresStaySeparate() {
-        val results = listOf(
-            result("resolver.a", DiagnosticStatus.FAIL),
-            result("resolver.b", DiagnosticStatus.FAIL),
-        )
+        val results =
+            listOf(
+                result("resolver.a", DiagnosticStatus.FAIL),
+                result("resolver.b", DiagnosticStatus.FAIL),
+            )
         assertEquals(2, RootCauseClusterer.cluster(results).size)
     }
 
     @Test fun theFirstFailedDependencyFollowsTheCausalOrderNotAlphabetical() {
-        val results = listOf(
-            result(AtomicCheckInventory.JID_RAW_STRING, DiagnosticStatus.FAIL),
-            result(AtomicCheckInventory.CONTACT_DATA_CLASS, DiagnosticStatus.FAIL),
-        )
+        val results =
+            listOf(
+                result(AtomicCheckInventory.JID_RAW_STRING, DiagnosticStatus.FAIL),
+                result(AtomicCheckInventory.CONTACT_DATA_CLASS, DiagnosticStatus.FAIL),
+            )
         val order = AtomicCheckInventory.orderWith(emptyList())
         assertEquals(
             AtomicCheckInventory.CONTACT_DATA_CLASS,
@@ -77,10 +80,11 @@ class RootCauseClustererTest {
     }
 
     @Test fun aChainWithoutFailuresHasNoRootCause() {
-        val results = listOf(
-            result("a", DiagnosticStatus.PASS, failureClass = FailureClass.NONE),
-            result("b", DiagnosticStatus.NOT_TESTED, failureClass = FailureClass.NONE),
-        )
+        val results =
+            listOf(
+                result("a", DiagnosticStatus.PASS, failureClass = FailureClass.NONE),
+                result("b", DiagnosticStatus.NOT_TESTED, failureClass = FailureClass.NONE),
+            )
         assertTrue(RootCauseClusterer.cluster(results).isEmpty())
         assertNull(
             RootCauseClusterer.firstFailedDependency(results, listOf("a", "b")),
@@ -88,28 +92,30 @@ class RootCauseClustererTest {
     }
 
     @Test fun summaryCountsAreNotAHealthScore() {
-        val results = listOf(
-            result("a", DiagnosticStatus.PASS, failureClass = FailureClass.NONE),
-            result("b", DiagnosticStatus.FAIL),
-            result("c", DiagnosticStatus.NOT_TESTED, failureClass = FailureClass.NONE),
-            result("d", DiagnosticStatus.UNSUPPORTED, failureClass = FailureClass.NONE),
-            result(
-                "e", DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION,
-                failureClass = FailureClass.NONE,
-            ),
-        )
-        val summary = DiagnosticSummary(
-            total = results.size,
-            passed = results.count { it.status == DiagnosticStatus.PASS },
-            failed = results.count { it.status == DiagnosticStatus.FAIL },
-            blocked = results.count { it.status == DiagnosticStatus.BLOCKED },
-            notTested = results.count { it.status == DiagnosticStatus.NOT_TESTED },
-            unsupported = results.count { it.status == DiagnosticStatus.UNSUPPORTED },
-            needsExternalVerification = results.count {
-                it.status == DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-            },
-            clusters = RootCauseClusterer.cluster(results),
-        )
+        val results =
+            listOf(
+                result("a", DiagnosticStatus.PASS, failureClass = FailureClass.NONE),
+                result("b", DiagnosticStatus.FAIL),
+                result("c", DiagnosticStatus.NOT_TESTED, failureClass = FailureClass.NONE),
+                result("d", DiagnosticStatus.UNSUPPORTED, failureClass = FailureClass.NONE),
+                result(
+                    "e", DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION,
+                    failureClass = FailureClass.NONE,
+                ),
+            )
+        val summary =
+            DiagnosticSummary(
+                total = results.size,
+                passed = results.count { it.status == DiagnosticStatus.PASS },
+                failed = results.count { it.status == DiagnosticStatus.FAIL },
+                blocked = results.count { it.status == DiagnosticStatus.BLOCKED },
+                notTested = results.count { it.status == DiagnosticStatus.NOT_TESTED },
+                unsupported = results.count { it.status == DiagnosticStatus.UNSUPPORTED },
+                needsExternalVerification = results.count {
+                    it.status == DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                },
+                clusters = RootCauseClusterer.cluster(results),
+            )
         assertEquals(2, summary.inconclusive)
         assertFalse(
             "the JSON must expose counts, never a single fabricated score",

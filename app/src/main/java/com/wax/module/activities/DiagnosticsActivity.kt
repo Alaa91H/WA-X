@@ -109,18 +109,20 @@ class DiagnosticsActivity : BaseActivity() {
     }
 
     private fun runQuickCheck() {
-        val config = DiagnosticEngine.RunConfig.quick(
-            DiagnosticProbeSource.whatsappBuild(),
-            DiagnosticProbeSource.TARGET_PACKAGE,
-        )
+        val config =
+            DiagnosticEngine.RunConfig.quick(
+                DiagnosticProbeSource.whatsappBuild(),
+                DiagnosticProbeSource.TARGET_PACKAGE,
+            )
         runScan(config)
     }
 
     private fun runDeepScan() {
-        val config = DiagnosticEngine.RunConfig.deep(
-            DiagnosticProbeSource.whatsappBuild(),
-            DiagnosticProbeSource.TARGET_PACKAGE,
-        )
+        val config =
+            DiagnosticEngine.RunConfig.deep(
+                DiagnosticProbeSource.whatsappBuild(),
+                DiagnosticProbeSource.TARGET_PACKAGE,
+            )
         runScan(config)
     }
 
@@ -133,16 +135,17 @@ class DiagnosticsActivity : BaseActivity() {
     }
 
     private fun scanOnWorkerThread(config: DiagnosticEngine.RunConfig) {
-        val report = engine.run(
-            config,
-            AtomicCheckInventory.all(),
-            DiagnosticProbeSource.probes(),
-        ) { completed, total, lastId ->
-            mainHandler.post {
-                // Progress by verified checks, never an invented percentage.
-                progressLabel.text = "$completed / $total  ($lastId)"
+        val report =
+            engine.run(
+                config,
+                AtomicCheckInventory.all(),
+                DiagnosticProbeSource.probes(),
+            ) { completed, total, lastId ->
+                mainHandler.post {
+                    // Progress by verified checks, never an invented percentage.
+                    progressLabel.text = "$completed / $total  ($lastId)"
+                }
             }
-        }
         mainHandler.post { render(report) }
     }
 
@@ -228,13 +231,14 @@ class DiagnosticsActivity : BaseActivity() {
 
     private fun writeZip(redactedEntries: List<DiagnosticZipExporter.Entry>) {
         val exporter = DiagnosticZipExporter()
-        val built = try {
-            exporter.build(redactedEntries)
-        } catch (failure: RuntimeException) {
-            Log.w(TAG, "export failed", failure)
-            showFailure(failure.message ?: "")
-            return
-        }
+        val built =
+            try {
+                exporter.build(redactedEntries)
+            } catch (failure: RuntimeException) {
+                Log.w(TAG, "export failed", failure)
+                showFailure(failure.message ?: "")
+                return
+            }
         // Verified before the user is offered anything: an archive that cannot
         // be re-opened, or whose checksums do not match, must never be
         // presented as a finished report.
