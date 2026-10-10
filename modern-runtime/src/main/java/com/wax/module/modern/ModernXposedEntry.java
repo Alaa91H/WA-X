@@ -543,10 +543,9 @@ public final class ModernXposedEntry extends XposedModule {
             // module has no evidence that a local hook changes it. It is
             // reported as server-controlled rather than as a working switch.
             try {
-                String onlineReported = Boolean.toString(
-                        preferences.getBoolean("hideonline", false));
+                boolean onlineRequested = preferences.getBoolean("hideonline", false);
                 ModernTargetTelemetry.send(target, packageName, "ONLINE_PRIVACY",
-                        onlineReported ? "SERVER_CONTROLLED" : "DISABLED");
+                        onlineRequested ? "SERVER_CONTROLLED" : "DISABLED");
             } catch (RuntimeException onlineFailure) {
                 log(Log.WARN, TAG, "Online presence state delivery failed", onlineFailure);
             }
@@ -558,7 +557,7 @@ public final class ModernXposedEntry extends XposedModule {
                 System.loadLibrary("dexkit");
                 java.util.Map<String, ModernReceiptPrivacyFeature.Outcome> receiptStates =
                         ModernReceiptPrivacyFeature.INSTANCE.install(
-                                target, framework, hooks, preferences);
+                                target, this, hookRegistry, preferences);
                 for (java.util.Map.Entry<String, ModernReceiptPrivacyFeature.Outcome> entry
                         : receiptStates.entrySet()) {
                     String outcome = entry.getValue().name();
