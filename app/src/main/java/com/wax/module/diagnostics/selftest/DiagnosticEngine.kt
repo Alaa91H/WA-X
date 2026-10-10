@@ -128,7 +128,7 @@ class DiagnosticEngine(
 
         val ordered =
             if (config.mode == RunConfig.Mode.DEEP_SCAN) definitions
-            else definitions.filter { it.id in QUICK_CHECKS }
+            else definitions.filter { it.id in quickChecks }
         val total = ordered.size
         val byId = ordered.associateBy { it.id }
 
@@ -331,6 +331,12 @@ class DiagnosticEngine(
         observed[definition.id] = result
     }
 
+    /** Releases the worker; a scan outliving the screen would leak a thread. */
+    fun shutdown() {
+        cancel()
+        executor.shutdownNow()
+    }
+
     /**
      * Quick Check deliberately covers only the cheap, startup-safe prefix, so
      * it can run on demand without a full DEX scan.
@@ -339,10 +345,10 @@ class DiagnosticEngine(
      * accidentally start a DEX walk on the cheap path.
      */
     fun quickSubset(): List<AtomicCheckInventory.Definition> =
-        AtomicCheckInventory.PIPELINE.filter { it.id in QUICK_CHECKS }
+        AtomicCheckInventory.PIPELINE.filter { it.id in quickChecks }
 
     /** Cheap, startup-safe checks: what Quick Check may run on demand. */
-    private val QUICK_CHECKS =
+    private val quickChecks =
         setOf(
             AtomicCheckInventory.ENV_ANDROID,
             AtomicCheckInventory.ENV_TARGET,
