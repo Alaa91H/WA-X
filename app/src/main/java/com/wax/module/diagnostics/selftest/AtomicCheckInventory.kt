@@ -265,28 +265,30 @@ object AtomicCheckInventory {
         resolvers: List<String>,
         preferenceKey: String,
         externalConfirmationRequired: Boolean,
-    ): Definition = Definition(
-        id = HOOK_PREFIX + featureId,
-        title = "$title hook registered",
-        scope = "feature:$featureId",
-        level = EvidenceLevel.L3_HOOK,
-        dependsOn = resolvers + PREF_READBACK,
-        expected = "The hook for $featureId is installed (preference $preferenceKey)",
-        remediation = "Enable the feature in the WA X Control Center, then restart WhatsApp",
-        severity = "high",
-        externalConfirmationRequired = externalConfirmationRequired,
-    )
+    ): Definition =
+        Definition(
+            id = HOOK_PREFIX + featureId,
+            title = "$title hook registered",
+            scope = "feature:$featureId",
+            level = EvidenceLevel.L3_HOOK,
+            dependsOn = resolvers + PREF_READBACK,
+            expected = "The hook for $featureId is installed (preference $preferenceKey)",
+            remediation = "Enable the feature in the WA X Control Center, then restart WhatsApp",
+            severity = "high",
+            externalConfirmationRequired = externalConfirmationRequired,
+        )
 
-    fun triggerCheck(featureId: String, title: String, hookId: String): Definition = Definition(
-        id = TRIGGER_PREFIX + featureId,
-        title = "$title callback invoked",
-        scope = "feature:$featureId",
-        level = EvidenceLevel.L4_TRIGGER,
-        dependsOn = listOf(hookId),
-        expected = "The hook callback fired at least once",
-        remediation = "Use the feature in WhatsApp, then run the scan again",
-        severity = "medium",
-    )
+    fun triggerCheck(featureId: String, title: String, hookId: String): Definition =
+        Definition(
+            id = TRIGGER_PREFIX + featureId,
+            title = "$title callback invoked",
+            scope = "feature:$featureId",
+            level = EvidenceLevel.L4_TRIGGER,
+            dependsOn = listOf(hookId),
+            expected = "The hook callback fired at least once",
+            remediation = "Use the feature in WhatsApp, then run the scan again",
+            severity = "medium",
+        )
 
     fun all(): List<Definition> = PIPELINE
 
