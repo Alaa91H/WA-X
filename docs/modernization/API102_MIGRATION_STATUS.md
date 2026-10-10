@@ -75,11 +75,11 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #447 | TypingPrivacy (privacy pair) | MERGED, main CI green |
 | #453 | HideChat (privacy pair) | MERGED, main CI green |
 | #454 | ViewOnce (privacy pair) | MERGED, main CI green |
-| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | `integration/api102-migration`, PR #457, CI pending |
+| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | PR #457 MERGED (`44b90875`), all 12 checks green on `8c093fc8`, issue CLOSED |
 
 ### #170 scope notes
 
-Delivered on the integration branch: atomic engine with quick/deep modes,
+Delivered and merged (PR #457, `44b90875`): atomic engine with quick/deep modes,
 cancellation, per-check timeouts and progress by verified counts; the shared
 pipeline inventory; the per-feature half that appends one hook check and one
 trigger check per wired feature with the resolver chain each one reads; guided
