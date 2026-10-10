@@ -297,22 +297,22 @@ class DiagnosticEngine(
         // registration is not a pass when it still needs a second account.
         val needsExternal =
             definition.externalConfirmationRequired &&
-                observation.level < EvidenceLevel.L4_TRIGGER
-        val status =
+                observation.verification != VerificationState.EXTERNALLY_VERIFIED
+        val candidateStatus =
             observation.statusOverride
                 ?: when {
-                    !observation.expectedMatch -> {
-                        DiagnosticStatus.FAIL
-                    }
-
-                    needsExternal -> {
-                        DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-                    }
-
-                    else -> {
-                        DiagnosticStatus.PASS
-                    }
+                    !observation.expectedMatch -> DiagnosticStatus.FAIL
+                    needsExternal -> DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                    else -> DiagnosticStatus.PASS
                 }
+        // An explicit statusOverride=PASS must not bypass the external peer
+        // proof requirement. A triggered callback is not sender-visible proof.
+        val status =
+            if (needsExternal && candidateStatus == DiagnosticStatus.PASS) {
+                DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+            } else {
+                candidateStatus
+            }
         return AtomicCheckResult(
             id = definition.id,
             title = definition.title,
