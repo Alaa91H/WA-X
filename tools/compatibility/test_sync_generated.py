@@ -87,5 +87,74 @@ class CompatibilityReportTests(unittest.TestCase):
         self.assertNotIn("No cell in this matrix is resolver-verified yet.", report)
 
 
+class InheritedCertificationGateTests(unittest.TestCase):
+    """The generator half of the #396 gate.
+
+    The validator already refuses a package-wide ``supported`` default. These
+    tests cover the other half: the generator must refuse to *emit* a cell it
+    cannot justify, because it can be run on its own.
+    """
+
+    def test_a_supported_default_is_listed_for_both_packages(self) -> None:
+        for package in ("whatsapp", "business"):
+            with self.subTest(package=package):
+                matrix = fixture()
+                matrix["packages"][package]["defaultStatus"] = "supported"
+                inherited = sync_generated.inherited_supported_cells(matrix)
+                self.assertTrue(inherited, "%s inherited cells were not caught" % package)
+                for cell in inherited:
+                    self.assertIn(package, cell)
+
+    def test_a_supported_default_lists_every_declared_version(self) -> None:
+        matrix = fixture()
+        matrix["packages"]["whatsapp"]["defaultStatus"] = "supported"
+        inherited = sync_generated.inherited_supported_cells(matrix)
+        for version in matrix["packages"]["whatsapp"]["declaredVersions"]:
+            self.assertTrue(
+                any(cell.endswith("/whatsapp/%s" % version) for cell in inherited),
+                "version %s was not listed" % version,
+            )
+
+    def test_an_explicit_cell_is_never_listed(self) -> None:
+        matrix = fixture()
+        matrix["packages"]["whatsapp"]["defaultStatus"] = "supported"
+        matrix["matrix"] = {
+            "ExampleFeature": {
+                "whatsapp": {"versions": {"w1": "supported"}},
+            }
+        }
+        inherited = sync_generated.inherited_supported_cells(matrix)
+        self.assertFalse(
+            any(cell == "ExampleFeature/whatsapp/w1" for cell in inherited),
+            "an evidence-backed cell must not be treated as inherited",
+        )
+        self.assertTrue(any(cell.endswith("/whatsapp/w2") for cell in inherited))
+
+    def test_the_gate_raises_rather_than_emitting(self) -> None:
+        matrix = fixture()
+        matrix["packages"]["business"]["defaultStatus"] = "supported"
+        with self.assertRaises(SystemExit) as raised:
+            sync_generated.refuse_inherited_certification(matrix)
+        self.assertIn("refusing to generate", str(raised.exception))
+
+    def test_other_defaults_pass_the_gate(self) -> None:
+        for status in ("unknown", "degraded", "unsupported"):
+            with self.subTest(status=status):
+                matrix = fixture()
+                matrix["packages"]["whatsapp"]["defaultStatus"] = status
+                matrix["packages"]["business"]["defaultStatus"] = status
+                self.assertEqual(
+                    [],
+                    sync_generated.inherited_supported_cells(matrix),
+                )
+                sync_generated.refuse_inherited_certification(matrix)
+
+    def test_the_real_generation_still_runs(self) -> None:
+        # The gate must not break the zero-evidence matrix this project has.
+        matrix = fixture()
+        report = sync_generated.render(matrix)
+        self.assertIn("No cell in this matrix is resolver-verified yet.", report)
+
+
 if __name__ == "__main__":
     unittest.main()
