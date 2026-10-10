@@ -31,6 +31,7 @@ object ControlCenterStrings {
         val disabled: String,
         val hideAfterClicks: String,
         val hideWhileHolding: String,
+        val runDiagnostics: String,
     )
 
     private val english = Table(
@@ -47,6 +48,7 @@ object ControlCenterStrings {
         disabled = "Disabled",
         hideAfterClicks = "Hide after click count",
         hideWhileHolding = "Hide while holding the title",
+        runDiagnostics = "Run diagnostics",
     )
 
     private val arabic = Table(
@@ -63,6 +65,7 @@ object ControlCenterStrings {
         disabled = "معطّل",
         hideAfterClicks = "إخفاء بعد عدد الضغطات",
         hideWhileHolding = "إخفاء أثناء الضغط على العنوان",
+        runDiagnostics = "تشخيص ذاتي",
     )
 
     /** Unknown languages fall back to English instead of rendering blanks. */

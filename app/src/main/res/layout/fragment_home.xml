@@ -646,6 +646,15 @@
                             android:text="@string/diag_button"
                             app:icon="@drawable/ic_round_bug_report_24" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/atomicSelfTestBtn"
+                            style="@style/ModernButton.Outlined"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/spacing_small"
+                            android:text="@string/diagnostics_title"
+                            app:icon="@drawable/ic_round_bug_report_24" />
+
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>

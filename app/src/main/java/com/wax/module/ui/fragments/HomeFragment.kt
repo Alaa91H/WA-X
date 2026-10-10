@@ -32,6 +32,7 @@ import com.wax.module.activation.ActivationStatus
 import com.wax.module.activation.ActivationStatusResolver
 import com.wax.module.activation.TargetHeartbeatCodec
 import com.wax.module.activation.TargetProcessObserver
+import com.wax.module.activities.DiagnosticsActivity
 import com.wax.module.adapter.LogLineAdapter
 import com.wax.module.compat.TargetVersions
 import com.wax.module.compat.UpdateOffer
@@ -235,6 +236,12 @@ class HomeFragment : BaseFragment() {
         binding.diagBtn.setOnClickListener { view ->
             animateClick(view)
             showDiagnosticsDialog()
+        }
+
+        // F155: the atomic self-test screen, reachable from the Manager.
+        currentBinding?.atomicSelfTestBtn?.setOnClickListener { view ->
+            animateClick(view)
+            startActivity(Intent(requireContext(), DiagnosticsActivity::class.java))
         }
 
         if (BuildConfig.MODERN_XPOSED) {

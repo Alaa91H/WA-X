@@ -598,4 +598,36 @@
     <string name="modern_pilot_tap">اضغط هنا لضبط ميزة CustomTime التجريبية.</string>
     <string name="modern_target_share_limit_status">حد إعادة التوجيه: %1$s</string>
     <string name="modern_target_presence_status">تجميد آخر ظهور: %1$s | عدم الإزعاج: %2$s</string>
+
+    <string name="diagnostics_title">تشخيص WA X</string>
+    <string name="diagnostics_explain">يجري فحوصات ذرية للوحدة وبيئتها ومحركات البحث. الفحص الذي لا يملك دليلًا يُعرض كغير مُختبر وليس كعامل. سلوك الخصوصية الكامل يحتاج حسابًا ثانيًا ولا يُؤكَّد تلقائيًا.</string>
+    <string name="diagnostics_quick">فحص سريع</string>
+    <string name="diagnostics_deep">فحص ذري شامل</string>
+    <string name="diagnostics_cancel">إلغاء</string>
+    <string name="diagnostics_close">إغلاق</string>
+    <string name="diagnostics_export">تصدير ZIP</string>
+    <string name="diagnostics_import">استيراد ZIP</string>
+    <string name="diagnostics_import_title">أرشيف تشخيص سابق</string>
+    <string name="diagnostics_import_failed">رُفض الأرشيف ولم يُقرأ منه شيء.</string>
+    <string name="diagnostics_import_run_first">نفّذ مسحًا أولًا للمقارنة مع هذا الأرشيف.</string>
+    <string name="diagnostics_import_summary">المخطط %1$s · واتساب %2$s · البناء %3$s · الفحوصات المسجلة: %4$d</string>
+    <string name="diagnostics_confirm_external">تأكيد فحص خارجي</string>
+    <string name="diagnostics_confirm">متابعة</string>
+    <string name="diagnostics_external_none">لا توجد ميزة في هذا الإصدار تحتاج تأكيدًا خارجيًا.</string>
+    <string name="diagnostics_external_explainer">لا يُرى هذا التأثير إلا من حساب ثانٍ. أكّد أحدها فقط بعد أن تلاحظه على واتساب %1$s. اختيار ميزة مؤكَّدة مسبقًا يلغي التأكيد.</string>
+    <string name="diagnostics_external_recorded">تم تأكيد %1$s لواتساب %2$s. أعد الفحص الذري الشامل ليظهر في التقرير.</string>
+    <string name="diagnostics_running">جارٍ تنفيذ الفحوصات\u2026</string>
+    <string name="diagnostics_cancelled">تم الإلغاء</string>
+    <string name="diagnostics_finished">اكتمل</string>
+    <string name="diagnostics_scan">المسح</string>
+    <string name="diagnostics_counts">العدادات:</string>
+    <string name="diagnostics_first_failed">أول تبعية فاشلة:</string>
+    <string name="diagnostics_root_causes">الأسباب الجذرية</string>
+    <string name="diagnostics_run_first">نفّذ مسحًا قبل التصدير.</string>
+    <string name="diagnostics_redaction_preview">معاينة الإخفاء</string>
+    <string name="diagnostics_redaction_summary">العناصر المخفية: %1$d</string>
+    <string name="diagnostics_export_done">تم تصدير التشخيص</string>
+    <string name="diagnostics_export_failed">فشل التصدير</string>
+    <string name="diagnostics_manifest_missing">تعذّر التحقق من الأرشيف ولم يُكتب.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

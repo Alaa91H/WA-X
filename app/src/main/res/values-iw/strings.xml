@@ -596,4 +596,36 @@
     <string name="modern_target_previous_attach">אתחול המודול אומת בעבר, אך שלבי האתחול המפורטים כבר אינם עדכניים.</string>
     <string name="modern_target_no_lifecycle_signal">עדיין לא התקבל דיווח אתחול מ-WhatsApp.</string>
     <string name="modern_target_menu_status">דיווח אחרון על תפריט WA X: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">אבחון WA X</string>
+    <string name="diagnostics_explain">מריץ בדיקות אטומיות של המודול, סביבת ההרצה והפותרים. בדיקה ללא ראיות מדווחת כלא נבדקה, ולעולם לא כפועלת. התנהגות פרטיות מלאה דורשת חשבון שני ואינה מאומתת אוטומטית.</string>
+    <string name="diagnostics_quick">בדיקה מהירה</string>
+    <string name="diagnostics_deep">סריקה אטומית מקיפה</string>
+    <string name="diagnostics_cancel">ביטול</string>
+    <string name="diagnostics_close">סגירה</string>
+    <string name="diagnostics_export">ייצוא ZIP</string>
+    <string name="diagnostics_import">ייבוא ZIP</string>
+    <string name="diagnostics_import_title">ארכיון אבחון קודם</string>
+    <string name="diagnostics_import_failed">הארכיון נדחה ולא נקרא ממנו דבר.</string>
+    <string name="diagnostics_import_run_first">הרץ סריקה תחילה כדי להשוות אותה לארכיון זה.</string>
+    <string name="diagnostics_import_summary">סכימה %1$s · WhatsApp %2$s · גרסה %3$s · בדיקות רשומות: %4$d</string>
+    <string name="diagnostics_confirm_external">אישור בדיקה חיצונית</string>
+    <string name="diagnostics_confirm">המשך</string>
+    <string name="diagnostics_external_none">אין בגרסה זו תכונה שדורשת אישור חיצוני.</string>
+    <string name="diagnostics_external_explainer">אפקט זה נראה רק מחשבון שני. אשר רק לאחר שראית אותו ב‑WhatsApp %1$s. בחירה בתכונה שכבר אושרה מבטלת את האישור.</string>
+    <string name="diagnostics_external_recorded">%1$s אושר עבור WhatsApp %2$s. הרץ שוב את הסריקה האטומית המלאה כדי לראות אותו בדוח.</string>
+    <string name="diagnostics_running">מריץ בדיקות\u2026</string>
+    <string name="diagnostics_cancelled">בוטל</string>
+    <string name="diagnostics_finished">הושלם</string>
+    <string name="diagnostics_scan">סריקה</string>
+    <string name="diagnostics_counts">ספירות:</string>
+    <string name="diagnostics_first_failed">תלות ראשונה שנכשלה:</string>
+    <string name="diagnostics_root_causes">סיבות שורש</string>
+    <string name="diagnostics_run_first">הרץ סריקה לפני הייצוא.</string>
+    <string name="diagnostics_redaction_preview">תצוגה מקדימה של ההשתרהות</string>
+    <string name="diagnostics_redaction_summary">פריטים שהוסתרו: %1$d</string>
+    <string name="diagnostics_export_done">האבחון יוצא</string>
+    <string name="diagnostics_export_failed">הייצוא נכשל</string>
+    <string name="diagnostics_manifest_missing">לא ניתן היה לאמת את הארכיון ולכן הוא לא נכתב.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

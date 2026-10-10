@@ -596,4 +596,36 @@
     <string name="modern_target_previous_attach">A inicialização do módulo foi confirmada antes; as etapas detalhadas já não são recentes.</string>
     <string name="modern_target_no_lifecycle_signal">Ainda não foi recebido um relatório de inicialização do WhatsApp.</string>
     <string name="modern_target_menu_status">Último relatório do menu WA X: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">Diagnóstico do WA X</string>
+    <string name="diagnostics_explain">Executa verificações atómicas do módulo, do runtime e dos seus resolvedores. Uma verificação sem evidência é reportada como não testada, nunca como funcional. O comportamento completo de privacidade exige uma segunda conta e nunca é confirmado automaticamente.</string>
+    <string name="diagnostics_quick">Verificação rápida</string>
+    <string name="diagnostics_deep">Análise atómica completa</string>
+    <string name="diagnostics_cancel">Cancelar</string>
+    <string name="diagnostics_close">Fechar</string>
+    <string name="diagnostics_export">Exportar ZIP</string>
+    <string name="diagnostics_import">Importar ZIP</string>
+    <string name="diagnostics_import_title">Arquivo de diagnóstico anterior</string>
+    <string name="diagnostics_import_failed">O arquivo foi recusado e nada foi lido dele.</string>
+    <string name="diagnostics_import_run_first">Execute primeiro uma verificação para compará-la com este arquivo.</string>
+    <string name="diagnostics_import_summary">Esquema %1$s · WhatsApp %2$s · build %3$s · verificações registradas: %4$d</string>
+    <string name="diagnostics_confirm_external">Confirmar verificação externa</string>
+    <string name="diagnostics_confirm">Continuar</string>
+    <string name="diagnostics_external_none">Nenhum recurso desta versão exige confirmação externa.</string>
+    <string name="diagnostics_external_explainer">Este efeito só é visível de uma segunda conta. Confirme apenas depois de o observar no WhatsApp %1$s. Escolher um recurso já confirmado revoga a confirmação.</string>
+    <string name="diagnostics_external_recorded">%1$s confirmado para o WhatsApp %2$s. Execute novamente a Varredura Atômica Completa para vê-lo no relatório.</string>
+    <string name="diagnostics_running">A executar verificações\u2026</string>
+    <string name="diagnostics_cancelled">Cancelado</string>
+    <string name="diagnostics_finished">Concluído</string>
+    <string name="diagnostics_scan">Análise</string>
+    <string name="diagnostics_counts">Contagens:</string>
+    <string name="diagnostics_first_failed">Primeira dependência com falha:</string>
+    <string name="diagnostics_root_causes">Causas principais</string>
+    <string name="diagnostics_run_first">Executa uma análise antes de exportar.</string>
+    <string name="diagnostics_redaction_preview">Pré-visualização da ocultação</string>
+    <string name="diagnostics_redaction_summary">Itens ocultados: %1$d</string>
+    <string name="diagnostics_export_done">Diagnóstico exportado</string>
+    <string name="diagnostics_export_failed">Falha na exportação</string>
+    <string name="diagnostics_manifest_missing">Não foi possível verificar o arquivo e ele não foi escrito.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

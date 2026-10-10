@@ -597,4 +597,36 @@
     <string name="modern_target_previous_attach">Запуск модуля подтверждался ранее; подробные этапы запуска уже устарели.</string>
     <string name="modern_target_no_lifecycle_signal">От WhatsApp пока не получен отчёт о запуске.</string>
     <string name="modern_target_menu_status">Последний отчёт о меню WA X: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">Диагностика WA X</string>
+    <string name="diagnostics_explain">Выполняет атомарные проверки модуля, среды выполнения и резолверов. Проверка без подтверждений отмечается как непроверенная, а не как работающая. Полное поведение приватности требует второго аккаунта и никогда не подтверждается автоматически.</string>
+    <string name="diagnostics_quick">Быстрая проверка</string>
+    <string name="diagnostics_deep">Полное атомарное сканирование</string>
+    <string name="diagnostics_cancel">Отмена</string>
+    <string name="diagnostics_close">Закрыть</string>
+    <string name="diagnostics_export">Экспорт ZIP</string>
+    <string name="diagnostics_import">Импорт ZIP</string>
+    <string name="diagnostics_import_title">Предыдущий архив диагностики</string>
+    <string name="diagnostics_import_failed">Архив отклонён, из него ничего не прочитано.</string>
+    <string name="diagnostics_import_run_first">Сначала выполните проверку, чтобы сравнить её с этим архивом.</string>
+    <string name="diagnostics_import_summary">Схема %1$s · WhatsApp %2$s · сборка %3$s · записано проверок: %4$d</string>
+    <string name="diagnostics_confirm_external">Подтвердить внешнюю проверку</string>
+    <string name="diagnostics_confirm">Продолжить</string>
+    <string name="diagnostics_external_none">В этой сборке нет функции, требующей внешнего подтверждения.</string>
+    <string name="diagnostics_external_explainer">Этот эффект виден только со второго аккаунта. Подтверждайте, только увидев его в WhatsApp %1$s. Выбор уже подтверждённой функции отменяет подтверждение.</string>
+    <string name="diagnostics_external_recorded">%1$s подтверждено для WhatsApp %2$s. Повторите глубокое атомарное сканирование, чтобы увидеть это в отчёте.</string>
+    <string name="diagnostics_running">Выполняются проверки\u2026</string>
+    <string name="diagnostics_cancelled">Отменено</string>
+    <string name="diagnostics_finished">Завершено</string>
+    <string name="diagnostics_scan">Сканирование</string>
+    <string name="diagnostics_counts">Счётчики:</string>
+    <string name="diagnostics_first_failed">Первая нерабочая зависимость:</string>
+    <string name="diagnostics_root_causes">Корневые причины</string>
+    <string name="diagnostics_run_first">Сначала выполните сканирование.</string>
+    <string name="diagnostics_redaction_preview">Предпросмотр сокрытия</string>
+    <string name="diagnostics_redaction_summary">Скрыто элементов: %1$d</string>
+    <string name="diagnostics_export_done">Диагностика экспортирована</string>
+    <string name="diagnostics_export_failed">Ошибка экспорта</string>
+    <string name="diagnostics_manifest_missing">Архив не удалось проверить, поэтому он не был записан.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

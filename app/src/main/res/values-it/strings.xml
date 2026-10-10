@@ -594,4 +594,36 @@
     <string name="modern_target_previous_attach">Avvio del modulo confermato in precedenza; i dettagli delle fasi non sono più recenti.</string>
     <string name="modern_target_no_lifecycle_signal">Nessun rapporto di avvio da WhatsApp ancora ricevuto.</string>
     <string name="modern_target_menu_status">Ultimo rapporto del menu WA X: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">Diagnostica WA X</string>
+    <string name="diagnostics_explain">Esegue controlli atomici su modulo, runtime e risolutori. Un controllo senza prove viene riportato come non testato, mai come funzionante. Il comportamento completo della privacy richiede un secondo account e non viene mai confermato automaticamente.</string>
+    <string name="diagnostics_quick">Controllo rapido</string>
+    <string name="diagnostics_deep">Scansione atomica completa</string>
+    <string name="diagnostics_cancel">Annulla</string>
+    <string name="diagnostics_close">Chiudi</string>
+    <string name="diagnostics_export">Esporta ZIP</string>
+    <string name="diagnostics_import">Importa ZIP</string>
+    <string name="diagnostics_import_title">Archivio diagnostico precedente</string>
+    <string name="diagnostics_import_failed">L’archivio è stato rifiutato e non ne è stato letto nulla.</string>
+    <string name="diagnostics_import_run_first">Esegui prima una scansione per confrontarla con questo archivio.</string>
+    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · build %3$s · controlli registrati: %4$d</string>
+    <string name="diagnostics_confirm_external">Conferma il controllo esterno</string>
+    <string name="diagnostics_confirm">Continua</string>
+    <string name="diagnostics_external_none">Nessuna funzionalità di questa build richiede una conferma esterna.</string>
+    <string name="diagnostics_external_explainer">Questo effetto è visibile solo da un secondo account. Conferma solo dopo averlo osservato su WhatsApp %1$s. Scegliere una funzionalità già confermata revoca la conferma.</string>
+    <string name="diagnostics_external_recorded">%1$s confermato per WhatsApp %2$s. Riesegui la Scansione Atomica Profonda per vederlo nel rapporto.</string>
+    <string name="diagnostics_running">Controlli in corso\u2026</string>
+    <string name="diagnostics_cancelled">Annullato</string>
+    <string name="diagnostics_finished">Completato</string>
+    <string name="diagnostics_scan">Scansione</string>
+    <string name="diagnostics_counts">Conteggi:</string>
+    <string name="diagnostics_first_failed">Prima dipendenza fallita:</string>
+    <string name="diagnostics_root_causes">Cause principali</string>
+    <string name="diagnostics_run_first">Esegui una scansione prima di esportare.</string>
+    <string name="diagnostics_redaction_preview">Anteprima della redazione</string>
+    <string name="diagnostics_redaction_summary">Elementi redatti: %1$d</string>
+    <string name="diagnostics_export_done">Diagnostica esportata</string>
+    <string name="diagnostics_export_failed">Esportazione non riuscita</string>
+    <string name="diagnostics_manifest_missing">Non è stato possibile verificare l’archivio e non è stato scritto.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

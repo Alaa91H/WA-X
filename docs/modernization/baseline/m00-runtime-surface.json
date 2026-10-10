@@ -502,6 +502,7 @@
           "app/src/main/java/com/wax/module/activities/TextEditorActivity.kt",
           "app/src/main/java/com/wax/module/activities/base/BaseActivity.kt",
           "app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt",
+          "app/src/main/java/com/wax/module/diagnostics/selftest/DiagnosticProbeSource.kt",
           "app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt",
           "app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java",
           "app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt",
@@ -514,6 +515,8 @@
           "app/src/main/java/com/wax/module/ui/targets/TargetSettingsViewModel.kt"
         ],
         "getSharedPreferences()": [
+          "app/src/main/java/com/wax/module/diagnostics/selftest/DiagnosticProbeSource.kt",
+          "app/src/main/java/com/wax/module/diagnostics/selftest/ExternalVerificationStore.kt",
           "app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt",
           "app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java",
           "app/src/main/java/com/wax/module/preference/ContactPickerPreference.kt",
@@ -521,8 +524,8 @@
         ]
       },
       "by_pattern": {
-        "PreferenceManager": 41,
-        "getSharedPreferences()": 7
+        "PreferenceManager": 42,
+        "getSharedPreferences()": 9
       },
       "files": [
         "app/src/main/java/com/wax/module/AppLanguage.kt",
@@ -531,6 +534,8 @@
         "app/src/main/java/com/wax/module/activities/TextEditorActivity.kt",
         "app/src/main/java/com/wax/module/activities/base/BaseActivity.kt",
         "app/src/main/java/com/wax/module/adapter/MainPagerAdapter.kt",
+        "app/src/main/java/com/wax/module/diagnostics/selftest/DiagnosticProbeSource.kt",
+        "app/src/main/java/com/wax/module/diagnostics/selftest/ExternalVerificationStore.kt",
         "app/src/main/java/com/wax/module/modern/ModernManagerRuntimeStatus.kt",
         "app/src/main/java/com/wax/module/modern/ModernRuntimePreferenceRelay.kt",
         "app/src/main/java/com/wax/module/modern/ModernTargetTelemetryProvider.java",
@@ -543,7 +548,7 @@
         "app/src/main/java/com/wax/module/ui/fragments/base/BasePreferenceFragment.kt",
         "app/src/main/java/com/wax/module/ui/targets/TargetSettingsViewModel.kt"
       ],
-      "occurrences": 48,
+      "occurrences": 51,
       "owner": "#333 A09",
       "target": "Not a target of this program. Listed so the asymmetry stays visible.",
       "title": "Preference reads inside the Manager process",
@@ -1041,5 +1046,5 @@
     }
   },
   "schema": "wax.m00.runtime-surface/1",
-  "source_files": 332
+  "source_files": 344
 }

@@ -593,4 +593,36 @@
     <string name="modern_target_previous_attach">Startup modul sudah pernah dikonfirmasi, tetapi detail tahapan startup tidak lagi terbaru.</string>
     <string name="modern_target_no_lifecycle_signal">Belum ada laporan startup dari WhatsApp.</string>
     <string name="modern_target_menu_status">Laporan terakhir menu WA X: %1$s</string>
+    <!-- F155 atomic diagnostic and self-test (#170) -->
+    <string name="diagnostics_title">Diagnosis WA X</string>
+    <string name="diagnostics_explain">Menjalankan pemeriksaan atomik pada modul, runtime, dan resolver-nya. Pemeriksaan tanpa bukti dilaporkan sebagai belum diuji, tidak pernah sebagai berfungsi. Perilaku privasi lengkap memerlukan akun kedua dan tidak pernah dikonfirmasi otomatis.</string>
+    <string name="diagnostics_quick">Pemeriksaan cepat</string>
+    <string name="diagnostics_deep">Pindaian atomik menyeluruh</string>
+    <string name="diagnostics_cancel">Batal</string>
+    <string name="diagnostics_close">Tutup</string>
+    <string name="diagnostics_export">Ekspor ZIP</string>
+    <string name="diagnostics_import">Impor ZIP</string>
+    <string name="diagnostics_import_title">Arsip diagnostik sebelumnya</string>
+    <string name="diagnostics_import_failed">Arsip ditolak dan tidak ada yang dibaca darinya.</string>
+    <string name="diagnostics_import_run_first">Jalankan pindai terlebih dahulu untuk membandingkannya dengan arsip ini.</string>
+    <string name="diagnostics_import_summary">Skema %1$s · WhatsApp %2$s · build %3$s · pemeriksaan tercatat: %4$d</string>
+    <string name="diagnostics_confirm_external">Konfirmasi pemeriksaan eksternal</string>
+    <string name="diagnostics_confirm">Lanjutkan</string>
+    <string name="diagnostics_external_none">Tidak ada fitur pada build ini yang memerlukan konfirmasi eksternal.</string>
+    <string name="diagnostics_external_explainer">Efek ini hanya terlihat dari akun kedua. Konfirmasi hanya setelah Anda melihatnya di WhatsApp %1$s. Memilih fitur yang sudah dikonfirmasi akan membatalkan konfirmasi.</string>
+    <string name="diagnostics_external_recorded">%1$s dikonfirmasi untuk WhatsApp %2$s. Jalankan ulang Pindai Atomik Mendalam agar terlihat di laporan.</string>
+    <string name="diagnostics_running">Menjalankan pemeriksaan\u2026</string>
+    <string name="diagnostics_cancelled">Dibatalkan</string>
+    <string name="diagnostics_finished">Selesai</string>
+    <string name="diagnostics_scan">Pindaian</string>
+    <string name="diagnostics_counts">Hitungan:</string>
+    <string name="diagnostics_first_failed">Ketergantungan pertama yang gagal:</string>
+    <string name="diagnostics_root_causes">Akar penyebab</string>
+    <string name="diagnostics_run_first">Jalankan pindaian sebelum mengekspor.</string>
+    <string name="diagnostics_redaction_preview">Pratinjau penyensoran</string>
+    <string name="diagnostics_redaction_summary">Item disensor: %1$d</string>
+    <string name="diagnostics_export_done">Diagnosis diekspor</string>
+    <string name="diagnostics_export_failed">Ekspor gagal</string>
+    <string name="diagnostics_manifest_missing">Arsip tidak dapat diverifikasi dan tidak ditulis.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>
