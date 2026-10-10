@@ -247,6 +247,7 @@ Nothing below is claimed as done.
 | #433 | **CLOSED**: Control Center acceptance met, verified in the tree |
 | #425 | **CLOSED**: single menu entry restored, Control Center is the control path |
 | #396 | **CLOSED**: merged `e6b056a0`, inherited-certification refused at the generator |
+| #391 | partial: merged `658e434`, conflicting-fingerprint cells refused; evidence schema still open |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
@@ -259,7 +260,9 @@ owner's second account and is not substitutable by a build.
    the positive control passes. The one case that still cannot fail is a
    *single* changed build fingerprint, because the schema declares no expected
    value to compare against; the conflicting-fingerprint half is now closed.
-   Closing the rest needs that schema field, not more logic.
+   Closing the rest needs that schema field, not more logic. Instance-bound
+   account scoping is open for the same reason: the evidence record has no
+   account field, so a per-account observation cannot be told from a global one.
 2. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
    evidence gap.
 3. **#383** — the master audit that aggregates the above.
