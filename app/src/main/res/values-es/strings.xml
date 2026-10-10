@@ -616,15 +616,11 @@
     <string name="diagnostics_cancelled">Cancelado</string>
     <string name="diagnostics_finished">Finalizado</string>
     <string name="diagnostics_scan">Escaneo</string>
-    <string name="diagnostics_counts">Recuentos:</string>
     <string name="diagnostics_first_failed">Primera dependencia fallida:</string>
-    <string name="diagnostics_root_causes">Causas raíz</string>
-    <string name="diagnostics_run_first">Ejecuta un escaneo antes de exportar.</string>
     <string name="diagnostics_redaction_preview">Vista previa de la ocultación</string>
     <string name="diagnostics_redaction_summary">Elementos ocultados: %1$d</string>
     <string name="diagnostics_export_done">Diagnóstico exportado</string>
     <string name="diagnostics_export_failed">Error al exportar</string>
-    <string name="diagnostics_manifest_missing">No se pudo verificar el archivo y no se escribió.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">No hay pruebas finalizadas. Inicie un análisis o exporte un informe vacío.</string>
     <string name="diagnostics_busy">Ya hay un análisis en curso. Cancélelo o espere.</string>

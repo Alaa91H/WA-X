@@ -616,15 +616,11 @@
     <string name="diagnostics_cancelled">Annulé</string>
     <string name="diagnostics_finished">Terminé</string>
     <string name="diagnostics_scan">Analyse</string>
-    <string name="diagnostics_counts">Compteurs :</string>
     <string name="diagnostics_first_failed">Première dépendance en échec :</string>
-    <string name="diagnostics_root_causes">Causes racines</string>
-    <string name="diagnostics_run_first">Lancez une analyse avant d’exporter.</string>
     <string name="diagnostics_redaction_preview">Aperçu du masquage</string>
     <string name="diagnostics_redaction_summary">Éléments masqués : %1$d</string>
     <string name="diagnostics_export_done">Diagnostic exporté</string>
     <string name="diagnostics_export_failed">Échec de l’export</string>
-    <string name="diagnostics_manifest_missing">L’archive n’a pas pu être vérifiée et n’a pas été écrite.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">Aucun contrôle terminé. Lancez une analyse ou exportez un rapport vide.</string>
     <string name="diagnostics_busy">Une analyse est déjà en cours. Annulez ou patientez.</string>

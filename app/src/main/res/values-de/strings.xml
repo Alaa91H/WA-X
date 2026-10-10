@@ -616,15 +616,11 @@
     <string name="diagnostics_cancelled">Abgebrochen</string>
     <string name="diagnostics_finished">Fertig</string>
     <string name="diagnostics_scan">Scan</string>
-    <string name="diagnostics_counts">Zähler:</string>
     <string name="diagnostics_first_failed">Erste fehlgeschlagene Abhängigkeit:</string>
-    <string name="diagnostics_root_causes">Ursachen</string>
-    <string name="diagnostics_run_first">Vor dem Export einen Scan ausführen.</string>
     <string name="diagnostics_redaction_preview">Vorschau der Schwärzung</string>
     <string name="diagnostics_redaction_summary">Geschwärzte Einträge: %1$d</string>
     <string name="diagnostics_export_done">Diagnose exportiert</string>
     <string name="diagnostics_export_failed">Export fehlgeschlagen</string>
-    <string name="diagnostics_manifest_missing">Das Archiv konnte nicht geprüft werden und wurde nicht geschrieben.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">Noch keine Prüfung abgeschlossen. Starten Sie einen Scan oder exportieren Sie einen leeren Bericht.</string>
     <string name="diagnostics_busy">Ein Scan läuft bereits. Abbrechen oder Ergebnis abwarten.</string>

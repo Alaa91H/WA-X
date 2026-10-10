@@ -615,15 +615,11 @@
     <string name="diagnostics_cancelled">Dibatalkan</string>
     <string name="diagnostics_finished">Selesai</string>
     <string name="diagnostics_scan">Pindaian</string>
-    <string name="diagnostics_counts">Hitungan:</string>
     <string name="diagnostics_first_failed">Ketergantungan pertama yang gagal:</string>
-    <string name="diagnostics_root_causes">Akar penyebab</string>
-    <string name="diagnostics_run_first">Jalankan pindaian sebelum mengekspor.</string>
     <string name="diagnostics_redaction_preview">Pratinjau penyensoran</string>
     <string name="diagnostics_redaction_summary">Item disensor: %1$d</string>
     <string name="diagnostics_export_done">Diagnosis diekspor</string>
     <string name="diagnostics_export_failed">Ekspor gagal</string>
-    <string name="diagnostics_manifest_missing">Arsip tidak dapat diverifikasi dan tidak ditulis.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">Belum ada pemeriksaan selesai. Mulai pemindaian atau ekspor laporan kosong.</string>
     <string name="diagnostics_busy">Pemindaian sedang berjalan. Batalkan atau tunggu.</string>

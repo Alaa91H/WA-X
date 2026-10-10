@@ -618,15 +618,11 @@
     <string name="diagnostics_cancelled">İptal edildi</string>
     <string name="diagnostics_finished">Bitti</string>
     <string name="diagnostics_scan">Tarama</string>
-    <string name="diagnostics_counts">Sayaçlar:</string>
     <string name="diagnostics_first_failed">İlk başarısız bağımlılık:</string>
-    <string name="diagnostics_root_causes">Kök nedenler</string>
-    <string name="diagnostics_run_first">Dışa aktarmadan önce bir tarama çalıştırın.</string>
     <string name="diagnostics_redaction_preview">Karartma önizlemesi</string>
     <string name="diagnostics_redaction_summary">Karartılan öge: %1$d</string>
     <string name="diagnostics_export_done">Tanılama dışa aktarıldı</string>
     <string name="diagnostics_export_failed">Dışa aktarma başarısız</string>
-    <string name="diagnostics_manifest_missing">Arşiv doğrulanamadı ve bu yüzden yazılmadı.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">Henüz tamamlanan denetim yok. Tarama başlatın veya boş rapor dışa aktarın.</string>
     <string name="diagnostics_busy">Tarama zaten sürüyor. İptal edin veya bekleyin.</string>

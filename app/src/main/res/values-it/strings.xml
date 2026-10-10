@@ -616,15 +616,11 @@
     <string name="diagnostics_cancelled">Annullato</string>
     <string name="diagnostics_finished">Completato</string>
     <string name="diagnostics_scan">Scansione</string>
-    <string name="diagnostics_counts">Conteggi:</string>
     <string name="diagnostics_first_failed">Prima dipendenza fallita:</string>
-    <string name="diagnostics_root_causes">Cause principali</string>
-    <string name="diagnostics_run_first">Esegui una scansione prima di esportare.</string>
     <string name="diagnostics_redaction_preview">Anteprima della redazione</string>
     <string name="diagnostics_redaction_summary">Elementi redatti: %1$d</string>
     <string name="diagnostics_export_done">Diagnostica esportata</string>
     <string name="diagnostics_export_failed">Esportazione non riuscita</string>
-    <string name="diagnostics_manifest_missing">Non è stato possibile verificare l’archivio e non è stato scritto.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">Nessun controllo completato. Avvia la scansione o esporta un rapporto vuoto.</string>
     <string name="diagnostics_busy">Una scansione è già in corso. Annulla o attendi.</string>

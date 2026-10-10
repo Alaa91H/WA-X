@@ -617,15 +617,11 @@
     <string name="diagnostics_cancelled">已取消</string>
     <string name="diagnostics_finished">已完成</string>
     <string name="diagnostics_scan">扫描</string>
-    <string name="diagnostics_counts">计数：</string>
     <string name="diagnostics_first_failed">首个失败的依赖：</string>
-    <string name="diagnostics_root_causes">根本原因</string>
-    <string name="diagnostics_run_first">请先执行扫描再导出。</string>
     <string name="diagnostics_redaction_preview">脱敏预览</string>
     <string name="diagnostics_redaction_summary">已脱敏条目：%1$d</string>
     <string name="diagnostics_export_done">诊断已导出</string>
     <string name="diagnostics_export_failed">导出失败</string>
-    <string name="diagnostics_manifest_missing">无法验证该压缩包，因此未写入。</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">尚未完成检查。可开始扫描或导出空报告。</string>
     <string name="diagnostics_busy">已有扫描正在进行，请取消或等待。</string>

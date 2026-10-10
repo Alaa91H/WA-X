@@ -620,15 +620,11 @@
     <string name="diagnostics_cancelled">تم الإلغاء</string>
     <string name="diagnostics_finished">اكتمل</string>
     <string name="diagnostics_scan">المسح</string>
-    <string name="diagnostics_counts">العدادات:</string>
     <string name="diagnostics_first_failed">أول تبعية فاشلة:</string>
-    <string name="diagnostics_root_causes">الأسباب الجذرية</string>
-    <string name="diagnostics_run_first">نفّذ مسحًا قبل التصدير.</string>
     <string name="diagnostics_redaction_preview">معاينة الإخفاء</string>
     <string name="diagnostics_redaction_summary">العناصر المخفية: %1$d</string>
     <string name="diagnostics_export_done">تم تصدير التشخيص</string>
     <string name="diagnostics_export_failed">فشل التصدير</string>
-    <string name="diagnostics_manifest_missing">تعذّر التحقق من الأرشيف ولم يُكتب.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">لم تكتمل أي فحوصات بعد. يمكنك بدء الفحص السريع أو الذري، أو تصدير تقرير حتى دون فحص.</string>
     <string name="diagnostics_busy">يوجد فحص قيد التنفيذ. ألغِه أو انتظر نتيجته.</string>

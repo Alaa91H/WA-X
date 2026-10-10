@@ -619,15 +619,11 @@
     <string name="diagnostics_cancelled">Отменено</string>
     <string name="diagnostics_finished">Завершено</string>
     <string name="diagnostics_scan">Сканирование</string>
-    <string name="diagnostics_counts">Счётчики:</string>
     <string name="diagnostics_first_failed">Первая нерабочая зависимость:</string>
-    <string name="diagnostics_root_causes">Корневые причины</string>
-    <string name="diagnostics_run_first">Сначала выполните сканирование.</string>
     <string name="diagnostics_redaction_preview">Предпросмотр сокрытия</string>
     <string name="diagnostics_redaction_summary">Скрыто элементов: %1$d</string>
     <string name="diagnostics_export_done">Диагностика экспортирована</string>
     <string name="diagnostics_export_failed">Ошибка экспорта</string>
-    <string name="diagnostics_manifest_missing">Архив не удалось проверить, поэтому он не был записан.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
     <string name="diagnostics_no_results">Проверки ещё не завершены. Запустите сканирование или экспортируйте пустой отчёт.</string>
     <string name="diagnostics_busy">Проверка уже выполняется. Отмените её или подождите.</string>
