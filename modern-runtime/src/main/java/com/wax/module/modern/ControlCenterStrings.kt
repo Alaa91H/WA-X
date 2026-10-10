@@ -32,6 +32,8 @@ object ControlCenterStrings {
         val hideAfterClicks: String,
         val hideWhileHolding: String,
         val runDiagnostics: String,
+        val allFeatures: String,
+        val restartConfirmation: String,
     )
 
     private val english = Table(
@@ -49,6 +51,8 @@ object ControlCenterStrings {
         hideAfterClicks = "Hide after click count",
         hideWhileHolding = "Hide while holding the title",
         runDiagnostics = "Run diagnostics",
+        allFeatures = "All",
+        restartConfirmation = "Restart WhatsApp to apply pending changes?",
     )
 
     private val arabic = Table(
@@ -66,6 +70,8 @@ object ControlCenterStrings {
         hideAfterClicks = "إخفاء بعد عدد الضغطات",
         hideWhileHolding = "إخفاء أثناء الضغط على العنوان",
         runDiagnostics = "تشخيص ذاتي",
+        allFeatures = "الكل",
+        restartConfirmation = "هل تريد إعادة تشغيل واتساب لتطبيق التغييرات؟",
     )
 
     /** Unknown languages fall back to English instead of rendering blanks. */
