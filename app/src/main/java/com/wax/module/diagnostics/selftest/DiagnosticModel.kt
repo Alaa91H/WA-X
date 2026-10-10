@@ -57,12 +57,16 @@ enum class EvidenceLevel {
 enum class VerificationState {
     /** Nothing observed yet. */
     NOT_OBSERVED,
+
     /** A hook is registered. This is the ceiling for a "smoke" claim. */
     HOOKED,
+
     /** The callback actually fired. */
     TRIGGERED,
+
     /** Locally observed behaviour, e.g. the hook changed local state. */
     LOCALLY_VERIFIED,
+
     /** Confirmed by a human observing the effect from another account. */
     EXTERNALLY_VERIFIED,
 }
@@ -124,11 +128,17 @@ data class AtomicCheckResult(
                 dependencyStatus != DiagnosticStatus.PASS
             }
         return when {
-            status == DiagnosticStatus.PASS && observedEvidence.isBlank() ->
+            status == DiagnosticStatus.PASS && observedEvidence.isBlank() -> {
                 DiagnosticStatus.NOT_TESTED
-            status == DiagnosticStatus.PASS && failedDependency != null ->
+            }
+
+            status == DiagnosticStatus.PASS && failedDependency != null -> {
                 DiagnosticStatus.BLOCKED
-            else -> status
+            }
+
+            else -> {
+                status
+            }
         }
     }
 
@@ -173,15 +183,32 @@ internal fun StringBuilder.appendQuoted(value: String): StringBuilder {
     append('"')
     for (character in value) {
         when (character) {
-            '"' -> append("\\\"")
-            '\\' -> append("\\\\")
-            '\n' -> append("\\n")
-            '\r' -> append("\\r")
-            '\t' -> append("\\t")
-            else -> if (character < ' ') {
-                append("\\u").append(String.format("%04x", character.code))
-            } else {
-                append(character)
+            '"' -> {
+                append("\\\"")
+            }
+
+            '\\' -> {
+                append("\\\\")
+            }
+
+            '\n' -> {
+                append("\\n")
+            }
+
+            '\r' -> {
+                append("\\r")
+            }
+
+            '\t' -> {
+                append("\\t")
+            }
+
+            else -> {
+                if (character < ' ') {
+                    append("\\u").append(String.format("%04x", character.code))
+                } else {
+                    append(character)
+                }
             }
         }
     }

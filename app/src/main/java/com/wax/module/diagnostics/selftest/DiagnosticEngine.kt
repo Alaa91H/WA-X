@@ -283,13 +283,24 @@ class DiagnosticEngine(
                 externalConfirmationRequired = definition.externalConfirmationRequired,
             )
         }
+        // A check whose expectation held and that only reached hook
+        // registration is not a pass when it still needs a second account.
+        val needsExternal =
+            definition.externalConfirmationRequired &&
+                observation.level < EvidenceLevel.L4_TRIGGER
         val status =
             when {
-                !observation.expectedMatch -> DiagnosticStatus.FAIL
-                definition.externalConfirmationRequired &&
-                    observation.level < EvidenceLevel.L4_TRIGGER ->
+                !observation.expectedMatch -> {
+                    DiagnosticStatus.FAIL
+                }
+
+                needsExternal -> {
                     DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-                else -> DiagnosticStatus.PASS
+                }
+
+                else -> {
+                    DiagnosticStatus.PASS
+                }
             }
         return AtomicCheckResult(
             id = definition.id,
