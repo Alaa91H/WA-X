@@ -602,6 +602,29 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Anti-revoke state delivery failed", error);
             }
+            // Status privacy (#452). Status acknowledgements are a different
+            // claim from chat read receipts and are reported under their own
+            // ids, never the receipt ones.
+            try {
+                System.loadLibrary("dexkit");
+                java.util.Map<String, ModernStatusPrivacyFeature.Outcome> statusStates =
+                        ModernStatusPrivacyFeature.INSTANCE.install(
+                                target, this, hookRegistry, preferences);
+                for (java.util.Map.Entry<String, ModernStatusPrivacyFeature.Outcome> entryState
+                        : statusStates.entrySet()) {
+                    String outcome = entryState.getValue().name();
+                    Log.i(TAG, "M06_STATUS_PRIVACY_RESULT package=" + packageName
+                            + " feature=" + entryState.getKey()
+                            + " state=" + outcome);
+                    ModernTargetTelemetry.send(
+                            target, packageName, statusEventFor(entryState.getKey()), outcome);
+                }
+            } catch (Throwable statusFailure) {
+                if (statusFailure instanceof VirtualMachineError) {
+                    throw (VirtualMachineError) statusFailure;
+                }
+                log(Log.ERROR, TAG, "Status privacy failed on " + packageName, statusFailure);
+            }
             // Message accessor chain, reused by every message consumer.
             String messageAccessState = ModernMessageAccess.Outcome.ERROR.name();
             ModernMessageAccess resolvedMessageAccess = null;
@@ -680,6 +703,13 @@ public final class ModernXposedEntry extends XposedModule {
      * claims; folding them into one event would make an unsupported delivery
      * tick look like a working read-receipt switch.
      */
+    private static String statusEventFor(String featureId) {
+        if (ModernStatusPrivacyFeature.FEATURE_ID_AFTER_REPLY.equals(featureId)) {
+            return "STATUS_SEEN_AFTER_REPLY";
+        }
+        return "STATUS_SEEN_HIDDEN";
+    }
+
     private static String receiptEventFor(String featureId) {
         if (ModernReceiptPrivacyFeature.FEATURE_ID_AFTER_REPLY.equals(featureId)) {
             return "RECEIPT_PRIVACY_AFTER_REPLY";
