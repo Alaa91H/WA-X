@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
  * Non-destructive, opt-in bridge from WA X Manager settings into the API102
  * framework-owned RemotePreferences scoped to com.wax.module.
  *
- * Mirrors ONLY the migrated CustomTime pilot keys. Never deletes settings,
+ * Mirrors explicitly supported API102 feature keys. Never deletes settings,
  * copies contacts/chats, or implies that any legacy feature is running.
  */
 object ModernRuntimePreferenceRelay {
@@ -60,10 +60,35 @@ object ModernRuntimePreferenceRelay {
     fun start(context: Context) {
         if (local != null) return
         val preferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+        // Old embedded switches accidentally wrote Booleans into ListPreference slots.
+        // Repair the stored type before the Manager UI or the runtime can read those slots.
+        repairLegacyModes(preferences)
         local = preferences
         preferences.registerOnSharedPreferenceChangeListener(changes)
         ModernFrameworkServiceBridge.setOnConnectedListener { requestSync() }
         requestSync()
+    }
+
+    /** Preserve real list selections while normalizing historical malformed booleans. */
+    internal fun legacyMode(value: Any?): String = when (value) {
+        "1", "2" -> value as String
+        true -> "1"
+        else -> "0"
+    }
+
+    private fun repairLegacyModes(preferences: SharedPreferences) {
+        val original = preferences.all
+        val editor = preferences.edit()
+        var changed = false
+        for (key in listOf("typearchive", "antirevoke")) {
+            if (original[key] is Boolean) {
+                editor.putString(key, legacyMode(original[key]))
+                changed = true
+            }
+        }
+        if (changed && !editor.commit()) {
+            Log.w(TAG, "Could not repair malformed legacy list preference values")
+        }
     }
 
     fun requestSync() {
@@ -106,14 +131,7 @@ object ModernRuntimePreferenceRelay {
                     putBoolean("hideread_group", source.getBoolean("hideread_group", false))
                     putBoolean("hidereceipt", source.getBoolean("hidereceipt", false))
                     putBoolean("hidereadafterreply", source.getBoolean("hidereadafterreply", false))
-                    // An older boolean write may have damaged this legacy list preference.
-                    // Normalize it without aborting the whole synchronization transaction.
-                    val antiRevoke = source.all["antirevoke"]
-                    putString("antirevoke", when (antiRevoke) {
-                        "1", "2" -> antiRevoke as String
-                        true -> "1"
-                        else -> "0"
-                    })
+                    putString("antirevoke", legacyMode(source.all["antirevoke"]))
                     putBoolean("hidestatusview", source.getBoolean("hidestatusview", false))
                     putBoolean("sendstatusseenonreply", source.getBoolean("sendstatusseenonreply", false))
                 }
