@@ -247,9 +247,18 @@ class DiagnosticEngineTest {
         engine.shutdown()
     }
 
-    @Test fun theQuickSubsetIsCheaperThanTheFullInventory() {
-        val quick = engine().quickSubset()
+    @Test fun theQuickSubsetLeavesOutTheResolverChain() {
+        // Quick Check may load the DexKit library, but it must not walk the DEX
+        // to resolve the contact/JID chain, which is what makes it slow.
+        val quick = engine().quickSubset().map { it.id }
         assertTrue("quick mode must be a strict subset", quick.size < AtomicCheckInventory.all().size)
-        assertTrue(quick.none { it.id == AtomicCheckInventory.DEXKIT_NATIVE })
+        for (resolverHeavy in listOf(
+            AtomicCheckInventory.CONTACT_CLASS,
+            AtomicCheckInventory.CONTACT_DATA_CLASS,
+            AtomicCheckInventory.JID_CLASS,
+            AtomicCheckInventory.JID_RAW_STRING,
+        )) {
+            assertTrue("$resolverHeavy must not run in the cheap prefix", quick.none { it == resolverHeavy })
+        }
     }
 }
