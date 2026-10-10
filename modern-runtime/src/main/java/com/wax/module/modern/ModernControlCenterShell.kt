@@ -3,9 +3,13 @@ package com.wax.module.modern
 import android.app.Activity
 import android.app.Application
 import android.app.Dialog
+import android.app.AlertDialog
 import android.content.Intent
 import android.database.ContentObserver
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,9 +22,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.HorizontalScrollView
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
@@ -61,10 +65,19 @@ class ModernControlCenterShell(
 
     private var favorites = emptySet<String>()
     private var favoritesOnly = false
+    private var selectedCategory: ControlCategory? = null
+    private var redraw: (() -> Unit)? = null
     private val currentModes = HashMap<String, String>()
 
     private val primary = themeColor(android.R.attr.textColorPrimary, Color.WHITE)
     private val secondary = themeColor(android.R.attr.textColorSecondary, Color.LTGRAY)
+    private val bg = themeColor(android.R.attr.colorBackground, Color.DKGRAY)
+    private val dark = Color.luminance(bg) < 0.45f
+    private val cardColor = if (dark) Color.rgb(50, 56, 53) else Color.rgb(244, 248, 246)
+    private val accent = Color.rgb(19, 153, 87)
+    private val labels = ControlCenterLabels.forLanguage(
+        activity.resources.configuration.locales.get(0).language,
+    )
 
     private var dialog: Dialog? = null
     private var dialogLifecycle: ActivityBoundDialogLifecycle? = null
@@ -125,104 +138,126 @@ class ModernControlCenterShell(
         val root = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(8))
+            setBackgroundColor(bg)
+            layoutDirection = View.LAYOUT_DIRECTION_LOCALE
         }
-        val header = TextView(activity).apply {
+        root.addView(TextView(activity).apply {
             text = strings.title
             setTextColor(primary)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-        }
-        root.addView(header)
-
-        val favoritesFilter = CheckBox(activity).apply {
-            text = strings.favoritesOnly
-            isChecked = favoritesOnly
-            setTextColor(secondary)
-        }
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 21f)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setPadding(dp(4), dp(4), 0, dp(12))
+        })
         val search = EditText(activity).apply {
             hint = strings.searchHint
             setTextColor(primary)
+            setHintTextColor(secondary)
             setSingleLine(true)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             imeOptions = EditorInfo.IME_ACTION_SEARCH
+            setPadding(dp(14), 0, dp(14), 0)
+            background = rounded(cardColor, 14)
         }
-        root.addView(search)
-        root.addView(favoritesFilter)
-
+        root.addView(search, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(48),
+        ))
+        val tabs = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(8), 0, dp(8))
+        }
+        root.addView(HorizontalScrollView(activity).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(tabs)
+        })
         val content = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
         }
-        val scroll = ScrollView(activity).apply {
-            addView(content)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f,
-            )
-        }
-        root.addView(scroll)
-
+        val scroll = ScrollView(activity).apply { addView(content) }
+        root.addView(scroll, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f,
+        ))
         val footer = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.END
         }
         val restart = Button(activity).apply {
             text = strings.restart
-            setOnClickListener { if (isWindowInteractive()) restartWhatsApp() }
+            isAllCaps = false
+            setOnClickListener { if (isWindowInteractive()) confirmRestart() }
         }
         val manager = Button(activity).apply {
             text = strings.openManager
+            isAllCaps = false
             setOnClickListener { fallbackToManager() }
         }
-        footer.addView(restart)
         footer.addView(manager)
+        footer.addView(restart)
         root.addView(footer)
-
         var rowsInOrder = buildEntries(states, "")
-
         fun render(query: String) {
             if (!isShellAlive()) return
             content.removeAllViews()
-            val matching = rowsInOrder.filter { ControlPolicy.matches(it, query) }
-            val filtered = if (favoritesOnly) matching.filter { it.id in favorites } else matching
-            val entries = ControlPolicy.group(filtered, query)
-            if (entries.isEmpty()) {
+            restart.visibility = if (rowsInOrder.any { it.requiresRestart }) View.VISIBLE else View.GONE
+            val filtered = ControlCenterListState.visible(
+                rowsInOrder, query, selectedCategory, favoritesOnly, favorites, labels,
+            )
+            if (filtered.isEmpty()) {
                 content.addView(TextView(activity).apply {
                     text = strings.noResults
                     setTextColor(secondary)
-                    setPadding(0, dp(12), 0, dp(12))
+                    setPadding(dp(12), dp(20), dp(12), dp(20))
                 })
                 return
             }
-            val favouriteRows = if (favoritesOnly) emptyList() else
-                matching.filter { it.id in favorites }
-            if (favouriteRows.isNotEmpty()) {
-                content.addView(sectionHeader(strings.favorites))
-                for (row in favouriteRows) content.addView(rowView(row))
+            for ((category, rows) in ControlPolicy.group(filtered)) {
+                content.addView(sectionHeader(labels.category(category)))
+                for (row in rows) content.addView(rowView(row))
             }
-            val favouriteIds = favouriteRows.map { it.id }.toSet()
-            for ((category, rows) in entries) {
-                content.addView(sectionHeader(ControlStatusText.categoryTitle(category)))
-                for (row in rows) {
-                    if (row.id in favouriteIds) continue
-                    content.addView(rowView(row))
+        }
+        fun renderTabs() {
+            tabs.removeAllViews()
+            fun addTab(text: String, selected: Boolean, select: () -> Unit) {
+                tabs.addView(TextView(activity).apply {
+                    this.text = text
+                    setTextColor(if (selected) Color.WHITE else primary)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                    gravity = Gravity.CENTER
+                    setPadding(dp(15), 0, dp(15), 0)
+                    minHeight = dp(44)
+                    background = rounded(if (selected) accent else cardColor, 22)
+                    setOnClickListener {
+                        if (!isWindowInteractive()) return@setOnClickListener
+                        select()
+                        redraw?.invoke()
+                        scroll.scrollTo(0, 0)
+                    }
+                }, LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, dp(44),
+                ).apply { marginEnd = dp(7) })
+            }
+            addTab(strings.allFeatures, selectedCategory == null && !favoritesOnly) {
+                favoritesOnly = false; selectedCategory = null
+            }
+            addTab(strings.favorites, favoritesOnly) {
+                favoritesOnly = true; selectedCategory = null
+            }
+            for (cat in ControlStatusText.ordered()) {
+                if (rowsInOrder.none { it.category == cat }) continue
+                addTab(labels.category(cat), selectedCategory == cat && !favoritesOnly) {
+                    favoritesOnly = false; selectedCategory = cat
                 }
             }
         }
-
-        favoritesFilter.setOnCheckedChangeListener { button, checked ->
-            if (!isShellAlive() || !button.isPressed) return@setOnCheckedChangeListener
-            favoritesOnly = checked
-            render(search.text.toString())
-        }
-        render("")
+        redraw = { renderTabs(); render(search.text.toString()) }
+        redraw?.invoke()
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 if (!isShellAlive()) return
-                try {
-                    render(s?.toString().orEmpty())
-                } catch (failure: Throwable) {
+                try { render(s?.toString().orEmpty()) } catch (failure: Throwable) {
                     if (failure is VirtualMachineError) throw failure
-                    Log.w(TAG,
-                        "WINDOW_RENDER_FAILED package=$packageName exception=${failure.javaClass.simpleName}")
+                    Log.w(TAG, "WINDOW_RENDER_FAILED package=$packageName")
                 }
             }
         })
@@ -255,7 +290,7 @@ class ModernControlCenterShell(
                         )
                         currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] = readModeFromState(updated)
                         rowsInOrder = buildEntries(updated, "")
-                        render(search.text.toString())
+                        redraw?.invoke()
                     } else {
                         Log.w(TAG, "CONTROL_CENTER_REFRESH_FAILED package=$packageName")
                     }
@@ -292,6 +327,7 @@ class ModernControlCenterShell(
 
     private fun stopObservingSettings() {
         managerRefresh = null
+        redraw = null
         val observer = settingsObserver ?: return
         settingsObserver = null
         try {
@@ -303,7 +339,7 @@ class ModernControlCenterShell(
     private fun showDialog(root: View) {
         val window = Dialog(activity)
         window.setContentView(root)
-        window.setTitle(strings.title)
+        window.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog = window
 
         val application = activity.application
@@ -359,6 +395,11 @@ class ModernControlCenterShell(
         callbackRegistered = true
         Log.i(TAG, "WINDOW_CREATED package=$packageName")
         window.show()
+        val display = activity.resources.displayMetrics
+        window.window?.setLayout(
+            (display.widthPixels - dp(24)).coerceAtMost(dp(560)),
+            (display.heightPixels * 0.84f).toInt(),
+        )
         if (!window.isShowing) throw IllegalStateException("Dialog did not attach")
         Log.i(TAG, "WINDOW_SHOWN package=$packageName")
     }
@@ -405,12 +446,27 @@ class ModernControlCenterShell(
         if (isWindowInteractive()) ModernManagerFallback.open(activity)
     }
 
+    private fun rounded(color: Int, radius: Int): GradientDrawable =
+        GradientDrawable().apply {
+            setColor(color)
+            cornerRadius = dp(radius).toFloat()
+        }
+
+    private fun confirmRestart() {
+        if (!isWindowInteractive()) return
+        AlertDialog.Builder(activity).setTitle(strings.restart)
+            .setMessage(strings.restartConfirmation)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(strings.restart) { _, _ -> restartWhatsApp() }
+            .show()
+    }
+
     private fun sectionHeader(label: String): View = TextView(activity).apply {
         text = label
         setTextColor(secondary)
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
         typeface = android.graphics.Typeface.DEFAULT_BOLD
-        setPadding(0, dp(14), 0, dp(4))
+        setPadding(dp(5), dp(14), 0, dp(8))
     }
 
     private fun buildEntries(states: Bundle, query: String): List<ControlEntry> {
@@ -461,100 +517,99 @@ class ModernControlCenterShell(
         return rows.filter { ControlPolicy.matches(it, query) }
     }
 
+    /** A compact, honest row with an independent switch and one star icon. */
     private fun rowView(row: ControlEntry): View {
-        val container = LinearLayout(activity).apply {
+        val card = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(9), dp(9), dp(9))
+            background = rounded(cardColor, 14)
+        }
+        val wrapper = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(8), 0, dp(8))
+            setPadding(0, 0, 0, dp(7))
+            addView(card, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+            ))
         }
-        val label = TextView(activity).apply {
-            text = row.title
+        val details = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        details.addView(TextView(activity).apply {
+            text = labels.title(row.id, row.title)
             setTextColor(primary)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-        }
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            maxLines = 2
+        })
         val status = TextView(activity).apply {
-            text = ControlStatusText.status(row.effective)
+            text = labels.description(row.id, row.description) + " · " +
+                labels.status(row.effective) +
+                if (row.requiresRestart) " · " + strings.restart else ""
             setTextColor(secondary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            setPadding(0, dp(5), 0, 0)
+            maxLines = 4
         }
+        details.addView(status)
+        card.addView(details, LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f,
+        ))
         if (row.id == "diagnostics") {
-            // Rendered before the inert-row rule: this row is an action, not a
-            // switch, so hiding it from accessibility services would be wrong.
-            // The self-test engine lives in the Manager, where the sanitized
-            // export and the SAF writer are; this row is the in-WhatsApp door.
-            container.addView(
-                Button(activity).apply {
-                    text = strings.runDiagnostics
-                    isAllCaps = false
-                    contentDescription = strings.runDiagnostics
-                    setOnClickListener { fallbackToManager() }
-                },
-            )
-            container.addView(
-                TextView(activity).apply {
-                    text = row.description
-                    setTextColor(secondary)
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                },
-            )
-            return container
-        }
-        if (!row.writable) {
-            // Pending / failed rows are inert by design; make that explicit to
-            // accessibility services instead of a dead switch.
-            container.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }
-        val modeControl = row.preferenceKey == ModernHideChatFeature.PREF_ARCHIVE_MODE
-        if (modeControl) {
-            // A three-state mode, not an on/off switch: tapping cycles
-            // disabled -> hide -> hold, which is what the Manager list offers.
-            val button = Button(activity).apply {
+            card.addView(TextView(activity).apply {
+                text = "›"
+                setTextColor(accent)
+                textSize = 26f
+                gravity = Gravity.CENTER
+                contentDescription = strings.runDiagnostics
+                setOnClickListener { fallbackToManager() }
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        } else if (row.preferenceKey == ModernHideChatFeature.PREF_ARCHIVE_MODE) {
+            card.addView(Button(activity).apply {
+                text = archiveModeLabel(row)
                 isAllCaps = false
-                contentDescription = row.title
+                isEnabled = row.writable
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 setOnClickListener {
                     if (isWindowInteractive()) cycleArchiveMode(row, status)
                 }
-            }
-            container.addView(button)
-            status.text = "${row.description} · ${archiveModeLabel(row)}" +
-                if (row.requiresRestart) " · restart required" else ""
-            container.addView(status)
-            return container
-        }
-        if (row.writable && row.preferenceKey != null) {
-            val toggle = Switch(activity).apply {
-                text = row.title
+            }, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(48),
+            ))
+        } else if (row.preferenceKey != null) {
+            card.addView(Switch(activity).apply {
+                text = ""
+                showText = false
                 isChecked = row.requested == ControlRequested.ENABLED
-                contentDescription = "${row.title}. ${ControlStatusText.status(row.effective)}"
-                setOnCheckedChangeListener { button, isChecked ->
+                isEnabled = row.writable
+                minHeight = dp(48)
+                thumbTintList = ColorStateList.valueOf(Color.WHITE)
+                trackTintList = ColorStateList.valueOf(if (isChecked) accent else Color.GRAY)
+                contentDescription = labels.title(row.id, row.title) + ". " +
+                    labels.status(row.effective)
+                setOnCheckedChangeListener { button, checked ->
+                    trackTintList = ColorStateList.valueOf(if (checked) accent else Color.GRAY)
                     if (!isWindowInteractive() || !button.isPressed) return@setOnCheckedChangeListener
-                    val key = row.preferenceKey
-                    persist(key, isChecked, button as Switch, status, row)
+                    persist(row.preferenceKey, checked, button as Switch, status, row)
                 }
-            }
-            container.addView(toggle)
-            status.text = "${row.description} · ${ControlStatusText.status(row.effective)}" +
-                if (row.requiresRestart) " · restart required" else ""
-        } else {
-            container.addView(label)
-            status.text = "${row.description} · ${ControlStatusText.status(row.effective)}"
+            }, LinearLayout.LayoutParams(dp(60), dp(48)))
         }
-        container.addView(status)
         if (row.writable) {
-            val star = Button(activity).apply {
-                text = if (row.id in favorites) strings.favoriteToggleOn else strings.favoriteToggleOff
-                isAllCaps = false
-                contentDescription = strings.markFavorite
-                setOnClickListener {
-                    if (isWindowInteractive()) toggleFavorite(row)
-                }
-            }
-            container.addView(star)
+            card.addView(TextView(activity).apply {
+                text = if (row.id in favorites) "★" else "☆"
+                setTextColor(if (row.id in favorites) accent else secondary)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
+                gravity = Gravity.CENTER
+                contentDescription = if (row.id in favorites)
+                    strings.favoriteToggleOn else strings.favoriteToggleOff
+                setOnClickListener { if (isWindowInteractive()) toggleFavorite(row) }
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
         }
-        return container
+        return wrapper
     }
 
     private fun archiveModeLabel(row: ControlEntry): String {
-        val stored = currentModes[row.id] ?: ModernHideChatFeature.MODE_DISABLED
+        val stored = currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] ?: ModernHideChatFeature.MODE_DISABLED
         return when (stored) {
             "1" -> strings.hideAfterClicks
             "2" -> strings.hideWhileHolding
@@ -564,7 +619,7 @@ class ModernControlCenterShell(
 
     private fun cycleArchiveMode(row: ControlEntry, status: TextView) {
         if (!isWindowInteractive()) return
-        val stored = currentModes[row.id] ?: ModernHideChatFeature.MODE_DISABLED
+        val stored = currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] ?: ModernHideChatFeature.MODE_DISABLED
         val next = when (stored) {
             ModernHideChatFeature.MODE_DISABLED -> ModernHideChatFeature.MODE_CLICK_TIMES
             "1" -> "2"
@@ -581,7 +636,7 @@ class ModernControlCenterShell(
                 val statusView = weakStatus.get() ?: return@submit
                 if (!shell.isWindowInteractive()) return@submit
                 if (saved) {
-                    shell.currentModes[row.id] = next
+                    shell.currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] = next
                     statusView.text = "${row.description} · ${shell.archiveModeLabel(row)} · restart required"
                 } else {
                     statusView.text = "${row.description} · " +
@@ -604,6 +659,7 @@ class ModernControlCenterShell(
                 val shell = weakShell.get() ?: return@submit
                 if (saved && shell.isWindowInteractive()) {
                     shell.favorites = next
+                    shell.redraw?.invoke()
                     Log.i(TAG, "CONTROL_CENTER_FAVORITE_SAVED")
                 } else if (!saved) {
                     Log.w(TAG, "CONTROL_CENTER_FAVORITE_SAVE_FAILED")
