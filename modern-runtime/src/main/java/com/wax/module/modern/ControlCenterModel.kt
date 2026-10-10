@@ -86,41 +86,44 @@ data class ControlEntry(
 
 /** Human-readable, non-lying status text for a row. */
 object ControlStatusText {
-    fun status(effective: ControlEffective): String = when (effective) {
-        ControlEffective.NOT_OBSERVED -> "Not observed yet"
-        ControlEffective.WORKING -> "Working"
-        ControlEffective.INSTALLED -> "Installed"
-        ControlEffective.DISABLED -> "Off"
-        ControlEffective.RESOLVER_FAILED -> "Resolver could not confirm"
-        ControlEffective.UNSAFE_SIGNATURE -> "Unsupported target signature"
-        ControlEffective.PENDING_MIGRATION -> "Pending migration"
-        ControlEffective.ERROR -> "Runtime error"
-        ControlEffective.RESTART_REQUIRED -> "Restart WhatsApp to apply"
-        ControlEffective.PARTIAL -> "Partial: part still pending migration"
-    }
+    fun status(effective: ControlEffective): String =
+        when (effective) {
+            ControlEffective.NOT_OBSERVED -> "Not observed yet"
+            ControlEffective.WORKING -> "Working"
+            ControlEffective.INSTALLED -> "Installed"
+            ControlEffective.DISABLED -> "Off"
+            ControlEffective.RESOLVER_FAILED -> "Resolver could not confirm"
+            ControlEffective.UNSAFE_SIGNATURE -> "Unsupported target signature"
+            ControlEffective.PENDING_MIGRATION -> "Pending migration"
+            ControlEffective.ERROR -> "Runtime error"
+            ControlEffective.RESTART_REQUIRED -> "Restart WhatsApp to apply"
+            ControlEffective.PARTIAL -> "Partial: part still pending migration"
+        }
 
-    fun categoryTitle(category: ControlCategory): String = when (category) {
-        ControlCategory.PRIVACY -> "Privacy"
-        ControlCategory.CHATS -> "Chats"
-        ControlCategory.MEDIA -> "Media"
-        ControlCategory.APPEARANCE -> "Appearance"
-        ControlCategory.NOTIFICATIONS -> "Notifications"
-        ControlCategory.TOOLS -> "Tools"
-        ControlCategory.ADVANCED -> "Advanced"
-        ControlCategory.PENDING -> "Pending migration"
-    }
+    fun categoryTitle(category: ControlCategory): String =
+        when (category) {
+            ControlCategory.PRIVACY -> "Privacy"
+            ControlCategory.CHATS -> "Chats"
+            ControlCategory.MEDIA -> "Media"
+            ControlCategory.APPEARANCE -> "Appearance"
+            ControlCategory.NOTIFICATIONS -> "Notifications"
+            ControlCategory.TOOLS -> "Tools"
+            ControlCategory.ADVANCED -> "Advanced"
+            ControlCategory.PENDING -> "Pending migration"
+        }
 
     /** Categories in display order; pending always last. */
-    fun ordered(): List<ControlCategory> = listOf(
-        ControlCategory.PRIVACY,
-        ControlCategory.CHATS,
-        ControlCategory.MEDIA,
-        ControlCategory.APPEARANCE,
-        ControlCategory.NOTIFICATIONS,
-        ControlCategory.TOOLS,
-        ControlCategory.ADVANCED,
-        ControlCategory.PENDING,
-    )
+    fun ordered(): List<ControlCategory> =
+        listOf(
+            ControlCategory.PRIVACY,
+            ControlCategory.CHATS,
+            ControlCategory.MEDIA,
+            ControlCategory.APPEARANCE,
+            ControlCategory.NOTIFICATIONS,
+            ControlCategory.TOOLS,
+            ControlCategory.ADVANCED,
+            ControlCategory.PENDING,
+        )
 }
 
 /**
@@ -149,8 +152,10 @@ object ControlPolicy {
      * and an empty key must never be treated as writable just because it is
      * not null.
      */
-    fun isWritable(preferenceKey: String?, effective: ControlEffective): Boolean =
-        preferenceKey != null && preferenceKey.isNotBlank() && effective in WORKING_STATES
+    fun isWritable(
+        preferenceKey: String?,
+        effective: ControlEffective,
+    ): Boolean = preferenceKey != null && preferenceKey.isNotBlank() && effective in WORKING_STATES
 
     fun effectiveFrom(
         reported: String?,
@@ -159,20 +164,53 @@ object ControlPolicy {
     ): ControlEffective {
         if (pendingMigration) return ControlEffective.PENDING_MIGRATION
         return when {
-            reported == null || reported.isEmpty() -> ControlEffective.NOT_OBSERVED
-            reported == "DISABLED" ->
+            reported == null || reported.isEmpty() -> {
+                ControlEffective.NOT_OBSERVED
+            }
+
+            reported == "DISABLED" -> {
                 if (requested == ControlRequested.ENABLED) {
                     ControlEffective.RESTART_REQUIRED
                 } else {
                     ControlEffective.DISABLED
                 }
+            }
+
             reported == "INSTALLED" || reported == "ALREADY_INSTALLED" ||
-                reported.startsWith("INSTALLED") -> ControlEffective.INSTALLED
-            reported.startsWith("RESOLVER_") -> ControlEffective.RESOLVER_FAILED
-            reported == "UNSAFE_SIGNATURE" -> ControlEffective.UNSAFE_SIGNATURE
-            reported == "SEND_DIRECTION_PENDING" -> ControlEffective.PARTIAL
-            reported.startsWith("ERROR") -> ControlEffective.ERROR
-            else -> ControlEffective.NOT_OBSERVED
+                reported.startsWith("INSTALLED") -> {
+                ControlEffective.INSTALLED
+            }
+
+            reported.startsWith("RESOLVER_") -> {
+                ControlEffective.RESOLVER_FAILED
+            }
+
+            reported == "UNSAFE_SIGNATURE" -> {
+                ControlEffective.UNSAFE_SIGNATURE
+            }
+
+            // A behaviour the runtime states it cannot provide. Showing it as a
+            // working switch would be the exact false claim #449 rules out, so
+            // it is surfaced as unsupported instead of quietly installed.
+            reported == "UNSUPPORTED" || reported.startsWith("UNSUPPORTED") -> {
+                ControlEffective.UNSUPPORTED
+            }
+
+            reported == "INSTALLED_ARMED" || reported.startsWith("INSTALLED_ARMED") -> {
+                ControlEffective.WORKING
+            }
+
+            reported == "SEND_DIRECTION_PENDING" -> {
+                ControlEffective.PARTIAL
+            }
+
+            reported.startsWith("ERROR") -> {
+                ControlEffective.ERROR
+            }
+
+            else -> {
+                ControlEffective.NOT_OBSERVED
+            }
         }
     }
 
@@ -181,9 +219,10 @@ object ControlPolicy {
         requested: ControlRequested,
         effective: ControlEffective,
         wasRequestedEnabled: Boolean,
-    ): Boolean = wasRequestedEnabled != (requested == ControlRequested.ENABLED) &&
-        effective != ControlEffective.PENDING_MIGRATION &&
-        effective != ControlEffective.ERROR
+    ): Boolean =
+        wasRequestedEnabled != (requested == ControlRequested.ENABLED) &&
+            effective != ControlEffective.PENDING_MIGRATION &&
+            effective != ControlEffective.ERROR
 
     /** Search matches title or description, case- and accent-insensitive. */
     fun matches(
@@ -194,7 +233,9 @@ object ControlPolicy {
         val needle = query.trim().lowercase()
         return entry.title.lowercase().contains(needle) ||
             entry.description.lowercase().contains(needle) ||
-            entry.category.name.lowercase().contains(needle)
+            entry.category.name
+                .lowercase()
+                .contains(needle)
     }
 
     fun group(

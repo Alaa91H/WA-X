@@ -43,6 +43,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_CONTACT_ACCESS = "CONTACT_ACCESS";
     public static final String EVENT_JID_ACCESS = "JID_ACCESS";
     public static final String EVENT_TYPING_PRIVACY = "TYPING_PRIVACY";
+    public static final String EVENT_RECEIPT_PRIVACY_READ = "RECEIPT_PRIVACY_READ";
+    public static final String EVENT_RECEIPT_PRIVACY_AFTER_REPLY = "RECEIPT_PRIVACY_AFTER_REPLY";
+    public static final String EVENT_RECEIPT_PRIVACY_DELIVERY = "RECEIPT_PRIVACY_DELIVERY";
     public static final String EVENT_HIDE_CHAT = "HIDE_CHAT";
     public static final String EVENT_VIEW_ONCE = "VIEW_ONCE";
     public static final String EVENT_MESSAGE_ACCESS = "MESSAGE_ACCESS";
@@ -81,6 +84,12 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "ghostmode_r",
         "typearchive",
         "viewonce",
+        // Receipt privacy keeps the legacy keys so an existing switch keeps
+        // its meaning across the port.
+        "hideread",
+        "hideread_group",
+        "hidereceipt",
+        "hidereadafterreply",
     };
 
     /** The only effective-state keys the embedded Control Center may read. */
@@ -103,6 +112,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.view_once.state",
         "modern.feature.message_access.state",
         "modern.feature.diagnostics.state",
+        "modern.feature.receipt_privacy_read.state",
+        "modern.feature.receipt_privacy_after_reply.state",
+        "modern.feature.receipt_privacy_delivery.state",
     };
 
     @Override
@@ -190,6 +202,12 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.jid_access.state." + target, value);
         } else if (EVENT_TYPING_PRIVACY.equals(event)) {
             editor.putString("modern.feature.typing_privacy.state." + target, value);
+        } else if (EVENT_RECEIPT_PRIVACY_READ.equals(event)) {
+            editor.putString("modern.feature.receipt_privacy_read.state." + target, value);
+        } else if (EVENT_RECEIPT_PRIVACY_AFTER_REPLY.equals(event)) {
+            editor.putString("modern.feature.receipt_privacy_after_reply.state." + target, value);
+        } else if (EVENT_RECEIPT_PRIVACY_DELIVERY.equals(event)) {
+            editor.putString("modern.feature.receipt_privacy_delivery.state." + target, value);
         } else if (EVENT_HIDE_CHAT.equals(event)) {
             editor.putString("modern.feature.hide_chat.state." + target, value);
         } else if (EVENT_VIEW_ONCE.equals(event)) {
@@ -265,7 +283,11 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "removeforwardlimit".equals(key)
                 || "freezelastseen".equals(key)
                 || "dndmode".equals(key)
-                || "viewonce".equals(key);
+                || "viewonce".equals(key)
+                || "hideread".equals(key)
+                || "hideread_group".equals(key)
+                || "hidereceipt".equals(key)
+                || "hidereadafterreply".equals(key);
     }
 
     /** Favourites must be a short, comma-separated list of plain identifiers. */

@@ -503,6 +503,30 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Typing privacy state delivery failed", error);
             }
+            // Receipt privacy family (#449). Three separate claims, reported
+            // separately: withholding read receipts, releasing them only after a
+            // confirmed reply, and the delivery tick, which this module reports
+            // as unsupported rather than pretending to suppress.
+            try {
+                System.loadLibrary("dexkit");
+                java.util.Map<String, ModernReceiptPrivacyFeature.Outcome> receiptStates =
+                        ModernReceiptPrivacyFeature.INSTANCE.install(
+                                target, framework, hooks, preferences);
+                for (java.util.Map.Entry<String, ModernReceiptPrivacyFeature.Outcome> entry
+                        : receiptStates.entrySet()) {
+                    String outcome = entry.getValue().name();
+                    Log.i(TAG, "M06_RECEIPT_PRIVACY_RESULT package=" + packageName
+                            + " feature=" + entry.getKey()
+                            + " state=" + outcome);
+                    ModernTargetTelemetry.send(
+                            target, packageName, receiptEventFor(entry.getKey()), outcome);
+                }
+            } catch (Throwable receiptFailure) {
+                if (receiptFailure instanceof VirtualMachineError) {
+                    throw (VirtualMachineError) receiptFailure;
+                }
+                log(Log.ERROR, TAG, "Receipt privacy failed on " + packageName, receiptFailure);
+            }
             // Message accessor chain, reused by every message consumer.
             String messageAccessState = ModernMessageAccess.Outcome.ERROR.name();
             ModernMessageAccess resolvedMessageAccess = null;
@@ -574,4 +598,20 @@ public final class ModernXposedEntry extends XposedModule {
         }
     }
 
+    /**
+     * Maps a receipt feature id onto the telemetry event the Manager reads.
+     *
+     * The three behaviours report separately because they are three separate
+     * claims; folding them into one event would make an unsupported delivery
+     * tick look like a working read-receipt switch.
+     */
+    private static String receiptEventFor(String featureId) {
+        if (ModernReceiptPrivacyFeature.FEATURE_ID_AFTER_REPLY.equals(featureId)) {
+            return "RECEIPT_PRIVACY_AFTER_REPLY";
+        }
+        if (ModernReceiptPrivacyFeature.FEATURE_ID_DELIVERY.equals(featureId)) {
+            return "RECEIPT_PRIVACY_DELIVERY";
+        }
+        return "RECEIPT_PRIVACY_READ";
+    }
 }
