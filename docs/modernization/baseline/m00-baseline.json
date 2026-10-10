@@ -347,10 +347,10 @@
   "repository": "https://github.com/Alaa91H/WA-X",
   "schema": "wax.m00.baseline/1",
   "source_counts": {
-    "android_tests": 2,
+    "android_tests": 3,
     "cpp": 425,
     "java": 5,
-    "kotlin": 426,
+    "kotlin": 427,
     "unit_tests": 85
   },
   "static_analysis": {
