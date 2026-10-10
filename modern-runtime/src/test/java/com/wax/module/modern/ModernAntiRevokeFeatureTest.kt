@@ -35,10 +35,23 @@ class ModernAntiRevokeFeatureTest {
     @Test fun aMessageThatNeverArrivedIsNeverPreserved() {
         ModernAntiRevokeFeature.clearPreserved()
         assertFalse(
-            "there is nothing to keep for a message the client never received",
-            ModernAntiRevokeFeature.recordArrival("never-seen", ModernAntiRevokeFeature.ContentClass.STANDARD, 0L, 7L),
+            "an id that was never recorded stands for nothing",
+            ModernAntiRevokeFeature.mayWithholdRevocation("never-seen", 0L),
         )
-        assertFalse(ModernAntiRevokeFeature.mayWithholdRevocation("never-seen", 0L))
+        assertEquals(0, ModernAntiRevokeFeature.preservedCount())
+        ModernAntiRevokeFeature.clearPreserved()
+    }
+
+    @Test fun anEmptyIdIsNeverPreserved() {
+        ModernAntiRevokeFeature.clearPreserved()
+        assertFalse(
+            ModernAntiRevokeFeature.recordArrival("", ModernAntiRevokeFeature.ContentClass.STANDARD, 0L, 7L),
+        )
+        assertFalse(
+            ModernAntiRevokeFeature.recordArrival(null, ModernAntiRevokeFeature.ContentClass.STANDARD, 0L, 7L),
+        )
+        assertFalse(ModernAntiRevokeFeature.mayWithholdRevocation(null, 0L))
+        assertEquals(0, ModernAntiRevokeFeature.preservedCount())
         ModernAntiRevokeFeature.clearPreserved()
     }
 
