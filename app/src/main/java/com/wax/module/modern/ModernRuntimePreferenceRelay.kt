@@ -43,6 +43,8 @@ object ModernRuntimePreferenceRelay {
         )
     /** Checked by contract tests so new Control Center keys cannot be omitted from the relay. */
     internal fun observes(key: String): Boolean = key in observedKeys
+    internal fun affectsControlCenter(key: String?): Boolean =
+        key == null || key in observedKeys || key == ModernControlCenterCatalog.FAVORITES_KEY
 
     private val worker =
         Executors.newSingleThreadExecutor { task ->
@@ -51,14 +53,28 @@ object ModernRuntimePreferenceRelay {
 
     @Volatile
     private var local: SharedPreferences? = null
+
+    @Volatile
+    private var applicationContext: Context? = null
+
     private val changes =
         SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == null || key in observedKeys) requestSync()
+            if (affectsControlCenter(key)) notifyControlCenter()
         }
+
+    private fun notifyControlCenter() {
+        try {
+            applicationContext?.contentResolver?.notifyChange(ModernTargetStateClient.STATES_URI, null)
+        } catch (error: RuntimeException) {
+            Log.w(TAG, "Could not signal Control Center state change", error)
+        }
+    }
 
     @Synchronized
     fun start(context: Context) {
         if (local != null) return
+        applicationContext = context.applicationContext
         val preferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
         // Old embedded switches accidentally wrote Booleans into ListPreference slots.
         // Repair the stored type before the Manager UI or the runtime can read those slots.

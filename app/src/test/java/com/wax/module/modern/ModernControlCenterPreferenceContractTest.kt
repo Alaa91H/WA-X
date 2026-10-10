@@ -11,6 +11,7 @@ class ModernControlCenterPreferenceContractTest {
         for (entry in ModernControlCenterCatalog.wired) {
             val key = entry.preferenceKey
             assertTrue("Missing relay observation for $key", ModernRuntimePreferenceRelay.observes(key))
+            assertTrue("No live change notification for $key", ModernRuntimePreferenceRelay.affectsControlCenter(key))
             assertTrue(
                 "Missing authenticated write for $key",
                 key == "typearchive" || ModernTargetTelemetryProvider.isWritableSettingKey(key),
@@ -21,6 +22,13 @@ class ModernControlCenterPreferenceContractTest {
             )
         }
     }
+    @Test
+    fun favoritesAndUnknownPreferenceChangesNotifyTheEmbeddedPanel() {
+        assertTrue(ModernRuntimePreferenceRelay.affectsControlCenter(ModernControlCenterCatalog.FAVORITES_KEY))
+        assertTrue(ModernRuntimePreferenceRelay.affectsControlCenter(null))
+        org.junit.Assert.assertFalse(ModernRuntimePreferenceRelay.affectsControlCenter("unrelated_whatsapp_key"))
+    }
+
     @Test
     fun malformedLegacyModeValuesAreNormalizedWithoutChangingSelections() {
         org.junit.Assert.assertEquals("1", ModernRuntimePreferenceRelay.legacyMode(true))
