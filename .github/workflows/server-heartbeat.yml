@@ -52,10 +52,10 @@ jobs:
           THRESHOLD=9
           if [ "$AGE" -gt "$THRESHOLD" ]; then
             echo "stale=true" >> "$GITHUB_OUTPUT"
-            echo "The WA-X migration server has not published a heartbeat for ${AGE} hours (threshold ${THRESHOLD})." >> "$GITHUB_ENV"
+            echo "stale=true" >> "$GITHUB_ENV"
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
-            echo "Heartbeat is ${AGE} hours old. Healthy." >> "$GITHUB_ENV"
+            echo "stale=false" >> "$GITHUB_ENV"
           fi
 
       - name: Notify Telegram
@@ -69,20 +69,17 @@ jobs:
             echo "::warning::Telegram secret or chat id missing; skipping Telegram alert."
             exit 0
           fi
+          TEXT="WA-X server heartbeat STALE. Last heartbeat: ${{ steps.hb.outputs.date || 'never' }}. Age: ${{ steps.hb.outputs.age_hours }} h (threshold 9 h). The migration supervisor may be down, offline, or stuck."
           curl -sS --max-time 30 -X POST \
             "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
             -d chat_id="${TG_CHAT}" \
-            -d parse_mode=HTML \
-            --data-urlencode "text=<b>WA-X server heartbeat stale</b>
-Last heartbeat: ${{ steps.hb.outputs.date || 'never' }}
-Age: ${{ steps.hb.outputs.age_hours }} h (threshold 9 h)
-
-The migration supervisor may be down, offline, or stuck. Check the box." \
-            > /dev/null
+            --data-urlencode "text=${TEXT}" > /dev/null
           echo "Telegram alert sent."
 
       - name: Record it on the repository
         if: steps.verdict.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           TITLE="Server heartbeat stale since ${{ steps.hb.outputs.date || 'never' }}"
@@ -96,13 +93,16 @@ The migration supervisor may be down, offline, or stuck. Check the box." \
           fi
 
       - name: Result
+        env:
+          STALE: ${{ steps.verdict.outputs.stale }}
+          AGE: ${{ steps.hb.outputs.age_hours }}
+          LAST: ${{ steps.hb.outputs.date }}
         run: |
           {
             echo "### Server heartbeat"
             echo ""
-            echo "$REPORT"
-            echo ""
-            echo "- last heartbeat: ${{ steps.hb.outputs.date || 'never seen' }}"
-            echo "- age (hours): ${{ steps.hb.outputs.age_hours }}"
+            echo "- stale: ${STALE}"
+            echo "- last heartbeat: ${LAST:-never seen}"
+            echo "- age (hours): ${AGE}"
             echo "- threshold (hours): 9"
           } >> "$GITHUB_STEP_SUMMARY"
