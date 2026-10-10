@@ -75,7 +75,32 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #447 | TypingPrivacy (privacy pair) | MERGED, main CI green |
 | #453 | HideChat (privacy pair) | MERGED, main CI green |
 | #454 | ViewOnce (privacy pair) | MERGED, main CI green |
-| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | on `integration/api102-migration`, CI pending |
+| #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | `integration/api102-migration`, PR #457, CI pending |
+
+### #170 scope notes
+
+Delivered on the integration branch: atomic engine with quick/deep modes,
+cancellation, per-check timeouts and progress by verified counts; the shared
+pipeline inventory; the per-feature half that appends one hook check and one
+trigger check per wired feature with the resolver chain each one reads; guided
+external verification recorded per feature and bound to the WhatsApp build it
+was made on; redacted SAF ZIP export verified by re-opening; verified import
+and comparison of a previous archive; root-cause clustering; EN+AR+10 more
+localisations.
+
+Deliberate ceilings, stated rather than hidden:
+
+- a feature switched off in preferences is `NOT_TESTED`, never a failing hook;
+- `L4` trigger evidence exists only for the feature that reports an invocation
+  counter; for every other feature the trigger check stays `NOT_TESTED`;
+- `L5` is unreachable without a person with a second account confirming it,
+  and the confirmation is bound to one WhatsApp build;
+- the legacy features in the #337 runtime registry report no per-feature state
+  to the Manager, so the scan reports them as registered, never as hooked.
+
+Residual unknowns: instrumentation coverage for toggles, restart, IPC denial
+and version change is not yet in the repository; the anonymised sample ZIP
+schema is still to be posted on the issue.
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
 exists (the Manager link alone is not the full acceptance criterion).

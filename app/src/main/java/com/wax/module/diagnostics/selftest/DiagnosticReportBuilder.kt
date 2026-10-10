@@ -280,7 +280,12 @@ object DiagnosticReportBuilder {
         val body =
             entries
                 .filter { it.name != REDACTION_ENTRY && it.name != CHECKSUMS_ENTRY }
-                .plus(DiagnosticZipExporter.Entry(REDACTION_ENTRY, redactionReportJson(redaction)))
+                .plus(
+                    DiagnosticZipExporter.Entry(
+                        REDACTION_ENTRY,
+                        redactionReportJson(redaction).toByteArray(),
+                    ),
+                )
         return body.plus(
             DiagnosticZipExporter.Entry(CHECKSUMS_ENTRY, DiagnosticZipExporter().checksums(body)),
         )
