@@ -62,16 +62,14 @@ class DiagnosticArchiveImporterTest {
 
     @Test fun anArchiveFromAnotherSchemaIsRefusedRatherThanGuessedAt() {
         val built =
-            exporter.build(
-                listOf(
-                    entry(
-                        "manifest.json",
-                        "{\"schema_version\":\"wax.diagnostics/99\",\"scan_id\":\"x\"}",
-                    ),
-                    entry("results.json", "[]"),
+            sealed(
+                entry(
+                    "manifest.json",
+                    "{\"schema_version\":\"wax.diagnostics/99\",\"scan_id\":\"x\"}",
                 ),
+                entry("results.json", "[]"),
             )
-        val result = importer.import(built.bytes)
+        val result = importer.import(built)
         assertTrue(result is DiagnosticArchiveImporter.ImportResult.Rejected)
         assertEquals(
             DiagnosticArchiveImporter.ImportResult.Reason.UNSUPPORTED_SCHEMA,
@@ -80,14 +78,18 @@ class DiagnosticArchiveImporterTest {
     }
 
     @Test fun aManifestThatIsNotAnObjectIsRefused() {
-        val built = exporter.build(listOf(entry("manifest.json", "[]"), entry("results.json", "[]")))
-        val result = importer.import(built.bytes)
+        val built = sealed(entry("manifest.json", "[]"), entry("results.json", "[]"))
+        val result = importer.import(built)
         assertTrue(result is DiagnosticArchiveImporter.ImportResult.Rejected)
         assertEquals(
             DiagnosticArchiveImporter.ImportResult.Reason.MANIFEST_UNREADABLE,
             (result as DiagnosticArchiveImporter.ImportResult.Rejected).reason,
         )
     }
+
+    /** An archive whose digests are correct, so the later gates are reached. */
+    private fun sealed(vararg entries: DiagnosticZipExporter.Entry): ByteArray =
+        exporter.build(entries.toList() + DiagnosticZipExporter.Entry(CHECKSUMS_ENTRY, exporter.checksums(entries.toList()))).bytes
 
     @Test fun aRegressedCheckIsReportedAsARegression() {
         val previous =
@@ -153,8 +155,29 @@ class DiagnosticArchiveImporterTest {
                 listOf(result("hook.share_limit", DiagnosticStatus.NOT_TESTED)),
             )
         assertEquals(1, deltas.size)
+        assertTrue(deltas.single().isUnchanged)
         assertFalse(deltas.single().isRegression)
         assertFalse(deltas.single().isImprovement)
+    }
+
+    @Test fun newlyLearningThatADependencyIsBrokenIsARegression() {
+        // Silence turning into a known failure is the case the issue cares
+        // about, so it must be visible rather than read as "unchanged".
+        val delta =
+            importer
+                .compare(
+                    mapOf(
+                        "hook.jid_access" to
+                            DiagnosticArchiveImporter.PreviousResult(
+                                "hook.jid_access",
+                                DiagnosticStatus.NOT_TESTED,
+                                EvidenceLevel.L3_HOOK,
+                                "",
+                            ),
+                    ),
+                    listOf(result("hook.jid_access", DiagnosticStatus.BLOCKED)),
+                ).single()
+        assertTrue(delta.isRegression)
     }
 
     @Test fun thePreviousStatusesSurviveTheRoundTrip() {

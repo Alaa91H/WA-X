@@ -65,23 +65,29 @@ class DiagnosticArchiveImporter(
         val before: DiagnosticStatus,
         val after: DiagnosticStatus,
     ) {
-        val isRegression: Boolean
-            get() =
-                severity(after) > severity(before) ||
-                    (after == DiagnosticStatus.PASS && before != DiagnosticStatus.PASS)
+        /**
+         * A regression is a check that ended up in a *worse* state than it was.
+         *
+         * The ranking is deliberately about severity, not about how much the
+         * report changed: reaching `PASS` from `NOT_TESTED` is an improvement,
+         * not a regression, and reaching `BLOCKED` from `NOT_TESTED` is a
+         * regression, because silence turned into a known broken dependency.
+         */
+        val isRegression: Boolean get() = severity(after) > severity(before)
 
-        val isImprovement: Boolean
-            get() = !isRegression && severity(after) < severity(before)
+        val isImprovement: Boolean get() = severity(after) < severity(before)
+
+        val isUnchanged: Boolean get() = before == after
 
         private fun severity(status: DiagnosticStatus): Int =
             when (status) {
-                DiagnosticStatus.FAIL -> 4
-                DiagnosticStatus.BLOCKED -> 3
-                DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION -> 2
-                DiagnosticStatus.NOT_TESTED -> 2
-                DiagnosticStatus.UNSUPPORTED -> 1
-                DiagnosticStatus.RUNNING -> 1
                 DiagnosticStatus.PASS -> 0
+                DiagnosticStatus.UNSUPPORTED -> 1
+                DiagnosticStatus.NOT_TESTED -> 2
+                DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION -> 2
+                DiagnosticStatus.BLOCKED -> 3
+                DiagnosticStatus.FAIL -> 4
+                DiagnosticStatus.RUNNING -> 2
             }
     }
 
@@ -92,6 +98,15 @@ class DiagnosticArchiveImporter(
                     ImportResult.Reason.NOT_A_VALID_ARCHIVE,
                     "the file could not be opened as an archive",
                 )
+        // An empty listing is the shape a file that is not a ZIP at all also
+        // takes, so it is caught before any later gate would blame the
+        // checksum file for something the archive never had.
+        if (verification.entryNames.isEmpty()) {
+            return ImportResult.Rejected(
+                ImportResult.Reason.NOT_A_VALID_ARCHIVE,
+                "the file holds no archive entries",
+            )
+        }
         if (!verification.checksumsPresent || !verification.checksumMatches) {
             return ImportResult.Rejected(
                 ImportResult.Reason.CHECKSUMS_MISSING_OR_MISMATCHED,
@@ -159,7 +174,7 @@ class DiagnosticArchiveImporter(
             whatsappVersion = values["whatsapp_version"],
             appBuildSha = values["app_build_sha"],
             finishedUtcMillis = values["finished_utc"]?.toLongOrNull(),
-            declaredMissing = MiniJson.parseArray(values["declared_missing"]).orEmpty(),
+            declaredMissing = MiniJson.parseArray(values["declared_missing_sources"]).orEmpty(),
         )
     }
 
