@@ -251,16 +251,17 @@ object AtomicCheckInventory {
         expected: String,
         remediation: String,
         severity: String,
-    ): Definition = Definition(
-        id = id,
-        title = title,
-        scope = scope,
-        level = level,
-        dependsOn = dependsOn,
-        expected = expected,
-        remediation = remediation,
-        severity = severity,
-    )
+    ): Definition =
+        Definition(
+            id,
+            title,
+            scope,
+            level,
+            dependsOn,
+            expected,
+            remediation,
+            severity,
+        )
 
     /** Owner's priority order for the everyday privacy behaviours. */
     val P0_PRIVACY_ORDER: List<String> =
