@@ -573,6 +573,35 @@ public final class ModernXposedEntry extends XposedModule {
                 }
                 log(Log.ERROR, TAG, "Receipt privacy failed on " + packageName, receiptFailure);
             }
+            // Anti-revoke (#451). Only content that already arrived and was
+            // already local is preserved; disappearing-mode, view-once and
+            // status content are separate capability classes and are never
+            // copied. Disappearing entries are dropped here so the retention
+            // window is real rather than nominal.
+            String antiRevokeState = ModernAntiRevokeFeature.Outcome.ERROR.name();
+            try {
+                System.loadLibrary("dexkit");
+                ModernAntiRevokeFeature.purgeExpired(System.currentTimeMillis());
+                antiRevokeState = ModernAntiRevokeFeature.INSTANCE
+                        .install(target, this, hookRegistry, preferences).name();
+                Log.i(TAG, "M06_ANTI_REVOKE_RESULT package=" + packageName
+                        + " state=" + antiRevokeState
+                        + " preserved=" + ModernAntiRevokeFeature.preservedCount()
+                        + " retentionDays=" + ModernAntiRevokeFeature.INSTANCE.retentionDays(
+                                preferences.getString(
+                                        ModernAntiRevokeFeature.PREF_ANTIREVOKE, "0")));
+            } catch (Throwable revokeFailure) {
+                if (revokeFailure instanceof VirtualMachineError) {
+                    throw (VirtualMachineError) revokeFailure;
+                }
+                antiRevokeState = "ERROR_" + revokeFailure.getClass().getSimpleName();
+                log(Log.ERROR, TAG, "Anti-revoke failed on " + packageName, revokeFailure);
+            }
+            try {
+                ModernTargetTelemetry.send(target, packageName, "ANTI_REVOKE", antiRevokeState);
+            } catch (RuntimeException error) {
+                log(Log.WARN, TAG, "Anti-revoke state delivery failed", error);
+            }
             // Message accessor chain, reused by every message consumer.
             String messageAccessState = ModernMessageAccess.Outcome.ERROR.name();
             ModernMessageAccess resolvedMessageAccess = null;

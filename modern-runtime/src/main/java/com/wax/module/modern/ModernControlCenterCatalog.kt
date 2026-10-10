@@ -89,6 +89,14 @@ object ModernControlCenterCatalog {
                 description = "Keep a viewed view-once message open instead of expiring",
             ),
             Wired(
+                id = "anti_revoke",
+                preferenceKey = ModernAntiRevokeFeature.PREF_ANTIREVOKE,
+                evidenceKey = "modern.feature.anti_revoke.state",
+                category = ControlCategory.PRIVACY,
+                label = "Anti-Delete",
+                description = "Keep chat messages that were already received when a sender revokes them",
+            ),
+            Wired(
                 id = "receipt_privacy_read",
                 preferenceKey = ModernReceiptPrivacyFeature.PREF_HIDE_READ,
                 evidenceKey = "modern.feature.receipt_privacy_read.state",

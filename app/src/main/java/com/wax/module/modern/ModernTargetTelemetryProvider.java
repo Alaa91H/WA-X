@@ -46,6 +46,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_TYPING_PRIVACY_TYPING = "TYPING_PRIVACY_TYPING";
     public static final String EVENT_TYPING_PRIVACY_RECORDING = "TYPING_PRIVACY_RECORDING";
     public static final String EVENT_ONLINE_PRIVACY = "ONLINE_PRIVACY";
+    public static final String EVENT_ANTI_REVOKE = "ANTI_REVOKE";
     public static final String EVENT_RECEIPT_PRIVACY_READ = "RECEIPT_PRIVACY_READ";
     public static final String EVENT_RECEIPT_PRIVACY_AFTER_REPLY = "RECEIPT_PRIVACY_AFTER_REPLY";
     public static final String EVENT_RECEIPT_PRIVACY_DELIVERY = "RECEIPT_PRIVACY_DELIVERY";
@@ -93,6 +94,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "hideread_group",
         "hidereceipt",
         "hidereadafterreply",
+        "antirevoke",
     };
 
     /** The only effective-state keys the embedded Control Center may read. */
@@ -121,6 +123,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.typing_privacy_typing.state",
         "modern.feature.typing_privacy_recording.state",
         "modern.feature.online_privacy.state",
+        "modern.feature.anti_revoke.state",
     };
 
     @Override
@@ -214,6 +217,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.typing_privacy_recording.state." + target, value);
         } else if (EVENT_ONLINE_PRIVACY.equals(event)) {
             editor.putString("modern.feature.online_privacy.state." + target, value);
+        } else if (EVENT_ANTI_REVOKE.equals(event)) {
+            editor.putString("modern.feature.anti_revoke.state." + target, value);
         } else if (EVENT_RECEIPT_PRIVACY_READ.equals(event)) {
             editor.putString("modern.feature.receipt_privacy_read.state." + target, value);
         } else if (EVENT_RECEIPT_PRIVACY_AFTER_REPLY.equals(event)) {
@@ -299,7 +304,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "hideread".equals(key)
                 || "hideread_group".equals(key)
                 || "hidereceipt".equals(key)
-                || "hidereadafterreply".equals(key);
+                || "hidereadafterreply".equals(key)
+                || "antirevoke".equals(key);
     }
 
     /** Favourites must be a short, comma-separated list of plain identifiers. */
