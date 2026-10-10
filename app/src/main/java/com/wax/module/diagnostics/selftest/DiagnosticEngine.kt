@@ -106,8 +106,7 @@ class DiagnosticEngine(
             )
         }
 
-        fun firstFailedDependency(): AtomicCheckResult? =
-            RootCauseClusterer.firstFailedDependency(results, order)
+        fun firstFailedDependency(): AtomicCheckResult? = RootCauseClusterer.firstFailedDependency(results, order)
     }
 
     private val completed = AtomicInteger()
@@ -116,7 +115,9 @@ class DiagnosticEngine(
     private val progress = CopyOnWriteArrayList<String>()
 
     fun completedCount(): Int = completed.get()
+
     fun isCancelled(): Boolean = cancelled.get()
+
     fun progressSoFar(): List<String> = progress.toList()
 
     fun cancel() {
@@ -141,8 +142,11 @@ class DiagnosticEngine(
         progress.clear()
 
         val ordered =
-            if (config.mode == RunConfig.Mode.DEEP_SCAN) definitions
-            else definitions.filter { it.id in quickChecks }
+            if (config.mode == RunConfig.Mode.DEEP_SCAN) {
+                definitions
+            } else {
+                definitions.filter { it.id in quickChecks }
+            }
         val total = ordered.size
         val byId = ordered.associateBy { it.id }
 
@@ -358,8 +362,7 @@ class DiagnosticEngine(
      * [run] enforces that prefix itself in quick mode, so no call site can
      * accidentally start a DEX walk on the cheap path.
      */
-    fun quickSubset(): List<AtomicCheckInventory.Definition> =
-        AtomicCheckInventory.PIPELINE.filter { it.id in quickChecks }
+    fun quickSubset(): List<AtomicCheckInventory.Definition> = AtomicCheckInventory.PIPELINE.filter { it.id in quickChecks }
 
     /** Cheap, startup-safe checks: what Quick Check may run on demand. */
     private val quickChecks =
