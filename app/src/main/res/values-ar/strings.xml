@@ -610,7 +610,7 @@
     <string name="diagnostics_import_title">أرشيف تشخيص سابق</string>
     <string name="diagnostics_import_failed">رُفض الأرشيف ولم يُقرأ منه شيء.</string>
     <string name="diagnostics_import_run_first">نفّذ مسحًا أولًا للمقارنة مع هذا الأرشيف.</string>
-    <string name="diagnostics_import_summary">المخطط %1$s · واتساب %2$s · البناء %3$s · %4$d فحصًا مسجلًا</string>
+    <string name="diagnostics_import_summary">المخطط %1$s · واتساب %2$s · البناء %3$s · الفحوصات المسجلة: %4$d</string>
     <string name="diagnostics_confirm_external">تأكيد فحص خارجي</string>
     <string name="diagnostics_confirm">متابعة</string>
     <string name="diagnostics_external_none">لا توجد ميزة في هذا الإصدار تحتاج تأكيدًا خارجيًا.</string>

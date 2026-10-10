@@ -605,7 +605,7 @@
     <string name="diagnostics_import_title">Arsip diagnostik sebelumnya</string>
     <string name="diagnostics_import_failed">Arsip ditolak dan tidak ada yang dibaca darinya.</string>
     <string name="diagnostics_import_run_first">Jalankan pindai terlebih dahulu untuk membandingkannya dengan arsip ini.</string>
-    <string name="diagnostics_import_summary">Skema %1$s · WhatsApp %2$s · build %3$s · %4$d pemeriksaan tercatat</string>
+    <string name="diagnostics_import_summary">Skema %1$s · WhatsApp %2$s · build %3$s · pemeriksaan tercatat: %4$d</string>
     <string name="diagnostics_confirm_external">Konfirmasi pemeriksaan eksternal</string>
     <string name="diagnostics_confirm">Lanjutkan</string>
     <string name="diagnostics_external_none">Tidak ada fitur pada build ini yang memerlukan konfirmasi eksternal.</string>

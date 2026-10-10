@@ -608,7 +608,7 @@
     <string name="diagnostics_import_title">Önceki tanılama arşivi</string>
     <string name="diagnostics_import_failed">Arşiv reddedildi ve içinden hiçbir şey okunmadı.</string>
     <string name="diagnostics_import_run_first">Karşılaştırmak için önce bir tarama çalıştırın.</string>
-    <string name="diagnostics_import_summary">Şema %1$s · WhatsApp %2$s · derleme %3$s · %4$d kayıtlı kontrol</string>
+    <string name="diagnostics_import_summary">Şema %1$s · WhatsApp %2$s · derleme %3$s · kayıtlı kontrol: %4$d</string>
     <string name="diagnostics_confirm_external">Dış doğrulamayı onayla</string>
     <string name="diagnostics_confirm">Devam</string>
     <string name="diagnostics_external_none">Bu sürümde dış onay gerektiren bir özellik yok.</string>

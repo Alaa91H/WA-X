@@ -608,7 +608,7 @@
     <string name="diagnostics_import_title">ארכיון אבחון קודם</string>
     <string name="diagnostics_import_failed">הארכיון נדחה ולא נקרא ממנו דבר.</string>
     <string name="diagnostics_import_run_first">הרץ סריקה תחילה כדי להשוות אותה לארכיון זה.</string>
-    <string name="diagnostics_import_summary">סכימה %1$s · WhatsApp %2$s · גרסה %3$s · %4$d בדיקות רשומות</string>
+    <string name="diagnostics_import_summary">סכימה %1$s · WhatsApp %2$s · גרסה %3$s · בדיקות רשומות: %4$d</string>
     <string name="diagnostics_confirm_external">אישור בדיקה חיצונית</string>
     <string name="diagnostics_confirm">המשך</string>
     <string name="diagnostics_external_none">אין בגרסה זו תכונה שדורשת אישור חיצוני.</string>

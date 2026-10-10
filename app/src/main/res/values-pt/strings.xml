@@ -608,7 +608,7 @@
     <string name="diagnostics_import_title">Arquivo de diagnóstico anterior</string>
     <string name="diagnostics_import_failed">O arquivo foi recusado e nada foi lido dele.</string>
     <string name="diagnostics_import_run_first">Execute primeiro uma verificação para compará-la com este arquivo.</string>
-    <string name="diagnostics_import_summary">Esquema %1$s · WhatsApp %2$s · build %3$s · %4$d verificações registradas</string>
+    <string name="diagnostics_import_summary">Esquema %1$s · WhatsApp %2$s · build %3$s · verificações registradas: %4$d</string>
     <string name="diagnostics_confirm_external">Confirmar verificação externa</string>
     <string name="diagnostics_confirm">Continuar</string>
     <string name="diagnostics_external_none">Nenhum recurso desta versão exige confirmação externa.</string>

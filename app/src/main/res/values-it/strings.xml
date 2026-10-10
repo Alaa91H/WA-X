@@ -606,7 +606,7 @@
     <string name="diagnostics_import_title">Archivio diagnostico precedente</string>
     <string name="diagnostics_import_failed">L’archivio è stato rifiutato e non ne è stato letto nulla.</string>
     <string name="diagnostics_import_run_first">Esegui prima una scansione per confrontarla con questo archivio.</string>
-    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · build %3$s · %4$d controlli registrati</string>
+    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · build %3$s · controlli registrati: %4$d</string>
     <string name="diagnostics_confirm_external">Conferma il controllo esterno</string>
     <string name="diagnostics_confirm">Continua</string>
     <string name="diagnostics_external_none">Nessuna funzionalità di questa build richiede una conferma esterna.</string>

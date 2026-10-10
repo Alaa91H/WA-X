@@ -639,7 +639,7 @@
     <string name="diagnostics_import_title">Previous diagnostics archive</string>
     <string name="diagnostics_import_failed">The archive was rejected and nothing was read from it.</string>
     <string name="diagnostics_import_run_first">Run a scan first to compare against this archive.</string>
-    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · build %3$s · %4$d recorded checks</string>
+    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · build %3$s · recorded checks: %4$d</string>
     <string name="diagnostics_confirm_external">Confirm external check</string>
     <string name="diagnostics_confirm">Continue</string>
     <string name="diagnostics_external_none">No feature in this build needs an external confirmation.</string>

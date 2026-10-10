@@ -607,7 +607,7 @@
     <string name="diagnostics_import_title">先前的诊断归档</string>
     <string name="diagnostics_import_failed">该归档已被拒绝，未从中读取任何内容。</string>
     <string name="diagnostics_import_run_first">请先运行一次扫描以与该归档比较。</string>
-    <string name="diagnostics_import_summary">架构 %1$s · WhatsApp %2$s · 构建 %3$s · 已记录 %4$d 项检查</string>
+    <string name="diagnostics_import_summary">架构 %1$s · WhatsApp %2$s · 构建 %3$s · 已记录检查：%4$d</string>
     <string name="diagnostics_confirm_external">确认外部验证</string>
     <string name="diagnostics_confirm">继续</string>
     <string name="diagnostics_external_none">此版本没有任何功能需要外部确认。</string>

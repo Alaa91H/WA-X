@@ -606,7 +606,7 @@
     <string name="diagnostics_import_title">Früheres Diagnose-Archiv</string>
     <string name="diagnostics_import_failed">Das Archiv wurde abgelehnt; es wurde nichts daraus gelesen.</string>
     <string name="diagnostics_import_run_first">Führe zuerst einen Scan aus, um ihn mit diesem Archiv zu vergleichen.</string>
-    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · Build %3$s · %4$d erfasste Prüfungen</string>
+    <string name="diagnostics_import_summary">Schema %1$s · WhatsApp %2$s · Build %3$s · erfasste Prüfungen: %4$d</string>
     <string name="diagnostics_confirm_external">Externe Prüfung bestätigen</string>
     <string name="diagnostics_confirm">Weiter</string>
     <string name="diagnostics_external_none">In diesem Build muss keine Funktion extern bestätigt werden.</string>
