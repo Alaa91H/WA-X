@@ -628,4 +628,21 @@
     <string name="diagnostics_export_failed">Falha na exportação</string>
     <string name="diagnostics_manifest_missing">Não foi possível verificar o arquivo e ele não foi escrito.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
+    <string name="diagnostics_no_results">Nenhuma verificação concluída. Inicie a análise ou exporte um relatório vazio.</string>
+    <string name="diagnostics_busy">Uma análise já está em execução. Cancele ou aguarde.</string>
+    <string name="diagnostics_scan_failed">Falha na análise. Exporte o relatório ou tente de novo.</string>
+    <string name="diagnostics_export_without_scan">Nenhuma análise concluída. ZIP contém apenas dados do ambiente; nenhuma função foi aprovada.</string>
+    <string name="diagnostics_export_preparing">Preparando e verificando ZIP de diagnóstico…</string>
+    <string name="diagnostics_export_lost">Exportação perdida após recriar a tela. Tente novamente; dados inalterados.</string>
+    <string name="diagnostics_export_verified">ZIP salvo, relido e verificado com sucesso.</string>
+    <string name="diagnostics_summary_readable">Aprovados: %1$d · Falhas: %2$d · Bloqueados: %3$d · Não testados: %4$d</string>
+    <string name="diagnostics_summary_additional">Sem suporte: %1$d · Verificação externa necessária: %2$d</string>
+    <string name="diagnostics_feature_checks">Verificações de funções</string>
+    <string name="diagnostics_system_checks">Verificações do sistema e execução</string>
+    <string name="diagnostics_status_pass">Aprovado</string>
+    <string name="diagnostics_status_fail">Falhou</string>
+    <string name="diagnostics_status_blocked">Bloqueado</string>
+    <string name="diagnostics_status_not_tested">Não testado</string>
+    <string name="diagnostics_status_unsupported">Sem suporte</string>
+    <string name="diagnostics_status_external">Verificação externa necessária</string>
 </resources>
