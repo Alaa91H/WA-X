@@ -503,6 +503,53 @@ public final class ModernXposedEntry extends XposedModule {
             } catch (RuntimeException error) {
                 log(Log.WARN, TAG, "Typing privacy state delivery failed", error);
             }
+            // Typing and recording are separate promises to the people the user
+            // is talking to, so they are reported separately (#450). A stored
+            // preference is not the evidence: only an installed hook withholding
+            // the behaviour counts, and anything else says so.
+            try {
+                ModernTypingPrivacyFeature.Outcome privacyOutcome;
+                try {
+                    privacyOutcome = ModernTypingPrivacyFeature.Outcome.valueOf(typingPrivacyState);
+                } catch (IllegalArgumentException notAnOutcome) {
+                    // JID_ACCESS_UNAVAILABLE and the ERROR_ forms are honest
+                    // states the enum does not model; both withhold nothing.
+                    privacyOutcome = ModernTypingPrivacyFeature.Outcome.ERROR;
+                }
+                ModernTypingPrivacyFeature.BehaviourState behaviours =
+                        ModernTypingPrivacyFeature.INSTANCE.behaviourState(preferences, privacyOutcome);
+                Log.i(TAG, "M06_TYPING_RECORDING_STATE package=" + packageName
+                        + " typingRequested=" + behaviours.getTypingRequested()
+                        + " typingWithheld=" + behaviours.getTypingWithheld()
+                        + " recordingRequested=" + behaviours.getRecordingRequested()
+                        + " recordingWithheld=" + behaviours.getRecordingWithheld());
+                ModernTargetTelemetry.send(target, packageName,
+                        "TYPING_PRIVACY_TYPING",
+                        behaviours.isBehaviourActive(
+                                behaviours.getTypingRequested(),
+                                behaviours.getTypingWithheld())
+                                ? "WITHHELD" : "NOT_WITHHELD");
+                ModernTargetTelemetry.send(target, packageName,
+                        "TYPING_PRIVACY_RECORDING",
+                        behaviours.isBehaviourActive(
+                                behaviours.getRecordingRequested(),
+                                behaviours.getRecordingWithheld())
+                                ? "WITHHELD" : "NOT_WITHHELD");
+            } catch (RuntimeException behaviourFailure) {
+                log(Log.WARN, TAG, "Typing/recording state delivery failed", behaviourFailure);
+            }
+            // Online presence is a different claim again (#450). WhatsApp decides
+            // what a remote observer sees about presence server-side, and this
+            // module has no evidence that a local hook changes it. It is
+            // reported as server-controlled rather than as a working switch.
+            try {
+                String onlineReported = Boolean.toString(
+                        preferences.getBoolean("hideonline", false));
+                ModernTargetTelemetry.send(target, packageName, "ONLINE_PRIVACY",
+                        onlineReported ? "SERVER_CONTROLLED" : "DISABLED");
+            } catch (RuntimeException onlineFailure) {
+                log(Log.WARN, TAG, "Online presence state delivery failed", onlineFailure);
+            }
             // Receipt privacy family (#449). Three separate claims, reported
             // separately: withholding read receipts, releasing them only after a
             // confirmed reply, and the delivery tick, which this module reports

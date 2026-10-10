@@ -43,6 +43,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
     public static final String EVENT_CONTACT_ACCESS = "CONTACT_ACCESS";
     public static final String EVENT_JID_ACCESS = "JID_ACCESS";
     public static final String EVENT_TYPING_PRIVACY = "TYPING_PRIVACY";
+    public static final String EVENT_TYPING_PRIVACY_TYPING = "TYPING_PRIVACY_TYPING";
+    public static final String EVENT_TYPING_PRIVACY_RECORDING = "TYPING_PRIVACY_RECORDING";
+    public static final String EVENT_ONLINE_PRIVACY = "ONLINE_PRIVACY";
     public static final String EVENT_RECEIPT_PRIVACY_READ = "RECEIPT_PRIVACY_READ";
     public static final String EVENT_RECEIPT_PRIVACY_AFTER_REPLY = "RECEIPT_PRIVACY_AFTER_REPLY";
     public static final String EVENT_RECEIPT_PRIVACY_DELIVERY = "RECEIPT_PRIVACY_DELIVERY";
@@ -115,6 +118,9 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "modern.feature.receipt_privacy_read.state",
         "modern.feature.receipt_privacy_after_reply.state",
         "modern.feature.receipt_privacy_delivery.state",
+        "modern.feature.typing_privacy_typing.state",
+        "modern.feature.typing_privacy_recording.state",
+        "modern.feature.online_privacy.state",
     };
 
     @Override
@@ -202,6 +208,12 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
             editor.putString("modern.feature.jid_access.state." + target, value);
         } else if (EVENT_TYPING_PRIVACY.equals(event)) {
             editor.putString("modern.feature.typing_privacy.state." + target, value);
+        } else if (EVENT_TYPING_PRIVACY_TYPING.equals(event)) {
+            editor.putString("modern.feature.typing_privacy_typing.state." + target, value);
+        } else if (EVENT_TYPING_PRIVACY_RECORDING.equals(event)) {
+            editor.putString("modern.feature.typing_privacy_recording.state." + target, value);
+        } else if (EVENT_ONLINE_PRIVACY.equals(event)) {
+            editor.putString("modern.feature.online_privacy.state." + target, value);
         } else if (EVENT_RECEIPT_PRIVACY_READ.equals(event)) {
             editor.putString("modern.feature.receipt_privacy_read.state." + target, value);
         } else if (EVENT_RECEIPT_PRIVACY_AFTER_REPLY.equals(event)) {
