@@ -22,7 +22,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.wax.module.activities.DiagnosticsActivity
 import com.wax.module.BuildConfig
 import com.wax.module.ModuleApplication
 import com.wax.module.R
@@ -33,6 +32,7 @@ import com.wax.module.activation.ActivationStatus
 import com.wax.module.activation.ActivationStatusResolver
 import com.wax.module.activation.TargetHeartbeatCodec
 import com.wax.module.activation.TargetProcessObserver
+import com.wax.module.activities.DiagnosticsActivity
 import com.wax.module.adapter.LogLineAdapter
 import com.wax.module.compat.TargetVersions
 import com.wax.module.compat.UpdateOffer

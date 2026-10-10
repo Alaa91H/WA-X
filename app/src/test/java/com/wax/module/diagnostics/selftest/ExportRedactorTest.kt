@@ -9,8 +9,7 @@ import org.junit.Test
 class ExportRedactorTest {
     private val redactor = ExportRedactor()
 
-    private fun List<DiagnosticZipExporter.Entry>.toArchive(): ByteArray =
-        DiagnosticZipExporter().build(this).bytes
+    private fun List<DiagnosticZipExporter.Entry>.toArchive(): ByteArray = DiagnosticZipExporter().build(this).bytes
 
     @Test fun jidsAreRemoved() {
         val cleaned = redactor.redact("sender=4915112345678@s.whatsapp.net")
@@ -20,7 +19,9 @@ class ExportRedactorTest {
 
     @Test fun groupAndLidJidsAreRemoved() {
         for (jid in listOf(
-            "12345@g.us", "99887766@lid", "status@broadcast",
+            "12345@g.us",
+            "99887766@lid",
+            "status@broadcast",
         )) {
             assertFalse(redactor.redact("jid $jid").contains(jid.split("@")[1]))
         }
@@ -100,10 +101,11 @@ class ExportRedactorTest {
                 DiagnosticZipExporter.Entry("summary.md", "plain".toByteArray()),
             )
         val withChecksums =
-            payload + DiagnosticZipExporter.Entry(
-                CHECKSUMS_ENTRY,
-                DiagnosticZipExporter().checksums(payload),
-            )
+            payload +
+                DiagnosticZipExporter.Entry(
+                    CHECKSUMS_ENTRY,
+                    DiagnosticZipExporter().checksums(payload),
+                )
         val redacted = ExportRedactor().redactEntries(withChecksums)
         val verification = DiagnosticZipExporter().verify(redacted.entries.toArchive())
         assertTrue("checksums", verification.checksumsPresent)

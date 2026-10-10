@@ -25,7 +25,10 @@ class DiagnosticZipExporter(
     private val maxTotalBytes: Int = 4 * 1024 * 1024,
     private val maxEntries: Int = 200,
 ) {
-    data class Entry(val name: String, val content: ByteArray)
+    data class Entry(
+        val name: String,
+        val content: ByteArray,
+    )
 
     data class BuildResult(
         val bytes: ByteArray,
@@ -34,7 +37,9 @@ class DiagnosticZipExporter(
         val declaredMissing: List<String>,
     )
 
-    class ExportTooLargeException(message: String) : IllegalStateException(message)
+    class ExportTooLargeException(
+        message: String,
+    ) : IllegalStateException(message)
 
     /** Rejects absolute paths, parent traversal and empty or odd names. */
     fun isSafeEntryName(name: String): Boolean {
@@ -56,12 +61,15 @@ class DiagnosticZipExporter(
         return "WA-X-diagnostics-" + format.format(java.util.Date(timestampMillis)) + ".zip"
     }
 
-    fun build(entries: List<Entry>, declaredMissing: List<String> = emptyList()): BuildResult {
+    fun build(
+        entries: List<Entry>,
+        declaredMissing: List<String> = emptyList(),
+    ): BuildResult {
         require(entries.size <= maxEntries) { "too many entries: ${entries.size}" }
         for (entry in entries) {
             require(isSafeEntryName(entry.name)) { "unsafe entry name: ${entry.name}" }
             require(entry.content.size <= maxEntryBytes) {
-                "entry ${entry.name} exceeds ${maxEntryBytes} bytes"
+                "entry ${entry.name} exceeds $maxEntryBytes bytes"
             }
         }
         val buffer = ByteArrayOutputStream()
@@ -75,7 +83,7 @@ class DiagnosticZipExporter(
         }
         val bytes = buffer.toByteArray()
         if (bytes.size > maxTotalBytes) {
-            throw ExportTooLargeException("archive exceeds ${maxTotalBytes} bytes")
+            throw ExportTooLargeException("archive exceeds $maxTotalBytes bytes")
         }
         val verification = verify(bytes)
         return BuildResult(
@@ -124,13 +132,22 @@ class DiagnosticZipExporter(
             // Every declared digest must match the bytes actually written. A
             // checksum file that parses but does not match is a corrupt export,
             // and corruption has to be caught here rather than by the user.
-            checksumMatches = checksumsPresent &&
-                checksumsMatch(payloads.getValue(CHECKSUMS_ENTRY), payloads),
+            checksumMatches =
+                checksumsPresent &&
+                    checksumsMatch(payloads.getValue(CHECKSUMS_ENTRY), payloads),
         )
     }
 
-    private fun checksumsMatch(declared: ByteArray, payloads: Map<String, ByteArray>): Boolean {
-        val rows = declared.toString(Charsets.UTF_8).lineSequence().filter { it.isNotBlank() }.toList()
+    private fun checksumsMatch(
+        declared: ByteArray,
+        payloads: Map<String, ByteArray>,
+    ): Boolean {
+        val rows =
+            declared
+                .toString(Charsets.UTF_8)
+                .lineSequence()
+                .filter { it.isNotBlank() }
+                .toList()
         if (rows.isEmpty()) return false
         for (row in rows) {
             val parts = row.split("  ", limit = 2)
@@ -143,14 +160,17 @@ class DiagnosticZipExporter(
     }
 
     /** Per-entry checksums, written next to the payload as `checksums.sha256`. */
-    fun checksums(entries: List<Entry>): ByteArray  =
+    fun checksums(entries: List<Entry>): ByteArray =
         buildString {
             for (entry in entries.sortedBy { it.name }) {
                 append(sha256(entry.content)).append("  ").append(entry.name).append('\n')
             }
         }.toByteArray()
 
-    fun readEntry(bytes: ByteArray, name: String): ByteArray? {
+    fun readEntry(
+        bytes: ByteArray,
+        name: String,
+    ): ByteArray? {
         ZipInputStream(bytes.inputStream()).use { zip ->
             var entry: ZipEntry? = zip.nextEntry
             while (entry != null) {
@@ -168,7 +188,11 @@ class DiagnosticZipExporter(
     }
 
     /** Streaming writer for the SAF output, so a large report never sits in RAM twice. */
-    fun writeTo(stream: OutputStreamTarget, bytes: ByteArray, onCancelled: () -> Boolean = { false }) {
+    fun writeTo(
+        stream: OutputStreamTarget,
+        bytes: ByteArray,
+        onCancelled: () -> Boolean = { false },
+    ) {
         var offset = 0
         while (offset < bytes.size) {
             if (onCancelled()) throw IllegalStateException("export cancelled")
@@ -181,7 +205,12 @@ class DiagnosticZipExporter(
 
     /** The single output surface the exporter needs, so it stays testable. */
     interface OutputStreamTarget {
-        fun write(buffer: ByteArray, offset: Int, length: Int)
+        fun write(
+            buffer: ByteArray,
+            offset: Int,
+            length: Int,
+        )
+
         fun finish()
     }
 

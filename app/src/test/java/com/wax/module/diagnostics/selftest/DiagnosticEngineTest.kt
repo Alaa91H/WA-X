@@ -24,7 +24,8 @@ class DiagnosticEngineTest {
                 "hide_blue_tick",
                 "Hide blue tick",
                 listOf(AtomicCheckInventory.JID_RAW_STRING),
-                "hide_seen", externalConfirmationRequired = true,
+                "hide_seen",
+                externalConfirmationRequired = true,
             )
         val engine = engine()
         val report =
@@ -32,14 +33,15 @@ class DiagnosticEngineTest {
                 config(),
                 listOf(definition),
                 mapOf(
-                    definition.id to DiagnosticEngine.Probe {
-                        // Registration only: no invocation, no external observation.
-                        DiagnosticEngine.Observation(
-                            evidence = "hook registered",
-                            level = EvidenceLevel.L3_HOOK,
-                            verification = VerificationState.HOOKED,
-                        )
-                    },
+                    definition.id to
+                        DiagnosticEngine.Probe {
+                            // Registration only: no invocation, no external observation.
+                            DiagnosticEngine.Observation(
+                                evidence = "hook registered",
+                                level = EvidenceLevel.L3_HOOK,
+                                verification = VerificationState.HOOKED,
+                            )
+                        },
                 ),
             )
         val result = report.results.single()
@@ -60,9 +62,15 @@ class DiagnosticEngineTest {
                 scope = "s",
                 status = DiagnosticStatus.PASS,
                 evidenceLevel = EvidenceLevel.L3_HOOK,
-                expected = "e", observedEvidence = "", verification = VerificationState.HOOKED,
-                timestampMillis = 0, whatsappBuild = "b", severity = "high",
-                confidence = 1.0, failureClass = FailureClass.NONE, remediation = "r",
+                expected = "e",
+                observedEvidence = "",
+                verification = VerificationState.HOOKED,
+                timestampMillis = 0,
+                whatsappBuild = "b",
+                severity = "high",
+                confidence = 1.0,
+                failureClass = FailureClass.NONE,
+                remediation = "r",
             )
         assertEquals(
             DiagnosticStatus.NOT_TESTED,
@@ -76,21 +84,35 @@ class DiagnosticEngineTest {
                 id = "root",
                 title = "root",
                 scope = "resolver",
-                status = DiagnosticStatus.FAIL, evidenceLevel = EvidenceLevel.L2_RESOLVER,
-                expected = "e", observedEvidence = "missing", verification = VerificationState.NOT_OBSERVED,
-                timestampMillis = 0, whatsappBuild = "b", severity = "high", confidence = 1.0,
-                failureClass = FailureClass.DEPENDENCY_MISSING, remediation = "fix root",
+                status = DiagnosticStatus.FAIL,
+                evidenceLevel = EvidenceLevel.L2_RESOLVER,
+                expected = "e",
+                observedEvidence = "missing",
+                verification = VerificationState.NOT_OBSERVED,
+                timestampMillis = 0,
+                whatsappBuild = "b",
+                severity = "high",
+                confidence = 1.0,
+                failureClass = FailureClass.DEPENDENCY_MISSING,
+                remediation = "fix root",
             )
         val dependent =
             AtomicCheckResult(
                 id = "dependent",
                 title = "dependent",
                 scope = "feature",
-                status = DiagnosticStatus.PASS, evidenceLevel = EvidenceLevel.L3_HOOK,
-                expected = "e", observedEvidence = "installed",
-                verification = VerificationState.HOOKED, timestampMillis = 0, whatsappBuild = "b",
-                severity = "high", confidence = 1.0, failureClass = FailureClass.NONE,
-                remediation = "", dependsOn = listOf("root"),
+                status = DiagnosticStatus.PASS,
+                evidenceLevel = EvidenceLevel.L3_HOOK,
+                expected = "e",
+                observedEvidence = "installed",
+                verification = VerificationState.HOOKED,
+                timestampMillis = 0,
+                whatsappBuild = "b",
+                severity = "high",
+                confidence = 1.0,
+                failureClass = FailureClass.NONE,
+                remediation = "",
+                dependsOn = listOf("root"),
             )
         assertEquals(
             DiagnosticStatus.BLOCKED,
@@ -105,22 +127,35 @@ class DiagnosticEngineTest {
                 id = "root",
                 title = "root",
                 scope = "resolver",
-                status = DiagnosticStatus.NOT_TESTED, evidenceLevel = EvidenceLevel.L2_RESOLVER,
-                expected = "e", observedEvidence = "no observation",
+                status = DiagnosticStatus.NOT_TESTED,
+                evidenceLevel = EvidenceLevel.L2_RESOLVER,
+                expected = "e",
+                observedEvidence = "no observation",
                 verification = VerificationState.NOT_OBSERVED,
-                timestampMillis = 0, whatsappBuild = "b", severity = "high", confidence = 1.0,
-                failureClass = FailureClass.NONE, remediation = "",
+                timestampMillis = 0,
+                whatsappBuild = "b",
+                severity = "high",
+                confidence = 1.0,
+                failureClass = FailureClass.NONE,
+                remediation = "",
             )
         val dependent =
             AtomicCheckResult(
                 id = "dependent",
                 title = "dependent",
                 scope = "feature",
-                status = DiagnosticStatus.PASS, evidenceLevel = EvidenceLevel.L3_HOOK,
-                expected = "e", observedEvidence = "installed",
-                verification = VerificationState.HOOKED, timestampMillis = 0, whatsappBuild = "b",
-                severity = "high", confidence = 1.0, failureClass = FailureClass.NONE,
-                remediation = "", dependsOn = listOf("root"),
+                status = DiagnosticStatus.PASS,
+                evidenceLevel = EvidenceLevel.L3_HOOK,
+                expected = "e",
+                observedEvidence = "installed",
+                verification = VerificationState.HOOKED,
+                timestampMillis = 0,
+                whatsappBuild = "b",
+                severity = "high",
+                confidence = 1.0,
+                failureClass = FailureClass.NONE,
+                remediation = "",
+                dependsOn = listOf("root"),
             )
         assertEquals(
             DiagnosticStatus.BLOCKED,
@@ -133,7 +168,12 @@ class DiagnosticEngineTest {
         val engine = engine()
         val report = engine.run(config(), listOf(definition), emptyMap())
         assertEquals(DiagnosticStatus.NOT_TESTED, report.results.single().status)
-        assertTrue(report.results.single().observedEvidence.isNotBlank())
+        assertTrue(
+            report.results
+                .single()
+                .observedEvidence
+                .isNotBlank(),
+        )
         engine.shutdown()
     }
 
@@ -149,7 +189,13 @@ class DiagnosticEngineTest {
                     "s",
                 ),
                 listOf(definition),
-                mapOf(definition.id to DiagnosticEngine.Probe { Thread.sleep(5_000L); null }),
+                mapOf(
+                    definition.id to
+                        DiagnosticEngine.Probe {
+                            Thread.sleep(5_000L)
+                            null
+                        },
+                ),
             )
         val result = report.results.single()
         assertEquals(DiagnosticStatus.FAIL, result.status)
@@ -162,7 +208,8 @@ class DiagnosticEngineTest {
             AtomicCheckInventory.featureCheck(
                 "disabled_feature",
                 "Disabled feature",
-                listOf(AtomicCheckInventory.JID_RAW_STRING), "off_key",
+                listOf(AtomicCheckInventory.JID_RAW_STRING),
+                "off_key",
                 externalConfirmationRequired = false,
             )
         val engine = engine()
@@ -171,15 +218,16 @@ class DiagnosticEngineTest {
                 config(),
                 listOf(definition),
                 mapOf(
-                    definition.id to DiagnosticEngine.Probe {
-                        DiagnosticEngine.Observation(
-                            evidence = "preference off; hook intentionally absent",
-                            level = EvidenceLevel.L2_RESOLVER,
-                            verification = VerificationState.NOT_OBSERVED,
-                            expectedMatch = false,
-                            failureClass = FailureClass.PREFERENCE_DISABLED,
-                        )
-                    },
+                    definition.id to
+                        DiagnosticEngine.Probe {
+                            DiagnosticEngine.Observation(
+                                evidence = "preference off; hook intentionally absent",
+                                level = EvidenceLevel.L2_RESOLVER,
+                                verification = VerificationState.NOT_OBSERVED,
+                                expectedMatch = false,
+                                failureClass = FailureClass.PREFERENCE_DISABLED,
+                            )
+                        },
                 ),
             )
         val result = report.results.single()
@@ -201,10 +249,11 @@ class DiagnosticEngineTest {
                 DiagnosticEngine.RunConfig.quick("b", "s"),
                 AtomicCheckInventory.PIPELINE,
                 mapOf(
-                    expensive.id to DiagnosticEngine.Probe {
-                        expensiveRan = true
-                        DiagnosticEngine.Observation("ok", EvidenceLevel.L2_RESOLVER)
-                    },
+                    expensive.id to
+                        DiagnosticEngine.Probe {
+                            expensiveRan = true
+                            DiagnosticEngine.Observation("ok", EvidenceLevel.L2_RESOLVER)
+                        },
                 ),
             )
         assertFalse("quick mode must not run the message-class resolver", expensiveRan)
@@ -220,10 +269,11 @@ class DiagnosticEngineTest {
                 config(),
                 AtomicCheckInventory.PIPELINE,
                 AtomicCheckInventory.PIPELINE.associate { definition ->
-                    definition.id to DiagnosticEngine.Probe {
-                        executed++
-                        DiagnosticEngine.Observation("ok", EvidenceLevel.L0_PACKAGE)
-                    }
+                    definition.id to
+                        DiagnosticEngine.Probe {
+                            executed++
+                            DiagnosticEngine.Observation("ok", EvidenceLevel.L0_PACKAGE)
+                        }
                 },
                 onProgress = { _, _, _ -> engine.cancel() },
             )

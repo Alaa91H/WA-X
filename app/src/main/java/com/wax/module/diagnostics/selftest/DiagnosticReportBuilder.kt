@@ -58,15 +58,18 @@ object DiagnosticReportBuilder {
         }
         // Digests cover the payload above. The checksum file cannot contain its
         // own digest, so it is appended last and excluded from itself.
-        entries += DiagnosticZipExporter.Entry(
-            "checksums.sha256",
-            DiagnosticZipExporter().checksums(entries),
-        )
+        entries +=
+            DiagnosticZipExporter.Entry(
+                "checksums.sha256",
+                DiagnosticZipExporter().checksums(entries),
+            )
         return entries
     }
 
-    private fun entry(name: String, content: String) =
-        DiagnosticZipExporter.Entry(name, content.toByteArray())
+    private fun entry(
+        name: String,
+        content: String,
+    ) = DiagnosticZipExporter.Entry(name, content.toByteArray())
 
     private fun manifest(
         inputs: Inputs,
@@ -148,73 +151,80 @@ object DiagnosticReportBuilder {
             }
         }
 
-    private fun resultsJson(report: DiagnosticEngine.Report): String = buildString {
-        append("{\"scan_id\":").appendQuoted(report.scanId).append(",\"checks\":[")
-        append(report.results.joinToString(",") { it.toJson() })
-        append("]}")
-    }
-
-    private fun environmentJson(environment: Environment): String = buildString {
-        append('{')
-        append("\"app_version\":").appendQuoted(environment.appVersion).append(',')
-        append("\"app_build_sha\":").appendQuoted(environment.appBuildSha).append(',')
-        append("\"whatsapp_package\":").appendQuoted(environment.whatsappPackage).append(',')
-        append("\"whatsapp_version\":").appendQuoted(environment.whatsappVersion).append(',')
-        append("\"android_version\":").appendQuoted(environment.androidVersion).append(',')
-        append("\"android_sdk\":").append(environment.androidSdk).append(',')
-        append("\"abi\":").appendQuoted(environment.abi)
-        append('}')
-    }
-
-    private fun hooksJson(hooks: List<String>): String =
-        "{\"hooks\":" + jsonArray(hooks) + "}"
-
-    private fun resolversJson(states: Map<String, String>): String = buildString {
-        append('{')
-        states.entries.sortedBy { it.key }.forEachIndexed { index, entry ->
-            if (index > 0) append(',')
-            appendQuoted(entry.key).append(':').appendQuoted(entry.value)
+    private fun resultsJson(report: DiagnosticEngine.Report): String =
+        buildString {
+            append("{\"scan_id\":").appendQuoted(report.scanId).append(",\"checks\":[")
+            append(report.results.joinToString(",") { it.toJson() })
+            append("]}")
         }
-        append('}')
-    }
 
-    private fun errorsJson(report: DiagnosticEngine.Report): String = buildString {
-        val failures =
-            report.results.filter {
-                it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
-            }
-        append("{\"errors\":[")
-        append(failures.joinToString(",") { failure ->
-            buildString {
-                append('{')
-                append("\"id\":").appendQuoted(failure.id)
-                append(",\"failure_class\":").appendQuoted(failure.failureClass.name)
-                append(",\"severity\":").appendQuoted(failure.severity)
-                append(",\"confidence\":").append(failure.confidence)
-                append(",\"observed\":").appendQuoted(failure.observedEvidence)
-                append(",\"remediation\":").appendQuoted(failure.remediation)
-                append('}')
-            }
-        })
-        append("]}")
-    }
-
-    private fun timingsJson(report: DiagnosticEngine.Report): String = buildString {
-        append('{')
-        append("\"total_millis\":").append(report.finishedAtMillis - report.startedAtMillis).append(',')
-        append("\"per_check\":{")
-        report.results.forEachIndexed { index, result ->
-            if (index > 0) append(',')
-            appendQuoted(result.id).append(':').append(result.durationMillis)
+    private fun environmentJson(environment: Environment): String =
+        buildString {
+            append('{')
+            append("\"app_version\":").appendQuoted(environment.appVersion).append(',')
+            append("\"app_build_sha\":").appendQuoted(environment.appBuildSha).append(',')
+            append("\"whatsapp_package\":").appendQuoted(environment.whatsappPackage).append(',')
+            append("\"whatsapp_version\":").appendQuoted(environment.whatsappVersion).append(',')
+            append("\"android_version\":").appendQuoted(environment.androidVersion).append(',')
+            append("\"android_sdk\":").append(environment.androidSdk).append(',')
+            append("\"abi\":").appendQuoted(environment.abi)
+            append('}')
         }
-        append("}}")
-    }
 
-    private fun redactionJson(report: DiagnosticEngine.Report): String = buildString {
-        append('{')
-        append("\"policy\":").appendQuoted("local_only_never_auto_uploaded").append(',')
-        append("\"applied_to\":").append(jsonArray(report.results.map { it.id })).append(',')
-        append("\"unredacted_dump_available\":false")
-        append('}')
-    }
+    private fun hooksJson(hooks: List<String>): String = "{\"hooks\":" + jsonArray(hooks) + "}"
+
+    private fun resolversJson(states: Map<String, String>): String =
+        buildString {
+            append('{')
+            states.entries.sortedBy { it.key }.forEachIndexed { index, entry ->
+                if (index > 0) append(',')
+                appendQuoted(entry.key).append(':').appendQuoted(entry.value)
+            }
+            append('}')
+        }
+
+    private fun errorsJson(report: DiagnosticEngine.Report): String =
+        buildString {
+            val failures =
+                report.results.filter {
+                    it.status == DiagnosticStatus.FAIL || it.status == DiagnosticStatus.BLOCKED
+                }
+            append("{\"errors\":[")
+            append(
+                failures.joinToString(",") { failure ->
+                    buildString {
+                        append('{')
+                        append("\"id\":").appendQuoted(failure.id)
+                        append(",\"failure_class\":").appendQuoted(failure.failureClass.name)
+                        append(",\"severity\":").appendQuoted(failure.severity)
+                        append(",\"confidence\":").append(failure.confidence)
+                        append(",\"observed\":").appendQuoted(failure.observedEvidence)
+                        append(",\"remediation\":").appendQuoted(failure.remediation)
+                        append('}')
+                    }
+                },
+            )
+            append("]}")
+        }
+
+    private fun timingsJson(report: DiagnosticEngine.Report): String =
+        buildString {
+            append('{')
+            append("\"total_millis\":").append(report.finishedAtMillis - report.startedAtMillis).append(',')
+            append("\"per_check\":{")
+            report.results.forEachIndexed { index, result ->
+                if (index > 0) append(',')
+                appendQuoted(result.id).append(':').append(result.durationMillis)
+            }
+            append("}}")
+        }
+
+    private fun redactionJson(report: DiagnosticEngine.Report): String =
+        buildString {
+            append('{')
+            append("\"policy\":").appendQuoted("local_only_never_auto_uploaded").append(',')
+            append("\"applied_to\":").append(jsonArray(report.results.map { it.id })).append(',')
+            append("\"unredacted_dump_available\":false")
+            append('}')
+        }
 }

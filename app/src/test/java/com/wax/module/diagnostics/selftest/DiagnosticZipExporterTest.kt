@@ -11,8 +11,10 @@ import org.junit.Test
 class DiagnosticZipExporterTest {
     private val exporter = DiagnosticZipExporter()
 
-    private fun entry(name: String, content: String) =
-        DiagnosticZipExporter.Entry(name, content.toByteArray())
+    private fun entry(
+        name: String,
+        content: String,
+    ) = DiagnosticZipExporter.Entry(name, content.toByteArray())
 
     @Test fun entryNamesRejectTraversalAndAbsolutePaths() {
         assertFalse(exporter.isSafeEntryName("../evil.json"))
@@ -75,7 +77,13 @@ class DiagnosticZipExporterTest {
         assertEquals(2, checksums.trim().lines().size)
         assertTrue(checksums.contains("manifest.json"))
         assertTrue(checksums.contains("results.json"))
-        assertTrue(checksums.lines().first().substringBefore("  ").length == 64)
+        assertTrue(
+            checksums
+                .lines()
+                .first()
+                .substringBefore("  ")
+                .length == 64,
+        )
     }
 
     @Test fun writeToStreamsEveryByteAndCanBeCancelled() {
@@ -100,8 +108,11 @@ class DiagnosticZipExporterTest {
                     DiagnosticReportBuilder.Environment(
                         appVersion = "1.2.0",
                         appBuildSha = "abc123",
-                        whatsappPackage = "com.whatsapp", whatsappVersion = "2.26.39.74",
-                        androidVersion = "17", androidSdk = 37, abi = "arm64-v8a",
+                        whatsappPackage = "com.whatsapp",
+                        whatsappVersion = "2.26.39.74",
+                        androidVersion = "17",
+                        androidSdk = 37,
+                        abi = "arm64-v8a",
                     ),
                 hooks = emptyList(),
                 resolverStates = emptyMap(),
@@ -138,9 +149,16 @@ class DiagnosticZipExporterTest {
             )
         val names = DiagnosticReportBuilder.entries(inputs).map { it.name }.toSet()
         for (required in listOf(
-            "manifest.json", "summary.md", "results.json", "environment.json",
-            "hooks.json", "resolvers.json", "errors.json", "timings.json",
-            "redaction-report.json", "logs/sanitized-runtime.log",
+            "manifest.json",
+            "summary.md",
+            "results.json",
+            "environment.json",
+            "hooks.json",
+            "resolvers.json",
+            "errors.json",
+            "timings.json",
+            "redaction-report.json",
+            "logs/sanitized-runtime.log",
         )) {
             assertTrue("missing $required", names.contains(required))
         }
@@ -150,22 +168,26 @@ class DiagnosticZipExporterTest {
     @Test fun theSummaryIsBilingual() {
         val summary =
             String(
-                DiagnosticReportBuilder.entries(
-                    DiagnosticReportBuilder.Inputs(
-                        report = sampleReport(),
-                        environment =
-                            DiagnosticReportBuilder.Environment(
-                                "1.2.0",
-                                "abc",
-                                "com.whatsapp",
-                                "2.26.39.74",
-                                "17",
-                                37,
-                                "arm64-v8a",
-                            ),
-                        hooks = emptyList(), resolverStates = emptyMap(), sanitizedLog = null,
-                    ),
-                ).first { it.name == "summary.md" }.content,
+                DiagnosticReportBuilder
+                    .entries(
+                        DiagnosticReportBuilder.Inputs(
+                            report = sampleReport(),
+                            environment =
+                                DiagnosticReportBuilder.Environment(
+                                    "1.2.0",
+                                    "abc",
+                                    "com.whatsapp",
+                                    "2.26.39.74",
+                                    "17",
+                                    37,
+                                    "arm64-v8a",
+                                ),
+                            hooks = emptyList(),
+                            resolverStates = emptyMap(),
+                            sanitizedLog = null,
+                        ),
+                    ).first { it.name == "summary.md" }
+                    .content,
             )
         assertTrue(summary.contains("Root causes"))
         assertTrue("the contract requires Arabic and English", summary.contains("الجذر"))
@@ -255,7 +277,12 @@ class DiagnosticZipExporterTest {
     private class RecordingTarget : DiagnosticZipExporter.OutputStreamTarget {
         var total = 0
         var finished = false
-        override fun write(buffer: ByteArray, offset: Int, length: Int) {
+
+        override fun write(
+            buffer: ByteArray,
+            offset: Int,
+            length: Int,
+        ) {
             total += length
         }
 

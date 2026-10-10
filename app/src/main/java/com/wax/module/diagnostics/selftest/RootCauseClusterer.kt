@@ -47,16 +47,17 @@ object RootCauseClusterer {
         val alreadySymptoms = symptoms.values.flatten().toSet()
         rootIds.removeAll(alreadySymptoms)
 
-        return rootIds.map { rootId ->
-            val root = byId.getValue(rootId)
-            Cluster(
-                rootCauseId = root.id,
-                rootTitle = root.title,
-                symptomIds = (symptoms[rootId].orEmpty() + rootId).distinct(),
-                affectedFeatures = features[rootId].orEmpty().distinct(),
-                remediation = root.remediation,
-            )
-        }.sortedBy { it.rootCauseId }
+        return rootIds
+            .map { rootId ->
+                val root = byId.getValue(rootId)
+                Cluster(
+                    rootCauseId = root.id,
+                    rootTitle = root.title,
+                    symptomIds = (symptoms[rootId].orEmpty() + rootId).distinct(),
+                    affectedFeatures = features[rootId].orEmpty().distinct(),
+                    remediation = root.remediation,
+                )
+            }.sortedBy { it.rootCauseId }
     }
 
     /**
@@ -100,7 +101,8 @@ object RootCauseClusterer {
         orderedIds: List<String>,
     ): AtomicCheckResult? {
         val byId = results.associateBy { it.id }
-        return orderedIds.asSequence()
+        return orderedIds
+            .asSequence()
             .mapNotNull { byId[it] }
             .firstOrNull { it.status == DiagnosticStatus.FAIL }
     }
@@ -131,22 +133,24 @@ data class DiagnosticSummary(
             append("\"needs_external_verification\":").append(needsExternalVerification).append(',')
             append("\"inconclusive\":").append(inconclusive).append(',')
             append("\"clusters\":[")
-            append(clusters.joinToString(",") { cluster ->
-                buildString {
-                    append('{')
-                    append("\"root_cause\":")
-                    appendQuoted(cluster.rootCauseId)
-                    append(",\"title\":")
-                    appendQuoted(cluster.rootTitle)
-                    append(",\"symptoms\":")
-                    append(jsonArray(cluster.symptomIds))
-                    append(",\"affected_features\":")
-                    append(jsonArray(cluster.affectedFeatures))
-                    append(",\"remediation\":")
-                    appendQuoted(cluster.remediation)
-                    append('}')
-                }
-            })
+            append(
+                clusters.joinToString(",") { cluster ->
+                    buildString {
+                        append('{')
+                        append("\"root_cause\":")
+                        appendQuoted(cluster.rootCauseId)
+                        append(",\"title\":")
+                        appendQuoted(cluster.rootTitle)
+                        append(",\"symptoms\":")
+                        append(jsonArray(cluster.symptomIds))
+                        append(",\"affected_features\":")
+                        append(jsonArray(cluster.affectedFeatures))
+                        append(",\"remediation\":")
+                        appendQuoted(cluster.remediation)
+                        append('}')
+                    }
+                },
+            )
             append("]}")
         }
-        }
+}

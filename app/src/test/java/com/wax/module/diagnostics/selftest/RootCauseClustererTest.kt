@@ -16,12 +16,21 @@ class RootCauseClustererTest {
         failureClass: FailureClass = FailureClass.DEPENDENCY_MISSING,
         remediation: String = "fix $id",
     ) = AtomicCheckResult(
-        id = id, title = "title $id", scope = "resolver", status = status,
-        evidenceLevel = EvidenceLevel.L2_RESOLVER, expected = "e",
+        id = id,
+        title = "title $id",
+        scope = "resolver",
+        status = status,
+        evidenceLevel = EvidenceLevel.L2_RESOLVER,
+        expected = "e",
         observedEvidence = if (status == DiagnosticStatus.FAIL) "broken" else "",
-        verification = VerificationState.NOT_OBSERVED, timestampMillis = 0,
-        whatsappBuild = "2.26.39.74", severity = "high", confidence = 1.0,
-        failureClass = failureClass, remediation = remediation, dependsOn = dependsOn,
+        verification = VerificationState.NOT_OBSERVED,
+        timestampMillis = 0,
+        whatsappBuild = "2.26.39.74",
+        severity = "high",
+        confidence = 1.0,
+        failureClass = failureClass,
+        remediation = remediation,
+        dependsOn = dependsOn,
     )
 
     @Test fun theObservedChainCollapsesToOneCluster() {
