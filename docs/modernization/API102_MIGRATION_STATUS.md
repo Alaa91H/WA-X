@@ -246,15 +246,15 @@ Nothing below is claimed as done.
 | #357 | merged `5c8d91b6`: the Status reply seen-receipt rule; native path `NATIVE_PATH_UNRESOLVED` |
 | #433 | **CLOSED**: Control Center acceptance met, verified in the tree |
 | #425 | **CLOSED**: single menu entry restored, Control Center is the control path |
+| #396 | **CLOSED**: merged `e6b056a0`, inherited-certification refused at the generator |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
 
 ### Next, in order
 
-1. **#396 / #391** — the resolver evidence gate and its package/version
-   scoping. Every migrated privacy feature depends on these, so they come
-   before further feature work.
+1. **#391** — resolver evidence identity and package/version scoping. #396 is
+   closed, so this is the remaining half of the evidence gate.
 2. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
    evidence gap.
 3. **#383** — the master audit that aggregates the above.
