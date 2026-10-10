@@ -30,27 +30,40 @@ import org.luckypray.dexkit.query.enums.StringMatchType
  */
 class ModernContactAccess private constructor(
     val contactClass: Class<*>,
-    private val contactDataClass: Class<*>?,
+    /** The contact's nested data holder, null when the JID lives on the contact itself. */
+    private val contactDataField: java.lang.reflect.Field?,
     /** The JID class, exposed so a JID accessor can be resolved from it. */
     val jidClass: Class<*>,
     private val phoneUserJidClass: Class<*>?,
     private val userJidField: java.lang.reflect.Field,
 ) {
-    /** The contact's JID object, or null when it cannot be read. */
-    fun userJid(contact: Any): Any? =
-        try {
-            userJidField.get(contact)
+    /** Reads only a JID field on its actual declaring object (never the wrong owner). */
+    fun userJid(contact: Any): Any? {
+        val owner = contactData(contact) ?: return null
+        return try {
+            userJidField.get(owner)
         } catch (failure: Throwable) {
             if (failure is VirtualMachineError) throw failure
-            Log.w(TAG, "Contact JID unreadable", failure)
+            Log.w(TAG, "Contact JID unreadable: ${failure.javaClass.simpleName}")
             null
         }
+    }
 
     /** True when the value is a JID (as opposed to a LID-shaped value). */
     fun isPhoneJid(jid: Any?): Boolean = jid != null && phoneUserJidClass?.isInstance(jid) == true
 
-    /** Unwraps the contact-data holder when the contact stores one. */
-    fun contactData(contact: Any): Any = contact
+    /** Safely unwraps the data holder selected by the resolver, or returns null. */
+    fun contactData(contact: Any): Any? {
+        if (!contactClass.isInstance(contact)) return null
+        val dataField = contactDataField ?: return contact
+        return try {
+            dataField.get(contact)?.takeIf { dataField.type.isInstance(it) }
+        } catch (failure: Throwable) {
+            if (failure is VirtualMachineError) throw failure
+            Log.w(TAG, "Contact data unreadable: ${failure.javaClass.simpleName}")
+            null
+        }
+    }
 
     enum class Outcome {
         AVAILABLE,
@@ -58,6 +71,11 @@ class ModernContactAccess private constructor(
         CONTACT_DATA_CLASS_MISSING,
         JID_CLASS_MISSING,
         USER_JID_FIELD_MISSING,
+        USER_JID_FIELD_AMBIGUOUS,
+        CONTACT_DATA_FIELD_MISSING,
+        CONTACT_DATA_FIELD_AMBIGUOUS,
+        PHONE_JID_FIELD_AMBIGUOUS,
+        PHONE_JID_METHOD_AMBIGUOUS,
 
         /**
          * More than one class satisfied the query. Picking one of them would be
@@ -239,43 +257,42 @@ class ModernContactAccess private constructor(
                         return Resolution(null, Outcome.CLASS_LOADER_MISMATCH, evidence)
                     }
 
-                    // DexKit's returnType is a ClassData, not a Class.
-                    val phoneJidClass =
-                        dex
-                            .findMethod {
-                                matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
-                            }.firstOrNull()
-                            ?.returnType
-                            ?.getInstance(classLoader)
+                    if (!isTargetClass(contactClass, classLoader)) {
+                        return Resolution(null, Outcome.CLASS_LOADER_MISMATCH, evidence)
+                    }
 
-                    // Mirror the legacy decision: the JID field lives on the
-                    // contact-data class when the contact has no phone-JID
-                    // field of its own, and on the contact class otherwise.
-                    val phoneField =
-                        phoneJidClass?.let {
-                            firstFieldOfType(contactClass, it)
+                    // A method match is not a guarantee of uniqueness. Never
+                    // derive a contact owner from an arbitrary first result.
+                    val phoneMethods =
+                        dex.findMethod {
+                            matcher { addUsingString(ANCHOR_PHONE_JID, StringMatchType.Contains) }
                         }
-                    val (owner, field) =
-                        if (phoneField == null) {
-                            val jidField =
-                                firstFieldOfType(dataClass, jidClass)
-                                    ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
-                            dataClass to jidField
-                        } else {
-                            val jidField =
-                                firstFieldOfType(contactClass, jidClass)
-                                    ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING)
-                            contactClass to jidField
-                        }
+                    if (phoneMethods.size > 1) {
+                        return Resolution(null, Outcome.PHONE_JID_METHOD_AMBIGUOUS, evidence)
+                    }
+                    // DexKit's returnType is a ClassData, not a Class.
+                    val phoneJidClass = phoneMethods.singleOrNull()?.returnType?.getInstance(classLoader)
+                    if (phoneJidClass != null && !isTargetClass(phoneJidClass, classLoader)) {
+                        return Resolution(null, Outcome.CLASS_LOADER_MISMATCH, evidence)
+                    }
+
+                    val plan = selectFieldPlan(contactClass, dataClass, jidClass, phoneJidClass)
+                    if (plan.outcome != Outcome.AVAILABLE) {
+                        return Resolution(null, plan.outcome, evidence)
+                    }
+                    val field = plan.jidField
+                        ?: return Resolution(null, Outcome.USER_JID_FIELD_MISSING, evidence)
                     field.isAccessible = true
+                    plan.contactDataField?.isAccessible = true
                     Log.i(
                         TAG,
-                        "Contact access resolved; JID field owner=" + owner.name,
+                        "Contact access resolved; JID owner=" +
+                            if (plan.contactDataField == null) "CONTACT" else "CONTACT_DATA",
                     )
                     Resolution(
                         ModernContactAccess(
                             contactClass,
-                            dataClass,
+                            plan.contactDataField,
                             jidClass,
                             phoneJidClass,
                             field,
@@ -307,9 +324,51 @@ private fun <T> singleOrNull(candidates: List<T>): T? =
             classLoader: ClassLoader,
         ): Boolean = candidate.classLoader == classLoader
 
-        private fun firstFieldOfType(
-            owner: Class<*>,
-            type: Class<*>,
-        ): java.lang.reflect.Field? = owner.declaredFields.firstOrNull { type.isAssignableFrom(it.type) }
+        /**
+         * Reflect the same direct-vs-nested decision as the legacy wrapper.
+         * Missing or multiple candidates fail closed, never select the first
+         * obfuscated field that happens to have a compatible type.
+         */
+        internal data class FieldPlan(
+            val contactDataField: java.lang.reflect.Field?,
+            val jidField: java.lang.reflect.Field?,
+            val outcome: Outcome,
+        )
+
+        internal fun selectFieldPlan(
+            contactClass: Class<*>,
+            dataClass: Class<*>,
+            jidClass: Class<*>,
+            phoneJidClass: Class<*>?,
+        ): FieldPlan {
+            fun fieldsOfType(owner: Class<*>, type: Class<*>): List<java.lang.reflect.Field> =
+                owner.declaredFields.filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) &&
+                    type.isAssignableFrom(it.type) }
+
+            val phoneFields = phoneJidClass?.let { fieldsOfType(contactClass, it) }.orEmpty()
+            if (phoneFields.size > 1) {
+                return FieldPlan(null, null, Outcome.PHONE_JID_FIELD_AMBIGUOUS)
+            }
+
+            val nested = phoneFields.isEmpty()
+            val contactDataFields =
+                if (nested) fieldsOfType(contactClass, dataClass) else emptyList()
+            if (nested && contactDataFields.isEmpty()) {
+                return FieldPlan(null, null, Outcome.CONTACT_DATA_FIELD_MISSING)
+            }
+            if (contactDataFields.size > 1) {
+                return FieldPlan(null, null, Outcome.CONTACT_DATA_FIELD_AMBIGUOUS)
+            }
+
+            val owner = if (nested) dataClass else contactClass
+            val jidFields = fieldsOfType(owner, jidClass)
+            if (jidFields.isEmpty()) {
+                return FieldPlan(null, null, Outcome.USER_JID_FIELD_MISSING)
+            }
+            if (jidFields.size > 1) {
+                return FieldPlan(null, null, Outcome.USER_JID_FIELD_AMBIGUOUS)
+            }
+            return FieldPlan(contactDataFields.singleOrNull(), jidFields.single(), Outcome.AVAILABLE)
+        }
     }
 }
