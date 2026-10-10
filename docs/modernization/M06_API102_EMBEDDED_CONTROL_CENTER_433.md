@@ -57,12 +57,31 @@ value up after a restart, and the row says so immediately.
 - Framework widgets only: the modern runtime module deliberately carries no
   AndroidX dependency, so nothing theme- or context-surprising is pulled
   into WhatsApp.
-- `show()` refuses when the Activity is finishing/destroyed or off the main
-  thread, and wraps construction in a catch that falls back to the Manager.
-  A failure in the UI can never crash WhatsApp; every write is on a daemon
-  thread and results are posted back to the main thread.
+- The window is bound to the exact host `HomeActivity`. One session is reused
+  for repeated taps in that Activity; when Android recreates the Activity,
+  the old session is retired and cannot release the new session.
+- The lifecycle callback closes and dismisses the dialog on the main thread
+  when its host stops or is destroyed, and unregisters itself on every close
+  path, including manual dismissal and show failure. Close is idempotent.
+- Creation/show failures, including `WindowManager.BadTokenException`, return
+  to the menu hook, which requests the Manager fallback through a per-Activity
+  single-flight gate. The menu-item-added event is not evidence that the
+  Control Center opened.
+- Preference writes run on a daemon executor. Closing rejects new writes but
+  drains writes already accepted, preserving completed saves. Session Handler
+  callbacks are removed and late worker completions cannot update a closed
+  window. Restart is queued behind accepted writes.
+- Diagnostics distinguish window created, shown, reused, closed, and failed;
+  failure logs use fixed reasons and exception class names only, without
+  preference values or chat data.
 - Native WhatsApp menu items are untouched: the hook still calls through
   first and keeps the original boolean result.
+
+Root cause for the API 102 WindowLeaked regression: the shell created a
+`Dialog` from `HomeActivity` without registering for that Activity's lifecycle.
+When Android stopped or destroyed the host, the window and its views retained
+the old Activity. The lifecycle-bound session and task-scope handling above
+address that ownership gap. The WhatsApp source is not modified.
 
 ## Verification boundary
 
@@ -73,6 +92,16 @@ no pending/wired overlap, no duplicate ids, category coverage), plus the
 provider allowlist test. Real rendering, RTL/theme rendering and the
 Android 17 / WhatsApp 2.26.39.74 acceptance run are
 `PENDING_USER_DEVICE_TEST`. Full CI must pass before merging.
+
+Lifecycle regression coverage was added in commit
+`8ef897d329f87f7d3a4f0970f1903637e82cfcc3`: host identity, stop/destroy,
+main-thread dispatch, exactly-once cleanup, repeated open/close, Activity
+replacement, save draining, Handler callback removal, and single-flight
+fallback behavior. Unit and static gates pass for that branch. The new APK
+has not been installed on the phone, so real `Dialog.show()`/
+`BadTokenException` and rotation behavior on the target device remain
+`NOT TESTED`.
+
 ## Slice 2 — localization, favourites, accessibility
 
 Slice 1 shipped with hardcoded English labels, no favourites and thin
