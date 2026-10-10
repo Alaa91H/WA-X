@@ -89,6 +89,15 @@ object ModernControlCenterCatalog {
                 description = "Keep a viewed view-once message open instead of expiring",
             ),
             Wired(
+                id = "status_reply_seen_receipt",
+                preferenceKey = ModernStatusReplySeenReceipt.PREF_SEND_SEEN_ON_REPLY,
+                evidenceKey = "modern.feature.status_seen_after_reply.state",
+                category = ControlCategory.PRIVACY,
+                label = "Status Seen After Reply",
+                description = "Mark a Status seen once you reply to it",
+                restartHint = false,
+            ),
+            Wired(
                 id = "status_seen_hidden",
                 preferenceKey = ModernStatusPrivacyFeature.PREF_HIDE_STATUS_VIEW,
                 evidenceKey = "modern.feature.status_seen_hidden.state",

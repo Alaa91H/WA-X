@@ -98,6 +98,7 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
         "hidereadafterreply",
         "antirevoke",
         "hidestatusview",
+        "sendstatusseenonreply",
     };
 
     /** The only effective-state keys the embedded Control Center may read. */
@@ -315,7 +316,8 @@ public final class ModernTargetTelemetryProvider extends ContentProvider {
                 || "hidereceipt".equals(key)
                 || "hidereadafterreply".equals(key)
                 || "antirevoke".equals(key)
-                || "hidestatusview".equals(key);
+                || "hidestatusview".equals(key)
+                || "sendstatusseenonreply".equals(key);
     }
 
     /** Favourites must be a short, comma-separated list of plain identifiers. */
