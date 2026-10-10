@@ -229,60 +229,52 @@ FilterGroups, Channels, TextStatusComposer; batch 11 = AntiWa,
 AudioTranscript, ContactVerify, LockedChatsEnhancer, CallRecording;
 batch 12 = BackupRestore, CaptureDevice.
 
-## Remaining work (updated every turn)
+## Remaining work (as of `3b6b4842`)
 
-0. HIGHEST PRIORITY (#433, owner P0): embedded Control Center — branch
-   `feat/issue-433-embedded-control-center`. Vertical slice committed: exactly
-   one WA X overflow entry opening an in-process control-center shell (not a
-   Manager redirect), honest state model (requested vs verified effective vs
-   pending/error), verified-state read channel, Manager fallback. Next: CI
-   green, merge, then slices 2-3 (category navigation polish, favourites,
-   RTL/Arabic localization, themes, accessibility) and the Control Center
-   progress comments on #433.
-1. DONE — Batch 1 closed at 5 verified features (ContactItemListener,
-   ConversationItemListener, MenuStatusProvider, ActivityController, Tasker)
-   and released as 1.2.0-beta.10 (PR #441). NEXT: Batch 2 —
-   ContextMenuActionProvider, CustomToolbar, CustomView, CallPrivacy,
-   CustomThemeV2, one at a time, each with hook path + preference path + UI
-   wiring + tests + CI verified before the next.
-2. DONE (Phase 2, Batch 2 infra): the **message/contact accessor layer**
-   (`ModernMessageAccess`, `ModernContactAccess`, #444) and the **JID accessor**
-   (`ModernJidAccess`, resolving the raw-string reader by signature instead of
-   the legacy literal `"getRawString"`, with `JidRules` pinning the phone-number
-   derivation branch by branch) now exist. NEXT: port the first privacy
-   consumers now run on it: **TypingPrivacy** (#447) and **HideChat** (branch
-   `feat/m06-hide-chat`, a self-contained feature needing no accessor layer, and
-   a three-state control because the Manager setting is a list preference, not a
-   boolean) and **ViewOnce** (branch `feat/m06-view-once`, the first consumer of
-   the *message* accessor layer, rewriting the caller's view state only when the
-   message key resolves). NEXT in the queue:
-   hook target from the `HandleMeComposing/sendComposing` anchor with the
-   3rd-parameter int guard, recipient located by JID type rather than argument
-   position, per-contact rules fetched one contact at a time through the new
-   `read-target-privacy-v1` channel so the address book never moves into the
-   injected process, and the three ghost-mode switches relayed. ShowOnline and
-   CallPrivacy additionally need presence/VoipManager layers that do not exist
-   yet. Dependency finding, not a
-   guess: after the five W1 buses, every remaining consumer feature needs one
-   of two things that the modern module does not yet have:
-   - the `FMessageWpp` / `WaContactWpp` accessor chain (JID, phone number,
-     message id, display name) that ShowOnline, CallPrivacy,
-     CopySelectionMessage, CaptureDevice, TagMessage, TextStatusComposer and
-     the rest read. Porting a consumer without it would mean guessing which
-     hook argument is the message, which the Tasker port deliberately refuses
-     to do.
-   - module **resource injection** (drawables, layouts, string resources via
-     `DesignUtils` / `ModuleContextWrapper` / `R.*`). CustomToolbar and
-     CustomThemeV2 depend on this and are therefore deferred to the resource
-     bridge wave (M06.07 / M07), not silently shipped stripped: a feature
-     with no real wiring is forbidden, and shipping a cosmetic variant would
-     be exactly that.
-   ContextMenuActionProvider is already merged (#442); its consumers follow the
-   accessor layer.
-3. Device acceptance checklist for the user (consolidated, at the end):
-   every wired feature, the single WA X entry opening the Control Center
-   (#433), each toggle applying after restart, and every later batch. Never a
-   merge gate.
-4. Gate M06 / Gate C proof only after the waves complete with CI + source
-   evidence; hot reload stays disabled (M06.09); no dual-loader stable APK
-   (M06.07).
+Nothing below is claimed as done.
+
+### Merged this pass, device validation still outstanding
+
+| issue | state |
+|---|---|
+| #170 | merged `44b90875`, issue closed, anonymised schema posted on the issue |
+| #455 | root causes merged `599deca6`: control-center lifecycle, contact-data anchor, fail-closed resolver selection |
+| #449 | merged `67fc086b`: read receipts withheld, release-after-reply, delivery tick reported `UNSUPPORTED` on purpose |
+| #450 | merged `67fc086b`: typing and recording reported separately; online presence named `SERVER_CONTROLLED` |
+| #451 | merged `3b6b4842`: anti-revoke with bounded retention and no protected content copied |
+
+Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
+owner's second account and is not substitutable by a build.
+
+### Next, in order
+
+1. **#452** — hide Status viewed, and send-seen-on-reply with #357. #357 keeps
+   sole ownership of the status seen-receipt rule and #452 explicitly forbids a
+   second competing state machine, so this one owns the integration, the
+   settings surface and the version evidence. Status acknowledgements stay
+   separate from the chat receipts in #449.
+2. **#448** — the execution-order parent, updated for the landed P0-CORE set.
+3. **#433 / #425** — close the embedded Control Center and options-menu
+   acceptance now that per-feature toggles exist for receipt, activity and
+   message privacy.
+4. **#396 / #391** — the resolver evidence gate and its package/version scoping,
+   which every migrated feature above depends on.
+5. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
+   evidence gap.
+6. **#383** — the master audit aggregating the above.
+7. **#377** — per-build WhatsApp/Business version discovery and the
+   compatibility canary.
+8. **#403** — the release APK growth budget, which currently watches debug only.
+
+### Not started
+
+Ascending, once the P0 items above are done: #458, #437, #400, #395, #394, #393,
+#389, #387, #386, #385, #384, #379, #378, #372, #371, #370, #369, #368, #357,
+#354, #353, #352, #351, #350, and the remainder of the open list.
+
+### Standing constraints
+
+- One integration branch; one visible PR per owner-level task or batch of five.
+- CI is the only place builds and tests run; no gate is ever weakened.
+- Device testing belongs to the owner and never blocks a merge or a closure.
+- A hook being installed is never reported as a feature working.
