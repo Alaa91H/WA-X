@@ -150,7 +150,8 @@ class DiagnosticsActivity : BaseActivity() {
             ) { completed, total, lastId ->
                 mainHandler.post {
                     // Progress by verified checks, never an invented percentage.
-                    progressLabel.text = "$completed / $total  ($lastId)"
+                    progressLabel.text =
+                        getString(R.string.diagnostics_progress, completed, total, lastId)
                 }
             }
         mainHandler.post { render(report) }
@@ -291,8 +292,9 @@ class DiagnosticsActivity : BaseActivity() {
     }
 
     /** Streams the verified archive into the document the user picked. */
-    private class ResolverTarget(private val stream: OutputStream) :
-        DiagnosticZipExporter.OutputStreamTarget {
+    private class ResolverTarget(
+        private val stream: OutputStream,
+    ) : DiagnosticZipExporter.OutputStreamTarget {
         override fun write(buffer: ByteArray, offset: Int, length: Int) {
             stream.write(buffer, offset, length)
         }
