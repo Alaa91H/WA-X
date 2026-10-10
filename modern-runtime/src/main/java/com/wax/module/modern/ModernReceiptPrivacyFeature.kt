@@ -133,7 +133,9 @@ object ModernReceiptPrivacyFeature {
         result: SendResult,
         nowMillis: Long,
     ): Boolean {
-        if (conversationKey.isNullOrEmpty() || result != SendResult.SUCCEEDED) return false
+        if (conversationKey.isNullOrEmpty() || result != SendResult.SUCCEEDED ||
+            nowMillis < 0 || nowMillis > Long.MAX_VALUE - RELEASE_WINDOW_MILLIS
+        ) return false
         armedConversations[conversationKey] = nowMillis + RELEASE_WINDOW_MILLIS
         return true
     }
@@ -152,11 +154,13 @@ object ModernReceiptPrivacyFeature {
         if (conversationKey.isNullOrEmpty()) return false
         val expiresAt = armedConversations[conversationKey] ?: return false
         if (nowMillis > expiresAt) {
-            armedConversations.remove(conversationKey)
+            // Do not remove a later, fresh arming that raced with expiration.
+            armedConversations.remove(conversationKey, expiresAt)
             return false
         }
-        armedConversations.remove(conversationKey)
-        return true
+        // Conditional remove is atomic. Two receipt-job threads must not
+        // both release the same withheld receipt after one completed reply.
+        return armedConversations.remove(conversationKey, expiresAt)
     }
 
     /** Whether a withheld receipt may still be released right now. */
@@ -268,14 +272,21 @@ object ModernReceiptPrivacyFeature {
             }
 
         results[FEATURE_ID_READ] = installed
-        results[FEATURE_ID_AFTER_REPLY] =
-            when {
-                !request.afterReply -> Outcome.DISABLED
-                installed != Outcome.INSTALLED -> installed
-                else -> Outcome.INSTALLED_ARMED
-            }
+        results[FEATURE_ID_AFTER_REPLY] = afterReplyOperationalState(request.afterReply, installed)
         return results
     }
+
+    /**
+     * A reply release requires an observed *successful native send* callback.
+     * Until that event is wired and proven, the arming state-machine alone is
+     * NOT a working feature. Keep the withholding read hook independent.
+     */
+    internal fun afterReplyOperationalState(requested: Boolean, readHook: Outcome): Outcome =
+        when {
+            !requested -> Outcome.DISABLED
+            readHook != Outcome.INSTALLED -> readHook
+            else -> Outcome.UNSUPPORTED
+        }
 
     /**
      * The receipt send, or the reason there is none.
