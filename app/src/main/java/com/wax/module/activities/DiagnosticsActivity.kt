@@ -114,7 +114,8 @@ class DiagnosticsActivity : BaseActivity() {
                 DiagnosticProbeSource.whatsappBuild(),
                 DiagnosticProbeSource.TARGET_PACKAGE,
             )
-        runScan(config)
+        // Cheap prefix only: no DEX scan, safe to run whenever the user asks.
+        runScan(config, engine.quickSubset())
     }
 
     private fun runDeepScan() {
@@ -123,22 +124,28 @@ class DiagnosticsActivity : BaseActivity() {
                 DiagnosticProbeSource.whatsappBuild(),
                 DiagnosticProbeSource.TARGET_PACKAGE,
             )
-        runScan(config)
+        runScan(config, AtomicCheckInventory.all())
     }
 
-    private fun runScan(config: DiagnosticEngine.RunConfig) {
+    private fun runScan(
+        config: DiagnosticEngine.RunConfig,
+        inventory: List<AtomicCheckInventory.Definition>,
+    ) {
         output.text = getString(R.string.diagnostics_running)
         progressLabel.text = ""
-        val worker = Thread({ scanOnWorkerThread(config) }, "wax-diagnostics-ui")
+        val worker = Thread({ scanOnWorkerThread(config, inventory) }, "wax-diagnostics-ui")
         worker.isDaemon = true
         worker.start()
     }
 
-    private fun scanOnWorkerThread(config: DiagnosticEngine.RunConfig) {
+    private fun scanOnWorkerThread(
+        config: DiagnosticEngine.RunConfig,
+        inventory: List<AtomicCheckInventory.Definition>,
+    ) {
         val report =
             engine.run(
                 config,
-                AtomicCheckInventory.all(),
+                inventory,
                 DiagnosticProbeSource.probes(),
             ) { completed, total, lastId ->
                 mainHandler.post {

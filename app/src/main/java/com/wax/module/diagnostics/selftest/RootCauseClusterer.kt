@@ -56,19 +56,28 @@ object RootCauseClusterer {
         }.sortedBy { it.rootCauseId }
     }
 
-    /** Walks [dependsOn] depth-first for the first dependency that failed. */
+    /**
+     * The earliest failed ancestor of [result], i.e. the root of its chain.
+     *
+     * It keeps climbing past a failed dependency instead of stopping at it:
+     * a JID check that depends on a JID-class check that depends on a missing
+     * contact-data class is one broken chain, not two unrelated symptoms.
+     */
     private fun firstFailedAncestor(
         result: AtomicCheckResult,
         byId: Map<String, AtomicCheckResult>,
         seen: MutableSet<String> = mutableSetOf(),
     ): AtomicCheckResult? {
+        var earliest: AtomicCheckResult? = null
         for (dependencyId in result.dependsOn) {
             if (!seen.add(dependencyId)) continue
             val dependency = byId[dependencyId] ?: continue
-            if (dependency.status == DiagnosticStatus.FAIL) return dependency
-            firstFailedAncestor(dependency, byId, seen)?.let { return it }
+            if (dependency.status == DiagnosticStatus.FAIL) {
+                val upstream = firstFailedAncestor(dependency, byId, seen)
+                earliest = upstream ?: dependency
+            }
         }
-        return null
+        return earliest
     }
 
     /**

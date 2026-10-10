@@ -231,4 +231,25 @@ class DiagnosticEngineTest {
         assertTrue(seen.all { it.second == 4 })
         engine.shutdown()
     }
+
+    @Test fun everyCheckThatRunsIsReported() {
+        // A scan that silently dropped results would look like a clean bill of
+        // health; the report must contain exactly what was asked for.
+        val engine = engine()
+        val definitions =
+            listOf(
+                AtomicCheckInventory.byId(AtomicCheckInventory.ENV_ANDROID)!!,
+                AtomicCheckInventory.byId(AtomicCheckInventory.ENV_SCOPE)!!,
+                AtomicCheckInventory.byId(AtomicCheckInventory.HEARTBEAT)!!,
+            )
+        val report = engine.run(config(), definitions, emptyMap())
+        assertEquals(definitions.map { it.id }.sorted(), report.results.map { it.id }.sorted())
+        engine.shutdown()
+    }
+
+    @Test fun theQuickSubsetIsCheaperThanTheFullInventory() {
+        val quick = engine().quickSubset()
+        assertTrue("quick mode must be a strict subset", quick.size < AtomicCheckInventory.all().size)
+        assertTrue(quick.none { it.id == AtomicCheckInventory.DEXKIT_NATIVE })
+    }
 }

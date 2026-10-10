@@ -22,6 +22,9 @@ class DiagnosticZipExporter(
     private val maxTotalBytes: Int = 4 * 1024 * 1024,
     private val maxEntries: Int = 200,
 ) {
+    /** The digest file; it is rebuilt after redaction because it covers the rest. */
+    const val CHECKSUMS_ENTRY = "checksums.sha256"
+
     data class Entry(val name: String, val content: ByteArray)
 
     data class BuildResult(
@@ -108,15 +111,12 @@ class DiagnosticZipExporter(
             while (entry != null) {
                 names.add(entry.name)
                 val content = zip.readBytes()
-                if (entry.name == "manifest.json") {
-                    manifestPresent = true
-                } else {
-                    payloads[entry.name] = content
-                }
+                payloads[entry.name] = content
+                if (entry.name == "manifest.json") manifestPresent = true
                 entry = zip.nextEntry
             }
         }
-        val checksumsPresent = payloads.containsKey("checksums.sha256")
+        val checksumsPresent = payloads.containsKey(CHECKSUMS_ENTRY)
         return Verification(
             manifestPresent = manifestPresent,
             checksumsPresent = checksumsPresent,
@@ -125,7 +125,7 @@ class DiagnosticZipExporter(
             // checksum file that parses but does not match is a corrupt export,
             // and corruption has to be caught here rather than by the user.
             checksumMatches = checksumsPresent &&
-                checksumsMatch(payloads["checksums.sha256"]!!, payloads),
+                checksumsMatch(payloads.getValue(CHECKSUMS_ENTRY), payloads),
         )
     }
 

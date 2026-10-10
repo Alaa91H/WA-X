@@ -102,12 +102,28 @@ class ExportRedactor {
         entries: List<DiagnosticZipExporter.Entry>,
     ): RedactedEntries {
         val state = MutableReportState()
-        val cleaned =
-            entries.map { entry ->
-                DiagnosticZipExporter.Entry(entry.name, redact(String(entry.content), state).toByteArray())
+        val hadChecksums = entries.any { it.name == DiagnosticZipExporter.CHECKSUMS_ENTRY }
+        val cleaned = entries
+            .filter { it.name != DiagnosticZipExporter.CHECKSUMS_ENTRY }
+            .map { entry ->
+                DiagnosticZipExporter.Entry(
+                    entry.name,
+                    redact(String(entry.content), state).toByteArray(),
+                )
             }
+        // Redaction changes the bytes, so the digests are taken from the
+        // redacted payload. Keeping the originals would ship an archive that
+        // fails its own verification, which is worse than shipping none.
+        val withChecksums = if (hadChecksums) {
+            cleaned + DiagnosticZipExporter.Entry(
+                DiagnosticZipExporter.CHECKSUMS_ENTRY,
+                DiagnosticZipExporter().checksums(cleaned),
+            )
+        } else {
+            cleaned
+        }
         return RedactedEntries(
-            entries = cleaned,
+            entries = withChecksums,
             report = RedactionReport(
                 jidsRedacted = state.jids,
                 numbersRedacted = state.numbers,

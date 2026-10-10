@@ -9,6 +9,9 @@ import org.junit.Test
 class ExportRedactorTest {
     private val redactor = ExportRedactor()
 
+    private fun List<DiagnosticZipExporter.Entry>.toArchive(): ByteArray =
+        DiagnosticZipExporter().build(this).bytes
+
     @Test fun jidsAreRemoved() {
         val cleaned = redactor.redact("sender=4915112345678@s.whatsapp.net")
         assertFalse(cleaned.contains("4915112345678"))
@@ -82,5 +85,32 @@ class ExportRedactorTest {
             "a removed phone number must appear in the report, not just vanish",
             redacted.report.numbersRedacted >= 1,
         )
+    }
+
+    @Test fun redactionKeepsTheArchiveVerifiable() {
+        // Redaction rewrites bytes, so the digests must be rebuilt from the
+        // redacted payload; otherwise the export ships a file that fails its
+        // own verification.
+        val payload =
+            listOf(
+                DiagnosticZipExporter.Entry(
+                    "results.json",
+                    "{\"jid\":\"4915112345678@s.whatsapp.net\"}".toByteArray(),
+                ),
+                DiagnosticZipExporter.Entry("summary.md", "plain".toByteArray()),
+            )
+        val withChecksums =
+            payload + DiagnosticZipExporter.Entry(
+                DiagnosticZipExporter.CHECKSUMS_ENTRY,
+                DiagnosticZipExporter().checksums(payload),
+            )
+        val redacted = ExportRedactor().redactEntries(withChecksums)
+        val verification = DiagnosticZipExporter().verify(redacted.entries.toArchive())
+        assertTrue("checksums", verification.checksumsPresent)
+        assertTrue(
+            "an exported archive must pass its own checksum verification",
+            verification.checksumMatches,
+        )
+        assertFalse(String(redacted.entries.first { it.name == "results.json" }.content).contains("4915112345678"))
     }
 }

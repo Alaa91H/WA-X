@@ -126,7 +126,7 @@ class DiagnosticEngine(
         observed.clear()
         progress.clear()
 
-        val ordered = if (config.mode == RunConfig.Mode.DEEP_SCAN) definitions else quickSubset()
+        val ordered = definitions
         val total = ordered.size
         val byId = ordered.associateBy { it.id }
 
@@ -142,7 +142,7 @@ class DiagnosticEngine(
                 // and the cluster must not multiply it.
                 record(definition, blockedResult(definition, config))
             } else {
-                runProbe(definition, config, probes[definition.id])
+                record(definition, runProbe(definition, config, probes[definition.id]))
             }
             completed.incrementAndGet()
             progress.add(definition.id)
@@ -331,9 +331,11 @@ class DiagnosticEngine(
 
     /**
      * Quick Check deliberately covers only the cheap, startup-safe prefix, so
-     * it can run on launch without a full DEX scan.
+     * it can run on demand without a full DEX scan. The caller passes this to
+     * [run] instead of the whole inventory; the engine never silently drops
+     * checks the caller asked for.
      */
-    private fun quickSubset(): List<AtomicCheckInventory.Definition> {
+    fun quickSubset(): List<AtomicCheckInventory.Definition> {
         val cheapIds =
             setOf(
                 AtomicCheckInventory.ENV_ANDROID,
