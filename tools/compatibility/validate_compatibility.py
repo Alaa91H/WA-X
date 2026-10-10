@@ -348,15 +348,32 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
                         continue
                     record = entries.get(feature_id, {})
                     targets = record.get("targets") if isinstance(record, dict) else None
-                    if not isinstance(targets, list) or not any(
-                        _target_verified(target, package_key, cell,
-                                         package.get("packageName"),
-                                         feature["resolverDependencies"], module)
-                        for target in targets
-                    ):
+                    matching = [
+                        target
+                        for target in (targets or [])
+                        if _target_verified(target, package_key, cell,
+                                            package.get("packageName"),
+                                            feature["resolverDependencies"], module)
+                    ] if isinstance(targets, list) else []
+                    if not matching:
                         report.fail(
                             "%s claims supported without complete resolver evidence "
                             "for the exact package/version/build/SDK/ABI target" % claim
+                        )
+                        continue
+                    # One cell, one build. A beta and a release observation of the
+                    # same version are different signers and different runtimes,
+                    # so accepting whichever one happens to be listed would let a
+                    # green cell rest on evidence from a build it never described.
+                    fingerprints = {
+                        target.get("buildFingerprint") for target in matching
+                        if isinstance(target, dict)
+                    }
+                    if len(fingerprints) > 1:
+                        report.fail(
+                            "%s is claimed supported by %d conflicting build "
+                            "fingerprints; a cell names exactly one target"
+                            % (claim, len(fingerprints))
                         )
 
     # Feature-wide supported status cannot be scoped to any runtime target.

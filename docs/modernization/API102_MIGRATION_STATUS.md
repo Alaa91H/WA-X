@@ -246,15 +246,20 @@ Nothing below is claimed as done.
 | #357 | merged `5c8d91b6`: the Status reply seen-receipt rule; native path `NATIVE_PATH_UNRESOLVED` |
 | #433 | **CLOSED**: Control Center acceptance met, verified in the tree |
 | #425 | **CLOSED**: single menu entry restored, Control Center is the control path |
+| #396 | **CLOSED**: merged `e6b056a0`, inherited-certification refused at the generator |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
 
 ### Next, in order
 
-1. **#396 / #391** — the resolver evidence gate and its package/version
-   scoping. Every migrated privacy feature depends on these, so they come
-   before further feature work.
+1. **#391** — resolver evidence identity. Verified by scripted fixture against
+   the real validator: cross-version, cross-package, wrong ABI, expired,
+   future-dated, missing resolver, empty evidence and wildcard cells all refuse;
+   the positive control passes. The one case that still cannot fail is a
+   *single* changed build fingerprint, because the schema declares no expected
+   value to compare against; the conflicting-fingerprint half is now closed.
+   Closing the rest needs that schema field, not more logic.
 2. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
    evidence gap.
 3. **#383** — the master audit that aggregates the above.
