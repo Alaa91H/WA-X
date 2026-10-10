@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="diagnostics_report_scroll" type="id" />
+    <item name="diagnostics_actions" type="id" />
+</resources>

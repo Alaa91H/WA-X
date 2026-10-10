@@ -16,7 +16,7 @@ the numbers.
 | [Direct legacy hook installation](#direct_hooks) | #318 M03 / #333 A05 | 235 | 71 |
 | [Self-hook as the activation signal](#self_hook_activation) | #333 A01 | 7 | 3 |
 | [Global mutable state inside the injected process](#runtime_global_state) | #333 A02 | 234 | 61 |
-| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 142 | 43 |
+| [Failures swallowed without reporting](#silent_catch) | #318 M03 / #333 A05 | 143 | 44 |
 
 ## Legacy Xposed API surface
 
@@ -553,17 +553,18 @@ Legacy types in use:
 
 **End state:** Every catch reports through the runtime health store.
 
-**Current:** 142 occurrences across 43 files.
+**Current:** 143 occurrences across 44 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `catch with discarded binding` | 90 | 38 |
+| `catch with discarded binding` | 91 | 39 |
 | `empty catch body` | 52 | 24 |
 
 <details><summary>Files</summary>
 
 - `app/src/main/java/com/wax/module/ModuleApplication.kt`
 - `app/src/main/java/com/wax/module/ModuleEntryPoint.kt`
+- `app/src/main/java/com/wax/module/diagnostics/selftest/DiagnosticZipExporter.kt`
 - `app/src/main/java/com/wax/module/model/Recording.kt`
 - `app/src/main/java/com/wax/module/preference/FileSelectPreference.kt`
 - `app/src/main/java/com/wax/module/preference/ThemePreference.kt`

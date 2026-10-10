@@ -16,6 +16,7 @@ FEATURE = {
 }
 VERSION = "2.26.32.123"
 STAMP = "2026-10-08T12:00:00Z"
+BUILD = "com.whatsapp/release/arm64:stable-build-123"
 
 
 def fixture() -> dict:
@@ -29,12 +30,14 @@ def fixture() -> dict:
                 "packageName": "com.whatsapp",
                 "applicationId": "com.wax.module",
                 "declaredVersions": [VERSION],
+                "certifiedBuildFingerprints": {VERSION: BUILD},
                 "defaultStatus": "unknown",
             },
             "business": {
                 "packageName": "com.whatsapp.w4b",
                 "applicationId": "com.wax.module",
                 "declaredVersions": [VERSION],
+                "certifiedBuildFingerprints": {VERSION: BUILD},
                 "defaultStatus": "unknown",
             },
         },
@@ -49,7 +52,7 @@ def observation(package="whatsapp", version=VERSION):
         "package": package,
         "packageName": "com.whatsapp" if package == "whatsapp" else "com.whatsapp.w4b",
         "version": version,
-        "buildFingerprint": "com.whatsapp/release/arm64:stable-build-123",
+        "buildFingerprint": BUILD,
         "sdk": 35,
         "abi": "arm64-v8a",
         "verifiedAt": STAMP,
@@ -131,6 +134,38 @@ class EvidenceGateTests(unittest.TestCase):
         second["verifiedAt"] = STAMP
         matrix["evidence"] = {"Example": {"targets": [first, second]}}
         self.assertFalse(validate(matrix))
+
+    def test_single_changed_fingerprint_cannot_certify_a_supported_cell(self):
+        # The previous fix rejected conflicting pairs, but one drifted build
+        # remained enough to make the same version appear supported.
+        matrix = supported(fixture())
+        changed = observation()
+        changed["buildFingerprint"] = "com.whatsapp/release/arm64:changed-without-version-bump"
+        matrix["evidence"] = {"Example": {"targets": [changed]}}
+        self.assertTrue(validate(matrix))
+
+    def test_unpinned_build_cannot_be_supported_even_with_valid_observation(self):
+        matrix = supported(fixture())
+        del matrix["packages"]["whatsapp"]["certifiedBuildFingerprints"]
+        matrix["evidence"] = {"Example": {"targets": [observation()]}}
+        self.assertTrue(validate(matrix))
+
+    def test_expected_fingerprint_is_required_only_for_supported_cells(self):
+        matrix = fixture()
+        matrix["packages"]["whatsapp"]["certifiedBuildFingerprints"] = {}
+        matrix["matrix"] = {"Example": {"whatsapp": {"versions": {VERSION: "unknown"}}}}
+        self.assertFalse(validate(matrix))
+
+    def test_certified_builds_must_be_exact_declared_versions(self):
+        for version, fingerprint in (
+            ("2.26.32.xx", BUILD),
+            ("2.26.32.999", BUILD),
+            (VERSION, ""),
+        ):
+            with self.subTest(version=version, fingerprint=fingerprint):
+                matrix = fixture()
+                matrix["packages"]["whatsapp"]["certifiedBuildFingerprints"] = {version: fingerprint}
+                self.assertTrue(validate(matrix))
 
     def test_cross_package_evidence_is_rejected(self):
         matrix = supported(fixture(), package="business")

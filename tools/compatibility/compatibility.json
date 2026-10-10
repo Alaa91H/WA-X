@@ -9,7 +9,7 @@
     "unknown": "No resolver evidence has been collected for this cell yet. This is the only status permitted without evidence."
   },
   "evidencePolicy": {
-    "rule": "A cell may only be marked supported when evidence.resolvers lists every resolver the feature depends on and each entry has a verifiedAt timestamp and a result of resolved.",
+    "rule": "A supported version cell requires a packages.<target>.certifiedBuildFingerprints[exactVersion] entry declaring the expected build identity separately from observations, plus matching exact-target evidence and each required resolver verified resolved at runtime. Missing or drifted fingerprints fail closed. Version-wide status does not prove other Android users/accounts or feature behavior.",
     "enforcedBy": "tools/compatibility/validate_compatibility.py",
     "collectedAtRuntimeBy": "T51+ diagnostics; until then no cell may claim supported"
   },

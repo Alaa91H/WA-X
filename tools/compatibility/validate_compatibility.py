@@ -107,6 +107,19 @@ def check_schema(matrix: dict, report: Report) -> None:
                 "packages.%s.defaultStatus %r is not one of %s"
                 % (key, entry.get("defaultStatus"), ", ".join(VALID_STATUSES))
             )
+        # Explicitly pin the single expected build per exact version.
+        # These are curator-declared identities, separate from observations:
+        # without one, a lone changed binary could certify the wrong build.
+        certified = entry.get("certifiedBuildFingerprints", {})
+        if not isinstance(certified, dict):
+            report.fail("packages.%s.certifiedBuildFingerprints must be an object" % key)
+        else:
+            for version, fingerprint in certified.items():
+                if not _exact_version(version) or version not in entry.get("declaredVersions", []):
+                    report.fail("packages.%s has non-declared exact build %r" % (key, version))
+                if (not isinstance(fingerprint, str) or not fingerprint.strip()
+                        or len(fingerprint) > 512):
+                    report.fail("packages.%s has invalid expected fingerprint for %r" % (key, version))
         # A package-wide default cannot certify all features and versions.
         if entry.get("defaultStatus") == "supported":
             report.fail(
@@ -346,15 +359,27 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
                     if feature is None or cell not in package.get("declaredVersions", []):
                         report.fail("%s claims supported for an unknown feature/version" % claim)
                         continue
+                    certified = package.get("certifiedBuildFingerprints", {})
+                    expected_fingerprint = certified.get(cell) if isinstance(certified, dict) else None
+                    if not isinstance(expected_fingerprint, str) or not expected_fingerprint.strip():
+                        report.fail(
+                            "%s claims supported without a separately declared exact build fingerprint"
+                            % claim
+                        )
+                        continue
                     record = entries.get(feature_id, {})
                     targets = record.get("targets") if isinstance(record, dict) else None
-                    matching = [
+                    observed = [
                         target
                         for target in (targets or [])
                         if _target_verified(target, package_key, cell,
                                             package.get("packageName"),
                                             feature["resolverDependencies"], module)
                     ] if isinstance(targets, list) else []
+                    matching = [
+                        target for target in observed
+                        if target.get("buildFingerprint") == expected_fingerprint
+                    ]
                     if not matching:
                         report.fail(
                             "%s claims supported without complete resolver evidence "
@@ -366,7 +391,7 @@ def check_evidence(matrix: dict, derived: dict, report: Report) -> None:
                     # so accepting whichever one happens to be listed would let a
                     # green cell rest on evidence from a build it never described.
                     fingerprints = {
-                        target.get("buildFingerprint") for target in matching
+                        target.get("buildFingerprint") for target in observed
                         if isinstance(target, dict)
                     }
                     if len(fingerprints) > 1:

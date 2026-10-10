@@ -62,51 +62,52 @@ class DiagnosticsActivity : BaseActivity() {
         externalVerifications = ExternalVerificationStore(this)
         DiagnosticProbeSource.attach(this, externalVerifications)
 
-        val root =
-            vertical().apply {
-                layoutParams =
-                    ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    )
-            }
-        root.addView(title())
-        root.addView(body())
+        // A long atomic report scrolls independently; ZIP actions stay visible.
+        // Preserve the widget IDs and footer contract from #475.
+        val root = vertical()
+        val reportContent = vertical()
+        reportContent.addView(title())
+        reportContent.addView(body())
         progressLabel = label(getString(R.string.diagnostics_no_results))
-        root.addView(progressLabel)
+        reportContent.addView(progressLabel)
         output = label(getString(R.string.diagnostics_no_results))
         resultsContainer = vertical().apply { setPadding(0, 0, 0, 0) }
         resultsContainer.addView(output)
+        reportContent.addView(resultsContainer)
         val scroller =
             ScrollView(this).apply {
+                id = R.id.diagnostics_report_scroll
                 isFillViewport = false
-                addView(resultsContainer)
+                addView(reportContent)
             }
-        // Without a weighted viewport, the full deep inventory can push all
-        // controls below the screen, appearing as an empty or stuck scan.
         root.addView(
             scroller,
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f),
         )
 
+        val actions =
+            vertical().apply {
+                id = R.id.diagnostics_actions
+                setPadding(dp(16), dp(4), dp(16), dp(16))
+            }
         val runRow = horizontal()
         runRow.addView(button(R.string.diagnostics_quick) { runQuickCheck() })
         runRow.addView(button(R.string.diagnostics_deep) { runDeepScan() })
         runRow.addView(button(R.string.diagnostics_cancel) { cancelScan() })
-        root.addView(scrollRow(runRow))
+        actions.addView(runRow)
 
         val verificationRow = horizontal()
         verificationRow.addView(
             button(R.string.diagnostics_confirm_external) { showExternalVerificationDialog() },
         )
-        root.addView(scrollRow(verificationRow))
+        actions.addView(verificationRow)
 
         val exportRow = horizontal()
         exportRow.addView(button(R.string.diagnostics_export) { exportWithConfirmation() })
         exportRow.addView(button(R.string.diagnostics_import) { importPreviousArchive() })
         exportRow.addView(button(R.string.diagnostics_close) { finish() })
-        root.addView(scrollRow(exportRow))
-
+        actions.addView(exportRow)
+        root.addView(actions)
         setContentView(root)
     }
 
