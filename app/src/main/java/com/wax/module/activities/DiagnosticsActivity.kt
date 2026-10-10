@@ -295,7 +295,11 @@ class DiagnosticsActivity : BaseActivity() {
     private class ResolverTarget(
         private val stream: OutputStream,
     ) : DiagnosticZipExporter.OutputStreamTarget {
-        override fun write(buffer: ByteArray, offset: Int, length: Int) {
+        override fun write(
+            buffer: ByteArray,
+            offset: Int,
+            length: Int,
+        ) {
             stream.write(buffer, offset, length)
         }
 
