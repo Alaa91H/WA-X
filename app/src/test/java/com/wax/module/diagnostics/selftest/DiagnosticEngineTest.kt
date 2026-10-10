@@ -21,7 +21,9 @@ class DiagnosticEngineTest {
     @Test fun anInstalledHookAloneIsNotFunctional() {
         val definition =
             AtomicCheckInventory.featureCheck(
-                "hide_blue_tick", "Hide blue tick", listOf(AtomicCheckInventory.JID_RAW_STRING),
+                "hide_blue_tick",
+                "Hide blue tick",
+                listOf(AtomicCheckInventory.JID_RAW_STRING),
                 "hide_seen", externalConfirmationRequired = true,
             )
         val engine = engine()
@@ -53,7 +55,9 @@ class DiagnosticEngineTest {
     @Test fun aPassWithoutAnyObservationIsDowngradedToNotTested() {
         val result =
             AtomicCheckResult(
-                id = "x", title = "x", scope = "s",
+                id = "x",
+                title = "x",
+                scope = "s",
                 status = DiagnosticStatus.PASS,
                 evidenceLevel = EvidenceLevel.L3_HOOK,
                 expected = "e", observedEvidence = "", verification = VerificationState.HOOKED,
@@ -69,7 +73,9 @@ class DiagnosticEngineTest {
     @Test fun aPassBehindAFailedDependencyBecomesBlocked() {
         val root =
             AtomicCheckResult(
-                id = "root", title = "root", scope = "resolver",
+                id = "root",
+                title = "root",
+                scope = "resolver",
                 status = DiagnosticStatus.FAIL, evidenceLevel = EvidenceLevel.L2_RESOLVER,
                 expected = "e", observedEvidence = "missing", verification = VerificationState.NOT_OBSERVED,
                 timestampMillis = 0, whatsappBuild = "b", severity = "high", confidence = 1.0,
@@ -77,7 +83,9 @@ class DiagnosticEngineTest {
             )
         val dependent =
             AtomicCheckResult(
-                id = "dependent", title = "dependent", scope = "feature",
+                id = "dependent",
+                title = "dependent",
+                scope = "feature",
                 status = DiagnosticStatus.PASS, evidenceLevel = EvidenceLevel.L3_HOOK,
                 expected = "e", observedEvidence = "installed",
                 verification = VerificationState.HOOKED, timestampMillis = 0, whatsappBuild = "b",
@@ -94,7 +102,9 @@ class DiagnosticEngineTest {
         // "We did not measure the resolver" is not "the resolver works".
         val root =
             AtomicCheckResult(
-                id = "root", title = "root", scope = "resolver",
+                id = "root",
+                title = "root",
+                scope = "resolver",
                 status = DiagnosticStatus.NOT_TESTED, evidenceLevel = EvidenceLevel.L2_RESOLVER,
                 expected = "e", observedEvidence = "no observation",
                 verification = VerificationState.NOT_OBSERVED,
@@ -103,7 +113,9 @@ class DiagnosticEngineTest {
             )
         val dependent =
             AtomicCheckResult(
-                id = "dependent", title = "dependent", scope = "feature",
+                id = "dependent",
+                title = "dependent",
+                scope = "feature",
                 status = DiagnosticStatus.PASS, evidenceLevel = EvidenceLevel.L3_HOOK,
                 expected = "e", observedEvidence = "installed",
                 verification = VerificationState.HOOKED, timestampMillis = 0, whatsappBuild = "b",
@@ -131,7 +143,10 @@ class DiagnosticEngineTest {
         val report =
             engine.run(
                 DiagnosticEngine.RunConfig(
-                    DiagnosticEngine.RunConfig.Mode.DEEP_SCAN, 150L, "b", "s",
+                    DiagnosticEngine.RunConfig.Mode.DEEP_SCAN,
+                    150L,
+                    "b",
+                    "s",
                 ),
                 listOf(definition),
                 mapOf(definition.id to DiagnosticEngine.Probe { Thread.sleep(5_000L); null }),
@@ -145,7 +160,8 @@ class DiagnosticEngineTest {
     @Test fun aPreferenceDisabledFeatureIsNotAFailedHook() {
         val definition =
             AtomicCheckInventory.featureCheck(
-                "disabled_feature", "Disabled feature",
+                "disabled_feature",
+                "Disabled feature",
                 listOf(AtomicCheckInventory.JID_RAW_STRING), "off_key",
                 externalConfirmationRequired = false,
             )

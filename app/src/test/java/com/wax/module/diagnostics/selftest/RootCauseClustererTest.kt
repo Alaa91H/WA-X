@@ -98,7 +98,8 @@ class RootCauseClustererTest {
                 result("c", DiagnosticStatus.NOT_TESTED, failureClass = FailureClass.NONE),
                 result("d", DiagnosticStatus.UNSUPPORTED, failureClass = FailureClass.NONE),
                 result(
-                    "e", DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION,
+                    "e",
+                    DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION,
                     failureClass = FailureClass.NONE,
                 ),
             )

@@ -97,7 +97,8 @@ class DiagnosticZipExporterTest {
             DiagnosticReportBuilder.Inputs(
                 report = sampleReport(),
                 environment = DiagnosticReportBuilder.Environment(
-                    appVersion = "1.2.0", appBuildSha = "abc123",
+                    appVersion = "1.2.0",
+                    appBuildSha = "abc123",
                     whatsappPackage = "com.whatsapp", whatsappVersion = "2.26.39.74",
                     androidVersion = "17", androidSdk = 37, abi = "arm64-v8a",
                 ),
@@ -121,7 +122,13 @@ class DiagnosticZipExporterTest {
             DiagnosticReportBuilder.Inputs(
                 report = sampleReport(),
                 environment = DiagnosticReportBuilder.Environment(
-                    "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+                    "1.2.0",
+                    "abc123",
+                    "com.whatsapp",
+                    "2.26.39.74",
+                    "17",
+                    37,
+                    "arm64-v8a",
                 ),
                 hooks = listOf("wax.modern.typing_privacy.composing"),
                 resolverStates = mapOf("jid_class" to "AVAILABLE"),
@@ -145,7 +152,13 @@ class DiagnosticZipExporterTest {
                     DiagnosticReportBuilder.Inputs(
                         report = sampleReport(),
                         environment = DiagnosticReportBuilder.Environment(
-                            "1.2.0", "abc", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+                            "1.2.0",
+                            "abc",
+                            "com.whatsapp",
+                            "2.26.39.74",
+                            "17",
+                            37,
+                            "arm64-v8a",
                         ),
                         hooks = emptyList(), resolverStates = emptyMap(), sanitizedLog = null,
                     ),
@@ -160,7 +173,13 @@ class DiagnosticZipExporterTest {
             DiagnosticReportBuilder.Inputs(
                 report = sampleReport(),
                 environment = DiagnosticReportBuilder.Environment(
-                    "1.2.0", "abc123", "com.whatsapp", "2.26.39.74", "17", 37, "arm64-v8a",
+                    "1.2.0",
+                    "abc123",
+                    "com.whatsapp",
+                    "2.26.39.74",
+                    "17",
+                    37,
+                    "arm64-v8a",
                 ),
                 hooks = listOf("wax.modern.typing_privacy.composing"),
                 resolverStates = mapOf("jid_class" to "AVAILABLE"),

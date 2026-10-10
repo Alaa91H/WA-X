@@ -193,7 +193,8 @@ object DiagnosticProbeSource {
             .getOrNull()
 
     private fun targetPrefs() = context()?.getSharedPreferences(
-        ModernTargetTelemetryProvider.LOCAL_PREFS, Context.MODE_PRIVATE,
+        ModernTargetTelemetryProvider.LOCAL_PREFS,
+        Context.MODE_PRIVATE,
     )
 
     /** Feature states the target reported, keyed by feature id. */

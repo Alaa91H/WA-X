@@ -14,9 +14,10 @@ import com.wax.module.diagnostics.ReportRedactor
  */
 class ExportRedactor {
     private val pathPattern = Regex("(/[A-Za-z0-9_.\\-]+){2,}/?")
-    private val tokenPattern = Regex(
-        "(?i)\\b(token|secret|password|passwd|api[_-]?key|auth|bearer)\\b\\s*[=:]\\s*\\S+",
-    )
+    private val tokenPattern =
+        Regex(
+            "(?i)\\b(token|secret|password|passwd|api[_-]?key|auth|bearer)\\b\\s*[=:]\\s*\\S+",
+        )
     private val dataPathPattern = Regex("(?i)\\b(data/data|shared_prefs|databases|files)/\\S+")
 
     data class RedactionReport(

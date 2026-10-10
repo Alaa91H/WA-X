@@ -22,9 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger
  *  never `PASS`.
  */
 class DiagnosticEngine(
-    private val executor: ExecutorService = Executors.newSingleThreadExecutor { task ->
-        Thread(task, "wax-diagnostics").apply { isDaemon = true }
-    },
+    private val executor: ExecutorService =
+        Executors.newSingleThreadExecutor { task ->
+            Thread(task, "wax-diagnostics").apply { isDaemon = true }
+        },
 ) {
     /** One unit of real work, supplied by the Manager side. */
     fun interface Probe {
@@ -59,12 +60,24 @@ class DiagnosticEngine(
         }
 
         companion object {
-            fun quick(whatsappBuild: String, scope: String) = RunConfig(
-                Mode.QUICK_CHECK, 2_000L, whatsappBuild, scope,
+            fun quick(
+                whatsappBuild: String,
+                scope: String,
+            ) = RunConfig(
+                Mode.QUICK_CHECK,
+                2_000L,
+                whatsappBuild,
+                scope,
             )
 
-            fun deep(whatsappBuild: String, scope: String) = RunConfig(
-                Mode.DEEP_SCAN, 15_000L, whatsappBuild, scope,
+            fun deep(
+                whatsappBuild: String,
+                scope: String,
+            ) = RunConfig(
+                Mode.DEEP_SCAN,
+                15_000L,
+                whatsappBuild,
+                scope,
             )
         }
     }
@@ -85,9 +98,10 @@ class DiagnosticEngine(
                 blocked = results.count { it.status == DiagnosticStatus.BLOCKED },
                 notTested = results.count { it.status == DiagnosticStatus.NOT_TESTED },
                 unsupported = results.count { it.status == DiagnosticStatus.UNSUPPORTED },
-                needsExternalVerification = results.count {
-                    it.status == DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-                },
+                needsExternalVerification =
+                    results.count {
+                        it.status == DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                    },
                 clusters = RootCauseClusterer.cluster(results),
             )
         }
