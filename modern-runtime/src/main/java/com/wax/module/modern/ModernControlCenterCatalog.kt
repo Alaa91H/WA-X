@@ -270,11 +270,7 @@ object ModernControlCenterCatalog {
     val pending: List<Pending> =
         listOf(
             Pending("MinorFixes", "Document picker / ML Kit repair"),
-            Pending("AntiRevoke", "Anti message revoke"),
-            Pending("TypingPrivacy", "Typing indicator privacy"),
             Pending("HideChat", "Hide individual chats"),
-            Pending("HideSeen", "Hide blue ticks and read receipts"),
-            Pending("ViewOnce", "View-once handling"),
             Pending("BubbleColors", "Custom bubble colours"),
             Pending("StatusDownload", "Status download menu"),
             Pending("GroupAdmin", "Group admin tools"),

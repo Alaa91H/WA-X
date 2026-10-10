@@ -75,6 +75,20 @@ object ControlCenterStrings {
     )
 
     /** Unknown languages fall back to English instead of rendering blanks. */
-    fun forLanguage(language: String?): Table =
-        if (language != null && language.lowercase().startsWith(LANGUAGE_ARABIC)) arabic else english
+    fun forLanguage(language: String?): Table {
+        if (language?.lowercase()?.startsWith(LANGUAGE_ARABIC) == true) return arabic
+        val code = when (val tag = language?.lowercase()?.substringBefore('-')?.substringBefore('_')) {
+            "iw", "he" -> "he"
+            "in", "id" -> "id"
+            null -> "en"
+            else -> tag
+        }
+        val translated = ControlCenterLocaleCatalog.values(code)
+        return english.copy(
+            searchHint = translated["ui.search"] ?: english.searchHint,
+            noResults = translated["ui.empty"] ?: english.noResults,
+            restart = translated["ui.restart"] ?: english.restart,
+            allFeatures = translated["ui.all"] ?: english.allFeatures,
+        )
+    }
 }

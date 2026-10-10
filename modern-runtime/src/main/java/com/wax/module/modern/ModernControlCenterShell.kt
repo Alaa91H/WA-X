@@ -472,7 +472,7 @@ class ModernControlCenterShell(
     private fun buildEntries(states: Bundle, query: String): List<ControlEntry> {
         val stateAccepted = states.getBoolean("accepted", false)
         val rows = ArrayList<ControlEntry>()
-        for (item in ModernControlCenterCatalog.wired) {
+        for (item in ModernControlCenterCatalog.wired + ModernControlCenterCatalog.alwaysOn.filter { it.id == "diagnostics" }) {
             val requested = when {
                 !stateAccepted || item.preferenceKey.isEmpty() ||
                     !states.containsKey("pref." + item.preferenceKey) -> ControlRequested.UNKNOWN
@@ -695,10 +695,10 @@ class ModernControlCenterShell(
                     switchView.isChecked = !enabled
                     Log.w(TAG, "CONTROL_CENTER_SETTING_SAVE_FAILED key=$key")
                 }
-                statusView.text = "${row.description} · " +
-                    ControlStatusText.status(
-                        if (saved) ControlEffective.RESTART_REQUIRED else ControlEffective.ERROR,
-                    )
+                val pending = if (ModernControlCenterCatalog.wiredById(row.id)?.restartHint == true)
+                    ControlEffective.RESTART_REQUIRED else ControlEffective.NOT_OBSERVED
+                statusView.text = shell.labels.description(row.id, row.description) + " · " +
+                    shell.labels.status(if (saved) pending else ControlEffective.ERROR)
             },
         )
         if (!accepted) {

@@ -5,15 +5,17 @@ package com.wax.module.modern
  * Keep feature IDs stable; translated labels must never be used as persistence keys.
  */
 class ControlCenterLabels private constructor(private val language: String) {
+    private val resourceLabels = ControlCenterLocaleCatalog.values(language)
+
     fun title(id: String, fallback: String): String =
-        if (language == "ar") arabicTitles[id] ?: fallback else fallback
+        if (language == "ar") arabicTitles[id] ?: resourceLabels[id] ?: fallback else resourceLabels[id] ?: fallback
 
     fun description(id: String, fallback: String): String =
         if (language == "ar") arabicDescriptions[id] ?: fallback else fallback
 
     fun category(category: ControlCategory): String =
         if (language == "ar") arabicCategories[category] ?: ControlStatusText.categoryTitle(category)
-        else ControlStatusText.categoryTitle(category)
+        else resourceLabels["category." + category.name.lowercase()] ?: ControlStatusText.categoryTitle(category)
 
     fun status(effective: ControlEffective): String =
         if (language == "ar") arabicStatus[effective] ?: ControlStatusText.status(effective)
@@ -21,7 +23,14 @@ class ControlCenterLabels private constructor(private val language: String) {
 
     companion object {
         fun forLanguage(value: String?): ControlCenterLabels =
-            ControlCenterLabels(if (value?.lowercase()?.startsWith("ar") == true) "ar" else "en")
+            ControlCenterLabels(
+                when (value?.lowercase()?.substringBefore('-')?.substringBefore('_')) {
+                    "iw", "he" -> "he"
+                    "in", "id" -> "id"
+                    null -> "en"
+                    else -> value.lowercase().substringBefore('-').substringBefore('_')
+                },
+            )
 
         private val arabicTitles = mapOf(
             "custom_time" to "تخصيص الوقت",
