@@ -111,9 +111,10 @@ class RootCauseClustererTest {
                 blocked = results.count { it.status == DiagnosticStatus.BLOCKED },
                 notTested = results.count { it.status == DiagnosticStatus.NOT_TESTED },
                 unsupported = results.count { it.status == DiagnosticStatus.UNSUPPORTED },
-                needsExternalVerification = results.count {
-                    it.status == DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-                },
+                needsExternalVerification =
+                    results.count {
+                        it.status == DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                    },
                 clusters = RootCauseClusterer.cluster(results),
             )
         assertEquals(2, summary.inconclusive)

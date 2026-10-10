@@ -126,13 +126,14 @@ class ExportRedactor {
             }
         return RedactedEntries(
             entries = withChecksums,
-            report = RedactionReport(
-                jidsRedacted = state.jids,
-                numbersRedacted = state.numbers,
-                messageLikeRedacted = state.messages,
-                tokensRedacted = state.tokens,
-                pathsRedacted = state.paths,
-            ),
+            report =
+                RedactionReport(
+                    jidsRedacted = state.jids,
+                    numbersRedacted = state.numbers,
+                    messageLikeRedacted = state.messages,
+                    tokensRedacted = state.tokens,
+                    pathsRedacted = state.paths,
+                ),
         )
     }
 

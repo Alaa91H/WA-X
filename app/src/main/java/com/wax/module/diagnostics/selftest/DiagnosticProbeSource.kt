@@ -97,13 +97,14 @@ object DiagnosticProbeSource {
             DiagnosticEngine.Observation(
                 evidence = "evidence=" + target.evidence,
                 level = EvidenceLevel.L1_LIFECYCLE,
-                verification = if (target.evidence ==
-                    ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
-                ) {
-                    VerificationState.LOCALLY_VERIFIED
-                } else {
-                    VerificationState.HOOKED
-                },
+                verification =
+                    if (target.evidence ==
+                        ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT
+                    ) {
+                        VerificationState.LOCALLY_VERIFIED
+                    } else {
+                        VerificationState.HOOKED
+                    },
                 expectedMatch = target.evidence ==
                     ModernManagerRuntimeStatus.Evidence.LIVE_HEARTBEAT,
                 failureClass = FailureClass.SCOPE_MISSING,
@@ -114,11 +115,12 @@ object DiagnosticProbeSource {
             DiagnosticEngine.Observation(
                 evidence = if (loaded) "dexkit native library loaded" else "load failed",
                 level = EvidenceLevel.L2_RESOLVER,
-                verification = if (loaded) {
-                    VerificationState.LOCALLY_VERIFIED
-                } else {
-                    VerificationState.NOT_OBSERVED
-                },
+                verification =
+                    if (loaded) {
+                        VerificationState.LOCALLY_VERIFIED
+                    } else {
+                        VerificationState.NOT_OBSERVED
+                    },
                 expectedMatch = loaded,
                 failureClass = FailureClass.DEPENDENCY_MISSING,
             )
@@ -172,11 +174,12 @@ object DiagnosticProbeSource {
             level = EvidenceLevel.L2_RESOLVER,
             verification = if (failed) VerificationState.NOT_OBSERVED else VerificationState.LOCALLY_VERIFIED,
             expectedMatch = !failed,
-            failureClass = when {
-                reported.contains("AMBIGUOUS") -> FailureClass.RESOLVER_AMBIGUOUS
-                failed -> FailureClass.DEPENDENCY_MISSING
-                else -> FailureClass.NONE
-            },
+            failureClass =
+                when {
+                    reported.contains("AMBIGUOUS") -> FailureClass.RESOLVER_AMBIGUOUS
+                    failed -> FailureClass.DEPENDENCY_MISSING
+                    else -> FailureClass.NONE
+                },
         )
     }
 

@@ -96,12 +96,13 @@ class DiagnosticZipExporterTest {
         val inputs =
             DiagnosticReportBuilder.Inputs(
                 report = sampleReport(),
-                environment = DiagnosticReportBuilder.Environment(
-                    appVersion = "1.2.0",
-                    appBuildSha = "abc123",
-                    whatsappPackage = "com.whatsapp", whatsappVersion = "2.26.39.74",
-                    androidVersion = "17", androidSdk = 37, abi = "arm64-v8a",
-                ),
+                environment =
+                    DiagnosticReportBuilder.Environment(
+                        appVersion = "1.2.0",
+                        appBuildSha = "abc123",
+                        whatsappPackage = "com.whatsapp", whatsappVersion = "2.26.39.74",
+                        androidVersion = "17", androidSdk = 37, abi = "arm64-v8a",
+                    ),
                 hooks = emptyList(),
                 resolverStates = emptyMap(),
                 sanitizedLog = null,
@@ -121,15 +122,16 @@ class DiagnosticZipExporterTest {
         val inputs =
             DiagnosticReportBuilder.Inputs(
                 report = sampleReport(),
-                environment = DiagnosticReportBuilder.Environment(
-                    "1.2.0",
-                    "abc123",
-                    "com.whatsapp",
-                    "2.26.39.74",
-                    "17",
-                    37,
-                    "arm64-v8a",
-                ),
+                environment =
+                    DiagnosticReportBuilder.Environment(
+                        "1.2.0",
+                        "abc123",
+                        "com.whatsapp",
+                        "2.26.39.74",
+                        "17",
+                        37,
+                        "arm64-v8a",
+                    ),
                 hooks = listOf("wax.modern.typing_privacy.composing"),
                 resolverStates = mapOf("jid_class" to "AVAILABLE"),
                 sanitizedLog = "sanitized line\n",
@@ -151,15 +153,16 @@ class DiagnosticZipExporterTest {
                 DiagnosticReportBuilder.entries(
                     DiagnosticReportBuilder.Inputs(
                         report = sampleReport(),
-                        environment = DiagnosticReportBuilder.Environment(
-                            "1.2.0",
-                            "abc",
-                            "com.whatsapp",
-                            "2.26.39.74",
-                            "17",
-                            37,
-                            "arm64-v8a",
-                        ),
+                        environment =
+                            DiagnosticReportBuilder.Environment(
+                                "1.2.0",
+                                "abc",
+                                "com.whatsapp",
+                                "2.26.39.74",
+                                "17",
+                                37,
+                                "arm64-v8a",
+                            ),
                         hooks = emptyList(), resolverStates = emptyMap(), sanitizedLog = null,
                     ),
                 ).first { it.name == "summary.md" }.content,
@@ -172,15 +175,16 @@ class DiagnosticZipExporterTest {
         val inputs =
             DiagnosticReportBuilder.Inputs(
                 report = sampleReport(),
-                environment = DiagnosticReportBuilder.Environment(
-                    "1.2.0",
-                    "abc123",
-                    "com.whatsapp",
-                    "2.26.39.74",
-                    "17",
-                    37,
-                    "arm64-v8a",
-                ),
+                environment =
+                    DiagnosticReportBuilder.Environment(
+                        "1.2.0",
+                        "abc123",
+                        "com.whatsapp",
+                        "2.26.39.74",
+                        "17",
+                        37,
+                        "arm64-v8a",
+                    ),
                 hooks = listOf("wax.modern.typing_privacy.composing"),
                 resolverStates = mapOf("jid_class" to "AVAILABLE"),
                 sanitizedLog = "sanitized line\n",

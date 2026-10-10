@@ -174,14 +174,19 @@ class DiagnosticEngine(
         val honest =
             results.map { result ->
                 val corrected = result.honestStatus(results.associateBy { it.id })
-                if (corrected == result.status) result else result.copy(
-                    status = corrected,
-                    failureClass = if (corrected == DiagnosticStatus.NOT_TESTED) {
-                        FailureClass.NONE
-                    } else {
-                        FailureClass.DEPENDENCY_MISSING
-                    },
-                )
+                if (corrected == result.status) {
+                    result
+                } else {
+                    result.copy(
+                        status = corrected,
+                        failureClass =
+                            if (corrected == DiagnosticStatus.NOT_TESTED) {
+                                FailureClass.NONE
+                            } else {
+                                FailureClass.DEPENDENCY_MISSING
+                            },
+                    )
+                }
             }
         return Report(
             scanId = scanId,
@@ -235,11 +240,12 @@ class DiagnosticEngine(
                     status = DiagnosticStatus.FAIL,
                     evidenceLevel = definition.level,
                     expected = definition.expected,
-                    observedEvidence = if (timedOut) {
-                        "probe exceeded ${config.perCheckTimeoutMillis}ms"
-                    } else {
-                        "probe failed: ${failure.javaClass.simpleName}"
-                    },
+                    observedEvidence =
+                        if (timedOut) {
+                            "probe exceeded ${config.perCheckTimeoutMillis}ms"
+                        } else {
+                            "probe failed: ${failure.javaClass.simpleName}"
+                        },
                     verification = VerificationState.NOT_OBSERVED,
                     timestampMillis = System.currentTimeMillis(),
                     whatsappBuild = config.whatsappBuild,
@@ -257,11 +263,12 @@ class DiagnosticEngine(
                 id = definition.id,
                 title = definition.title,
                 scope = definition.scope,
-                status = if (definition.externalConfirmationRequired) {
-                    DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
-                } else {
-                    DiagnosticStatus.NOT_TESTED
-                },
+                status =
+                    if (definition.externalConfirmationRequired) {
+                        DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION
+                    } else {
+                        DiagnosticStatus.NOT_TESTED
+                    },
                 evidenceLevel = definition.level,
                 expected = definition.expected,
                 observedEvidence = "",
@@ -297,11 +304,12 @@ class DiagnosticEngine(
             whatsappBuild = config.whatsappBuild,
             severity = definition.severity,
             confidence = if (status == DiagnosticStatus.PASS) 1.0 else 0.5,
-            failureClass = if (status == DiagnosticStatus.FAIL) {
-                observation.failureClass
-            } else {
-                FailureClass.NONE
-            },
+            failureClass =
+                if (status == DiagnosticStatus.FAIL) {
+                    observation.failureClass
+                } else {
+                    FailureClass.NONE
+                },
             remediation = definition.remediation,
             durationMillis = observation.durationMillis,
             dependsOn = definition.dependsOn,
