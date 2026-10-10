@@ -125,7 +125,9 @@ class DiagnosticZipExporter(
                     // reject duplicate names, and refuse traversal paths.
                     if (names.size >= maxEntries || !isSafeEntryName(entry.name) ||
                         payloads.containsKey(entry.name)
-                    ) return invalid
+                    ) {
+                        return invalid
+                    }
                     names.add(entry.name)
                     payloads[entry.name] = zip.readBounded(maxEntryBytes)
                     zip.closeEntry()
@@ -140,8 +142,9 @@ class DiagnosticZipExporter(
             manifestPresent = payloads.containsKey("manifest.json"),
             checksumsPresent = checksumsPresent,
             entryNames = names,
-            checksumMatches = checksumsPresent &&
-                checksumsMatch(payloads.getValue(CHECKSUMS_ENTRY), payloads),
+            checksumMatches =
+                checksumsPresent &&
+                    checksumsMatch(payloads.getValue(CHECKSUMS_ENTRY), payloads),
         )
     }
 
@@ -164,7 +167,9 @@ class DiagnosticZipExporter(
             val (digest, name) = parts
             if (!Regex("[a-f0-9]{64}").matches(digest) || name !in payloadNames ||
                 !observed.add(name)
-            ) return false
+            ) {
+                return false
+            }
             val content = payloads[name] ?: return false
             if (sha256(content) != digest) return false
         }

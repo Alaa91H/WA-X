@@ -21,8 +21,7 @@ class DiagnosticScanSession {
     }
 
     @Synchronized
-    fun acceptsProgress(token: Long): Boolean =
-        active == token && !cancelRequested
+    fun acceptsProgress(token: Long): Boolean = active == token && !cancelRequested
 
     @Synchronized
     fun cancel(): Boolean {

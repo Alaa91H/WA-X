@@ -14,17 +14,18 @@ class DiagnosticScanFallbackTest {
         assertEquals(0, report.summary.total)
         assertEquals(0, report.summary.passed)
         assertTrue(report.scanId.startsWith("not-run-"))
-        val bytes = DiagnosticZipExporter().build(
-            DiagnosticReportBuilder.entries(
-                DiagnosticReportBuilder.Inputs(
-                    report,
-                    DiagnosticReportBuilder.Environment("1", "abc", 1L, "com.whatsapp", "2.26.test", "17", 37, "arm64"),
-                    emptyList(),
-                    emptyMap(),
-                    null,
+        val bytes =
+            DiagnosticZipExporter().build(
+                DiagnosticReportBuilder.entries(
+                    DiagnosticReportBuilder.Inputs(
+                        report,
+                        DiagnosticReportBuilder.Environment("1", "abc", 1L, "com.whatsapp", "2.26.test", "17", 37, "arm64"),
+                        emptyList(),
+                        emptyMap(),
+                        null,
+                    ),
                 ),
-            ),
-        )
+            )
         assertTrue(DiagnosticZipExporter().verify(bytes.bytes).valid)
     }
 
@@ -34,7 +35,17 @@ class DiagnosticScanFallbackTest {
         assertEquals(0, report.summary.passed)
         assertEquals(DiagnosticStatus.FAIL, report.results.single().status)
         assertEquals(FailureClass.CRASHED, report.results.single().failureClass)
-        assertTrue(report.results.single().observedEvidence.contains("IllegalStateException"))
-        assertFalse(report.results.single().observedEvidence.contains("contact@"))
+        assertTrue(
+            report.results
+                .single()
+                .observedEvidence
+                .contains("IllegalStateException"),
+        )
+        assertFalse(
+            report.results
+                .single()
+                .observedEvidence
+                .contains("contact@"),
+        )
     }
 }

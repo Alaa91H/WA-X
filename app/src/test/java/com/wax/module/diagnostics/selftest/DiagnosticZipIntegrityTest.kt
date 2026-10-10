@@ -1,11 +1,11 @@
 package com.wax.module.diagnostics.selftest
 
-import java.io.ByteArrayOutputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /** Adversarial offline ZIP fixtures: imports are not inherently trustworthy. */
 class DiagnosticZipIntegrityTest {
@@ -13,13 +13,14 @@ class DiagnosticZipIntegrityTest {
 
     @Test fun unlistedPayloadDoesNotInheritOtherFilesChecksum() {
         val manifest = DiagnosticZipExporter.Entry("manifest.json", "{}".toByteArray())
-        val zip = rawZip(
-            mapOf(
-                manifest.name to manifest.content,
-                "checksums.sha256" to exporter.checksums(listOf(manifest)),
-                "tests/extra.json" to "unlisted".toByteArray(),
-            ),
-        )
+        val zip =
+            rawZip(
+                mapOf(
+                    manifest.name to manifest.content,
+                    "checksums.sha256" to exporter.checksums(listOf(manifest)),
+                    "tests/extra.json" to "unlisted".toByteArray(),
+                ),
+            )
         assertFalse(exporter.verify(zip).valid)
         assertTrue(DiagnosticArchiveImporter().import(zip) is DiagnosticArchiveImporter.ImportResult.Rejected)
     }
@@ -38,7 +39,9 @@ class DiagnosticZipIntegrityTest {
     @Test fun generatedArchivesRequireUniqueNames() {
         val same = DiagnosticZipExporter.Entry("manifest.json", "{}".toByteArray())
         var thrown = false
-        try { exporter.build(listOf(same, same)) } catch (_: IllegalArgumentException) {
+        try {
+            exporter.build(listOf(same, same))
+        } catch (_: IllegalArgumentException) {
             thrown = true
         }
         assertTrue(thrown)
