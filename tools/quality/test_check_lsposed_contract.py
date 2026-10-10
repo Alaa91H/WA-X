@@ -24,6 +24,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -539,13 +540,36 @@ def main() -> int:
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
-    # The real repository has to satisfy the contract this checker enforces.
-    code, violations, _notes = run(REPO_ROOT)
-    if code == 0 and not violations:
-        print("[pass] the real repository satisfies the LSPosed loader contract")
+    # The repository has one loader contract at a time. The legacy fixture suite above always
+    # tests the legacy checker; the real-tree integration check must use the contract the APK
+    # actually ships. CI owns the modern package through check_modern_main_apk.py.
+    legacy_entry = os.path.join(REPO_ROOT, "app", "src", "main", "assets", "xposed_init")
+    modern_entry = os.path.join(
+        REPO_ROOT, "app", "src", "main", "resources", "META-INF", "xposed", "java_init.list"
+    )
+    if os.path.isfile(modern_entry) and not os.path.isfile(legacy_entry):
+        result = subprocess.run(
+            [sys.executable, os.path.join(HERE, "check_modern_main_apk.py"), "--source-only"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            print("[pass] the real repository satisfies the API102 loader contract")
+        else:
+            print(
+                "[fail] the real repository violates the API102 loader contract: %s"
+                % (result.stdout + result.stderr)
+            )
+            failed += 1
     else:
-        print("[fail] the real repository violates the contract: %s" % violations)
-        failed += 1
+        code, violations, _notes = run(REPO_ROOT)
+        if code == 0 and not violations:
+            print("[pass] the real repository satisfies the legacy LSPosed loader contract")
+        else:
+            print("[fail] the real repository violates the legacy contract: %s" % violations)
+            failed += 1
 
     total = len(cases) + len(keep_cases) + 11
     if failed:
