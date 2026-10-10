@@ -278,7 +278,11 @@ object AtomicCheckInventory {
             externalConfirmationRequired = externalConfirmationRequired,
         )
 
-    fun triggerCheck(featureId: String, title: String, hookId: String): Definition =
+    fun triggerCheck(
+        featureId: String,
+        title: String,
+        hookId: String,
+    ): Definition =
         Definition(
             id = TRIGGER_PREFIX + featureId,
             title = "$title callback invoked",
@@ -295,6 +299,5 @@ object AtomicCheckInventory {
     fun byId(id: String): Definition? = all().firstOrNull { it.id == id }
 
     /** The causal order, with feature checks appended after their pipeline. */
-    fun orderWith(features: List<Definition>): List<String> =
-        PIPELINE.map { it.id } + features.map { it.id }
+    fun orderWith(features: List<Definition>): List<String> = PIPELINE.map { it.id } + features.map { it.id }
 }
