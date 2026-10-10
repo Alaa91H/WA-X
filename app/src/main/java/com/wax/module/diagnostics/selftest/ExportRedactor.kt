@@ -31,15 +31,16 @@ class ExportRedactor {
             get() = jidsRedacted + numbersRedacted + messageLikeRedacted +
                 tokensRedacted + pathsRedacted
 
-        fun toJson(): String = buildString {
-            append('{')
-            append("\"jids\":").append(jidsRedacted).append(',')
-            append("\"phone_numbers\":").append(numbersRedacted).append(',')
-            append("\"message_like\":").append(messageLikeRedacted).append(',')
-            append("\"tokens\":").append(tokensRedacted).append(',')
-            append("\"paths\":").append(pathsRedacted)
-            append('}')
-        }
+        fun toJson(): String =
+            buildString {
+                append('{')
+                append("\"jids\":").append(jidsRedacted).append(',')
+                append("\"phone_numbers\":").append(numbersRedacted).append(',')
+                append("\"message_like\":").append(messageLikeRedacted).append(',')
+                append("\"tokens\":").append(tokensRedacted).append(',')
+                append("\"paths\":").append(pathsRedacted)
+                append('}')
+            }
     }
 
     data class Redacted(val text: String, val report: RedactionReport)

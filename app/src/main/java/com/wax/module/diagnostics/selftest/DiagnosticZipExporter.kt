@@ -143,11 +143,12 @@ class DiagnosticZipExporter(
     }
 
     /** Per-entry checksums, written next to the payload as `checksums.sha256`. */
-    fun checksums(entries: List<Entry>): ByteArray = buildString {
-        for (entry in entries.sortedBy { it.name }) {
-            append(sha256(entry.content)).append("  ").append(entry.name).append('\n')
-        }
-    }.toByteArray()
+    fun checksums(entries: List<Entry>): ByteArray  =
+        buildString {
+            for (entry in entries.sortedBy { it.name }) {
+                append(sha256(entry.content)).append("  ").append(entry.name).append('\n')
+            }
+        }.toByteArray()
 
     fun readEntry(bytes: ByteArray, name: String): ByteArray? {
         ZipInputStream(bytes.inputStream()).use { zip ->

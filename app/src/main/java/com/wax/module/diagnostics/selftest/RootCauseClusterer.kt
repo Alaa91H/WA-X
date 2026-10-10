@@ -119,33 +119,34 @@ data class DiagnosticSummary(
 ) {
     val inconclusive: Int get() = notTested + needsExternalVerification
 
-    fun toJson(): String = buildString {
-        append('{')
-        append("\"total\":").append(total).append(',')
-        append("\"passed\":").append(passed).append(',')
-        append("\"failed\":").append(failed).append(',')
-        append("\"blocked\":").append(blocked).append(',')
-        append("\"not_tested\":").append(notTested).append(',')
-        append("\"unsupported\":").append(unsupported).append(',')
-        append("\"needs_external_verification\":").append(needsExternalVerification).append(',')
-        append("\"inconclusive\":").append(inconclusive).append(',')
-        append("\"clusters\":[")
-        append(clusters.joinToString(",") { cluster ->
-            buildString {
-                append('{')
-                append("\"root_cause\":")
-                appendQuoted(cluster.rootCauseId)
-                append(",\"title\":")
-                appendQuoted(cluster.rootTitle)
-                append(",\"symptoms\":")
-                append(jsonArray(cluster.symptomIds))
-                append(",\"affected_features\":")
-                append(jsonArray(cluster.affectedFeatures))
-                append(",\"remediation\":")
-                appendQuoted(cluster.remediation)
-                append('}')
-            }
-        })
-        append("]}")
-    }
-}
+    fun toJson(): String =
+        buildString {
+            append('{')
+            append("\"total\":").append(total).append(',')
+            append("\"passed\":").append(passed).append(',')
+            append("\"failed\":").append(failed).append(',')
+            append("\"blocked\":").append(blocked).append(',')
+            append("\"not_tested\":").append(notTested).append(',')
+            append("\"unsupported\":").append(unsupported).append(',')
+            append("\"needs_external_verification\":").append(needsExternalVerification).append(',')
+            append("\"inconclusive\":").append(inconclusive).append(',')
+            append("\"clusters\":[")
+            append(clusters.joinToString(",") { cluster ->
+                buildString {
+                    append('{')
+                    append("\"root_cause\":")
+                    appendQuoted(cluster.rootCauseId)
+                    append(",\"title\":")
+                    appendQuoted(cluster.rootTitle)
+                    append(",\"symptoms\":")
+                    append(jsonArray(cluster.symptomIds))
+                    append(",\"affected_features\":")
+                    append(jsonArray(cluster.affectedFeatures))
+                    append(",\"remediation\":")
+                    appendQuoted(cluster.remediation)
+                    append('}')
+                }
+            })
+            append("]}")
+        }
+        }

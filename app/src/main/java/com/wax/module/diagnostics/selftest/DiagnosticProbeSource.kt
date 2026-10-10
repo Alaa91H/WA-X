@@ -19,10 +19,11 @@ import com.wax.module.platform.SupportedPackages
 object DiagnosticProbeSource {
     const val TARGET_PACKAGE = "com.whatsapp"
 
-    fun whatsappBuild(): String = runCatching {
-        val info = context()?.packageManager?.getPackageInfo(TARGET_PACKAGE, 0)
-        info?.versionName
-    }.getOrNull() ?: "unknown"
+    fun whatsappBuild(): String =
+        runCatching {
+            val info = context()?.packageManager?.getPackageInfo(TARGET_PACKAGE, 0)
+            info?.versionName
+        }.getOrNull() ?: "unknown"
 
     private var appContext: Context? = null
 

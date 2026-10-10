@@ -142,28 +142,29 @@ data class AtomicCheckResult(
         }
     }
 
-    fun toJson(): String = buildString {
-        append('{')
-        appendField("id", id)
-        appendField("title", title)
-        appendField("scope", scope)
-        appendField("status", status.name)
-        appendField("evidence_level", evidenceLevel.name)
-        appendField("expected", expected)
-        appendField("observed", observedEvidence)
-        appendField("verification", verification.name)
-        append("\"timestamp_millis\":").append(timestampMillis).append(',')
-        appendField("whatsapp_build", whatsappBuild)
-        appendField("severity", severity)
-        append("\"confidence\":").append(confidence)
-        appendField("failure_class", failureClass.name)
-        appendField("remediation", remediation)
-        append("\"duration_millis\":").append(durationMillis)
-        append("\"depends_on\":[")
-        append(dependsOn.joinToString(",") { "\"$it\"" })
-        append(']')
-        append("\"external_confirmation_required\":").append(externalConfirmationRequired)
-        append('}')
+    fun toJson(): String =
+        buildString {
+            append('{')
+            appendField("id", id)
+            appendField("title", title)
+            appendField("scope", scope)
+            appendField("status", status.name)
+            appendField("evidence_level", evidenceLevel.name)
+            appendField("expected", expected)
+            appendField("observed", observedEvidence)
+            appendField("verification", verification.name)
+            append("\"timestamp_millis\":").append(timestampMillis).append(',')
+            appendField("whatsapp_build", whatsappBuild)
+            appendField("severity", severity)
+            append("\"confidence\":").append(confidence)
+            appendField("failure_class", failureClass.name)
+            appendField("remediation", remediation)
+            append("\"duration_millis\":").append(durationMillis)
+            append("\"depends_on\":[")
+            append(dependsOn.joinToString(",") { "\"$it\"" })
+            append(']')
+            append("\"external_confirmation_required\":").append(externalConfirmationRequired)
+            append('}')
     }
 
     private fun StringBuilder.appendField(key: String, value: String) {

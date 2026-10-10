@@ -72,79 +72,81 @@ object DiagnosticReportBuilder {
         inputs: Inputs,
         summary: DiagnosticSummary,
         declaredMissing: List<String>,
-    ): String = buildString {
-        append('{')
-        append("\"schema_version\":").appendQuoted(DiagnosticSchema.SCHEMA_VERSION).append(',')
-        append("\"scan_id\":").appendQuoted(inputs.report.scanId).append(',')
-        append("\"started_utc\":").appendQuoted(inputs.report.startedAtMillis.toString()).append(',')
-        append("\"finished_utc\":").appendQuoted(inputs.report.finishedAtMillis.toString()).append(',')
-        append("\"mode\":").appendQuoted(inputs.report.config.mode.name).append(',')
-        append("\"scope\":").appendQuoted(inputs.report.config.scope).append(',')
-        append("\"consent\":").append("\"user_initiated_export\"").append(',')
-        append("\"app_version\":").appendQuoted(inputs.environment.appVersion).append(',')
-        append("\"app_build_sha\":").appendQuoted(inputs.environment.appBuildSha).append(',')
-        append("\"whatsapp_package\":").appendQuoted(inputs.environment.whatsappPackage).append(',')
-        append("\"whatsapp_version\":").appendQuoted(inputs.environment.whatsappVersion).append(',')
-        append("\"android_version\":").appendQuoted(inputs.environment.androidVersion).append(',')
-        append("\"android_sdk\":").append(inputs.environment.androidSdk).append(',')
-        append("\"abi\":").appendQuoted(inputs.environment.abi).append(',')
-        append("\"test_counts\":").append(summary.toJson()).append(',')
-        append("\"declared_missing_sources\":").append(jsonArray(declaredMissing))
-        append('}')
-    }
+    ): String =
+        buildString {
+            append('{')
+            append("\"schema_version\":").appendQuoted(DiagnosticSchema.SCHEMA_VERSION).append(',')
+            append("\"scan_id\":").appendQuoted(inputs.report.scanId).append(',')
+            append("\"started_utc\":").appendQuoted(inputs.report.startedAtMillis.toString()).append(',')
+            append("\"finished_utc\":").appendQuoted(inputs.report.finishedAtMillis.toString()).append(',')
+            append("\"mode\":").appendQuoted(inputs.report.config.mode.name).append(',')
+            append("\"scope\":").appendQuoted(inputs.report.config.scope).append(',')
+            append("\"consent\":").append("\"user_initiated_export\"").append(',')
+            append("\"app_version\":").appendQuoted(inputs.environment.appVersion).append(',')
+            append("\"app_build_sha\":").appendQuoted(inputs.environment.appBuildSha).append(',')
+            append("\"whatsapp_package\":").appendQuoted(inputs.environment.whatsappPackage).append(',')
+            append("\"whatsapp_version\":").appendQuoted(inputs.environment.whatsappVersion).append(',')
+            append("\"android_version\":").appendQuoted(inputs.environment.androidVersion).append(',')
+            append("\"android_sdk\":").append(inputs.environment.androidSdk).append(',')
+            append("\"abi\":").appendQuoted(inputs.environment.abi).append(',')
+            append("\"test_counts\":").append(summary.toJson()).append(',')
+            append("\"declared_missing_sources\":").append(jsonArray(declaredMissing))
+            append('}')
+        }
 
     /** Bilingual by contract: the Arabic section first, then English. */
     private fun summaryMarkdown(
         report: DiagnosticEngine.Report,
         summary: DiagnosticSummary,
         declaredMissing: List<String>,
-    ): String = buildString {
-        appendLine("# WA X تشخيص ذاتي / WA X self-test")
-        appendLine()
-        appendLine("المسح / Scan: `${report.scanId}`")
-        appendLine("النمط / Mode: `${report.config.mode}`")
-        appendLine("المجموع / Total: ${summary.total}")
-        appendLine(
-            "نجح/فشل/محجوب / passed/failed/blocked: " +
-                "${summary.passed}/${summary.failed}/${summary.blocked}",
-        )
-        appendLine(
-            "غير مختبر / inconclusive: ${summary.inconclusive} " +
-                "(not tested ${summary.notTested}, needs external " +
-                "${summary.needsExternalVerification})",
-        )
-        appendLine("غير مدعوم / unsupported: ${summary.unsupported}")
-        appendLine()
-        appendLine("## الجذر / Root causes")
-        if (summary.clusters.isEmpty()) {
-            appendLine("لا يوجد / none")
-        } else {
-            for (cluster in summary.clusters) {
-                appendLine("- `${cluster.rootCauseId}` ${cluster.rootTitle}")
-                if (cluster.symptomIds.size > 1) {
-                    appendLine("  - symptoms: " + cluster.symptomIds.joinToString(", "))
-                }
-                if (cluster.remediation.isNotBlank()) {
-                    appendLine("  - fix: ${cluster.remediation}")
-                }
-            }
-        }
-        appendLine()
-        appendLine("## النتائج / Results")
-        for (result in report.results) {
-            appendLine(
-                "- `${result.id}` ${result.status} (${result.evidenceLevel}, " +
-                    "${result.verification}) — ${result.remediation}",
-            )
-        }
-        if (declaredMissing.isNotEmpty()) {
+    ): String =
+        buildString {
+            appendLine("# WA X تشخيص ذاتي / WA X self-test")
             appendLine()
-            appendLine("## مصادر غير متاحة / Declared missing sources")
-            for (missing in declaredMissing) {
-                appendLine("- $missing")
+            appendLine("المسح / Scan: `${report.scanId}`")
+            appendLine("النمط / Mode: `${report.config.mode}`")
+            appendLine("المجموع / Total: ${summary.total}")
+            appendLine(
+                "نجح/فشل/محجوب / passed/failed/blocked: " +
+                    "${summary.passed}/${summary.failed}/${summary.blocked}",
+            )
+            appendLine(
+                "غير مختبر / inconclusive: ${summary.inconclusive} " +
+                    "(not tested ${summary.notTested}, needs external " +
+                    "${summary.needsExternalVerification})",
+            )
+            appendLine("غير مدعوم / unsupported: ${summary.unsupported}")
+            appendLine()
+            appendLine("## الجذر / Root causes")
+            if (summary.clusters.isEmpty()) {
+                appendLine("لا يوجد / none")
+            } else {
+                for (cluster in summary.clusters) {
+                    appendLine("- `${cluster.rootCauseId}` ${cluster.rootTitle}")
+                    if (cluster.symptomIds.size > 1) {
+                        appendLine("  - symptoms: " + cluster.symptomIds.joinToString(", "))
+                    }
+                    if (cluster.remediation.isNotBlank()) {
+                        appendLine("  - fix: ${cluster.remediation}")
+                    }
+                }
+            }
+            appendLine()
+            appendLine("## النتائج / Results")
+            for (result in report.results) {
+                appendLine(
+                    "- `${result.id}` ${result.status} (${result.evidenceLevel}, " +
+                        "${result.verification}) — ${result.remediation}",
+                )
+            }
+            if (declaredMissing.isNotEmpty()) {
+                appendLine()
+                appendLine("## مصادر غير متاحة / Declared missing sources")
+                for (missing in declaredMissing) {
+                    appendLine("- $missing")
+                }
             }
         }
-    }
 
     private fun resultsJson(report: DiagnosticEngine.Report): String = buildString {
         append("{\"scan_id\":").appendQuoted(report.scanId).append(",\"checks\":[")
