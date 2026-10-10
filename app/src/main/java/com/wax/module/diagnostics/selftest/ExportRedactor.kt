@@ -102,9 +102,9 @@ class ExportRedactor {
         entries: List<DiagnosticZipExporter.Entry>,
     ): RedactedEntries {
         val state = MutableReportState()
-        val hadChecksums = entries.any { it.name == DiagnosticZipExporter.CHECKSUMS_ENTRY }
+        val hadChecksums = entries.any { it.name == CHECKSUMS_ENTRY }
         val cleaned = entries
-            .filter { it.name != DiagnosticZipExporter.CHECKSUMS_ENTRY }
+            .filter { it.name != CHECKSUMS_ENTRY }
             .map { entry ->
                 DiagnosticZipExporter.Entry(
                     entry.name,
@@ -116,7 +116,7 @@ class ExportRedactor {
         // fails its own verification, which is worse than shipping none.
         val withChecksums = if (hadChecksums) {
             cleaned + DiagnosticZipExporter.Entry(
-                DiagnosticZipExporter.CHECKSUMS_ENTRY,
+                CHECKSUMS_ENTRY,
                 DiagnosticZipExporter().checksums(cleaned),
             )
         } else {

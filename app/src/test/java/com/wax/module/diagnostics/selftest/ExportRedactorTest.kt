@@ -101,7 +101,7 @@ class ExportRedactorTest {
             )
         val withChecksums =
             payload + DiagnosticZipExporter.Entry(
-                DiagnosticZipExporter.CHECKSUMS_ENTRY,
+                CHECKSUMS_ENTRY,
                 DiagnosticZipExporter().checksums(payload),
             )
         val redacted = ExportRedactor().redactEntries(withChecksums)
