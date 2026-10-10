@@ -242,7 +242,8 @@ Nothing below is claimed as done.
 | #449 | merged `67fc086b`: read receipts withheld, release-after-reply, delivery tick reported `UNSUPPORTED` on purpose |
 | #450 | merged `67fc086b`: typing and recording reported separately; online presence named `SERVER_CONTROLLED` |
 | #451 | merged `3b6b4842`: anti-revoke with bounded retention and no protected content copied |
-| #452 | merged `9a9d0a72`: Status seen privacy, kept separate from chat receipts; reply rule left to #357 |
+| #452 | merged `9a9d0a72`: Status seen privacy, kept separate from chat receipts |
+| #357 | merged `5c8d91b6`: the Status reply seen-receipt rule; native receipt path still unresolved on the runtime |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
