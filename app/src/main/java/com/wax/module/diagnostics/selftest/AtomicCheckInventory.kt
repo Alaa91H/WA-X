@@ -60,7 +60,7 @@ object AtomicCheckInventory {
      */
     val PIPELINE: List<Definition> =
         listOf(
-            define(
+            Definition(
                 id = ENV_ANDROID,
                 title = "Android version and ABI",
                 scope = "device",
@@ -70,7 +70,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "info",
             ),
-            define(
+            Definition(
                 id = ENV_TARGET,
                 title = "WhatsApp version and package",
                 scope = "target",
@@ -80,7 +80,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "info",
             ),
-            define(
+            Definition(
                 id = ENV_SCOPE,
                 title = "Framework scope",
                 scope = "framework",
@@ -90,7 +90,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "info",
             ),
-            define(
+            Definition(
                 id = FRAMEWORK_API102,
                 title = "libxposed API 102 runtime",
                 scope = "framework",
@@ -100,7 +100,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = MODULE_LOADED,
                 title = "Module loaded",
                 scope = "module",
@@ -110,7 +110,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = APP_ATTACH,
                 title = "Application.attach observed",
                 scope = "target",
@@ -120,7 +120,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = PACKAGE_CALLBACK,
                 title = "Target package callback",
                 scope = "target",
@@ -130,7 +130,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = MANAGER_IPC,
                 title = "Manager IPC authentication",
                 scope = "manager",
@@ -140,7 +140,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = HEARTBEAT,
                 title = "Runtime heartbeat",
                 scope = "manager",
@@ -150,7 +150,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "medium",
             ),
-            define(
+            Definition(
                 id = DEXKIT_NATIVE,
                 title = "DexKit native library",
                 scope = "resolver",
@@ -160,7 +160,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = CONTACT_CLASS,
                 title = "Contact class resolver",
                 scope = "resolver",
@@ -170,7 +170,7 @@ object AtomicCheckInventory {
                 remediation = "Report the WhatsApp build",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = CONTACT_DATA_CLASS,
                 title = "Contact data class resolver",
                 scope = "resolver",
@@ -180,7 +180,7 @@ object AtomicCheckInventory {
                 remediation = "The contact data class was renamed or removed in this build",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = JID_CLASS,
                 title = "JID class resolver",
                 scope = "resolver",
@@ -190,7 +190,7 @@ object AtomicCheckInventory {
                 remediation = "The JID class suffix no longer matches this build",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = JID_RAW_STRING,
                 title = "JID raw-string accessor",
                 scope = "resolver",
@@ -200,7 +200,7 @@ object AtomicCheckInventory {
                 remediation = "Several methods match; the accessor cannot be chosen safely",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = MESSAGE_CLASS,
                 title = "Message class resolver",
                 scope = "resolver",
@@ -210,7 +210,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = MESSAGE_KEY_CLASS,
                 title = "Message key resolver",
                 scope = "resolver",
@@ -220,7 +220,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "high",
             ),
-            define(
+            Definition(
                 id = REGISTRY,
                 title = "Feature registry",
                 scope = "registry",
@@ -230,7 +230,7 @@ object AtomicCheckInventory {
                 remediation = "",
                 severity = "medium",
             ),
-            define(
+            Definition(
                 id = PREF_READBACK,
                 title = "Preference readback",
                 scope = "preference",
@@ -241,26 +241,6 @@ object AtomicCheckInventory {
                 severity = "medium",
             ),
         )
-
-    private fun define(
-        id: String,
-        title: String,
-        scope: String,
-        level: EvidenceLevel,
-        dependsOn: List<String>,
-        expected: String,
-        remediation: String,
-        severity: String,
-    ): Definition = Definition(
-        id,
-        title,
-        scope,
-        level,
-        dependsOn,
-        expected,
-        remediation,
-        severity,
-    )
 
     /** Owner's priority order for the everyday privacy behaviours. */
     val P0_PRIVACY_ORDER: List<String> =
