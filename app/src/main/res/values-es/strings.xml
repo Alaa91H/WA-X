@@ -615,4 +615,5 @@
     <string name="diagnostics_export_done">Diagnóstico exportado</string>
     <string name="diagnostics_export_failed">Error al exportar</string>
     <string name="diagnostics_manifest_missing">No se pudo verificar el archivo y no se escribió.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

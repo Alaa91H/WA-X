@@ -616,4 +616,5 @@
     <string name="diagnostics_export_done">诊断已导出</string>
     <string name="diagnostics_export_failed">导出失败</string>
     <string name="diagnostics_manifest_missing">无法验证该压缩包，因此未写入。</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

@@ -617,4 +617,5 @@
     <string name="diagnostics_export_done">האבחון יוצא</string>
     <string name="diagnostics_export_failed">הייצוא נכשל</string>
     <string name="diagnostics_manifest_missing">לא ניתן היה לאמת את הארכיון ולכן הוא לא נכתב.</string>
+    <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
 </resources>

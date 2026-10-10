@@ -261,23 +261,25 @@ class DiagnosticsActivity : BaseActivity() {
     }
 
     /** Writes the verified archive to the document the user picked, or reports why not. */
-    private val createDocument = registerForActivityResult(ActivityResultContracts.CreateDocument(ZIP_MIME_TYPE)) { uri ->
-        val bytes = pendingBytes
-        pendingBytes = null
-        if (uri == null || bytes == null) return@registerForActivityResult
-        try {
-            val stream = contentResolver.openOutputStream(uri)
-                ?: throw IllegalStateException("storage provider returned no stream")
-            stream.use { DiagnosticZipExporter().writeTo(ResolverTarget(it), bytes) }
-            AlertDialog.Builder(this)
-                .setTitle(R.string.diagnostics_export_done)
-                .setMessage(uri.toString())
-                .show()
-        } catch (failure: Exception) {
-            Log.w(TAG, "could not write the export", failure)
-            showFailure(failure.message ?: "")
+    private val createDocument =
+        registerForActivityResult(ActivityResultContracts.CreateDocument(ZIP_MIME_TYPE)) { uri ->
+            val bytes = pendingBytes
+            pendingBytes = null
+            if (uri == null || bytes == null) return@registerForActivityResult
+            try {
+                val stream = contentResolver.openOutputStream(uri)
+                    ?: throw IllegalStateException("storage provider returned no stream")
+                stream.use { DiagnosticZipExporter().writeTo(ResolverTarget(it), bytes) }
+                AlertDialog
+                    .Builder(this)
+                    .setTitle(R.string.diagnostics_export_done)
+                    .setMessage(uri.toString())
+                    .show()
+            } catch (failure: Exception) {
+                Log.w(TAG, "could not write the export", failure)
+                showFailure(failure.message ?: "")
+            }
         }
-    }
 
     private fun showFailure(reason: String) {
         AlertDialog.Builder(this)
