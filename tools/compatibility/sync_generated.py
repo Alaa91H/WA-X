@@ -60,6 +60,58 @@ def effective_status(matrix: dict, feature_id: str, package: str, version: str) 
     return matrix.get("packages", {}).get(package, {}).get("defaultStatus", "unknown")
 
 
+def _known_feature_ids(matrix: dict) -> set[str]:
+    """Every feature the matrix knows about, from either side of the schema."""
+    ids = {
+        item.get("id")
+        for item in matrix.get("derived", {}).get("features", [])
+        if isinstance(item, dict)
+    }
+    ids.update(matrix.get("matrix", {}).keys())
+    return {value for value in ids if isinstance(value, str) and value}
+
+
+def inherited_supported_cells(matrix: dict) -> list[str]:
+    """Cells that would be certified only because of a package default.
+
+    The validator already refuses a package-wide ``supported`` default. This is
+    the second half of the gate (#396): the generator refuses to *emit* a green
+    cell it cannot justify either, so running it on its own cannot produce a
+    compatibility claim the validator would have rejected.
+
+    Only inherited cells are listed. A cell carrying its own explicit status is
+    evidence-backed and stays untouched, whatever the package default is.
+    """
+    inherited: list[str] = []
+    packages = matrix.get("packages", {})
+    rows = matrix.get("matrix", {})
+    for package in sorted(packages):
+        entry = packages[package]
+        if entry.get("defaultStatus") != "supported":
+            continue
+        for feature_id in sorted(_known_feature_ids(matrix)):
+            versions = rows.get(feature_id, {}).get(package, {}).get("versions", {})
+            for version in entry.get("declaredVersions", []):
+                if version not in versions:
+                    inherited.append("%s/%s/%s" % (feature_id, package, version))
+    return inherited
+
+
+def refuse_inherited_certification(matrix: dict) -> None:
+    """Fail loudly rather than write a green cell no evidence supports."""
+    inherited = inherited_supported_cells(matrix)
+    if not inherited:
+        return
+    preview = ", ".join(inherited[:5])
+    if len(inherited) > 5:
+        preview += ", ... (%d cells)" % len(inherited)
+    raise SystemExit(
+        "refusing to generate: %d cells would be certified by a package-wide "
+        "'supported' default with no per-cell evidence: %s. Set an explicit "
+        "per-feature, exact-version status instead." % (len(inherited), preview)
+    )
+
+
 def worst_status(statuses: list[str]) -> str:
     for candidate in ("unsupported", "degraded", "unknown", "supported"):
         if candidate in statuses:
@@ -338,6 +390,11 @@ def main(argv: list[str]) -> int:
         return 2
     with open(MATRIX, "r", encoding="utf-8") as handle:
         matrix = json.load(handle)
+
+    # The emission gate (#396). The validator already refuses a package-wide
+    # "supported" default; refusing here too means the generator cannot certify
+    # an inherited cell even when it is run on its own.
+    refuse_inherited_certification(matrix)
 
     if not os.path.exists(ARRAYS):
         print("missing %s" % ARRAYS, file=sys.stderr)

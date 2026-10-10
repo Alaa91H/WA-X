@@ -72,9 +72,25 @@ def validate(matrix):
 
 class EvidenceGateTests(unittest.TestCase):
     def test_default_supported_is_forbidden(self):
-        matrix = fixture()
-        matrix["packages"]["whatsapp"]["defaultStatus"] = "supported"
-        self.assertTrue(validate(matrix))
+        # Both targets, and every declared version, not just one of them: the
+        # bypass was never specific to a package or to a version list.
+        for package in validator.PACKAGE_KEYS:
+            for version in (VERSION, "2.26.39.74", "2.25.10.3"):
+                with self.subTest(package=package, version=version):
+                    matrix = fixture()
+                    matrix["packages"][package]["declaredVersions"] = [version]
+                    matrix["packages"][package]["defaultStatus"] = "supported"
+                    self.assertTrue(validate(matrix))
+
+    def test_default_supported_is_forbidden_with_an_empty_matrix(self):
+        # The exact bypass shape: a green default, no explicit cell anywhere.
+        for package in validator.PACKAGE_KEYS:
+            with self.subTest(package=package):
+                matrix = fixture()
+                matrix["matrix"] = {}
+                matrix["evidence"] = {}
+                matrix["packages"][package]["defaultStatus"] = "supported"
+                self.assertTrue(validate(matrix))
 
     def test_other_defaults_are_allowed(self):
         for status in ("unknown", "degraded", "unsupported"):
