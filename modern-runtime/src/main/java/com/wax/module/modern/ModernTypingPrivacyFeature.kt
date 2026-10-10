@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import io.github.libxposed.api.XposedInterface
-import java.util.concurrent.ConcurrentHashMap
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * API 102 port of the legacy TypingPrivacy feature.
@@ -51,6 +51,55 @@ object ModernTypingPrivacyFeature {
         ERROR,
     }
 
+    /**
+     * The per-behaviour state, which is not the same as the hook state (#450).
+     *
+     * Typing and recording are separate promises to the people you are talking
+     * to, so they are reported separately even though one hook serves both:
+     * a user who hides recording but not typing has to be able to see which one
+     * is actually in force.
+     */
+    data class BehaviourState(
+        val typingRequested: Boolean,
+        val recordingRequested: Boolean,
+        val typingWithheld: Boolean,
+        val recordingWithheld: Boolean,
+        val outcome: Outcome,
+    ) {
+        /** True only when the hook is installed and the behaviour is in force. */
+        fun isBehaviourActive(
+            requested: Boolean,
+            withheld: Boolean,
+        ): Boolean = outcome == Outcome.INSTALLED && requested && withheld
+    }
+
+    /**
+     * Reads the three legacy switches into the two behaviours they control.
+     *
+     * `ghostmode` is the legacy global that covers both, so it counts towards
+     * each behaviour rather than being a third thing.
+     */
+    @JvmStatic
+    fun behaviourState(
+        preferences: SharedPreferences,
+        outcome: Outcome,
+    ): BehaviourState {
+        val global = preferences.getBoolean(PREF_GHOSTMODE, false)
+        val typing = global || preferences.getBoolean(PREF_GHOSTMODE_TYPING, false)
+        val recording = global || preferences.getBoolean(PREF_GHOSTMODE_RECORDING, false)
+        // Installed is the ceiling: without it nothing is withheld, and
+        // reporting the preference alone is exactly the false claim #450 rules
+        // out.
+        val installed = outcome == Outcome.INSTALLED
+        return BehaviourState(
+            typingRequested = typing,
+            recordingRequested = recording,
+            typingWithheld = typing && installed,
+            recordingWithheld = recording && installed,
+            outcome = outcome,
+        )
+    }
+
     data class PrivacyRule(
         val hideTyping: Boolean,
         val hideRecording: Boolean,
@@ -64,8 +113,9 @@ object ModernTypingPrivacyFeature {
         stateType: Int,
         hideTyping: Boolean,
         hideRecording: Boolean,
-    ): Boolean = (stateType == STATE_RECORDING && hideRecording) ||
-        (stateType == STATE_TYPING && hideTyping)
+    ): Boolean =
+        (stateType == STATE_RECORDING && hideRecording) ||
+            (stateType == STATE_TYPING && hideTyping)
 
     @JvmStatic
     fun install(
@@ -81,29 +131,31 @@ object ModernTypingPrivacyFeature {
         if (!hideTypingGlobal && !hideRecordingGlobal) return Outcome.DISABLED
         if (jidAccess == null) return Outcome.UNSAFE_SIGNATURE
 
-        val composing = try {
-            DexKitBridge.create(target.applicationInfo.sourceDir).use { dex ->
-                dex.findMethod {
-                    matcher {
-                        addUsingString(ANCHOR_COMPOSING, StringMatchType.Contains)
+        val composing =
+            try {
+                DexKitBridge.create(target.applicationInfo.sourceDir).use { dex ->
+                    dex.findMethod {
+                        matcher {
+                            addUsingString(ANCHOR_COMPOSING, StringMatchType.Contains)
+                        }
                     }
                 }
+            } catch (failure: Throwable) {
+                if (failure is VirtualMachineError) throw failure
+                Log.w(TAG, "Composing resolver unavailable", failure)
+                return Outcome.RESOLVER_MISSING
             }
-        } catch (failure: Throwable) {
-            if (failure is VirtualMachineError) throw failure
-            Log.w(TAG, "Composing resolver unavailable", failure)
-            return Outcome.RESOLVER_MISSING
-        }
         when {
             composing.isEmpty() -> return Outcome.RESOLVER_MISSING
             composing.size != 1 -> return Outcome.RESOLVER_AMBIGUOUS
         }
-        val method = try {
-            composing[0].getMethodInstance(target.classLoader)
-        } catch (failure: Throwable) {
-            Log.w(TAG, "Composing method unresolvable", failure)
-            return Outcome.RESOLVER_MISSING
-        }
+        val method =
+            try {
+                composing[0].getMethodInstance(target.classLoader)
+            } catch (failure: Throwable) {
+                Log.w(TAG, "Composing method unresolvable", failure)
+                return Outcome.RESOLVER_MISSING
+            }
         // The legacy resolver only accepts this exact observed shape.
         if (method.parameterCount < 3 || method.parameterTypes[2] != Int::class.javaPrimitiveType) {
             return Outcome.UNSAFE_SIGNATURE
@@ -111,28 +163,35 @@ object ModernTypingPrivacyFeature {
         val jidClass = jidAccess.jidClass
 
         try {
-            hooks.installFeature(FEATURE_ID, listOf(
-                ModernHookRegistry.Registration("typing_privacy.composing") {
-                    val handle = ModernHookBridge(framework).intercept(
-                        method, "wax.modern.typing_privacy.composing",
-                    ) { chain ->
-                        val stateType = chain.args.firstOrNull() as? Int
-                        val jid = chain.args.firstOrNull { candidate ->
-                            candidate != null && jidClass.isInstance(candidate)
-                        }
-                        val number = jidAccess.phoneNumber(jid)
-                        val rule = number?.let { lookup(target, it, chain.args) }
-                        val hideTyping = hideTypingGlobal || (rule?.hideTyping == true)
-                        val hideRecording =
-                            hideRecordingGlobal || (rule?.hideRecording == true)
-                        if (stateType != null && shouldSuppress(stateType, hideTyping, hideRecording)) {
-                            // Legacy semantics: the state callback never fires.
-                            return@intercept null
-                        }
-                        chain.proceed()
-                    }
-                    ModernHookRegistry.Handle { handle.unhook() }
-                }))
+            hooks.installFeature(
+                FEATURE_ID,
+                listOf(
+                    ModernHookRegistry.Registration("typing_privacy.composing") {
+                        val handle =
+                            ModernHookBridge(framework).intercept(
+                                method,
+                                "wax.modern.typing_privacy.composing",
+                            ) { chain ->
+                                val stateType = chain.args.firstOrNull() as? Int
+                                val jid =
+                                    chain.args.firstOrNull { candidate ->
+                                        candidate != null && jidClass.isInstance(candidate)
+                                    }
+                                val number = jidAccess.phoneNumber(jid)
+                                val rule = number?.let { lookup(target, it, chain.args) }
+                                val hideTyping = hideTypingGlobal || (rule?.hideTyping == true)
+                                val hideRecording =
+                                    hideRecordingGlobal || (rule?.hideRecording == true)
+                                if (stateType != null && shouldSuppress(stateType, hideTyping, hideRecording)) {
+                                    // Legacy semantics: the state callback never fires.
+                                    return@intercept null
+                                }
+                                chain.proceed()
+                            }
+                        ModernHookRegistry.Handle { handle.unhook() }
+                    },
+                ),
+            )
         } catch (failure: Throwable) {
             if (failure is VirtualMachineError) throw failure
             Log.w(TAG, "Typing privacy hook unavailable", failure)
@@ -146,7 +205,11 @@ object ModernTypingPrivacyFeature {
      * answers with the global-only rule and asks the Manager in the
      * background, so a hook thread never blocks on IPC.
      */
-    private fun lookup(context: Context, number: String, args: List<Any?>): PrivacyRule {
+    private fun lookup(
+        context: Context,
+        number: String,
+        args: List<Any?>,
+    ): PrivacyRule {
         ruleCache[number]?.let { return it }
         val contextRef = context.applicationContext
         val packageName = context.packageName
@@ -164,9 +227,10 @@ object ModernTypingPrivacyFeature {
     }
 
     private object Worker {
-        private val executor = java.util.concurrent.Executors.newSingleThreadExecutor { task ->
-            Thread(task, "wax-api102-privacy-rules").apply { isDaemon = true }
-        }
+        private val executor =
+            java.util.concurrent.Executors.newSingleThreadExecutor { task ->
+                Thread(task, "wax-api102-privacy-rules").apply { isDaemon = true }
+            }
 
         fun execute(block: () -> Unit) {
             try {
