@@ -76,6 +76,7 @@ Wave sizes today: W0=7, W1=6, W2=28, W3=18, W4=5 (total 64).
 | #453 | HideChat (privacy pair) | MERGED, main CI green |
 | #454 | ViewOnce (privacy pair) | MERGED, main CI green |
 | #170 | F155 atomic diagnostic + self-test engine, Manager screen, SAF ZIP export | PR #457 MERGED (`44b90875`), all 12 checks green on `8c093fc8`, issue CLOSED |
+| #455 | API102 resolver, hook and core privacy failure investigation | in progress on `integration/api102-migration`; control-center lifecycle root cause integrated |
 
 ### #170 scope notes
 
@@ -102,6 +103,32 @@ Residual unknowns: instrumentation coverage now covers restart, build binding
 and the no-false-L5 rule (`ExternalVerificationStoreTest`); what is still absent
 is instrumentation for IPC denial and version change. The anonymised sample ZIP
 schema was posted on #170.
+
+### #455 scope notes
+
+Root cause established from the sanitised device evidence on the issue: the
+embedded Control Center built its window without a lifecycle owner, so stopping
+the host leaked the window and the centre never reported as opened. That is a
+root cause, not a symptom, and it is fixed at the source: the window is now
+bound to the host Activity, a replaced session is retired, accepted preference
+writes are drained before closing, and a creation or show failure routes through
+a single Manager fallback. Unit coverage covers lifecycle identity, repeated
+open/close, replacement, fallback de-duplication, save draining, callback
+cancellation and failure reasons.
+
+Still open in this issue, and stated rather than glossed over:
+
+- `ModernContactAccess.resolve` still selects with `firstOrNull()` over DexKit
+  results for `problematic contact:`, `WaContactData` and `jid.Jid`. Changing the
+  selection without a candidate set from a real target build would be guessing,
+  and guessing a resolver is the failure this issue exists to stop. The
+  instrumented candidate-count and class-loader-provenance reporting that would
+  justify the change is not yet in the runtime.
+- the everyday-privacy order (second tick, blue tick, blue after reply, status
+  viewed, last seen, typing/recording) has no migrated implementation behind it;
+  the Control Center lists them as pending rather than exposing dead toggles.
+- no device reproduction has been performed; every per-feature state stays
+  `PENDING_USER_DEVICE_TEST`.
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
 exists (the Manager link alone is not the full acceptance criterion).
