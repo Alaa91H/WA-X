@@ -1,6 +1,7 @@
 package com.wax.module.diagnostics.selftest
 
 import android.content.Context
+import androidx.core.content.edit
 
 /**
  * User-confirmed external verification (#170).
@@ -37,22 +38,20 @@ class ExternalVerificationStore(
         note: String,
         nowUtcMillis: Long,
     ) {
-        prefs
-            .edit()
-            .putLong(key(featureId, whatsappBuild), nowUtcMillis)
-            .putString(noteKey(featureId, whatsappBuild), note)
-            .apply()
+        prefs.edit {
+            putLong(key(featureId, whatsappBuild), nowUtcMillis)
+            putString(noteKey(featureId, whatsappBuild), note)
+        }
     }
 
     fun revoke(
         featureId: String,
         whatsappBuild: String,
     ) {
-        prefs
-            .edit()
-            .remove(key(featureId, whatsappBuild))
-            .remove(noteKey(featureId, whatsappBuild))
-            .apply()
+        prefs.edit {
+            remove(key(featureId, whatsappBuild))
+            remove(noteKey(featureId, whatsappBuild))
+        }
     }
 
     fun confirmationFor(
