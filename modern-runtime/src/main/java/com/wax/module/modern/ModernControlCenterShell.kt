@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.app.Dialog
 import android.content.Intent
+import android.database.ContentObserver
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -67,6 +68,8 @@ class ModernControlCenterShell(
 
     private var dialog: Dialog? = null
     private var dialogLifecycle: ActivityBoundDialogLifecycle? = null
+    private var managerRefresh: (() -> Unit)? = null
+    private var settingsObserver: ContentObserver? = null
 
     /** Shows one centre per target process/activity. Returns false for one Manager fallback. */
     private fun show(): Boolean {
@@ -171,7 +174,7 @@ class ModernControlCenterShell(
         footer.addView(manager)
         root.addView(footer)
 
-        val rowsInOrder = buildEntries(states, "")
+        var rowsInOrder = buildEntries(states, "")
 
         fun render(query: String) {
             if (!isShellAlive()) return
@@ -224,9 +227,79 @@ class ModernControlCenterShell(
             }
         })
 
+        // Manager writes reach this dialog through the same provider notification URI.
+        // Re-read on the writer worker, never with a Binder roundtrip on WhatsApp UI.
+        var refreshInFlight = false
+        var refreshQueued = false
+        val readContext = activity.applicationContext
+        fun refreshSettings() {
+            if (!isWindowInteractive()) return
+            if (refreshInFlight) {
+                refreshQueued = true
+                return
+            }
+            refreshInFlight = true
+            val latest = java.util.concurrent.atomic.AtomicReference<Bundle?>()
+            val accepted = taskScope.submit(
+                operation = {
+                    latest.set(ModernTargetStateClient.read(readContext, packageName))
+                    true
+                },
+                onComplete = { _ ->
+                    refreshInFlight = false
+                    if (!isWindowInteractive()) return@submit
+                    val updated = latest.get()
+                    if (updated?.getBoolean("accepted", false) == true) {
+                        favorites = ModernControlCenterCatalog.parseFavorites(
+                            updated.getString("pref." + ModernControlCenterCatalog.FAVORITES_KEY, null),
+                        )
+                        currentModes[ModernHideChatFeature.PREF_ARCHIVE_MODE] = readModeFromState(updated)
+                        rowsInOrder = buildEntries(updated, "")
+                        render(search.text.toString())
+                    } else {
+                        Log.w(TAG, "CONTROL_CENTER_REFRESH_FAILED package=$packageName")
+                    }
+                    if (refreshQueued) {
+                        refreshQueued = false
+                        refreshSettings()
+                    }
+                },
+            )
+            if (!accepted) refreshInFlight = false
+        }
+        managerRefresh = { refreshSettings() }
         showDialog(root)
+        startObservingSettings()
     }
 
+    /** Listen only while this dialog is visible; never poll WhatsApp or its database. */
+    private fun startObservingSettings() {
+        if (settingsObserver != null) return
+        val observer = object : ContentObserver(mainHandler) {
+            override fun onChange(selfChange: Boolean) {
+                managerRefresh?.invoke()
+            }
+        }
+        try {
+            activity.contentResolver.registerContentObserver(
+                ModernTargetStateClient.STATES_URI, false, observer,
+            )
+            settingsObserver = observer
+        } catch (failure: RuntimeException) {
+            Log.w(TAG, "CONTROL_CENTER_OBSERVER_REGISTER_FAILED", failure)
+        }
+    }
+
+    private fun stopObservingSettings() {
+        managerRefresh = null
+        val observer = settingsObserver ?: return
+        settingsObserver = null
+        try {
+            activity.contentResolver.unregisterContentObserver(observer)
+        } catch (failure: RuntimeException) {
+            Log.w(TAG, "CONTROL_CENTER_OBSERVER_REMOVE_FAILED", failure)
+        }
+    }
     private fun showDialog(root: View) {
         val window = Dialog(activity)
         window.setContentView(root)
@@ -239,7 +312,9 @@ class ModernControlCenterShell(
         val callbacks = object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(candidate: Activity, state: Bundle?) {}
             override fun onActivityStarted(candidate: Activity) {}
-            override fun onActivityResumed(candidate: Activity) {}
+            override fun onActivityResumed(candidate: Activity) {
+                if (candidate === activity) managerRefresh?.invoke()
+            }
             override fun onActivityPaused(candidate: Activity) {}
             override fun onActivityStopped(candidate: Activity) {
                 lifecycle.onActivityStopped(candidate)
@@ -294,6 +369,7 @@ class ModernControlCenterShell(
         reason: ActivityDialogCloseReason,
     ) {
         if (!disposed.compareAndSet(false, true)) return
+        stopObservingSettings()
         mainHandler.removeCallbacksAndMessages(null)
         try {
             taskScope.close()
@@ -308,6 +384,7 @@ class ModernControlCenterShell(
 
     private fun disposeWithoutWindow(reason: ActivityDialogCloseReason) {
         if (!disposed.compareAndSet(false, true)) return
+        stopObservingSettings()
         mainHandler.removeCallbacksAndMessages(null)
         try {
             taskScope.close()
@@ -337,15 +414,18 @@ class ModernControlCenterShell(
     }
 
     private fun buildEntries(states: Bundle, query: String): List<ControlEntry> {
+        val stateAccepted = states.getBoolean("accepted", false)
         val rows = ArrayList<ControlEntry>()
         for (item in ModernControlCenterCatalog.wired) {
             val requested = when {
-                item.preferenceKey.isEmpty() -> ControlRequested.UNKNOWN
+                !stateAccepted || item.preferenceKey.isEmpty() ||
+                    !states.containsKey("pref." + item.preferenceKey) -> ControlRequested.UNKNOWN
                 readBoolean(states, item.preferenceKey) -> ControlRequested.ENABLED
                 else -> ControlRequested.DISABLED
             }
             val reported = readString(states, item.evidenceKey)
-            val effective = ControlPolicy.effectiveFrom(reported, false, requested)
+            val effective = if (!stateAccepted) ControlEffective.ERROR else
+                ControlPolicy.effectiveFrom(reported, false, requested)
             rows.add(
                 ControlEntry(
                     id = item.id,
@@ -355,7 +435,8 @@ class ModernControlCenterShell(
                     preferenceKey = item.preferenceKey.ifEmpty { null },
                     requested = requested,
                     effective = effective,
-                    writable = item.preferenceKey.isNotEmpty() &&
+                    writable = stateAccepted && requested != ControlRequested.UNKNOWN &&
+                        item.preferenceKey.isNotEmpty() &&
                         ControlPolicy.isWritable(item.preferenceKey, effective),
                     restartRequired = item.restartHint && requested == ControlRequested.ENABLED &&
                         effective != ControlEffective.INSTALLED && effective != ControlEffective.WORKING,
@@ -447,7 +528,7 @@ class ModernControlCenterShell(
                 setOnCheckedChangeListener { button, isChecked ->
                     if (!isWindowInteractive() || !button.isPressed) return@setOnCheckedChangeListener
                     val key = row.preferenceKey
-                    persist(key, isChecked, status, row)
+                    persist(key, isChecked, button as Switch, status, row)
                 }
             }
             container.addView(toggle)
@@ -534,28 +615,42 @@ class ModernControlCenterShell(
     private fun persist(
         key: String,
         enabled: Boolean,
+        toggle: Switch,
         status: TextView,
         row: ControlEntry,
     ) {
         if (!isWindowInteractive()) return
+        toggle.isEnabled = false
         val context = activity.applicationContext
         val targetPackage = packageName
         val weakShell = WeakReference(this)
         val weakStatus = WeakReference(status)
-        taskScope.submit(
+        val weakToggle = WeakReference(toggle)
+        val accepted = taskScope.submit(
             operation = { ModernTargetSettingsClient.write(context, targetPackage, key, enabled) },
             onComplete = { saved ->
                 val shell = weakShell.get() ?: return@submit
                 val statusView = weakStatus.get() ?: return@submit
+                val switchView = weakToggle.get() ?: return@submit
                 if (!shell.isWindowInteractive()) return@submit
+                switchView.isEnabled = true
+                if (!saved) {
+                    // A rejected write must not leave an apparently enabled switch.
+                    switchView.isChecked = !enabled
+                    Log.w(TAG, "CONTROL_CENTER_SETTING_SAVE_FAILED key=$key")
+                }
                 statusView.text = "${row.description} · " +
                     ControlStatusText.status(
                         if (saved) ControlEffective.RESTART_REQUIRED else ControlEffective.ERROR,
                     )
-            }
+            },
         )
+        if (!accepted) {
+            toggle.isEnabled = true
+            toggle.isChecked = !enabled
+            status.text = "${row.description} · " + ControlStatusText.status(ControlEffective.ERROR)
+        }
     }
-
     private fun restartWhatsApp() {
         if (!isWindowInteractive()) return
         val weakShell = WeakReference(this)

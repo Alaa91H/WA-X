@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
  * Non-destructive, opt-in bridge from WA X Manager settings into the API102
  * framework-owned RemotePreferences scoped to com.wax.module.
  *
- * Mirrors ONLY the migrated CustomTime pilot keys. Never deletes settings,
+ * Mirrors explicitly supported API102 feature keys. Never deletes settings,
  * copies contacts/chats, or implies that any legacy feature is running.
  */
 object ModernRuntimePreferenceRelay {
@@ -33,7 +33,21 @@ object ModernRuntimePreferenceRelay {
             "ghostmode_r",
             "typearchive",
             "viewonce",
+            "hideread",
+            "hideread_group",
+            "hidereceipt",
+            "hidereadafterreply",
+            "antirevoke",
+            "hidestatusview",
+            "sendstatusseenonreply",
         )
+
+    /** Checked by contract tests so new Control Center keys cannot be omitted from the relay. */
+    internal fun observes(key: String): Boolean = key in observedKeys
+
+    internal fun affectsControlCenter(key: String?): Boolean =
+        key == null || key in observedKeys || key == ModernControlCenterCatalog.FAVORITES_KEY
+
     private val worker =
         Executors.newSingleThreadExecutor { task ->
             Thread(task, "wax-api102-settings-relay").apply { isDaemon = true }
@@ -41,19 +55,59 @@ object ModernRuntimePreferenceRelay {
 
     @Volatile
     private var local: SharedPreferences? = null
+
+    @Volatile
+    private var applicationContext: Context? = null
+
     private val changes =
         SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == null || key in observedKeys) requestSync()
+            if (affectsControlCenter(key)) notifyControlCenter()
         }
+
+    private fun notifyControlCenter() {
+        try {
+            applicationContext?.contentResolver?.notifyChange(ModernTargetStateClient.STATES_URI, null)
+        } catch (error: RuntimeException) {
+            Log.w(TAG, "Could not signal Control Center state change", error)
+        }
+    }
 
     @Synchronized
     fun start(context: Context) {
         if (local != null) return
+        applicationContext = context.applicationContext
         val preferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+        // Old embedded switches accidentally wrote Booleans into ListPreference slots.
+        // Repair the stored type before the Manager UI or the runtime can read those slots.
+        repairLegacyModes(preferences)
         local = preferences
         preferences.registerOnSharedPreferenceChangeListener(changes)
         ModernFrameworkServiceBridge.setOnConnectedListener { requestSync() }
         requestSync()
+    }
+
+    /** Preserve real list selections while normalizing historical malformed booleans. */
+    internal fun legacyMode(value: Any?): String =
+        when (value) {
+            "1", "2" -> value as String
+            true -> "1"
+            else -> "0"
+        }
+
+    private fun repairLegacyModes(preferences: SharedPreferences) {
+        val original = preferences.all
+        val editor = preferences.edit()
+        var changed = false
+        for (key in listOf("typearchive", "antirevoke")) {
+            if (original[key] is Boolean) {
+                editor.putString(key, legacyMode(original[key]))
+                changed = true
+            }
+        }
+        if (changed && !editor.commit()) {
+            Log.w(TAG, "Could not repair malformed legacy list preference values")
+        }
     }
 
     fun requestSync() {
@@ -90,6 +144,15 @@ object ModernRuntimePreferenceRelay {
                     // Archived-chat hiding: the user's mode, not a boolean.
                     putString("typearchive", source.getString("typearchive", "0") ?: "0")
                     putBoolean("viewonce", source.getBoolean("viewonce", false))
+                    // Single source of truth: Manager preferences also feed the in-WhatsApp
+                    // privacy toggles. Do not drop a persisted setting at the API102 bridge.
+                    putBoolean("hideread", source.getBoolean("hideread", false))
+                    putBoolean("hideread_group", source.getBoolean("hideread_group", false))
+                    putBoolean("hidereceipt", source.getBoolean("hidereceipt", false))
+                    putBoolean("hidereadafterreply", source.getBoolean("hidereadafterreply", false))
+                    putString("antirevoke", legacyMode(source.all["antirevoke"]))
+                    putBoolean("hidestatusview", source.getBoolean("hidestatusview", false))
+                    putBoolean("sendstatusseenonreply", source.getBoolean("sendstatusseenonreply", false))
                 }
             } catch (error: RuntimeException) {
                 Log.w(TAG, "Could not relay opted-in modern preference values", error)

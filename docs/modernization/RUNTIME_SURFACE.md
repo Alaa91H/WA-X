@@ -8,7 +8,7 @@ the numbers.
 | --- | --- | --- | --- |
 | [Legacy Xposed API surface](#legacy_api_surface) | #318 M04-M06 | 239 | 97 |
 | [Preference reads inside the injected process](#runtime_preference_reads) | #318 M02 / #333 A08 | 12 | 3 |
-| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 51 | 19 |
+| [Preference reads inside the Manager process](#manager_preference_reads) | #333 A09 | 52 | 19 |
 | [World-readable preference compatibility](#world_readable_prefs) | #318 M02 / #333 A16 | 4 | 1 |
 | [Legacy resource injection](#resource_injection) | #318 M07 | 11 | 2 |
 | [Reflective mutation of generated/static fields](#static_final_mutation) | #318 M07 | 39 | 22 |
@@ -179,11 +179,11 @@ Legacy types in use:
 
 **End state:** Not a target of this program. Listed so the asymmetry stays visible.
 
-**Current:** 51 occurrences across 19 files.
+**Current:** 52 occurrences across 19 files.
 
 | Pattern | Occurrences | Files |
 | --- | --- | --- |
-| `PreferenceManager` | 42 | 17 |
+| `PreferenceManager` | 43 | 17 |
 | `getSharedPreferences()` | 9 | 6 |
 
 <details><summary>Files</summary>
