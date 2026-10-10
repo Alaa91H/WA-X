@@ -1175,3 +1175,6 @@ The four highest-value architecture moves are:
 Only after those are formalized should WA X perform broad module extraction and Manager UI modernization.
 
 This preserves the source plan's evolutionary rule: isolate and formalize first, then replace.
+
+
+protection probe
