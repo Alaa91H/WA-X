@@ -16,9 +16,23 @@ class ControlCenterLocalizationTest {
 
     @Test fun unknownOrNullLocaleFallsBackToEnglish() {
         assertEquals("Search WA X features",
-            ControlCenterStrings.forLanguage("fr").searchHint)
+            ControlCenterStrings.forLanguage("zz").searchHint)
         assertEquals("Search WA X features",
             ControlCenterStrings.forLanguage(null).searchHint)
+    }
+
+    @Test fun shippedFrenchAndGermanLocalesReuseManagerTranslations() {
+        assertNotEquals("Search WA X features",
+            ControlCenterStrings.forLanguage("fr").searchHint)
+        assertNotEquals("Freeze Last Seen",
+            ControlCenterLabels.forLanguage("de").title("freeze_last_seen", "Freeze Last Seen"))
+    }
+
+    @Test fun legacyLanguageCodesResolveToCurrentLocales() {
+        assertNotEquals("Freeze Last Seen",
+            ControlCenterLabels.forLanguage("iw").title("freeze_last_seen", "Freeze Last Seen"))
+        assertNotEquals("Freeze Last Seen",
+            ControlCenterLabels.forLanguage("in").title("freeze_last_seen", "Freeze Last Seen"))
     }
 
     @Test fun everyTableHasCompleteStrings() {
