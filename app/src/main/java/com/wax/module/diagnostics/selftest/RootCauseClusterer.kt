@@ -41,8 +41,12 @@ object RootCauseClusterer {
             symptoms.getOrPut(root.id) { mutableListOf() }.add(result.id)
             features.getOrPut(root.id) { mutableSetOf() }.addAll(result.dependsOn)
         }
-        // A root cause is its own symptom so the cluster is never empty.
+        // A root cause is its own symptom so the cluster is never empty, but a
+        // failure that already sits under another failure is a symptom, not a
+        // second root: one broken chain must stay one cluster.
         failing.forEach { rootIds.add(it.id) }
+        val alreadySymptoms = symptoms.values.flatten().toSet()
+        rootIds.removeAll(alreadySymptoms)
 
         return rootIds.map { rootId ->
             val root = byId.getValue(rootId)

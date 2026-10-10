@@ -209,9 +209,19 @@ class DiagnosticZipExporterTest {
     private fun sampleReport(): DiagnosticEngine.Report {
         val engine = DiagnosticEngine()
         try {
+            val features =
+                listOf(
+                    AtomicCheckInventory.featureCheck(
+                        featureId = "hide_typing",
+                        title = "Hide typing",
+                        resolvers = listOf(AtomicCheckInventory.JID_RAW_STRING),
+                        preferenceKey = "hide_typing",
+                        externalConfirmationRequired = true,
+                    ),
+                )
             return engine.run(
                 DiagnosticEngine.RunConfig.deep("2.26.39.74", "com.whatsapp"),
-                AtomicCheckInventory.PIPELINE,
+                AtomicCheckInventory.PIPELINE + features,
                 emptyMap(),
             )
         } finally {

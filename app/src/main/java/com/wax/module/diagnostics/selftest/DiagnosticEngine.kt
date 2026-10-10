@@ -126,7 +126,9 @@ class DiagnosticEngine(
         observed.clear()
         progress.clear()
 
-        val ordered = definitions
+        val ordered =
+            if (config.mode == RunConfig.Mode.DEEP_SCAN) definitions
+            else definitions.filter { it.id in QUICK_CHECKS }
         val total = ordered.size
         val byId = ordered.associateBy { it.id }
 
@@ -331,26 +333,24 @@ class DiagnosticEngine(
 
     /**
      * Quick Check deliberately covers only the cheap, startup-safe prefix, so
-     * it can run on demand without a full DEX scan. The caller passes this to
-     * [run] instead of the whole inventory; the engine never silently drops
-     * checks the caller asked for.
+     * it can run on demand without a full DEX scan.
+     *
+     * [run] enforces that prefix itself in quick mode, so no call site can
+     * accidentally start a DEX walk on the cheap path.
      */
-    fun quickSubset(): List<AtomicCheckInventory.Definition> {
-        val cheapIds =
-            setOf(
-                AtomicCheckInventory.ENV_ANDROID,
-                AtomicCheckInventory.ENV_TARGET,
-                AtomicCheckInventory.FRAMEWORK_API102,
-                AtomicCheckInventory.MODULE_LOADED,
-                AtomicCheckInventory.APP_ATTACH,
-                AtomicCheckInventory.MANAGER_IPC,
-                AtomicCheckInventory.DEXKIT_NATIVE,
-            )
-        return AtomicCheckInventory.PIPELINE.filter { it.id in cheapIds }
-    }
+    fun quickSubset(): List<AtomicCheckInventory.Definition> =
+        AtomicCheckInventory.PIPELINE.filter { it.id in QUICK_CHECKS }
 
-    fun shutdown() {
-        cancelled.set(true)
-        executor.shutdownNow()
-    }
+    /** Cheap, startup-safe checks: what Quick Check may run on demand. */
+    private val QUICK_CHECKS =
+        setOf(
+            AtomicCheckInventory.ENV_ANDROID,
+            AtomicCheckInventory.ENV_TARGET,
+            AtomicCheckInventory.ENV_SCOPE,
+            AtomicCheckInventory.FRAMEWORK_API102,
+            AtomicCheckInventory.MODULE_LOADED,
+            AtomicCheckInventory.APP_ATTACH,
+            AtomicCheckInventory.MANAGER_IPC,
+            AtomicCheckInventory.DEXKIT_NATIVE,
+        )
 }
