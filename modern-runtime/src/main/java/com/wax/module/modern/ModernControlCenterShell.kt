@@ -165,7 +165,7 @@ class ModernControlCenterShell(
         }
         val manager = Button(activity).apply {
             text = strings.openManager
-            setOnClickListener { if (isWindowInteractive()) ModernManagerFallback.open(activity) }
+            setOnClickListener { fallbackToManager() }
         }
         footer.addView(restart)
         footer.addView(manager)
@@ -322,6 +322,11 @@ class ModernControlCenterShell(
 
     private fun isWindowInteractive(): Boolean =
         isShellAlive() && dialogLifecycle?.isActive == true && dialog?.isShowing == true
+
+    /** Kept as the row-action boundary used by the in-flight diagnostics PR. */
+    private fun fallbackToManager() {
+        if (isWindowInteractive()) ModernManagerFallback.open(activity)
+    }
 
     private fun sectionHeader(label: String): View = TextView(activity).apply {
         text = label
