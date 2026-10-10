@@ -253,8 +253,13 @@ owner's second account and is not substitutable by a build.
 
 ### Next, in order
 
-1. **#391** — resolver evidence identity and package/version scoping. #396 is
-   closed, so this is the remaining half of the evidence gate.
+1. **#391** — resolver evidence identity. Verified by scripted fixture against
+   the real validator: cross-version, cross-package, wrong ABI, expired,
+   future-dated, missing resolver, empty evidence and wildcard cells all refuse;
+   the positive control passes. The one case that still cannot fail is a
+   *single* changed build fingerprint, because the schema declares no expected
+   value to compare against; the conflicting-fingerprint half is now closed.
+   Closing the rest needs that schema field, not more logic.
 2. **#390 / #388** — the risk-ranked resolver audit and the compatibility-cell
    evidence gap.
 3. **#383** — the master audit that aggregates the above.
