@@ -98,9 +98,10 @@ Deliberate ceilings, stated rather than hidden:
 - the legacy features in the #337 runtime registry report no per-feature state
   to the Manager, so the scan reports them as registered, never as hooked.
 
-Residual unknowns: instrumentation coverage for toggles, restart, IPC denial
-and version change is not yet in the repository; the anonymised sample ZIP
-schema is still to be posted on the issue.
+Residual unknowns: instrumentation coverage now covers restart, build binding
+and the no-false-L5 rule (`ExternalVerificationStoreTest`); what is still absent
+is instrumentation for IPC denial and version change. The anonymised sample ZIP
+schema was posted on #170.
 
 Issue #425 stays OPEN until the in-WhatsApp per-feature settings surface
 exists (the Manager link alone is not the full acceptance criterion).
