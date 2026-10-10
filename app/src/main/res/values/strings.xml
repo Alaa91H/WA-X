@@ -649,14 +649,28 @@
     <string name="diagnostics_cancelled">Cancelled</string>
     <string name="diagnostics_finished">Finished</string>
     <string name="diagnostics_scan">Scan</string>
-    <string name="diagnostics_counts">Counts:</string>
     <string name="diagnostics_first_failed">First failed dependency:</string>
-    <string name="diagnostics_root_causes">Root causes</string>
-    <string name="diagnostics_run_first">Run a scan before exporting.</string>
     <string name="diagnostics_redaction_preview">Redaction preview</string>
     <string name="diagnostics_redaction_summary">Items redacted: %1$d</string>
     <string name="diagnostics_export_done">Diagnostics exported</string>
     <string name="diagnostics_export_failed">Export failed</string>
-    <string name="diagnostics_manifest_missing">The archive could not be verified and was not written.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
+    <string name="diagnostics_no_results">No checks completed. Run Quick Check or Deep Atomic Scan; export is available even without a scan.</string>
+    <string name="diagnostics_busy">A scan is already running. Cancel it or wait for its result.</string>
+    <string name="diagnostics_scan_failed">Scan failed. Export the failure report or retry.</string>
+    <string name="diagnostics_export_without_scan">No scan was completed. This ZIP contains environment metadata only; no feature is marked as passed.</string>
+    <string name="diagnostics_export_preparing">Preparing and verifying diagnostic ZIP…</string>
+    <string name="diagnostics_export_lost">The pending export was lost when this screen was recreated. Retry Export ZIP; no data was modified.</string>
+    <string name="diagnostics_export_verified">Diagnostic ZIP was saved and read back successfully. Integrity checks passed.</string>
+    <string name="diagnostics_summary_readable">Passed: %1$d · Failed: %2$d · Blocked: %3$d · Not tested: %4$d</string>
+    <string name="diagnostics_summary_additional">Unsupported: %1$d · External verification needed: %2$d</string>
+    <string name="diagnostics_feature_checks">Feature checks</string>
+    <string name="diagnostics_system_checks">System and runtime checks</string>
+    <string name="diagnostics_status_pass">Passed</string>
+    <string name="diagnostics_status_fail">Failed</string>
+    <string name="diagnostics_status_blocked">Blocked</string>
+    <string name="diagnostics_status_not_tested">Not tested</string>
+    <string name="diagnostics_status_unsupported">Unsupported</string>
+    <string name="diagnostics_status_external">External verification needed</string>
+
 </resources>

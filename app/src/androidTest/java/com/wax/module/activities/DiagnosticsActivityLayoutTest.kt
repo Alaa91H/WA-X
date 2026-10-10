@@ -23,7 +23,8 @@ class DiagnosticsActivityLayoutTest {
             scenario.onActivity { activity ->
                 val scroll = activity.findViewById<ScrollView>(R.id.diagnostics_report_scroll)
                 val content = scroll.getChildAt(0) as LinearLayout
-                val reportText = content.getChildAt(content.childCount - 1) as TextView
+                val results = content.getChildAt(content.childCount - 1) as LinearLayout
+                val reportText = results.getChildAt(0) as TextView
                 reportText.text = (1..400).joinToString("\n") { "hook.feature.$it: NOT_TESTED" }
             }
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()

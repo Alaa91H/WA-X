@@ -620,14 +620,28 @@
     <string name="diagnostics_cancelled">تم الإلغاء</string>
     <string name="diagnostics_finished">اكتمل</string>
     <string name="diagnostics_scan">المسح</string>
-    <string name="diagnostics_counts">العدادات:</string>
     <string name="diagnostics_first_failed">أول تبعية فاشلة:</string>
-    <string name="diagnostics_root_causes">الأسباب الجذرية</string>
-    <string name="diagnostics_run_first">نفّذ مسحًا قبل التصدير.</string>
     <string name="diagnostics_redaction_preview">معاينة الإخفاء</string>
     <string name="diagnostics_redaction_summary">العناصر المخفية: %1$d</string>
     <string name="diagnostics_export_done">تم تصدير التشخيص</string>
     <string name="diagnostics_export_failed">فشل التصدير</string>
-    <string name="diagnostics_manifest_missing">تعذّر التحقق من الأرشيف ولم يُكتب.</string>
     <string name="diagnostics_progress">%1$d / %2$d  (%3$s)</string>
+    <string name="diagnostics_no_results">لم تكتمل أي فحوصات بعد. يمكنك بدء الفحص السريع أو الذري، أو تصدير تقرير حتى دون فحص.</string>
+    <string name="diagnostics_busy">يوجد فحص قيد التنفيذ. ألغِه أو انتظر نتيجته.</string>
+    <string name="diagnostics_scan_failed">فشل الفحص. يمكنك تصدير تقرير الخطأ أو إعادة المحاولة.</string>
+    <string name="diagnostics_export_without_scan">لم يكتمل أي فحص. يحتوي ملف ZIP على بيانات البيئة فقط، دون اعتبار أي ميزة ناجحة.</string>
+    <string name="diagnostics_export_preparing">جارٍ إعداد ملف ZIP وفحص سلامته…</string>
+    <string name="diagnostics_export_lost">فُقد التصدير المعلّق عند إعادة إنشاء الشاشة. أعد محاولة التصدير؛ لم تُعدّل بياناتك.</string>
+    <string name="diagnostics_export_verified">حُفظ ملف ZIP، وأُعيدت قراءته بنجاح مع التحقق من سلامته.</string>
+    <string name="diagnostics_summary_readable">ناجح: %1$d · فاشل: %2$d · محجوب: %3$d · غير مختبر: %4$d</string>
+    <string name="diagnostics_summary_additional">غير مدعوم: %1$d · يحتاج تحققًا خارجيًا: %2$d</string>
+    <string name="diagnostics_feature_checks">فحوص الميزات</string>
+    <string name="diagnostics_system_checks">فحوص النظام والتشغيل</string>
+    <string name="diagnostics_status_pass">ناجح</string>
+    <string name="diagnostics_status_fail">فاشل</string>
+    <string name="diagnostics_status_blocked">محجوب</string>
+    <string name="diagnostics_status_not_tested">غير مختبر</string>
+    <string name="diagnostics_status_unsupported">غير مدعوم</string>
+    <string name="diagnostics_status_external">يتطلب تحققًا خارجيًا</string>
+
 </resources>

@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -18,6 +20,9 @@ import com.wax.module.diagnostics.selftest.DiagnosticArchiveImporter
 import com.wax.module.diagnostics.selftest.DiagnosticEngine
 import com.wax.module.diagnostics.selftest.DiagnosticProbeSource
 import com.wax.module.diagnostics.selftest.DiagnosticReportBuilder
+import com.wax.module.diagnostics.selftest.DiagnosticScanFallback
+import com.wax.module.diagnostics.selftest.DiagnosticScanSession
+import com.wax.module.diagnostics.selftest.DiagnosticStatus
 import com.wax.module.diagnostics.selftest.DiagnosticZipExporter
 import com.wax.module.diagnostics.selftest.ExportRedactor
 import com.wax.module.diagnostics.selftest.ExternalVerificationStore
@@ -41,9 +46,11 @@ import java.io.OutputStream
  */
 class DiagnosticsActivity : BaseActivity() {
     private val engine = DiagnosticEngine()
+    private val scanSession = DiagnosticScanSession()
     private val importer = DiagnosticArchiveImporter()
     private val mainHandler = Handler(Looper.getMainLooper())
     private lateinit var output: TextView
+    private lateinit var resultsContainer: LinearLayout
     private lateinit var progressLabel: TextView
     private var latest: DiagnosticEngine.Report? = null
 
@@ -55,40 +62,34 @@ class DiagnosticsActivity : BaseActivity() {
         externalVerifications = ExternalVerificationStore(this)
         DiagnosticProbeSource.attach(this, externalVerifications)
 
-        // Scan output can contain hundreds of checks. Keep the whole report in
-        // the weighted scrolling region and the actions outside it. Otherwise a
-        // long deep scan measures the ScrollView at its content height and pushes
-        // Export ZIP / Import ZIP below the screen with no way to reach them.
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        // A long atomic report scrolls independently; ZIP actions stay visible.
+        // Preserve the widget IDs and footer contract from #475.
+        val root = vertical()
         val reportContent = vertical()
         reportContent.addView(title())
         reportContent.addView(body())
-        progressLabel = label("")
+        progressLabel = label(getString(R.string.diagnostics_no_results))
         reportContent.addView(progressLabel)
-        output = label("")
-        reportContent.addView(output)
-
+        output = label(getString(R.string.diagnostics_no_results))
+        resultsContainer = vertical().apply { setPadding(0, 0, 0, 0) }
+        resultsContainer.addView(output)
+        reportContent.addView(resultsContainer)
         val scroller =
             ScrollView(this).apply {
                 id = R.id.diagnostics_report_scroll
-                isFillViewport = true
+                isFillViewport = false
                 addView(reportContent)
             }
         root.addView(
             scroller,
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f),
         )
 
-        // The footer is always visible, even while the report is expanding or
-        // the user is scrolling back through a deep scan. Both scan modes share
-        // these same export/import actions and their redaction safeguards.
         val actions =
-            LinearLayout(this).apply {
+            vertical().apply {
                 id = R.id.diagnostics_actions
-                orientation = LinearLayout.VERTICAL
                 setPadding(dp(16), dp(4), dp(16), dp(16))
             }
-
         val runRow = horizontal()
         runRow.addView(button(R.string.diagnostics_quick) { runQuickCheck() })
         runRow.addView(button(R.string.diagnostics_deep) { runDeepScan() })
@@ -106,7 +107,6 @@ class DiagnosticsActivity : BaseActivity() {
         exportRow.addView(button(R.string.diagnostics_import) { importPreviousArchive() })
         exportRow.addView(button(R.string.diagnostics_close) { finish() })
         actions.addView(exportRow)
-
         root.addView(actions)
         setContentView(root)
     }
@@ -257,6 +257,12 @@ class DiagnosticsActivity : BaseActivity() {
 
     private fun horizontal(): LinearLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
 
+    private fun scrollRow(row: LinearLayout): HorizontalScrollView =
+        HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(row)
+        }
+
     private fun label(value: String): TextView =
         TextView(this).apply {
             text = value
@@ -281,8 +287,10 @@ class DiagnosticsActivity : BaseActivity() {
         }
 
     private fun cancelScan() {
-        engine.cancel()
-        progressLabel.text = getString(R.string.diagnostics_cancelled)
+        if (scanSession.cancel()) {
+            engine.cancel()
+            progressLabel.text = getString(R.string.diagnostics_cancelled)
+        }
     }
 
     private fun runQuickCheck() {
@@ -311,97 +319,207 @@ class DiagnosticsActivity : BaseActivity() {
         config: DiagnosticEngine.RunConfig,
         inventory: List<AtomicCheckInventory.Definition>,
     ) {
+        val token = scanSession.begin()
+        if (token == null) {
+            toast(getString(R.string.diagnostics_busy))
+            return
+        }
         output.text = getString(R.string.diagnostics_running)
-        progressLabel.text = ""
-        val worker = Thread({ scanOnWorkerThread(config, inventory) }, "wax-diagnostics-ui")
+        resultsContainer.removeAllViews()
+        resultsContainer.addView(output)
+        progressLabel.text = getString(R.string.diagnostics_progress, 0, inventory.size, "")
+        val worker =
+            Thread(
+                { scanOnWorkerThread(token, config, inventory) },
+                "wax-diagnostics-ui",
+            )
         worker.isDaemon = true
         worker.start()
     }
 
     private fun scanOnWorkerThread(
+        token: Long,
         config: DiagnosticEngine.RunConfig,
         inventory: List<AtomicCheckInventory.Definition>,
     ) {
         val report =
-            engine.run(
-                config,
-                inventory,
-                DiagnosticProbeSource.probes(),
-            ) { completed, total, lastId ->
-                mainHandler.post {
-                    // Progress by verified checks, never an invented percentage.
-                    progressLabel.text =
-                        getString(R.string.diagnostics_progress, completed, total, lastId)
+            try {
+                engine.run(config, inventory, DiagnosticProbeSource.probes()) { completed, total, lastId ->
+                    mainHandler.post {
+                        if (scanSession.acceptsProgress(token) && !isDestroyed) {
+                            progressLabel.text =
+                                getString(R.string.diagnostics_progress, completed, total, lastId)
+                        }
+                    }
+                }
+            } catch (failure: Throwable) {
+                if (failure is VirtualMachineError) throw failure
+                // No exception message, stacktrace or contact metadata in the
+                // exported record. A failed scan still produces a truthful ZIP.
+                Log.w(TAG, "diagnostic scan runner failed: ${failure.javaClass.simpleName}")
+                DiagnosticScanFallback.failed(
+                    config,
+                    failure.javaClass.simpleName,
+                    System.currentTimeMillis(),
+                )
+            }
+        mainHandler.post {
+            if (isDestroyed || isFinishing) return@post
+            when (scanSession.finish(token)) {
+                DiagnosticScanSession.Completion.STALE -> {
+                    Unit
+                }
+
+                DiagnosticScanSession.Completion.CANCELLED -> {
+                    render(report)
+                    progressLabel.text = getString(R.string.diagnostics_cancelled)
+                }
+
+                DiagnosticScanSession.Completion.FINISHED -> {
+                    render(report)
+                    if (report.results.isEmpty()) {
+                        progressLabel.text = getString(R.string.diagnostics_no_results)
+                    } else if (report.scanId.startsWith("failed-")) {
+                        progressLabel.text = getString(R.string.diagnostics_scan_failed)
+                    }
                 }
             }
-        mainHandler.post { render(report) }
+        }
     }
 
     private fun render(report: DiagnosticEngine.Report) {
         latest = report
         val summary = report.summary
-        val builder = StringBuilder()
-        builder.appendLine("${getString(R.string.diagnostics_scan)} ${report.scanId}")
-        val counts =
-            getString(R.string.diagnostics_counts) + " " +
-                "pass=${summary.passed} fail=${summary.failed} " +
-                "blocked=${summary.blocked} notTested=${summary.notTested} " +
-                "unsupported=${summary.unsupported} " +
-                "external=${summary.needsExternalVerification}"
-        builder.appendLine(counts)
-        report.firstFailedDependency()?.let { first ->
-            val firstFailure =
-                getString(R.string.diagnostics_first_failed) + " ${first.id} — ${first.remediation}"
-            builder.appendLine(firstFailure)
-        }
-        if (summary.clusters.isNotEmpty()) {
-            builder.appendLine(getString(R.string.diagnostics_root_causes))
-            for (cluster in summary.clusters) {
-                builder.appendLine("• ${cluster.rootCauseId}: ${cluster.rootTitle}")
-                builder.appendLine("  ${cluster.symptomIds.joinToString(", ")}")
-                if (cluster.remediation.isNotBlank()) {
-                    builder.appendLine("  → ${cluster.remediation}")
+        // Summarize first. Never dump the raw diagnostic evidence as the
+        // default UI; technical IDs and observations remain available on tap.
+        output.text =
+            buildString {
+                appendLine(getString(R.string.diagnostics_scan) + " " + report.scanId)
+                appendLine(
+                    getString(
+                        R.string.diagnostics_summary_readable,
+                        summary.passed,
+                        summary.failed,
+                        summary.blocked,
+                        summary.notTested,
+                    ),
+                )
+                if (summary.unsupported > 0 || summary.needsExternalVerification > 0) {
+                    appendLine(
+                        getString(
+                            R.string.diagnostics_summary_additional,
+                            summary.unsupported,
+                            summary.needsExternalVerification,
+                        ),
+                    )
+                }
+                report.firstFailedDependency()?.let {
+                    appendLine(getString(R.string.diagnostics_first_failed) + " " + it.title)
+                }
+            }
+        resultsContainer.removeAllViews()
+        resultsContainer.addView(output)
+        if (report.results.isEmpty()) {
+            resultsContainer.addView(label(getString(R.string.diagnostics_no_results)))
+        } else {
+            val groups =
+                report.results.groupBy {
+                    if (it.scope.startsWith("feature:")) {
+                        R.string.diagnostics_feature_checks
+                    } else {
+                        R.string.diagnostics_system_checks
+                    }
+                }
+            for ((groupLabel, checks) in groups) {
+                val heading =
+                    label(getString(groupLabel)).apply {
+                        textSize = 17f
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                    }
+                resultsContainer.addView(heading)
+                for (check in checks) {
+                    val status = localizedStatus(check.status)
+                    val row =
+                        label(
+                            buildString {
+                                appendLine(check.title + " — " + status)
+                                append(check.evidenceLevel.name + " / " + check.verification.name)
+                                if (check.status != DiagnosticStatus.PASS && check.remediation.isNotBlank()) {
+                                    appendLine()
+                                    append(check.remediation)
+                                }
+                            },
+                        ).apply {
+                            setPadding(dp(12), dp(12), dp(12), dp(12))
+                            setBackgroundResource(android.R.drawable.list_selector_background)
+                            isFocusable = true
+                            isClickable = true
+                            contentDescription = check.title + ", " + status
+                            setOnClickListener {
+                                AlertDialog
+                                    .Builder(this@DiagnosticsActivity)
+                                    .setTitle(check.title)
+                                    .setMessage(
+                                        "${check.id}\n${check.status} [${check.evidenceLevel}/${check.verification}]" +
+                                            "\n${check.failureClass}\n${check.remediation}",
+                                    ).setPositiveButton(R.string.diagnostics_close, null)
+                                    .show()
+                            }
+                        }
+                    resultsContainer.addView(row)
                 }
             }
         }
-        builder.appendLine()
-        for (result in report.results) {
-            val line =
-                "${result.id}: ${result.status} [${result.evidenceLevel}/${result.verification}] " +
-                    result.remediation
-            builder.appendLine(line)
-        }
-        output.text = builder.toString()
         progressLabel.text = getString(R.string.diagnostics_finished)
     }
+
+    private fun localizedStatus(status: DiagnosticStatus): String =
+        getString(
+            when (status) {
+                DiagnosticStatus.PASS -> R.string.diagnostics_status_pass
+                DiagnosticStatus.FAIL -> R.string.diagnostics_status_fail
+                DiagnosticStatus.BLOCKED -> R.string.diagnostics_status_blocked
+                DiagnosticStatus.NOT_TESTED -> R.string.diagnostics_status_not_tested
+                DiagnosticStatus.UNSUPPORTED -> R.string.diagnostics_status_unsupported
+                DiagnosticStatus.NEEDS_EXTERNAL_VERIFICATION -> R.string.diagnostics_status_external
+                DiagnosticStatus.RUNNING -> R.string.diagnostics_running
+            },
+        )
 
     /**
      * Export is local-only and always preceded by a redaction preview and an
      * explicit confirmation; there is no unredacted option in this UI.
      */
     private fun exportWithConfirmation() {
-        val report = latest
-        if (report == null) {
-            toast(getString(R.string.diagnostics_run_first))
-            return
+        // An unavailable/failed scan must not hide the export action. The
+        // archive contains explicit zero observations, never invented passes.
+        val report =
+            latest ?: DiagnosticScanFallback.unrun(
+                DiagnosticEngine.RunConfig.quick(
+                    DiagnosticProbeSource.whatsappBuild(),
+                    DiagnosticProbeSource.TARGET_PACKAGE,
+                ),
+                System.currentTimeMillis(),
+            )
+        try {
+            val entries = DiagnosticReportBuilder.entries(reportInputs(report))
+            val redactor = ExportRedactor()
+            val redacted = redactor.redactEntries(entries)
+            val preview = redactor.redactAll(entries.map { String(it.content, Charsets.UTF_8) })
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.diagnostics_redaction_preview)
+                .setMessage(
+                    (if (latest == null) getString(R.string.diagnostics_export_without_scan) + "\n\n" else "") +
+                        redactionMessage(preview.text, redacted.report.total),
+                ).setPositiveButton(R.string.diagnostics_export) { _, _ ->
+                    writeZip(DiagnosticReportBuilder.withRedactionReport(redacted.entries, redacted.report))
+                }.setNegativeButton(R.string.diagnostics_cancel, null)
+                .show()
+        } catch (failure: Exception) {
+            Log.w(TAG, "could not prepare redacted diagnostics: ${failure.javaClass.simpleName}")
+            showFailure(failure.javaClass.simpleName)
         }
-        val entries = DiagnosticReportBuilder.entries(reportInputs(report))
-        // The archive that gets written is the redacted one. The preview and
-        // the export are produced from the same pass, so what the user confirms
-        // is exactly what lands on storage.
-        val redactor = ExportRedactor()
-        val redacted = redactor.redactEntries(entries)
-        val preview = redactor.redactAll(entries.map { String(it.content) })
-        AlertDialog
-            .Builder(this)
-            .setTitle(R.string.diagnostics_redaction_preview)
-            .setMessage(redactionMessage(preview.text, redacted.report.total))
-            .setPositiveButton(R.string.diagnostics_export) { _, _ ->
-                // The redaction account is written from what the redactor really
-                // removed, then the digests are re-sealed over the final bytes.
-                writeZip(DiagnosticReportBuilder.withRedactionReport(redacted.entries, redacted.report))
-            }.setNegativeButton(R.string.diagnostics_cancel, null)
-            .show()
     }
 
     private fun redactionMessage(
@@ -422,25 +540,29 @@ class DiagnosticsActivity : BaseActivity() {
     private var pendingBytes: ByteArray? = null
 
     private fun writeZip(redactedEntries: List<DiagnosticZipExporter.Entry>) {
-        val exporter = DiagnosticZipExporter()
-        val built =
-            try {
-                exporter.build(redactedEntries)
-            } catch (failure: RuntimeException) {
-                Log.w(TAG, "export failed", failure)
-                showFailure(failure.message ?: "")
-                return
+        progressLabel.text = getString(R.string.diagnostics_export_preparing)
+        Thread({
+            val exporter = DiagnosticZipExporter()
+            val built =
+                try {
+                    exporter.build(redactedEntries).also {
+                        require(exporter.verify(it.bytes).valid) {
+                            "diagnostic ZIP failed pre-export verification"
+                        }
+                    }
+                } catch (failure: Exception) {
+                    Log.w(TAG, "diagnostic ZIP preparation failed: ${failure.javaClass.simpleName}")
+                    mainHandler.post {
+                        if (!isDestroyed) showFailure(failure.javaClass.simpleName)
+                    }
+                    return@Thread
+                }
+            mainHandler.post {
+                if (isDestroyed || isFinishing) return@post
+                pendingBytes = built.bytes
+                createDocument.launch(exporter.fileName(System.currentTimeMillis()))
             }
-        // Verified before the user is offered anything: an archive that cannot
-        // be re-opened, or whose checksums do not match, must never be
-        // presented as a finished report.
-        val verification = exporter.verify(built.bytes)
-        if (!verification.valid) {
-            showFailure(getString(R.string.diagnostics_manifest_missing))
-            return
-        }
-        pendingBytes = built.bytes
-        createDocument.launch(exporter.fileName(System.currentTimeMillis()))
+        }, "wax-diagnostics-zip").apply { isDaemon = true }.start()
     }
 
     /** Writes the verified archive to the document the user picked, or reports why not. */
@@ -448,28 +570,61 @@ class DiagnosticsActivity : BaseActivity() {
         registerForActivityResult(ActivityResultContracts.CreateDocument(ZIP_MIME_TYPE)) { uri ->
             val bytes = pendingBytes
             pendingBytes = null
-            if (uri == null || bytes == null) return@registerForActivityResult
-            try {
-                val stream =
-                    contentResolver.openOutputStream(uri)
-                        ?: throw IllegalStateException("storage provider returned no stream")
-                stream.use { DiagnosticZipExporter().writeTo(ResolverTarget(it), bytes) }
-                AlertDialog
-                    .Builder(this)
-                    .setTitle(R.string.diagnostics_export_done)
-                    .setMessage(uri.toString())
-                    .show()
-            } catch (failure: Exception) {
-                Log.w(TAG, "could not write the export", failure)
-                showFailure(failure.message ?: "")
+            if (uri == null) {
+                progressLabel.text = getString(R.string.diagnostics_cancelled)
+                return@registerForActivityResult
             }
+            if (bytes == null) {
+                showFailure(getString(R.string.diagnostics_export_lost))
+                return@registerForActivityResult
+            }
+            progressLabel.text = getString(R.string.diagnostics_export_preparing)
+            Thread({
+                try {
+                    val stream =
+                        contentResolver.openOutputStream(uri)
+                            ?: throw IllegalStateException("storage provider returned no stream")
+                    stream.use { DiagnosticZipExporter().writeTo(ResolverTarget(it), bytes) }
+                    // Do not claim SAF success until the exact file is readable
+                    // and its ZIP digest manifest has been rechecked.
+                    val readBack =
+                        contentResolver
+                            .openInputStream(uri)
+                            ?.use { it.readBounded(MAX_IMPORT_BYTES) }
+                            ?: throw IllegalStateException("provider read-back unavailable")
+                    if (!bytes.contentEquals(readBack) ||
+                        !DiagnosticZipExporter().verify(readBack).valid
+                    ) {
+                        throw IllegalStateException("saved archive integrity verification failed")
+                    }
+                    mainHandler.post {
+                        if (!isDestroyed) {
+                            progressLabel.text = getString(R.string.diagnostics_export_done)
+                            AlertDialog
+                                .Builder(this)
+                                .setTitle(R.string.diagnostics_export_done)
+                                .setMessage(getString(R.string.diagnostics_export_verified))
+                                .setPositiveButton(R.string.diagnostics_close, null)
+                                .show()
+                        }
+                    }
+                } catch (failure: Exception) {
+                    Log.w(TAG, "diagnostic ZIP write/verify failed: ${failure.javaClass.simpleName}")
+                    mainHandler.post {
+                        if (!isDestroyed) showFailure(failure.javaClass.simpleName)
+                    }
+                }
+            }, "wax-diagnostics-save").apply { isDaemon = true }.start()
         }
 
     private fun showFailure(reason: String) {
+        progressLabel.text = getString(R.string.diagnostics_scan_failed)
+        if (isDestroyed || isFinishing) return
         AlertDialog
             .Builder(this)
             .setTitle(R.string.diagnostics_export_failed)
             .setMessage(reason)
+            .setPositiveButton(R.string.diagnostics_close, null)
             .show()
     }
 
@@ -497,7 +652,10 @@ class DiagnosticsActivity : BaseActivity() {
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() {
+        scanSession.invalidate()
         engine.shutdown()
+        mainHandler.removeCallbacksAndMessages(null)
+        pendingBytes = null
         super.onDestroy()
     }
 

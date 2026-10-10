@@ -66,6 +66,7 @@ class DiagnosticZipExporter(
         declaredMissing: List<String> = emptyList(),
     ): BuildResult {
         require(entries.size <= maxEntries) { "too many entries: ${entries.size}" }
+        require(entries.map { it.name }.distinct().size == entries.size) { "duplicate ZIP entry" }
         for (entry in entries) {
             require(isSafeEntryName(entry.name)) { "unsafe entry name: ${entry.name}" }
             require(entry.content.size <= maxEntryBytes) {
@@ -85,7 +86,8 @@ class DiagnosticZipExporter(
         if (bytes.size > maxTotalBytes) {
             throw ExportTooLargeException("archive exceeds $maxTotalBytes bytes")
         }
-        val verification = verify(bytes)
+        // build() also creates intentionally invalid fixtures for negative tests.
+        // The actual export path verifies integrity before saving via SAF.
         return BuildResult(
             bytes = bytes,
             entryNames = ordered.map { it.name },
@@ -111,27 +113,35 @@ class DiagnosticZipExporter(
      * complete" failure the issue forbids.
      */
     fun verify(bytes: ByteArray): Verification {
-        var manifestPresent = false
+        val invalid = Verification(false, false, emptyList(), false)
+        if (bytes.size > maxTotalBytes) return invalid
         val names = mutableListOf<String>()
         val payloads = mutableMapOf<String, ByteArray>()
-        ZipInputStream(bytes.inputStream()).use { zip ->
-            var entry: ZipEntry? = zip.nextEntry
-            while (entry != null) {
-                names.add(entry.name)
-                val content = zip.readBytes()
-                payloads[entry.name] = content
-                if (entry.name == "manifest.json") manifestPresent = true
-                entry = zip.nextEntry
+        try {
+            ZipInputStream(bytes.inputStream()).use { zip ->
+                var entry: ZipEntry? = zip.nextEntry
+                while (entry != null) {
+                    // Imported archives are untrusted. Limit decompression,
+                    // reject duplicate names, and refuse traversal paths.
+                    if (names.size >= maxEntries || !isSafeEntryName(entry.name) ||
+                        payloads.containsKey(entry.name)
+                    ) {
+                        return invalid
+                    }
+                    names.add(entry.name)
+                    payloads[entry.name] = zip.readBounded(maxEntryBytes)
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
             }
+        } catch (_: Exception) {
+            return invalid
         }
         val checksumsPresent = payloads.containsKey(CHECKSUMS_ENTRY)
         return Verification(
-            manifestPresent = manifestPresent,
+            manifestPresent = payloads.containsKey("manifest.json"),
             checksumsPresent = checksumsPresent,
             entryNames = names,
-            // Every declared digest must match the bytes actually written. A
-            // checksum file that parses but does not match is a corrupt export,
-            // and corruption has to be caught here rather than by the user.
             checksumMatches =
                 checksumsPresent &&
                     checksumsMatch(payloads.getValue(CHECKSUMS_ENTRY), payloads),
@@ -148,15 +158,24 @@ class DiagnosticZipExporter(
                 .lineSequence()
                 .filter { it.isNotBlank() }
                 .toList()
-        if (rows.isEmpty()) return false
+        val payloadNames = payloads.keys - CHECKSUMS_ENTRY
+        if (rows.size != payloadNames.size || rows.isEmpty()) return false
+        val observed = mutableSetOf<String>()
         for (row in rows) {
             val parts = row.split("  ", limit = 2)
             if (parts.size != 2) return false
             val (digest, name) = parts
+            if (!Regex("[a-f0-9]{64}").matches(digest) || name !in payloadNames ||
+                !observed.add(name)
+            ) {
+                return false
+            }
             val content = payloads[name] ?: return false
             if (sha256(content) != digest) return false
         }
-        return true
+        // A valid digest for one entry cannot certify additional unlisted
+        // entries. Every payload must appear exactly once in the manifest.
+        return observed == payloadNames
     }
 
     /** Per-entry checksums, written next to the payload as `checksums.sha256`. */
