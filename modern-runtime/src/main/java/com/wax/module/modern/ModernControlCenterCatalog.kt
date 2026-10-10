@@ -89,6 +89,14 @@ object ModernControlCenterCatalog {
                 description = "Keep a viewed view-once message open instead of expiring",
             ),
             Wired(
+                id = "status_seen_hidden",
+                preferenceKey = ModernStatusPrivacyFeature.PREF_HIDE_STATUS_VIEW,
+                evidenceKey = "modern.feature.status_seen_hidden.state",
+                category = ControlCategory.PRIVACY,
+                label = "Hide Status Viewed",
+                description = "Do not mark a Status as seen when you open it",
+            ),
+            Wired(
                 id = "anti_revoke",
                 preferenceKey = ModernAntiRevokeFeature.PREF_ANTIREVOKE,
                 evidenceKey = "modern.feature.anti_revoke.state",
