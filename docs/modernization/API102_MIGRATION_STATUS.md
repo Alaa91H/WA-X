@@ -242,17 +242,16 @@ Nothing below is claimed as done.
 | #449 | merged `67fc086b`: read receipts withheld, release-after-reply, delivery tick reported `UNSUPPORTED` on purpose |
 | #450 | merged `67fc086b`: typing and recording reported separately; online presence named `SERVER_CONTROLLED` |
 | #451 | merged `3b6b4842`: anti-revoke with bounded retention and no protected content copied |
+| #452 | merged `9a9d0a72`: Status seen privacy, kept separate from chat receipts; reply rule left to #357 |
 
 Every row carries `PENDING_USER_DEVICE_TEST`. Sender-visible behaviour needs the
 owner's second account and is not substitutable by a build.
 
 ### Next, in order
 
-1. **#452** — hide Status viewed, and send-seen-on-reply with #357. #357 keeps
-   sole ownership of the status seen-receipt rule and #452 explicitly forbids a
-   second competing state machine, so this one owns the integration, the
-   settings surface and the version evidence. Status acknowledgements stay
-   separate from the chat receipts in #449.
+1. **#357** — the single Status seen-receipt rule, including release after a
+   successful reply. #452 shipped the withheld-acknowledgement half and reports
+   `OWNED_BY_357` for this half rather than reimplementing it.
 2. **#448** — the execution-order parent, updated for the landed P0-CORE set.
 3. **#433 / #425** — close the embedded Control Center and options-menu
    acceptance now that per-feature toggles exist for receipt, activity and

@@ -54,6 +54,15 @@ object ModernStatusPrivacyFeature {
         DISABLED,
         INSTALLED,
 
+        /**
+         * The rule is implemented (#357) but the native Status receipt path has
+         * not been resolved on this runtime.
+         *
+         * The reply is left untouched and nothing is fabricated. This is the
+         * state that says the work is incomplete rather than pretending.
+         */
+        NATIVE_PATH_UNRESOLVED,
+
         /** The anchor was not found on this build. */
         RESOLVER_MISSING,
 
@@ -62,14 +71,6 @@ object ModernStatusPrivacyFeature {
 
         /** The anchor resolved but is not the shape this relies on. */
         UNSAFE_SIGNATURE,
-
-        /**
-         * Owned by #357, which is not on the API 102 runtime yet.
-         *
-         * Reporting this rather than implementing it a second time is what
-         * keeps one Status seen rule instead of two that can disagree.
-         */
-        OWNED_BY_357,
 
         ERROR,
     }
@@ -99,10 +100,21 @@ object ModernStatusPrivacyFeature {
         preferences: SharedPreferences,
     ): Map<String, Outcome> {
         val results = LinkedHashMap<String, Outcome>()
-        // #357 owns the reply rule. Until it is on this runtime, saying so is
-        // the only honest answer; implementing it here would be the competing
-        // state machine the issue forbids.
-        results[FEATURE_ID_AFTER_REPLY] = Outcome.OWNED_BY_357
+        // #357 owns the reply rule and implements it; what is missing is the
+        // native Status receipt path on this runtime. Reporting that is the
+        // point: the rule exists, the transport does not, and the two must not
+        // be conflated into a claim that it works.
+        results[FEATURE_ID_AFTER_REPLY] =
+            if (!preferences.getBoolean(
+                    ModernStatusReplySeenReceipt.PREF_SEND_SEEN_ON_REPLY,
+                    false,
+                )
+            ) {
+                Outcome.DISABLED
+            } else {
+                Outcome.NATIVE_PATH_UNRESOLVED
+            }
+        ModernStatusReplySeenReceipt.purgeOlderThan(System.currentTimeMillis())
 
         if (!preferences.getBoolean(PREF_HIDE_STATUS_VIEW, false)) {
             results[FEATURE_ID_SEEN] = Outcome.DISABLED

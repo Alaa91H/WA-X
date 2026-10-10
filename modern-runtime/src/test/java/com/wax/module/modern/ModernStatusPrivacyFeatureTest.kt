@@ -32,11 +32,28 @@ class ModernStatusPrivacyFeatureTest {
         )
     }
 
-    @Test fun theReplyRuleIsOwnedBy357AndNotReimplemented() {
+    @Test fun theReplyRuleIsImplementedButItsNativePathIsNotResolved() {
         val outcomes = ModernStatusPrivacyFeature.Outcome.entries.map { it.name }
         assertTrue(
-            "#357 owns the reply rule, so this feature must be able to say so",
+            "the reply rule exists; what is missing is the native transport",
+            outcomes.contains("NATIVE_PATH_UNRESOLVED"),
+        )
+        assertFalse(
+            "a finished claim would be false while the native path is unresolved",
             outcomes.contains("OWNED_BY_357"),
+        )
+    }
+
+    @Test fun theReplyRuleIsTheOneImplementedBy357() {
+        // #452 delegates the rule itself; the shipped behaviour has to be the
+        // one #357 owns, not a second state machine beside it.
+        assertEquals(
+            ModernStatusReplySeenReceipt.FEATURE_ID,
+            "status_reply_seen_receipt",
+        )
+        assertEquals(
+            "sendstatusseenonreply",
+            ModernStatusReplySeenReceipt.PREF_SEND_SEEN_ON_REPLY,
         )
     }
 
