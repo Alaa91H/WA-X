@@ -173,7 +173,7 @@ object ModernTypingPrivacyFeature {
                                 method,
                                 "wax.modern.typing_privacy.composing",
                             ) { chain ->
-                                val stateType = composingState(method.parameterTypes, chain.args)
+                                val stateType = composingState(method.parameterTypes, chain.args.toList())
                                 val jid =
                                     chain.args.firstOrNull { candidate ->
                                         candidate != null && jidClass.isInstance(candidate)
